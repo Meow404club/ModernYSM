@@ -3,15 +3,15 @@
 > 由主 Agent 在每次 state_update 重要变更后同步镜像。
 
 ## 阶段
-- phase: RAG 基础设施搭建
-- done: [agent-team-template 应用(端口8999), gregtech6 范围内材料迁移, Forge/NeoForge/Cleanroom 缺失分支克隆, 原版反编译 1.7.10~26.1]
-- current: 全量索引（gregtech6 已索引 chunk 移植零重嵌 + 新材料嵌入）
-- next: rag-shared 复用库落盘 → architect 出第一份模块卡
+- phase: RAG 基础设施搭建（已完成）
+- done: [agent-team-template 应用(端口8999), gregtech6 材料迁移+索引移植194617块, 34资料源全部索引(407308块), rag-shared 共享库落盘并核验]
+- current: 无进行中任务
+- next: architect 出第一份模块卡
 
 ## 任务板摘要
 | slug | status | branch | note |
 |---|---|---|---|
-| rag-bootstrap | in_progress | (基础设施) | brain :8999 + 全量索引 |
+| rag-bootstrap | merged | dev | cfeaae1；407308 块；共享库 402946 块净化副本 |
 
 ## 最近决策
 - 2026-09-09 索引复用策略：ModernYSM 建全新 rag.db，不共用 gregtech6 库；范围内已索引 chunk

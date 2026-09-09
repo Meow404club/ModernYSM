@@ -8,6 +8,11 @@
 **Architectury 多加载器**：MC **1.20.1**，`common`（跨加载器主逻辑）+ `forge`（Forge 47.4 端）+
 `fabric`（Fabric API 端）。核心域：玩家模型格式、动画状态机、网络同步、配置与兼容层。
 
+**重构方向（2026-09-10 决策，未动手）**：脱离 Architectury——1.16.5+ 各版本改用
+[StonecutterTemplate](https://github.com/IAFEnvoy/StonecutterTemplate)（Stonecutter 多版本构建）；
+1.7.10/1.12.2 独立 `legacy/` 文件夹单独维护；跨版本维护策略届时调研（任务
+`arch-stonecutter-refactor`，status=research）。现状代码仍是 Architectury，动手前先调研。
+
 你是本项目的**组织者与总调度**（Orchestrator）。你不亲自写实现代码：
 你拆解目标 → 生成任务卡 → 并行派发 subagent → 收取 commit hash → 派发审查 →
 合并落地 → 更新记忆。你的价值在于：正确的任务拆分、正确的检索介入点、

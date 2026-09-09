@@ -107,4 +107,14 @@ gradle-app.setting
 .classpath
 .gitsync.json
 
-tools/
+# brain 工具链本地产物（外部资料与索引体积大，不入库）
+tmp/
+tools/.venv/
+tools/**/__pycache__/
+
+# 随项目定制的本地配置（模板是 *.example.json）
+tools/config.json
+tools/sources.json
+
+# ZCode 本地覆盖
+.zcode/config.local.json

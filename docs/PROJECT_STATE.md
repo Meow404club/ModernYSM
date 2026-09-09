@@ -1,0 +1,26 @@
+# 项目状态镜像（MCP state 为权威，本文件人工/自动同步）
+
+> 由主 Agent 在每次 state_update 重要变更后同步镜像。
+
+## 阶段
+- phase: RAG 基础设施搭建
+- done: [agent-team-template 应用(端口8999), gregtech6 范围内材料迁移, Forge/NeoForge/Cleanroom 缺失分支克隆, 原版反编译 1.7.10~26.1]
+- current: 全量索引（gregtech6 已索引 chunk 移植零重嵌 + 新材料嵌入）
+- next: rag-shared 复用库落盘 → architect 出第一份模块卡
+
+## 任务板摘要
+| slug | status | branch | note |
+|---|---|---|---|
+| rag-bootstrap | in_progress | (基础设施) | brain :8999 + 全量索引 |
+
+## 最近决策
+- 2026-09-09 索引复用策略：ModernYSM 建全新 rag.db，不共用 gregtech6 库；范围内已索引 chunk
+  以 (source, path, mtime) 三元组从 gregtech6 rag.db 直接移植（同名 source key + cp -a 保 mtime
+  → index.py 增量零重嵌）；完成后净化副本（剔除 project/harvest/KG/state/memories）放
+  `~/workspace/MGT6GA/rag-shared/` 供其他 mod 复用。
+- 2026-09-09 版本选型：vanilla 13 版（1.7.10/1.12.2 用 MCP 名，1.16.5~26.1 用 Mojang 名）；
+  forge-api 9 分支（1.7.10/1.12.x/1.16.x/1.17.x/1.18.x/1.19.2/1.19.x/1.20.1/1.20.4，1.20.5 后
+  Forge 官方停更）；neoforge-api 10 版本（1.20.1~26.2.x）；cleanroom 1.12.2。1.20.5 世代由
+  1.20.6 代表（补丁版差异可忽略）。
+- 2026-09-09 服务端口：brain MCP :8999（本项目独立）；embed :8937 / rerank :8938 与
+  gregtech6 全局共用（同一 llama-server 实例，模型一致才可共享向量空间）。

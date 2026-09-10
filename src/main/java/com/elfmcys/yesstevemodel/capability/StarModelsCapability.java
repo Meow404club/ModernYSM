@@ -1,7 +1,7 @@
 package com.elfmcys.yesstevemodel.capability;
 
+import com.elfmcys.yesstevemodel.platform.forge.capability.StarModelsCapabilityProvider;
 import com.google.common.collect.Sets;
-import dev.architectury.injectables.annotations.ExpectPlatform;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
@@ -15,9 +15,8 @@ public class StarModelsCapability {
 
     private Set<String> starModels = Sets.newHashSet();
 
-    @ExpectPlatform
     public static Optional<StarModelsCapability> get(Player player) {
-        throw new AssertionError();
+        return player.getCapability(StarModelsCapabilityProvider.STAR_MODELS_CAP).resolve();
     }
 
     public void addModel(String str) {

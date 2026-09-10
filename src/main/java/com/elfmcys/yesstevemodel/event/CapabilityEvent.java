@@ -15,42 +15,57 @@ import com.elfmcys.yesstevemodel.network.message.S2CSyncProjectileModelPacket;
 import com.elfmcys.yesstevemodel.network.message.S2CSyncStarModelsPacket;
 import com.elfmcys.yesstevemodel.network.message.S2CSyncVehicleModelPacket;
 import com.elfmcys.yesstevemodel.network.message.S2CVersionCheckPacket;
-import rip.ysm.api.capability.CapabilityLifecycle;
-import dev.architectury.event.EventResult;
-import dev.architectury.event.events.common.EntityEvent;
-import dev.architectury.event.events.common.PlayerEvent;
-import dev.architectury.event.events.common.TickEvent;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraft.world.level.Level;
 
+/**
+ * Forge 原生实现（architectury 迁移）：
+ * <ul>
+ * <li>PlayerEvent.PLAYER_CLONE -&gt; {@link PlayerEvent.Clone}（同一 Forge 背板事件，getOriginal/getEntity/isWasDeath 一一对应）；</li>
+ * <li>EntityEvent.ADD -&gt; {@link EntityJoinLevelEvent}（architectury-forge 9.2.14 EventHandlerImplCommon 反编译实证背板）；
+ * 原 handler 恒返回 EventResult.pass()，architectury 仅对 isFalse()（fail）setCanceled，本处无 fail 出口 =&gt; void 处理器等价；</li>
+ * <li>TickEvent.SERVER_POST -&gt; {@link TickEvent.ServerTickEvent} phase == Phase.END（architectury START-&gt;SERVER_PRE/END-&gt;SERVER_POST 分派实证）。</li>
+ * </ul>
+ * capability attach 不在本类：由 platform/forge/ForgeCapabilityHooks 的 AttachCapabilitiesEvent 注解式处理。
+ */
+@Mod.EventBusSubscriber(modid = YesSteveModel.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class CapabilityEvent {
 
     private CapabilityEvent() {
     }
 
+    /**
+     * 注册已改由 @Mod.EventBusSubscriber 在 mod 构造期自动完成。
+     * 保留空实现仅因 YsmEventBootstrap（events-common 卡域）仍调用本方法，该卡收口时删除调用与本方法。
+     */
     public static void register() {
-        PlayerEvent.PLAYER_CLONE.register(CapabilityEvent::onPlayerCloned);
-        EntityEvent.ADD.register(CapabilityEvent::onEntityAdd);
-        TickEvent.SERVER_POST.register(CapabilityEvent::onServerTick);
     }
 
-    private static void onPlayerCloned(ServerPlayer oldPlayer, ServerPlayer newPlayer, boolean wasDeath) {
+    @SubscribeEvent
+    public static void onPlayerCloned(PlayerEvent.Clone event) {
         if (!YesSteveModel.isAvailable()) {
             return;
         }
-        CapabilityLifecycle.revive(oldPlayer);
+        ServerPlayer oldPlayer = (ServerPlayer) event.getOriginal();
+        ServerPlayer newPlayer = (ServerPlayer) event.getEntity();
+        oldPlayer.reviveCaps();
         Optional<ModelInfoCapability> oldModelInfoCap = getModelInfoCap(oldPlayer);
         Optional<AuthModelsCapability> oldAuthModelsCap = getAuthModelsCap(oldPlayer);
         Optional<StarModelsCapability> oldStarModelsCap = getStarModelsCap(oldPlayer);
-        CapabilityLifecycle.invalidate(oldPlayer);
+        oldPlayer.invalidateCaps();
         Optional<ModelInfoCapability> modelInfoCap = getModelInfoCap(newPlayer);
         Optional<AuthModelsCapability> authModelsCap = getAuthModelsCap(newPlayer);
         Optional<StarModelsCapability> starModelsCap = getStarModelsCap(newPlayer);
@@ -68,9 +83,11 @@ public final class CapabilityEvent {
         });
     }
 
-    private static EventResult onEntityAdd(Entity entity, Level level) {
+    @SubscribeEvent
+    public static void onEntityJoinLevel(EntityJoinLevelEvent event) {
+        Entity entity = event.getEntity();
         if (!YesSteveModel.isAvailable()) {
-            return EventResult.pass();
+            return;
         }
         if (entity instanceof ServerPlayer player) {
             getModelInfoCap(player).ifPresent(modelInfoCap -> {
@@ -92,10 +109,17 @@ public final class CapabilityEvent {
             });
             getStarModelsCap(player).ifPresent(starModelsCap -> NetworkHandler.sendToClientPlayer(new S2CSyncStarModelsPacket(starModelsCap.getStarModels()), player));
         }
-        return EventResult.pass();
     }
 
-    private static void onServerTick(MinecraftServer server) {
+    @SubscribeEvent
+    public static void onServerTick(TickEvent.ServerTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) {
+            return;
+        }
+        onServerTickEnd(event.getServer());
+    }
+
+    private static void onServerTickEnd(MinecraftServer server) {
         if (!YesSteveModel.isAvailable()) {
             return;
         }

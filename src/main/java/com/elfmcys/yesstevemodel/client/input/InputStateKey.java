@@ -2,8 +2,8 @@ package com.elfmcys.yesstevemodel.client.input;
 
 import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.util.InputUtil;
-import dev.architectury.event.EventResult;
-import dev.architectury.event.events.client.ClientRawInputEvent;
+import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.common.MinecraftForge;
 import rip.ysm.api.PlatformAPI;
 
 public class InputStateKey {
@@ -19,14 +19,17 @@ public class InputStateKey {
         if (PlatformAPI.isServer()) {
             return;
         }
-        ClientRawInputEvent.KEY_PRESSED.register((client, keyCode, scanCode, action, modifiers) -> {
-            onKeyInput(keyCode, action);
-            return EventResult.pass();
-        });
-        ClientRawInputEvent.MOUSE_CLICKED_PRE.register((client, button, action, mods) -> {
-            onMouseInput(button, action);
-            return EventResult.pass();
-        });
+        // KEY_PRESSED → InputEvent.Key（不可取消）；MOUSE_CLICKED_PRE → InputEvent.MouseButton.Pre（可取消，原 handler 恒 pass，故不 setCanceled）
+        MinecraftForge.EVENT_BUS.addListener(InputStateKey::onKeyEvent);
+        MinecraftForge.EVENT_BUS.addListener(InputStateKey::onMouseEvent);
+    }
+
+    private static void onKeyEvent(InputEvent.Key event) {
+        onKeyInput(event.getKey(), event.getAction());
+    }
+
+    private static void onMouseEvent(InputEvent.MouseButton.Pre event) {
+        onMouseInput(event.getButton(), event.getAction());
     }
 
     private static void onKeyInput(int keyCode, int action) {

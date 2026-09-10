@@ -4,9 +4,9 @@ import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.client.renderer.AnimationDebugOverlay;
 import com.elfmcys.yesstevemodel.util.InputUtil;
 import com.mojang.blaze3d.platform.InputConstants;
-import dev.architectury.event.EventResult;
-import dev.architectury.event.events.client.ClientRawInputEvent;
 import net.minecraft.client.KeyMapping;
+import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.common.MinecraftForge;
 import rip.ysm.api.PlatformAPI;
 import rip.ysm.api.client.KeyMappingFactory;
 
@@ -21,15 +21,17 @@ public final class DebugAnimationKey {
         if (PlatformAPI.isServer()) {
             return;
         }
-        ClientRawInputEvent.KEY_PRESSED.register((client, keyCode, scanCode, action, modifiers) -> {
-            if (YesSteveModel.isAvailable() && InputUtil.isPlayerReady() && action == 1 && InputUtil.isKeyPressed(keyCode, scanCode, KEY_MAPPING)) {
-                if (!AnimationDebugOverlay.isDebugActive()) {
-                    AnimationDebugOverlay.tryUpdateFromHitResult();
-                } else {
-                    AnimationDebugOverlay.clearActiveModel();
-                }
+        // architectury ClientRawInputEvent.KEY_PRESSED 在 forge 端即 InputEvent.Key（不可取消，原 EventResult 被丢弃）
+        MinecraftForge.EVENT_BUS.addListener(DebugAnimationKey::onKeyInput);
+    }
+
+    private static void onKeyInput(InputEvent.Key event) {
+        if (YesSteveModel.isAvailable() && InputUtil.isPlayerReady() && event.getAction() == 1 && InputUtil.isKeyPressed(event.getKey(), event.getScanCode(), KEY_MAPPING)) {
+            if (!AnimationDebugOverlay.isDebugActive()) {
+                AnimationDebugOverlay.tryUpdateFromHitResult();
+            } else {
+                AnimationDebugOverlay.clearActiveModel();
             }
-            return EventResult.pass();
-        });
+        }
     }
 }

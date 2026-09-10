@@ -9,10 +9,10 @@ import com.elfmcys.yesstevemodel.config.ServerConfig;
 import com.elfmcys.yesstevemodel.network.NetworkHandler;
 import com.elfmcys.yesstevemodel.util.InputUtil;
 import com.mojang.blaze3d.platform.InputConstants;
-import dev.architectury.event.EventResult;
-import dev.architectury.event.events.client.ClientRawInputEvent;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.common.MinecraftForge;
 import rip.ysm.api.PlatformAPI;
 import rip.ysm.api.client.KeyMappingFactory;
 
@@ -27,10 +27,12 @@ public final class PlayerModelToggleKey {
         if (PlatformAPI.isServer()) {
             return;
         }
-        ClientRawInputEvent.KEY_PRESSED.register((client, keyCode, scanCode, action, modifiers) -> {
-            onKeyInput(action, keyCode, scanCode);
-            return EventResult.pass();
-        });
+        // architectury ClientRawInputEvent.KEY_PRESSED 在 forge 端即 InputEvent.Key（不可取消，原 EventResult 被丢弃）
+        MinecraftForge.EVENT_BUS.addListener(PlayerModelToggleKey::onKeyEvent);
+    }
+
+    private static void onKeyEvent(InputEvent.Key event) {
+        onKeyInput(event.getAction(), event.getKey(), event.getScanCode());
     }
 
     private static void onKeyInput(int action, int keyCode, int scanCode) {

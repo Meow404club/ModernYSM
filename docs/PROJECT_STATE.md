@@ -40,7 +40,7 @@
 | m2-forge-thinlayer-condition | merged | 8f23248 | 64 条件块合规全过；capability 双分支语义核证；协议字节零变化 |
 | m2-mixin-versioning | merged | 5b6d3ac | 18 条版本化+两条任务卡证伪；mixins.json 1.20.1 md5 等价；embedMixinExtras 过铁律 5 |
 | m2-gui-hud-port | merged | fa83f37 | 审查通过：映射 3/3 双源命中、Pie 列主序亲核（反证①误读）、GPU 降级零行为变化 |
-| m2-render-pipeline-condition | in_progress（打回修复） | work/m2-render-pipeline-condition | 两 BLOCKER：MatrixBridge 全产 T^T（行主序前提错，投影上传链反证）+FishingHook 线段错配；新 coder 续作修复 |
+| m2-render-pipeline-condition | merged | ea9bfb3 | 方向争议裁决 coder 成立（Sanity 11/11+javap，JOML 字段名=（列,行）序）；真 BUG 仅 normal() 反射路径已修 |
 | m2 条件卡×3 + gui/native-poc/双门禁 | queued | - | 见 decisions.adr-m2-1165-stonecutter-entry 十卡序 |
 | mig-purge-architectury | queued | - | M1 收尾门禁：全仓 dev.architectury=0 |
 | poc-forge-1165 | done | - | 定案：unimined 线三代全 PASS，legacy/ 作废；1.7.10/1.12.2 源码条件化推迟 M5 |

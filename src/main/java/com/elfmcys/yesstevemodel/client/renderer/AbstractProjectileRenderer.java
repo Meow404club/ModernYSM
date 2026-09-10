@@ -6,6 +6,7 @@ import com.elfmcys.yesstevemodel.geckolib3.core.util.Color;
 import com.elfmcys.yesstevemodel.geckolib3.geo.IGeoRenderer;
 import com.elfmcys.yesstevemodel.geckolib3.geo.animated.AnimatedGeoModel;
 import com.elfmcys.yesstevemodel.geckolib3.util.EModelRenderCycle;
+import com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge;
 import com.elfmcys.yesstevemodel.geckolib3.util.IRenderCycle;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -13,14 +14,18 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
+//? if >=1.17 {
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+//? }
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.Projectile;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
+//? if >=1.17 {
 import com.mojang.math.Axis;
+//? }
 
 public abstract class AbstractProjectileRenderer<TEntity extends Projectile, T extends AnimatableEntity<TEntity>> extends EntityRenderer<TEntity> implements IGeoRenderer<T> {
 
@@ -32,7 +37,11 @@ public abstract class AbstractProjectileRenderer<TEntity extends Projectile, T e
 
     public MultiBufferSource bufferSource;
 
+    //? if <1.17 {
+    // public AbstractProjectileRenderer(net.minecraft.client.renderer.entity.EntityRenderDispatcher context) {
+    //? } else {
     public AbstractProjectileRenderer(EntityRendererProvider.Context context) {
+    //? }
         super(context);
         this.modelViewMatrix = new Matrix4f();
         this.projectionMatrix = new Matrix4f();
@@ -51,10 +60,16 @@ public abstract class AbstractProjectileRenderer<TEntity extends Projectile, T e
             if (renderType != null && (isVisible || zShouldEntityAppearGlowing)) {
                 Color color = getRenderColor(animatable, partialTick, poseStack, bufferSource, null, packedLight);
                 AnimatedGeoModel model = animatable.getCurrentModel();
-                this.modelViewMatrix = new Matrix4f(poseStack.last().pose());
+                this.modelViewMatrix = new Matrix4f(MatrixBridge.pose(poseStack.last()));
                 setCurrentModelRenderCycle(EModelRenderCycle.INITIAL);
                 poseStack.pushPose();
+                //? if <1.17
+                // poseStack.mulPose(com.mojang.math.Vector3f.YP.rotationDegrees(Mth.lerp(partialTick, projectile.yRotO, projectile.yRot) - 90.0f));
+                //? if >=1.17
                 poseStack.mulPose(Axis.YP.rotationDegrees(Mth.lerp(partialTick, projectile.yRotO, projectile.getYRot()) - 90.0f));
+                //? if <1.17
+                // poseStack.mulPose(com.mojang.math.Vector3f.ZP.rotationDegrees(Mth.lerp(partialTick, projectile.xRotO, projectile.xRot)));
+                //? if >=1.17
                 poseStack.mulPose(Axis.ZP.rotationDegrees(Mth.lerp(partialTick, projectile.xRotO, projectile.getXRot())));
                 renderWithBoneAndRenderType(model, animatable, partialTick, renderType, poseStack, bufferSource, 0, null, packedLight, getPackedLight(projectile, 0.0f), color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, color.getAlpha() / 255.0f);
                 poseStack.popPose();
@@ -65,7 +80,7 @@ public abstract class AbstractProjectileRenderer<TEntity extends Projectile, T e
 
     @Override
     public void renderEarly(T animatable, PoseStack poseStack, float partialTick, MultiBufferSource bufferSource, VertexConsumer buffer, int packedLight, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        this.projectionMatrix = new Matrix4f(poseStack.last().pose());
+        this.projectionMatrix = new Matrix4f(MatrixBridge.pose(poseStack.last()));
         IGeoRenderer.super.renderEarly(animatable, poseStack, partialTick, bufferSource, buffer, packedLight, packedOverlayIn, red, green, blue, alpha);
     }
 

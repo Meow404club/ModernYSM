@@ -21,6 +21,10 @@ public class CustomFishingHookRenderer {
     public static boolean tryRenderCustomHook(FishingHook fishingHook, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
         return ProjectileCapability.get(fishingHook).map(cap -> {
             if (cap.isModelInitialized() && cap.isModelReady()) {
+                // 1.16.5 xRot 为公共字段（setXRot 为 1.17+）
+                //? if <1.17
+                // fishingHook.xRot = 0.0f;
+                //? if >=1.17
                 fishingHook.setXRot(0.0f);
                 fishingHook.xRotO = 0.0f;
                 RendererManager.getProjectileRenderer().render(cap, entityYaw, partialTick, poseStack, bufferSource, packedLight);
@@ -58,7 +62,18 @@ public class CustomFishingHookRenderer {
             anglerZ = (Mth.lerp(partialTick, player.zo, player.getZ()) - (dSin * handOffset)) + (dCos * 0.8d);
             anglerEye = player.isCrouching() ? -0.1875f : 0.0f;
         } else {
+            // 1.16.5 无 NearPlane（1.18+）/OptionInstance.fov()（1.17+）：
+            // vanilla-1.16.5 FishingHookRenderer 同场景手算（options.fov int /100 缩放 + 手偏移向量按视角旋转）
+            //? if <1.17 {
+            // double fovScale = options.fov / 100.0d;
+            // Vec3 vec3XRot = new Vec3(hand * -0.36d * fovScale, -0.045d * fovScale, 0.4d)
+            //         .xRot(-Mth.lerp(partialTick, player.xRotO, player.xRot) * 0.017453292f)
+            //         .yRot(-Mth.lerp(partialTick, player.yRotO, player.yRot) * 0.017453292f)
+            //         .yRot(swingProgressSqrt * 0.5f)
+            //         .xRot(-swingProgressSqrt * 0.7f);
+            //? } else {
             Vec3 vec3XRot = entityRenderDispatcher.camera.getNearPlane().getPointOnPlane(hand * 0.525f, -0.1f).scale(960.0d / options.fov().get().intValue()).yRot(swingProgressSqrt * 0.5f).xRot((-swingProgressSqrt) * 0.7f);
+            //? }
             anglerX = Mth.lerp(partialTick, player.xo, player.getX()) + vec3XRot.x;
             anglerY = Mth.lerp(partialTick, player.yo, player.getY()) + vec3XRot.y;
             anglerZ = Mth.lerp(partialTick, player.zo, player.getZ()) + vec3XRot.z;
@@ -68,6 +83,10 @@ public class CustomFishingHookRenderer {
         float startY = ((float) (anglerY - (Mth.lerp(partialTick, fishingHook.yo, fishingHook.getY()) + 0.25d))) + anglerEye;
         float startZ = (float) (anglerZ - Mth.lerp(partialTick, fishingHook.zo, fishingHook.getZ()));
         float[] color = lineColor(fishingHook);
+        // 1.16.5 无 RenderType.lineStrip()（1.17+），vanilla 1.16.5 同场景用 lines()
+        //? if <1.17
+        // VertexConsumer buffer = bufferSource.getBuffer(RenderType.lines());
+        //? if >=1.17
         VertexConsumer buffer = bufferSource.getBuffer(RenderType.lineStrip());
         PoseStack.Pose poseLast = poseStack.last();
         for (int size = 0; size <= 16; size++) {

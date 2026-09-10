@@ -3,11 +3,18 @@ package com.elfmcys.yesstevemodel.client.renderer;
 import com.elfmcys.yesstevemodel.YesSteveModel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+//? if >=1.17 {
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+//? }
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraftforge.api.distmarker.Dist;
+//? if >=1.17 {
 import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
+//? }
+// RegisterClientReloadListenersEvent 为 1.16.5 所无（1.17+），1.16.5 分支在
+// FMLClientSetupEvent 直接向 ReloadableResourceManager 挂 ResourceManagerReloadListener
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import rip.ysm.compat.sbackpack.SBackpackCompat;
@@ -31,11 +38,21 @@ public class RendererManager {
      * 向 Minecraft 的 ReloadableResourceManager.registerReloadListener 挂接；
      * Forge 正规入口为 RegisterClientReloadListenersEvent（构造后、首轮资源重载前触发，落到同一管理器）。
      */
+    //? if <1.17 {
+    // @SubscribeEvent
+    // public static void onClientSetup(FMLClientSetupEvent event) {
+    //     event.enqueueWork(() -> {
+    //         ResourceManagerReloadListener listener = resourceManager -> resetRenderers();
+    //         ((net.minecraft.server.packs.resources.ReloadableResourceManager) net.minecraft.client.Minecraft.getInstance().getResourceManager()).registerReloadListener(listener);
+    //     });
+    // }
+    //? } else {
     @SubscribeEvent
     public static void onRegisterReloadListeners(RegisterClientReloadListenersEvent event) {
         ResourceManagerReloadListener listener = resourceManager -> resetRenderers();
         event.registerReloadListener(listener);
     }
+    //? }
 
     private static void resetRenderers() {
         playerRenderer = null;
@@ -49,11 +66,20 @@ public class RendererManager {
             return;
         }
         EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
+        // 1.16.5 无 EntityRendererProvider/Context（1.17+）：渲染器直接吃 dispatcher，
+        // bakeLayer 类模型走传统构造（各渲染器 ctor 已条件化）
+        //? if <1.17 {
+        // playerRenderer = new CustomPlayerRenderer(entityRenderDispatcher);
+        // projectileRenderer = new ProjectileRenderer(entityRenderDispatcher);
+        // handRenderer = new HandItemRenderer();
+        // vehicleRenderer = new VehicleRenderer(entityRenderDispatcher);
+        //? } else {
         EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemRenderer(), Minecraft.getInstance().getBlockRenderer(), entityRenderDispatcher.getItemInHandRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), Minecraft.getInstance().font);
         playerRenderer = new CustomPlayerRenderer(context);
         projectileRenderer = new ProjectileRenderer(context);
         handRenderer = new HandItemRenderer();
         vehicleRenderer = new VehicleRenderer(context);
+        //? }
         SBackpackCompat.setupRenderLayers();
     }
 

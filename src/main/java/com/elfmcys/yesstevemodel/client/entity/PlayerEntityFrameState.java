@@ -93,7 +93,10 @@ public class PlayerEntityFrameState extends LivingEntityFrameState<Player> {
 
     public boolean isFlying() {
         if (this.isLocalPlayer) {
-            return this.entity.getAbilities().flying;
+            //? if <1.17
+            // return this.entity.abilities.flying;
+            //? if >=1.17
+            // return this.entity.getAbilities().flying;
         }
         return this.isFlying;
     }
@@ -150,7 +153,13 @@ public class PlayerEntityFrameState extends LivingEntityFrameState<Player> {
     }
 
     private static void updateHeadYaw(Player player, int currentTick, int previousTick) {
+        //? if <1.17
+        //? if <1.17
+        // float yRot = player.yRot;
+        //? if >=1.17
         float yRot = player.getYRot();
+        //? if >=1.17
+        // float yRot = player.getYRot();
         if (previousTick > 0) {
             headYawDelta = ((yRot - lastYRot) * 20.0f) / (currentTick - previousTick);
         }

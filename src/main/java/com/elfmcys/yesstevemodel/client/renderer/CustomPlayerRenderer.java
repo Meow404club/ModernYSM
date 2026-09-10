@@ -16,7 +16,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
+//? if >=1.17 {
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+//? }
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -31,8 +33,16 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
 
     private ResourceLocation currentTexture;
 
+    //? if <1.17 {
+    // public CustomPlayerRenderer(net.minecraft.client.renderer.entity.EntityRenderDispatcher context) {
+    //? } else {
     public CustomPlayerRenderer(EntityRendererProvider.Context context) {
+    //? }
         super(context);
+        // 1.16.5 dispatcher 无 getItemInHandRenderer，自建（仅用于 renderItem 委托）
+        //? if <1.17
+        // addLayerRenderer(new CustomPlayerItemInHandLayer(new net.minecraft.client.renderer.ItemInHandRenderer(net.minecraft.client.Minecraft.getInstance())));
+        //? if >=1.17
         addLayerRenderer(new CustomPlayerItemInHandLayer(context.getItemInHandRenderer()));
         addLayerRenderer(new CustomPlayerElytraLayer(context));
         addLayerRenderer(new CustomPlayerParrotLayer(context));
@@ -98,6 +108,10 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
         double dDistanceToSqr = this.entityRenderDispatcher.distanceToSqr(player);
         poseStack.pushPose();
         if (dDistanceToSqr < 100.0d && (displayObjective = (scoreboard = player.getScoreboard()).getDisplayObjective(2)) != null) {
+            // Component.literal（1.19+）→ 1.16.5 new TextComponent；append 双版同名
+            //? if <1.17
+            // super.renderNameTag(player, new net.minecraft.network.chat.TextComponent(Integer.toString(scoreboard.getOrCreatePlayerScore(player.getScoreboardName(), displayObjective).getScore())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i);
+            //? if >=1.17
             super.renderNameTag(player, Component.literal(Integer.toString(scoreboard.getOrCreatePlayerScore(player.getScoreboardName(), displayObjective).getScore())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i);
             poseStack.translate(0.0d, 0.25875d, 0.0d);
         }

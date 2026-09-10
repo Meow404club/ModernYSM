@@ -227,7 +227,11 @@ public abstract class GeoEntity<T extends Entity> extends AnimatableEntity<T> {
     @Override
     @Nullable
     public AnimationEvent<?> processAnimationImpl(float partialTick, boolean isFirstPerson) {
-        RenderSystem.assertOnRenderThread();
+        // 1.16.5 无 assertOnRenderThread（1.17+），等价 assertThread(R::isOnRenderThread)
+        //? if <1.17
+        // RenderSystem.assertThread(RenderSystem::isOnRenderThread);
+        //? if >=1.17
+        // RenderSystem.assertOnRenderThread();
         if (isFirstPerson && this.modelFuture != null) {
             return awaitAsyncResult();
         }

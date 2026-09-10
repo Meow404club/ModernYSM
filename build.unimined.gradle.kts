@@ -69,9 +69,9 @@ dependencies {
     // 生产 jar 内嵌（照 1.20.1 的 ImageStream 先例）属后续卡
     implementation("com.github.TartaricAlkaline:ImageStream:-SNAPSHOT")
     // MixinExtras：保留（查证记录，m2-gate-compat）——本 mod 自有 mixin
-    // EntityRenderDispatcherMixin 用 @WrapOperation，且它注册在 1.16.5 有效的
-    // yes_steve_model.mixins.json（platform/forge 第三方 accessor 配置才是被闸对象）；
-    // 运行时注入方式（内嵌/伴生）未定，本卡只保编译
+    // EntityRenderDispatcherMixin 用 @WrapWithCondition（mixinextras v2 注解），且它
+    // 注册在 1.16.5 有效的 yes_steve_model.mixins.json（platform/forge 第三方
+    // accessor 配置才是被闸对象）；运行时注入方式（内嵌/伴生）未定，本卡只保编译
     compileOnly("io.github.llamalad7:mixinextras-common:${property("deps.mixinextras")}")
     annotationProcessor("io.github.llamalad7:mixinextras-common:${property("deps.mixinextras")}")
     // 1.16.5 不声明 libs/ fileTree：第三方 compat 依赖整体闸在本版本构建外
@@ -92,7 +92,7 @@ dependencies {
 //    TouhouMaidModelButton、TouhouMaidTextureButton、SophisticatedBackpackLayer
 sourceSets.main {
     java {
-        srcDir("src/main/shim/rip/ysm/compat")
+        srcDir("src/shim/rip/ysm/compat")
         exclude(
             "rip/ysm/compat/**",
             "com/elfmcys/yesstevemodel/client/compat/**",

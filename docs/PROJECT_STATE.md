@@ -6,7 +6,7 @@
 - phase: 架构重构（Stonecutter 迁移）——M1 已收官，M2（1.16.5）规划期
 - done: [M0 骨架 e9f0b61+源码合并 d086af3, native 子模块 7db591f, M1 七卡迁移+门禁 0f81660（8/8 approve）]
 - done: [RAG 34 源全量索引(407308块), openysm.cpp 研究(b573c7b), Stonecutter 调研(a780867), ADR 定案(decisions.adr-stonecutter-2026-09-10), curator 入库]
-- current: M2 推进中——java8-downshift 与 gate-compat 双卡 in_review（同会话 ②③/5）
+- current: M2 推进中——java8-downshift 已合入 dev（acd46c8）；gate-compat 审查打回修复中（shim srcDir 错位，9be944e rebase 于 acd46c8）
 - next: 双卡合入 → 条件卡波次（forge-thinlayer/render-pipeline/mixin-versioning 并行）→ gui-hud-port → native-poc → 双门禁
 - next: java8 下沉+compat 闸门合入 → 条件卡波次（forge-thinlayer/render-pipeline/mixin-versioning 并行）→ gui-hud-port → native-poc(GO/NO-GO) → compile-green-gate → ingame-smoke-gate
 - next: 骨架合入后 m2-gate-compat → 条件卡波次（forge-thinlayer/render-pipeline/mixin-versioning 并行）→ gui-hud-port → native-poc(GO/NO-GO) → compile-green-gate → ingame-smoke-gate；M3 平铺 → M4 NeoForge → M5 legacy

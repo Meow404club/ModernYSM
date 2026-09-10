@@ -5,8 +5,8 @@
 ## 阶段
 - phase: 架构重构（Stonecutter 迁移）执行期——M0 骨架
 - done: [RAG 34 源全量索引(407308块), openysm.cpp 研究(b573c7b), Stonecutter 调研(a780867), ADR 定案(decisions.adr-stonecutter-2026-09-10), curator 入库]
-- current: M1 七卡全部合入（7/7 approve 零打回，dev=7414160）；mig-purge-architectury 门禁卡在跑
-- next: 门禁合入（grep 零命中+进世界+runServer）→ M1 收官 → M2 1.16.5（unimined，POC 就绪）
+- current: M1 门禁卡 in_review（自测全绿：grep 零命中/进世界截屏实证/runServer Done 28.5s）
+- next: 审查合入 → M1 收官锚点 → M2 1.16.5（unimined，POC 就绪）；M2 前定 mixinextras JIJ 发布策略
 
 ## ADR 摘要（decisions.adr-stonecutter-2026-09-10）
 - architectury-api 彻底移除（@ExpectPlatform 无织入方）；**cardinal 与 forge_config_api_port 直接删**（全仓仅 fabric 源集使用，forge 通道纯 net.minecraftforge capability / ForgeConfigSpec）
@@ -30,7 +30,7 @@
 | mig-registry-config | merged | 8657f78 | DeferredRegister+ModLoadingContext 直调 |
 | mig-events-client | merged | d5362f8 | 键位/输入域全迁移；取消语义清零字节码证实 |
 | mig-platform-util | merged | 7414160 | YsmPlatform+主类接线+NCDFE 修复（NFRT LegacyClasspath 根因，A/B 实证 27 models） |
-| mig-purge-architectury | in_progress | work/mig-purge-architectury | M1 门禁：清零+进世界+runServer 验收 |
+| mig-purge-architectury | in_review | work/mig-purge-architectury | 3 commits；grep 门禁零命中+进世界截屏实证+runServer Done；审查中（分支③/5） |
 | mig-purge-architectury | queued | - | M1 收尾门禁：全仓 dev.architectury=0 |
 | poc-forge-1165 | done | - | 定案：unimined 线三代全 PASS，legacy/ 作废；1.7.10/1.12.2 源码条件化推迟 M5 |
 | poc-execute-unimined | merged | - | 实跑闭环：三版本 BUILD SUCCESSFUL+SRG 抽查过；报告 tmp/poc-1165/RUN-REPORT.md |

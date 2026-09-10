@@ -6,6 +6,7 @@ import net.minecraftforge.fml.ModList;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -20,7 +21,16 @@ import java.util.Optional;
  *       走 SecureJar 路径映射）。</li>
  * </ul>
  */
-public record YsmModInfo(IModInfo info) {
+public final class YsmModInfo {
+    private final IModInfo info;
+
+    public YsmModInfo(IModInfo info) {
+        this.info = info;
+    }
+
+    public IModInfo info() {
+        return this.info;
+    }
 
     public String getModId() {
         return info.getModId();
@@ -42,5 +52,24 @@ public record YsmModInfo(IModInfo info) {
         }
         Path resolved = fileInfo.getFile().findResource(path);
         return Files.exists(resolved) ? Optional.of(resolved) : Optional.empty();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof YsmModInfo)) {
+            return false;
+        }
+        YsmModInfo other = (YsmModInfo) obj;
+        return Objects.equals(this.info, other.info);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.info);
+    }
+
+    @Override
+    public String toString() {
+        return "YsmModInfo[info=" + this.info + "]";
     }
 }

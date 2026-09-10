@@ -3,6 +3,7 @@ package com.elfmcys.yesstevemodel.audio;
 import com.elfmcys.yesstevemodel.client.event.ClientTickEvent;
 
 import java.util.LinkedList;
+import java.util.Objects;
 
 public class ObjectPool {
 
@@ -53,6 +54,32 @@ public class ObjectPool {
         }
     }
 
-    private record PoolEntry<T>(T value, int expirationTick) {
+    private static final class PoolEntry<T> {
+        final T value;
+        final int expirationTick;
+
+        PoolEntry(T value, int expirationTick) {
+            this.value = value;
+            this.expirationTick = expirationTick;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof PoolEntry)) {
+                return false;
+            }
+            PoolEntry<?> other = (PoolEntry<?>) obj;
+            return Objects.equals(this.value, other.value) && this.expirationTick == other.expirationTick;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.value, this.expirationTick);
+        }
+
+        @Override
+        public String toString() {
+            return "PoolEntry[value=" + this.value + ", expirationTick=" + this.expirationTick + "]";
+        }
     }
 }

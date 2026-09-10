@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.util.IdentityHashMap;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class AudioStreamCache {
@@ -71,7 +72,37 @@ public class AudioStreamCache {
             };
         }
 
-        private record CachedAudioEntry(ByteBuffer audioData, AudioFormat audioFormat, IntArrayList seekPositions) {
+        private static final class CachedAudioEntry {
+            final ByteBuffer audioData;
+            final AudioFormat audioFormat;
+            final IntArrayList seekPositions;
+
+            CachedAudioEntry(ByteBuffer audioData, AudioFormat audioFormat, IntArrayList seekPositions) {
+                this.audioData = audioData;
+                this.audioFormat = audioFormat;
+                this.seekPositions = seekPositions;
+            }
+
+            @Override
+            public boolean equals(Object obj) {
+                if (!(obj instanceof CachedAudioEntry)) {
+                    return false;
+                }
+                CachedAudioEntry other = (CachedAudioEntry) obj;
+                return Objects.equals(this.audioData, other.audioData) && Objects.equals(this.audioFormat, other.audioFormat)
+                        && Objects.equals(this.seekPositions, other.seekPositions);
+            }
+
+            @Override
+            public int hashCode() {
+                return Objects.hash(this.audioData, this.audioFormat, this.seekPositions);
+            }
+
+            @Override
+            public String toString() {
+                return "CachedAudioEntry[audioData=" + this.audioData + ", audioFormat=" + this.audioFormat
+                        + ", seekPositions=" + this.seekPositions + "]";
+            }
         }
     }
 }

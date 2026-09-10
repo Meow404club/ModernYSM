@@ -9,7 +9,37 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import rip.ysm.api.network.PacketContext;
 
-public record C2SCompleteFeedbackPacket(FeedbackData feedbackData) {
+import java.util.Objects;
+
+public final class C2SCompleteFeedbackPacket {
+    private final FeedbackData feedbackData;
+
+    public C2SCompleteFeedbackPacket(FeedbackData feedbackData) {
+        this.feedbackData = feedbackData;
+    }
+
+    public FeedbackData feedbackData() {
+        return this.feedbackData;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof C2SCompleteFeedbackPacket)) {
+            return false;
+        }
+        C2SCompleteFeedbackPacket other = (C2SCompleteFeedbackPacket) obj;
+        return Objects.equals(this.feedbackData, other.feedbackData);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.feedbackData);
+    }
+
+    @Override
+    public String toString() {
+        return "C2SCompleteFeedbackPacket[feedbackData=" + this.feedbackData + "]";
+    }
 
     public static void encode(C2SCompleteFeedbackPacket message, FriendlyByteBuf buf) {
         FeedbackData.writeToBuf(message.feedbackData, buf);

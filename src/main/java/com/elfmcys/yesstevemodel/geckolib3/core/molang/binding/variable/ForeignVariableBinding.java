@@ -8,6 +8,8 @@ import com.elfmcys.yesstevemodel.molang.runtime.ExecutionContext;
 import com.elfmcys.yesstevemodel.molang.runtime.Variable;
 import com.elfmcys.yesstevemodel.molang.runtime.binding.ObjectBinding;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
+
+import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("MapOrSetKeyShouldOverrideHashCodeEquals")
@@ -25,7 +27,17 @@ public class ForeignVariableBinding implements ObjectBinding, ResetVariable {
         this.variableMap.clear();
     }
 
-    private record ForeignVariable(int name) implements Variable {
+    private static final class ForeignVariable implements Variable {
+        private final int name;
+
+        ForeignVariable(int name) {
+            this.name = name;
+        }
+
+        public int name() {
+            return this.name;
+        }
+
         @Override
         @SuppressWarnings("unchecked")
         public Object evaluate(@NotNull ExecutionContext<?> context) {
@@ -34,6 +46,25 @@ public class ForeignVariableBinding implements ObjectBinding, ResetVariable {
                 return storage.getPublic(this.name);
             }
             return null;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof ForeignVariable)) {
+                return false;
+            }
+            ForeignVariable other = (ForeignVariable) obj;
+            return this.name == other.name;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.name);
+        }
+
+        @Override
+        public String toString() {
+            return "ForeignVariable[name=" + this.name + "]";
         }
     }
 }

@@ -351,7 +351,33 @@ public class ClientModelManager {
         }
     }
 
-    private record ModelHash(long hash1, long hash2) {
+    private static final class ModelHash {
+        final long hash1;
+        final long hash2;
+
+        ModelHash(long hash1, long hash2) {
+            this.hash1 = hash1;
+            this.hash2 = hash2;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof ModelHash)) {
+                return false;
+            }
+            ModelHash other = (ModelHash) obj;
+            return this.hash1 == other.hash1 && this.hash2 == other.hash2;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.hash1, this.hash2);
+        }
+
+        @Override
+        public String toString() {
+            return "ModelHash[hash1=" + this.hash1 + ", hash2=" + this.hash2 + "]";
+        }
     }
 
     private static final List<ModelHash> cachedModelHashes = new ArrayList<>();
@@ -1248,9 +1274,62 @@ public class ClientModelManager {
         }
     }
 
-    private record LazyModelSource(Path cacheFile, byte[] key, ServerModelInfo modelInfo, boolean isAuth, boolean alwaysLazy) {
-        private LazyModelSource {
+    private static final class LazyModelSource {
+        final Path cacheFile;
+        final byte[] key;
+        final ServerModelInfo modelInfo;
+        final boolean isAuth;
+        final boolean alwaysLazy;
+
+        private LazyModelSource(Path cacheFile, byte[] key, ServerModelInfo modelInfo, boolean isAuth, boolean alwaysLazy) {
             key = key.clone();
+            this.cacheFile = cacheFile;
+            this.key = key;
+            this.modelInfo = modelInfo;
+            this.isAuth = isAuth;
+            this.alwaysLazy = alwaysLazy;
+        }
+
+        Path cacheFile() {
+            return this.cacheFile;
+        }
+
+        byte[] key() {
+            return this.key;
+        }
+
+        ServerModelInfo modelInfo() {
+            return this.modelInfo;
+        }
+
+        boolean isAuth() {
+            return this.isAuth;
+        }
+
+        boolean alwaysLazy() {
+            return this.alwaysLazy;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof LazyModelSource)) {
+                return false;
+            }
+            LazyModelSource other = (LazyModelSource) obj;
+            return this.isAuth == other.isAuth && this.alwaysLazy == other.alwaysLazy
+                    && Objects.equals(this.cacheFile, other.cacheFile) && Objects.equals(this.key, other.key)
+                    && Objects.equals(this.modelInfo, other.modelInfo);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.cacheFile, this.key, this.modelInfo, this.isAuth, this.alwaysLazy);
+        }
+
+        @Override
+        public String toString() {
+            return "LazyModelSource[cacheFile=" + this.cacheFile + ", key=" + this.key + ", modelInfo=" + this.modelInfo
+                    + ", isAuth=" + this.isAuth + ", alwaysLazy=" + this.alwaysLazy + "]";
         }
     }
 

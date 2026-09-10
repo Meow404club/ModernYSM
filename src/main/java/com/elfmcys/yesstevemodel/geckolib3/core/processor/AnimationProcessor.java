@@ -33,6 +33,7 @@ import org.joml.Vector3f;
 import java.util.ArrayDeque;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 
@@ -315,6 +316,38 @@ public class AnimationProcessor<TEntity extends Entity> {
         this.animationStorage.forEachPropertyName(consumer);
     }
 
-    private record PendingExpression(IValue IValue, boolean isClientPlayer, boolean executeBeforeAnimation, Consumer<String> callback) {
+    private static final class PendingExpression {
+        final IValue IValue;
+        final boolean isClientPlayer;
+        final boolean executeBeforeAnimation;
+        final Consumer<String> callback;
+
+        PendingExpression(IValue IValue, boolean isClientPlayer, boolean executeBeforeAnimation, Consumer<String> callback) {
+            this.IValue = IValue;
+            this.isClientPlayer = isClientPlayer;
+            this.executeBeforeAnimation = executeBeforeAnimation;
+            this.callback = callback;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof PendingExpression)) {
+                return false;
+            }
+            PendingExpression other = (PendingExpression) obj;
+            return this.isClientPlayer == other.isClientPlayer && this.executeBeforeAnimation == other.executeBeforeAnimation
+                    && Objects.equals(this.IValue, other.IValue) && Objects.equals(this.callback, other.callback);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.IValue, this.isClientPlayer, this.executeBeforeAnimation, this.callback);
+        }
+
+        @Override
+        public String toString() {
+            return "PendingExpression[IValue=" + this.IValue + ", isClientPlayer=" + this.isClientPlayer
+                    + ", executeBeforeAnimation=" + this.executeBeforeAnimation + ", callback=" + this.callback + "]";
+        }
     }
 }

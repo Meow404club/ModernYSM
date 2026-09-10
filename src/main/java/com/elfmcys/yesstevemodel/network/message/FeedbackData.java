@@ -5,8 +5,59 @@ import it.unimi.dsi.fastutil.ints.Int2FloatArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2FloatArrayMap;
 import net.minecraft.network.FriendlyByteBuf;
 
-public record FeedbackData(int entityId, Object2FloatArrayMap<String> stringValues,
-                           Int2FloatArrayMap intValues, int flags) {
+import java.util.Objects;
+
+public final class FeedbackData {
+    private final int entityId;
+    private final Object2FloatArrayMap<String> stringValues;
+    private final Int2FloatArrayMap intValues;
+    private final int flags;
+
+    public FeedbackData(int entityId, Object2FloatArrayMap<String> stringValues,
+                        Int2FloatArrayMap intValues, int flags) {
+        this.entityId = entityId;
+        this.stringValues = stringValues;
+        this.intValues = intValues;
+        this.flags = flags;
+    }
+
+    public int entityId() {
+        return this.entityId;
+    }
+
+    public Object2FloatArrayMap<String> stringValues() {
+        return this.stringValues;
+    }
+
+    public Int2FloatArrayMap intValues() {
+        return this.intValues;
+    }
+
+    public int flags() {
+        return this.flags;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof FeedbackData)) {
+            return false;
+        }
+        FeedbackData other = (FeedbackData) obj;
+        return this.entityId == other.entityId && this.flags == other.flags
+                && Objects.equals(this.stringValues, other.stringValues)
+                && Objects.equals(this.intValues, other.intValues);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.entityId, this.stringValues, this.intValues, this.flags);
+    }
+
+    @Override
+    public String toString() {
+        return "FeedbackData[entityId=" + this.entityId + ", stringValues=" + this.stringValues
+                + ", intValues=" + this.intValues + ", flags=" + this.flags + "]";
+    }
 
     public static void writeToBuf(FeedbackData message, FriendlyByteBuf buf) {
         buf.writeInt(message.entityId);

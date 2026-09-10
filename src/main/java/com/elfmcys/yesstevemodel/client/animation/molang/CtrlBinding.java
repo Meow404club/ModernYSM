@@ -31,6 +31,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 
+import java.util.Objects;
 import java.util.function.Predicate;
 
 public class CtrlBinding extends ContextBinding {
@@ -166,7 +167,48 @@ public class CtrlBinding extends ContextBinding {
         return false;
     }
 
-    private record AnimationStatePredicate(String name, int priority, Predicate<IContext<LivingEntity>> predicate) {
+    private static final class AnimationStatePredicate {
+        final String name;
+        final int priority;
+        final Predicate<IContext<LivingEntity>> predicate;
+
+        AnimationStatePredicate(String name, int priority, Predicate<IContext<LivingEntity>> predicate) {
+            this.name = name;
+            this.priority = priority;
+            this.predicate = predicate;
+        }
+
+        public String name() {
+            return this.name;
+        }
+
+        public int priority() {
+            return this.priority;
+        }
+
+        public Predicate<IContext<LivingEntity>> predicate() {
+            return this.predicate;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof AnimationStatePredicate)) {
+                return false;
+            }
+            AnimationStatePredicate other = (AnimationStatePredicate) obj;
+            return this.priority == other.priority && Objects.equals(this.name, other.name)
+                    && Objects.equals(this.predicate, other.predicate);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.name, this.priority, this.predicate);
+        }
+
+        @Override
+        public String toString() {
+            return "AnimationStatePredicate[name=" + this.name + ", priority=" + this.priority + ", predicate=" + this.predicate + "]";
+        }
     }
 
     private interface EntityCondition extends Predicate<IContext<LivingEntity>> {

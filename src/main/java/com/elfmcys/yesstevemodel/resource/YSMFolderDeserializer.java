@@ -969,7 +969,48 @@ public class YSMFolderDeserializer implements AutoCloseable {
     }
 
 
-    private record ImageMeta(int width, int height, int format) {}
+    private static final class ImageMeta {
+        final int width;
+        final int height;
+        final int format;
+
+        ImageMeta(int width, int height, int format) {
+            this.width = width;
+            this.height = height;
+            this.format = format;
+        }
+
+        int width() {
+            return this.width;
+        }
+
+        int height() {
+            return this.height;
+        }
+
+        int format() {
+            return this.format;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof ImageMeta)) {
+                return false;
+            }
+            ImageMeta other = (ImageMeta) obj;
+            return this.width == other.width && this.height == other.height && this.format == other.format;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.width, this.height, this.format);
+        }
+
+        @Override
+        public String toString() {
+            return "ImageMeta[width=" + this.width + ", height=" + this.height + ", format=" + this.format + "]";
+        }
+    }
 
 
     private static ImageMeta parseImageMeta(byte[] data, String path) {

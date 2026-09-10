@@ -1,7 +1,7 @@
 package com.elfmcys.yesstevemodel.capability;
 
+import com.elfmcys.yesstevemodel.platform.forge.capability.AuthModelsCapabilityProvider;
 import com.google.common.collect.Sets;
-import dev.architectury.injectables.annotations.ExpectPlatform;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
@@ -15,9 +15,8 @@ public class AuthModelsCapability {
 
     private Set<String> authModels = Sets.newHashSet();
 
-    @ExpectPlatform
     public static Optional<AuthModelsCapability> get(Player player) {
-        throw new AssertionError();
+        return player.getCapability(AuthModelsCapabilityProvider.AUTH_MODELS_CAP).resolve();
     }
 
     public void addModel(String str) {

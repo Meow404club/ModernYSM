@@ -20,7 +20,7 @@ import com.elfmcys.yesstevemodel.molang.runtime.Struct;
 import com.elfmcys.yesstevemodel.network.NetworkHandler;
 import com.elfmcys.yesstevemodel.network.message.C2SCompleteFeedbackPacket;
 import com.elfmcys.yesstevemodel.network.message.FeedbackData;
-import dev.architectury.injectables.annotations.ExpectPlatform;
+import com.elfmcys.yesstevemodel.platform.forge.capability.PlayerCapabilityProvider;
 import it.unimi.dsi.fastutil.ints.Int2FloatMap;
 import it.unimi.dsi.fastutil.ints.Int2FloatMaps;
 import it.unimi.dsi.fastutil.ints.Int2FloatOpenHashMap;
@@ -40,14 +40,12 @@ import java.util.Optional;
 @Environment(EnvType.CLIENT)
 public final class PlayerCapability extends CustomPlayerEntity {
 
-    @ExpectPlatform
     public static Optional<PlayerCapability> get(Player player) {
-        throw new AssertionError();
+        return player.getCapability(PlayerCapabilityProvider.PLAYER_CAP).resolve();
     }
 
-    @ExpectPlatform
     public static Optional<PlayerCapability> get(Entity entity) {
-        throw new AssertionError();
+        return entity.getCapability(PlayerCapabilityProvider.PLAYER_CAP).resolve();
     }
 
     private final Int2ReferenceOpenHashMap<MolangVarHolder> molangVarsMap;

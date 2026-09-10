@@ -5,8 +5,8 @@ import com.elfmcys.yesstevemodel.network.sync.PlayerStateSynchronizer;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.util.StringPool;
 import com.elfmcys.yesstevemodel.network.message.S2CSetModelAndTexturePacket;
 import com.elfmcys.yesstevemodel.network.message.FeedbackData;
+import com.elfmcys.yesstevemodel.platform.forge.capability.ModelInfoCapabilityProvider;
 import com.google.common.collect.Queues;
-import dev.architectury.injectables.annotations.ExpectPlatform;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceMap;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -24,9 +24,8 @@ import java.util.function.Consumer;
 
 public class ModelInfoCapability {
 
-    @ExpectPlatform
     public static Optional<ModelInfoCapability> get(Player player) {
-        throw new AssertionError();
+        return player.getCapability(ModelInfoCapabilityProvider.MODEL_INFO_CAP).resolve();
     }
 
     private String modelId;

@@ -1,21 +1,19 @@
 package rip.ysm.compat.simplehats;
 
-import dev.architectury.injectables.annotations.ExpectPlatform;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
+import rip.ysm.compat.simplehats.platform.forge.SimpleHatsHelperImpl;
 
 public final class SimpleHatsHelper {
 
     private SimpleHatsHelper() {
     }
 
-    @ExpectPlatform
     public static boolean isLoaded() {
-        throw new AssertionError();
+        return SimpleHatsHelperImpl.isLoaded();
     }
 
-    @ExpectPlatform
     public static ItemStack getHatItem(LivingEntity livingEntity) {
-        throw new AssertionError();
+        return SimpleHatsHelperImpl.getHatItem(livingEntity);
     }
 }

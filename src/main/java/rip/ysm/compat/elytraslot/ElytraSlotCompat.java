@@ -1,21 +1,19 @@
 package rip.ysm.compat.elytraslot;
 
-import dev.architectury.injectables.annotations.ExpectPlatform;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
+import rip.ysm.compat.elytraslot.platform.forge.ElytraSlotCompatImpl;
 
 public final class ElytraSlotCompat {
 
     private ElytraSlotCompat() {
     }
 
-    @ExpectPlatform
     public static boolean isLoaded() {
-        throw new AssertionError();
+        return ElytraSlotCompatImpl.isLoaded();
     }
 
-    @ExpectPlatform
     public static ItemStack getElytraItem(LivingEntity livingEntity) {
-        throw new AssertionError();
+        return ElytraSlotCompatImpl.getElytraItem(livingEntity);
     }
 }

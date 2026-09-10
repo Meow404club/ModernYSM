@@ -1,20 +1,18 @@
 package rip.ysm.compat.bettercombat;
 
 import com.elfmcys.yesstevemodel.client.animation.molang.CtrlBinding;
-import dev.architectury.injectables.annotations.ExpectPlatform;
+import rip.ysm.compat.bettercombat.platform.forge.BetterCombatCompatImpl;
 
 public final class BetterCombatCompat {
 
     private BetterCombatCompat() {
     }
 
-    @ExpectPlatform
     public static boolean isLoaded() {
-        throw new AssertionError();
+        return BetterCombatCompatImpl.isLoaded();
     }
 
-    @ExpectPlatform
     public static void registerBindings(CtrlBinding binding) {
-        throw new AssertionError();
+        BetterCombatCompatImpl.registerBindings(binding);
     }
 }

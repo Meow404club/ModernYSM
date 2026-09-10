@@ -1,19 +1,18 @@
 package rip.ysm.compat.realcamera;
 
-import dev.architectury.injectables.annotations.ExpectPlatform;
+import rip.ysm.compat.realcamera.platform.forge.RealCameraCompatImpl;
+
 
 public final class RealCameraCompat {
 
     private RealCameraCompat() {
     }
 
-    @ExpectPlatform
     public static boolean isLoaded() {
-        throw new AssertionError();
+        return RealCameraCompatImpl.isLoaded();
     }
 
-    @ExpectPlatform
     public static boolean isActive() {
-        throw new AssertionError();
+        return RealCameraCompatImpl.isActive();
     }
 }

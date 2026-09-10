@@ -3,15 +3,28 @@
 > 由主 Agent 在每次 state_update 重要变更后同步镜像。
 
 ## 阶段
-- phase: 架构重构（Stonecutter 迁移）规划期
-- done: [RAG 34 源全量索引(407308块), openysm.cpp 研究(zig 构建可复现,JNI 漂移点已记录, b573c7b), StonecutterTemplate 调研（研究卡见 RESEARCH-NOTES.md）]
-- current: architect 出迁移 ADR/模块卡；1.16.5 Forge 工具链 POC 并行；harvest 审查入库
-- next: 收 ADR → 拆卡派发 coder（里程碑 M1 = 1.20.1 forge+neoforge 编译通过）
+- phase: 架构重构（Stonecutter 迁移）执行期——M0 骨架
+- done: [RAG 34 源全量索引(407308块), openysm.cpp 研究(b573c7b), Stonecutter 调研(a780867), ADR 定案(decisions.adr-stonecutter-2026-09-10), curator 入库]
+- current: M0 骨架卡 m0-stonecutter-skeleton 已派发 coder；后台并行中：1.16.5/Unimined 工具链 POC、native 源码对齐
+- next: 骨架合并后派 m0-merge-sources → M1 五卡并行（capability/network/events×2/registry）
+
+## ADR 摘要（decisions.adr-stonecutter-2026-09-10）
+- architectury-api 彻底移除（@ExpectPlatform 无织入方）；**cardinal 与 forge_config_api_port 直接删**（全仓仅 fabric 源集使用，forge 通道纯 net.minecraftforge capability / ForgeConfigSpec）
+- 版本矩阵：1.20.1 单项 `1.20.1-forge`（NeoForge 1.20.1=47.1.x 兼容 fork，一份 jar 双跑）；NeoForge 独立 API 自 1.20.5+ 归 M4
+- 目录：根 settings.gradle.kts/stonecutter.gradle.kts/build.forge.gradle.kts + versions/<mc>-<loader>/；common→src/main；forge 实现类→platform/forge 子包；fabric/ 原目录保留不迁移不挂 sourceSet；legacy/ 空占位
+- JNI：GeoModel+natives 整包平移冻结；nInitSIMD 是运行时读 @BufferBuilderMapping 注解（非硬编码），机制零改动
+- 里程碑：M0 骨架+源码合并 → M1 1.20.1-forge 全绿（architectury=0 门禁）→ M2 1.16.5（gating: poc-forge-1165）→ M3 平铺 1.18.2/1.19.2/1.19.4/1.20.4 → M4 NeoForge 1.20.5+（gating: 1.20.5 API 漂移研究）
 
 ## 任务板摘要
 | slug | status | branch | note |
 |---|---|---|---|
 | rag-bootstrap | merged | dev | cfeaae1；407308 块；共享库 402946 块净化副本 |
+| arch-stonecutter-refactor | executing | - | ADR 定案，M0~M4 里程碑，11 张任务卡已登记 state |
+| m0-stonecutter-skeleton | in_progress | work/m0-stonecutter-skeleton | stonecutter 骨架+1.20.1-forge 空壳构建 |
+| m0-merge-sources | queued | - | 三端源码合并进 src/main（依赖骨架合并） |
+| mig-* (7卡) | queued | - | M1 并行：capability/network/events×2/registry-config/platform-util/compat |
+| mig-purge-architectury | queued | - | M1 收尾门禁：全仓 dev.architectury=0 |
+| poc-forge-1165 | research | - | + Unimined 专题（统一 1.16.5/1.12.2/1.7.10 消灭 legacy 分叉） |
 | native-openysm-cpp | closed | - | 用户裁决：自带实现已完整，上游仅档案存查（tmp/harvest/openysm-cpp） |
 | native-align-src | in_progress | work/native-align-src | 仓内 native 只有二进制——上游 MIT 源码打底，重建 nInitSIMD+stateArray，对拍验证 |
 | harvest-curator-1 | merged | - | stonecutter-template 入 RAG（17 文件）；openysm-cpp 不入库零污染 |

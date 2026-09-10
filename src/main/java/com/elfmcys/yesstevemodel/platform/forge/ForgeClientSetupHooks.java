@@ -26,12 +26,16 @@ import com.elfmcys.yesstevemodel.client.compat.simpleplanes.platform.forge.Simpl
 import com.elfmcys.yesstevemodel.client.compat.slashblade.platform.forge.SlashBladeCompat;
 import com.elfmcys.yesstevemodel.client.compat.swem.platform.forge.SWEMCompat;
 import com.elfmcys.yesstevemodel.client.compat.touhoulittlemaid.platform.forge.TouhouLittleMaidCompat;
+//? if >1.17 {
 import com.elfmcys.yesstevemodel.client.renderer.AnimationDebugOverlay;
 import com.elfmcys.yesstevemodel.client.renderer.ExtraPlayerOverlay;
 import com.elfmcys.yesstevemodel.client.renderer.ModelSyncStateOverlay;
+//?}
 import net.minecraftforge.api.distmarker.Dist;
+//? if >1.17 {
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
+//?}
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoader;
 import net.minecraftforge.fml.ModLoadingStage;
@@ -40,7 +44,9 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.loading.LoadingModList;
 import org.apache.commons.lang3.tuple.Pair;
+//? if >1.17 {
 import rip.ysm.api.client.HudOverlay;
+//?}
 
 import java.util.Optional;
 
@@ -88,6 +94,9 @@ public final class ForgeClientSetupHooks {
         });
     }
 
+    // 1.16.5 无 RegisterGuiOverlaysEvent 宿主：HUD 注册走 1.16.5 原生路径
+    // platform/forge/ForgeHudOverlayEvents（RenderGameOverlayEvent.Post 子事件）
+    //? if >1.17 {
     @SubscribeEvent
     public static void onRegisterGuiOverlays(RegisterGuiOverlaysEvent event) {
         if (!YesSteveModel.isAvailable()) {
@@ -100,6 +109,7 @@ public final class ForgeClientSetupHooks {
         event.registerAbove(VanillaGuiOverlay.DEBUG_TEXT.id(), "ysm_extra_player", (gui, gfx, partial, w, h) -> loadingOverlay.render(gfx, gui.getFont(), partial, w, h));
         event.registerAbove(VanillaGuiOverlay.DEBUG_TEXT.id(), "ysm_loading_state", (gui, gfx, partial, w, h) -> syncOverlay.render(gfx, gui.getFont(), partial, w, h));
     }
+    //?}
 
     private static void showInCompatibleMod(Optional<Pair<String, String>> optional) {
         optional.ifPresent(pair -> ModLoader.get().addWarning(new ModLoadingWarning(LoadingModList.get().getModFileById(YesSteveModel.MOD_ID).getMods().get(0), ModLoadingStage.SIDED_SETUP, "error.yes_steve_model.incompatible_mod_version", pair.getKey(), pair.getValue())));

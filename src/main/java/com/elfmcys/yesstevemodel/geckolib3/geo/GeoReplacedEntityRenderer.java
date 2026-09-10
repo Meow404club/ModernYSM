@@ -9,6 +9,7 @@ import com.elfmcys.yesstevemodel.geckolib3.extended.LivingEntityRendererAccessor
 import com.elfmcys.yesstevemodel.geckolib3.geo.animated.AnimatedGeoModel;
 import com.elfmcys.yesstevemodel.geckolib3.model.provider.data.EntityModelData;
 import com.elfmcys.yesstevemodel.geckolib3.util.EModelRenderCycle;
+import com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge;
 import com.elfmcys.yesstevemodel.geckolib3.util.IRenderCycle;
 import com.elfmcys.yesstevemodel.mixin.client.LivingEntityAccessor;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -16,10 +17,15 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.PlayerModel;
+// 1.16.5 无 EntityRendererProvider/ModelLayers（1.17 模型重写产物），渲染器构造参数为
+// EntityRenderDispatcher、模型为传统手写构造（new PlayerModel(0.0f, slim)，1.16.5 vanilla
+// PlayerRenderer 同款）；两类 import 仅 1.17+ 存在，1.16.5 生成分支用 EntityRenderDispatcher
+//? if >= 1.17 {
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+//? }
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
@@ -50,10 +56,17 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
 
     private IRenderCycle currentModelRenderCycle = EModelRenderCycle.INITIAL;
 
+    //? if < 1.17 {
+    // public GeoReplacedEntityRenderer(net.minecraft.client.renderer.entity.EntityRenderDispatcher dispatcher) {
+    //     super(dispatcher, new PlayerModel(0.0f, true), 0.5f);
+    //     this.rtb = null;
+    // }
+    //? } else {
     public GeoReplacedEntityRenderer(EntityRendererProvider.Context context) {
         super(context, new PlayerModel(context.bakeLayer(ModelLayers.PLAYER_SLIM), true), 0.5f);
         this.rtb = null;
     }
+    //? }
 
     public static int packOverlayCoords(LivingEntity entity, float u) {
         return OverlayTexture.pack(OverlayTexture.u(u), OverlayTexture.v(entity.hurtTime > 0 || entity.deathTime > 0));
@@ -73,7 +86,7 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
     @Override
     public void renderEarly(T animatable, PoseStack poseStack, float partialTick, MultiBufferSource bufferSource, VertexConsumer buffer, int packedLight, int packedOverlayIn, float red, float green, float blue, float alpha) {
         // 使用 .set 来避免每次渲染创建新的 Matrix4f, 减少 allocation rate
-        this.renderEarlyMat.set(poseStack.last().pose());
+        this.renderEarlyMat.set(MatrixBridge.pose(poseStack.last()));
         IGeoRenderer.super.renderEarly(animatable, poseStack, partialTick, bufferSource, buffer, packedLight, packedOverlayIn, red, green, blue, alpha);
     }
 
@@ -93,7 +106,7 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
         if (event != null && minecraft.player != null) {
             EntityModelData modelData = event.getModelData();
             // 使用 .set 来避免每次渲染创建新的 Matrix4f, 减少 allocation rate
-            this.dispatchedMat.set(poseStack.last().pose());
+            this.dispatchedMat.set(MatrixBridge.pose(poseStack.last()));
             setCurrentModelRenderCycle(EModelRenderCycle.INITIAL);
             poseStack.pushPose();
             if (entity.getPose() == Pose.SLEEPING && (bedOrientation = entity.getBedOrientation()) != null) {
@@ -105,7 +118,15 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
                 VehicleCapability.get(t.getEntity().getVehicle()).ifPresent(cap -> {
                     Vector3f vector3f = cap.getExpressionOffset();
                     if (vector3f != null) {
-                        poseStack.mulPose(new Quaternionf().rotateZYX(vector3f.z, 0.0f, vector3f.x).invert());
+                        // 1.16.5 moj Quaternion(x,y,z,degrees=false) 与 joml rotateZYX(z,y,x) 同为
+                    // Rx·Ry·Rz 列向量约定（两版源码推导对照），单位四元数 conj==invert
+                    //? if < 1.17 {
+                    // com.mojang.math.Quaternion vehicleRot = new com.mojang.math.Quaternion(vector3f.z, 0.0f, vector3f.x, false);
+                    // vehicleRot.conj();
+                    // poseStack.mulPose(vehicleRot);
+                    //? } else {
+                    poseStack.mulPose(new Quaternionf().rotateZYX(vector3f.z, 0.0f, vector3f.x).invert());
+                    //? }
                     }
                 });
             }
@@ -159,6 +180,9 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
         if (tentity.onClimbable()) {
             Optional<BlockPos> lastClimbablePos = tentity.getLastClimbablePos();
             if (lastClimbablePos.isPresent()) {
+                //? if < 1.17
+                // Optional<Direction> optionalValue = tentity.level.getBlockState(lastClimbablePos.get()).getOptionalValue(HorizontalDirectionalBlock.FACING);
+                //? if >= 1.17
                 Optional<Direction> optionalValue = tentity.level().getBlockState(lastClimbablePos.get()).getOptionalValue(HorizontalDirectionalBlock.FACING);
                 if (optionalValue.isPresent()) {
                     rotationYaw = optionalValue.get().getOpposite().get2DDataValue() * 90;

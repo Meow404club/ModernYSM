@@ -6,6 +6,7 @@ import com.elfmcys.yesstevemodel.NativeLibLoader;
 import com.elfmcys.yesstevemodel.client.renderer.ModelPreviewRenderer;
 import com.elfmcys.yesstevemodel.config.GeneralConfig;
 import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
+import com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge;
 import com.elfmcys.yesstevemodel.util.log.ChatLogger;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -35,7 +36,7 @@ public class NativeModelRenderer {
 
     public static void renderMesh(VertexConsumer buffer, PoseStack.Pose pose, GeoModel model, float[] boneParams, float[] stateBuffer, int textureIndex, int renderPartMask, int packedLight, int packedOverlay, float red, float green, float blue, float alpha, net.minecraft.resources.ResourceLocation textureLocation) {
         OculusCompat.updatePBRState();
-        RenderSystem.getProjectionMatrix().mul(RenderSystem.getModelViewMatrix(), projectionModelViewMatrix);
+        MatrixBridge.projectionMatrix().mul(MatrixBridge.modelViewMatrix(), projectionModelViewMatrix);
         boolean isPreview = ModelPreviewRenderer.isPreview() || ModelPreviewRenderer.isExtraPlayer();
 
         if (textureLocation != null && NativeLibLoader.isLoaded() && !GeneralConfig.USE_COMPATIBILITY_RENDERER.get() && GeneralConfig.USE_GPU_RENDERER.get()) {
@@ -109,9 +110,10 @@ public class NativeModelRenderer {
         if (mesh.bakedBones == null || mesh.bakedBones.isEmpty()) return;
 
         // TODO: 修復GC壓力
-        Matrix4f rootPoseMat = pose.pose();
-        Matrix3f rootNormalMC = pose.normal();
-        Matrix4f projMat = RenderSystem.getProjectionMatrix();
+        // 1.16.5 由 MatrixBridge 做 moj→JOML 转置换算（保 native float[] 契约布局不变），1.20.1 直通
+        Matrix4f rootPoseMat = MatrixBridge.pose(pose);
+        Matrix3f rootNormalMC = MatrixBridge.normal(pose);
+        Matrix4f projMat = MatrixBridge.projectionMatrix();
 
         Matrix4f identityMat = new Matrix4f();
         Matrix4f globalBoneMat = new Matrix4f();
@@ -282,10 +284,10 @@ public class NativeModelRenderer {
 
         if (mesh.nativeModelHandle == 0) return;
 
-        Matrix4f projMat = RenderSystem.getProjectionMatrix();
+        Matrix4f projMat = MatrixBridge.projectionMatrix();
 
-        pose.pose().get(matrixTransferArray, 0);
-        pose.normal().get(matrixTransferArray, 16);
+        MatrixBridge.pose(pose).get(matrixTransferArray, 0);
+        MatrixBridge.normal(pose).get(matrixTransferArray, 16);
         projMat.get(matrixTransferArray, 32);
 
         GeoModel.nComputeModelVertices(

@@ -202,7 +202,13 @@ public class GeoModel {
                     nextElementByteName,
                     ensureCapacityName,
                     modeName,
+                    // 1.16.5 BufferBuilder.mode 为 int（无 VertexFormat.Mode 枚举）；
+                    // nInitSIMD 兜底链（catch + USE_COMPATIBILITY_RENDERER）按 ADR 不变，native 侧自行降级
+                    //? if < 1.17 {
+                    // int.class
+                    //? } else {
                     VertexFormat.Mode.class
+                    //? }
             );
         } catch (Throwable ex) {
             YesSteveModel.LOGGER.error("[YSM] Failed to initialize SIMD mappings, fast vertex building will not work.", ex);

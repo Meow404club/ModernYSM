@@ -7,7 +7,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraftforge.common.MinecraftForge;
+//? if >=1.17 {
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
+//?} else {
+/*import net.minecraftforge.event.entity.EntityJoinWorldEvent;*/
+//?}
 import rip.ysm.api.PlatformAPI;
 
 import java.util.ArrayList;
@@ -29,9 +33,20 @@ public class EntityJoinCallbackEvent {
         MinecraftForge.EVENT_BUS.addListener(EntityJoinCallbackEvent::onEntityJoinLevel);
     }
 
+    // 事件名反向差：1.16.x 为 EntityJoinWorldEvent（1.19+ 才改名 JoinLevel），且 world 访问器
+    // getWorld()（1.16.x）vs getLevel()（1.19+）；getEntity() 两侧同名（javap 实证）。
+    //? if >=1.17 {
     private static void onEntityJoinLevel(EntityJoinLevelEvent event) {
-        Entity entity = event.getEntity();
-        if (!YesSteveModel.isAvailable() || !event.getLevel().isClientSide()) {
+        onEntityJoin(event.getEntity(), event.getLevel().isClientSide());
+    }
+    //?} else {
+    /*private static void onEntityJoinLevel(EntityJoinWorldEvent event) {
+        onEntityJoin(event.getEntity(), event.getWorld().isClientSide());
+    }*/
+//?}
+
+    private static void onEntityJoin(Entity entity, boolean clientSide) {
+        if (!YesSteveModel.isAvailable() || !clientSide) {
             return;
         }
         List<Consumer<Entity>> list = callbackCache.getIfPresent(entity.getId());

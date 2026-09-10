@@ -1,7 +1,9 @@
 package rip.ysm.gui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+//? if >1.17 {
 import net.minecraft.client.gui.GuiGraphics;
+//?}
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
 
@@ -44,7 +46,7 @@ public abstract class YsmWidget extends AbstractWidget {
 
     //? if <1.17 {
     /*@Override
-    protected void renderButton(PoseStack pose, int mouseX, int mouseY, float partialTick) {
+    public void renderButton(PoseStack pose, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(pose), mouseX, mouseY, partialTick);
     }
      *///?} else {

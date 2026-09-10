@@ -16,7 +16,9 @@ public final class BoneXformCompute {
     public static synchronized boolean ensureCompiled() {
         if (program != 0) return true;
         if (failed) return false;
+        //? if >1.17 {
         RenderSystem.assertOnRenderThreadOrInit();
+        //?}
 
         try {
             int cs = ShaderUtil.compileShaderFromResource(GL43.GL_COMPUTE_SHADER, "/bone_xform.csh");

@@ -3,10 +3,11 @@ package rip.ysm.gpu;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.BufferUploader;
 //? if >1.17 {
 import org.joml.Matrix4f;
+import com.mojang.blaze3d.vertex.BufferUploader;
 //?}
+import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 
@@ -82,12 +83,22 @@ public final class Pie {
         if (PieShader.locColor() >= 0) GL20.glUniform4f(PieShader.locColor(), cr, cg, cb, ca);
         if (PieShader.locFeather() >= 0) GL20.glUniform1f(PieShader.locFeather(), feather);
 
+        //? if <1.17 {
+        /*GL30.glBindVertexArray(PieShader.dummyVao());
+         *///?} else {
         GlStateManager._glBindVertexArray(PieShader.dummyVao());
+        //?}
         GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, 6);
 
         GlStateManager._glUseProgram(0);
+        //? if >1.17 {
         BufferUploader.invalidate();
+        //?}
+        //? if <1.17 {
+        /*GL30.glBindVertexArray(0);
+         *///?} else {
         GlStateManager._glBindVertexArray(0);
+        //?}
 
         RenderSystem.disableBlend();
     }

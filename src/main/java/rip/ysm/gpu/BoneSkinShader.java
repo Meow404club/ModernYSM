@@ -24,7 +24,9 @@ public final class BoneSkinShader {
     public static synchronized boolean ensureCompiled() {
         if (program != 0) return true;
         if (failed) return false;
+        //? if >1.17 {
         RenderSystem.assertOnRenderThreadOrInit();
+        //?}
 
         try {
             int vs = ShaderUtil.compileShaderFromResource(GL20.GL_VERTEX_SHADER, "/bone_skin.vsh");

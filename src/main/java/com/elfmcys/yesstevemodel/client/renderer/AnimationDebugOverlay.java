@@ -96,10 +96,10 @@ public class AnimationDebugOverlay {
         Entity entity = geoEntity.getEntity();
         LocalPlayer localPlayer = Minecraft.getInstance().player;
         if (localPlayer != null) {
-            MutableComponent mutableComponentAppend = Component.translatable("message.yes_steve_model.model.debug_animation.true").append(" -> ");
+            MutableComponent mutableComponentAppend = YsmGui.trans("message.yes_steve_model.model.debug_animation.true").append(" -> ");
             Component customName = entity.getCustomName();
             Objects.requireNonNull(entity);
-            localPlayer.sendSystemMessage(mutableComponentAppend.append(customName != null ? customName : entity.getDisplayName()));
+            localPlayer.displayClientMessage(mutableComponentAppend.append(customName != null ? customName : entity.getDisplayName()), false);
         }
     }
 
@@ -112,7 +112,7 @@ public class AnimationDebugOverlay {
             activeModel = null;
             LocalPlayer localPlayer = Minecraft.getInstance().player;
             if (localPlayer != null) {
-                localPlayer.sendSystemMessage(Component.translatable("message.yes_steve_model.model.debug_animation.false"));
+                localPlayer.displayClientMessage(YsmGui.trans("message.yes_steve_model.model.debug_animation.false"), false);
             }
         }
     }

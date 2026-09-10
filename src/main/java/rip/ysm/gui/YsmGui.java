@@ -175,8 +175,9 @@ public final class YsmGui {
     }
 
     public void drawString(Font font, FormattedCharSequence text, int x, int y, int color, boolean shadow) {
+        // 1.16.5 GuiComponent.drawString 仅 String/Component 重载（GuiComponent.java:120-127）
         if (shadow) {
-            net.minecraft.client.gui.GuiComponent.drawString(this.pose, font, text, x, y, color);
+            font.drawShadow(this.pose, text, (float) x, (float) y, color);
         } else {
             font.draw(this.pose, text, (float) x, (float) y, color);
         }

@@ -168,7 +168,11 @@ public class ModernPlayerTextureScreen extends OptionScreen {
         searchBox.setMaxLength(64);
         searchBox.setValue(oldQuery);
         searchBox.setResponder(s -> applySearchFilter());
+        //? if <1.17 {
+        /*addButton(searchBox);
+         *///?} else {
         addRenderableWidget(searchBox);
+        //?}
     }
 
     @Override

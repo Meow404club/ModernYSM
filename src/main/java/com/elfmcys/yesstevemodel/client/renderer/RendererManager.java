@@ -1,17 +1,18 @@
 package com.elfmcys.yesstevemodel.client.renderer;
 
 import com.elfmcys.yesstevemodel.YesSteveModel;
-import dev.architectury.registry.ReloadListenerRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
-import rip.ysm.api.PlatformAPI;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import rip.ysm.compat.sbackpack.SBackpackCompat;
 
+@Mod.EventBusSubscriber(modid = YesSteveModel.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class RendererManager {
 
     private static CustomPlayerRenderer playerRenderer;
@@ -25,12 +26,22 @@ public class RendererManager {
     private RendererManager() {
     }
 
+    /**
+     * 资源重载监听已改由 {@link #onRegisterReloadListeners} 经 mod 总线注册；
+     * 该入口保留给 YsmEventBootstrap 调用，无其他副作用。
+     */
     public static void register() {
-        if (PlatformAPI.isServer()) {
-            return;
-        }
+    }
+
+    /**
+     * 原 architectury ReloadListenerRegistry.register(CLIENT_RESOURCES, ...) 在 forge 端是直接
+     * 向 Minecraft 的 ReloadableResourceManager.registerReloadListener 挂接；
+     * Forge 正规入口为 RegisterClientReloadListenersEvent（构造后、首轮资源重载前触发，落到同一管理器）。
+     */
+    @SubscribeEvent
+    public static void onRegisterReloadListeners(RegisterClientReloadListenersEvent event) {
         ResourceManagerReloadListener listener = resourceManager -> resetRenderers();
-        ReloadListenerRegistry.register(PackType.CLIENT_RESOURCES, listener, new ResourceLocation(YesSteveModel.MOD_ID, "renderer_manager"));
+        event.registerReloadListener(listener);
     }
 
     private static void resetRenderers() {

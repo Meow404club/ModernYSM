@@ -5,31 +5,31 @@
 ## 阶段
 - phase: 架构重构（Stonecutter 迁移）执行期——M0 骨架
 - done: [RAG 34 源全量索引(407308块), openysm.cpp 研究(b573c7b), Stonecutter 调研(a780867), ADR 定案(decisions.adr-stonecutter-2026-09-10), curator 入库]
-- current: M0 骨架卡 m0-stonecutter-skeleton 已派发 coder；后台并行中：1.16.5/Unimined 工具链 POC、native 源码对齐
-- next: 骨架合并后派 m0-merge-sources → M1 五卡并行（capability/network/events×2/registry）
+- current: M0 骨架已交付待审（review-merge 审查中，合并锁独占）；POC 实跑收官——unimined 三版本全 PASS，legacy/ 方案作废；native-align coder 在途
+- next: 骨架合入 dev → 派 m0-merge-sources（三端源码合并）→ M1 五卡并行；M2 1.16.5 路线已定（unimined）
 
 ## ADR 摘要（decisions.adr-stonecutter-2026-09-10）
 - architectury-api 彻底移除（@ExpectPlatform 无织入方）；**cardinal 与 forge_config_api_port 直接删**（全仓仅 fabric 源集使用，forge 通道纯 net.minecraftforge capability / ForgeConfigSpec）
 - 版本矩阵：1.20.1 单项 `1.20.1-forge`（NeoForge 1.20.1=47.1.x 兼容 fork，一份 jar 双跑）；NeoForge 独立 API 自 1.20.5+ 归 M4
 - 目录：根 settings.gradle.kts/stonecutter.gradle.kts/build.forge.gradle.kts + versions/<mc>-<loader>/；common→src/main；forge 实现类→platform/forge 子包；fabric/ 原目录保留不迁移不挂 sourceSet；legacy/ 空占位
 - JNI：GeoModel+natives 整包平移冻结；nInitSIMD 是运行时读 @BufferBuilderMapping 注解（非硬编码），机制零改动
-- 里程碑：M0 骨架+源码合并 → M1 1.20.1-forge 全绿（architectury=0 门禁）→ M2 1.16.5（gating: poc-forge-1165）→ M3 平铺 1.18.2/1.19.2/1.19.4/1.20.4 → M4 NeoForge 1.20.5+（gating: 1.20.5 API 漂移研究）
+- 里程碑：M0 骨架+源码合并 → M1 1.20.1-forge 全绿（architectury=0 门禁）→ M2 1.16.5（unimined 路线实测 PASS，gating 已解）→ M3 平铺 1.18.2/1.19.2/1.19.4/1.20.4 → M4 NeoForge 1.20.5+（gating: 1.20.5 API 漂移研究）→ M5 1.12.2/1.7.10 源码条件化（build 已证可行，按用户指示推迟）
+- **legacy/ 独立文件夹方案作废**（2026-09-10 POC 实跑：unimined 1.4.1 三版本全 PASS，报告 tmp/poc-1165/RUN-REPORT.md）；实装注意：archivesName 须带版本防产物同名覆盖、旧版本 runClient dev 运行时待验证
 
 ## 任务板摘要
 | slug | status | branch | note |
 |---|---|---|---|
 | rag-bootstrap | merged | dev | cfeaae1；407308 块；共享库 402946 块净化副本 |
 | arch-stonecutter-refactor | executing | - | ADR 定案，M0~M4 里程碑，11 张任务卡已登记 state |
-| m0-stonecutter-skeleton | in_progress | work/m0-stonecutter-skeleton | stonecutter 骨架+1.20.1-forge 空壳构建 |
+| m0-stonecutter-skeleton | in_review | work/m0-stonecutter-skeleton | bda16fe 283eb87；build+runClient 双过；review-merge 审查中 |
 | m0-merge-sources | queued | - | 三端源码合并进 src/main（依赖骨架合并） |
 | mig-* (7卡) | queued | - | M1 并行：capability/network/events×2/registry-config/platform-util/compat |
 | mig-purge-architectury | queued | - | M1 收尾门禁：全仓 dev.architectury=0 |
-| poc-forge-1165 | research | - | + Unimined 专题（统一 1.16.5/1.12.2/1.7.10 消灭 legacy 分叉） |
+| poc-forge-1165 | done | - | 定案：unimined 线三代全 PASS，legacy/ 作废；1.7.10/1.12.2 源码条件化推迟 M5 |
+| poc-execute-unimined | merged | - | 实跑闭环：三版本 BUILD SUCCESSFUL+SRG 抽查过；报告 tmp/poc-1165/RUN-REPORT.md |
 | native-openysm-cpp | closed | - | 用户裁决：自带实现已完整，上游仅档案存查（tmp/harvest/openysm-cpp） |
 | native-align-src | in_progress | work/native-align-src | 仓内 native 只有二进制——上游 MIT 源码打底，重建 nInitSIMD+stateArray，对拍验证 |
 | harvest-curator-1 | merged | - | stonecutter-template 入 RAG（17 文件）；openysm-cpp 不入库零污染 |
-| arch-stonecutter-refactor | planning | - | 目标收窄：1.16.5+ 仅 forge/neoforge，fabric 代码保留不建项；legacy 推迟 |
-| poc-forge-1165 | research | - | 1.16.5 Forge 能否进 stonecutter 单 Gradle（FG4/5 vs parchment-loom vs 拆 legacy） |
 
 ## 最近决策
 - 2026-09-10 架构重构方向：脱离 Architectury——1.16.5+ 用 StonecutterTemplate(IAFEnvoy)

@@ -82,3 +82,17 @@
   stonecutter 单一源码树（condition 切版本差异）。
 - 脚手架就绪：`tmp/poc-1165/unimined/`（三版本 + mdg-force 对照 + README 逐条命令），
   gradle 实跑为唯一 gating。
+
+### POC 实跑结果（2026-09-10，tmp/poc-1165/RUN-REPORT.md）
+
+- **三代全 PASS**：1.16.5（FG3+mojmap，首跑 3m20s 因脚手架 dummy 源映射名写错，修正后 11s）、
+  1.12.2（FG3+MCP stable_39 一次过 1m43s）、1.7.10（FG2 自动降级+MCP stable_12 一次过 39s）。
+  SRG 抽查全部命中（如 field_151576_e/func_149711_c），dev jar 零 SRG 命中。unimined 1.4.1
+  全程零 fallback（未退 1.3.16-SNAPSHOT）。
+- **mdg-force 对照 FAIL（预期证据）**：NFRT 原文报 "does not support MCP versions that did
+  not make use of official Mojang mappings (pre 1.17)"——legacyforge 线对 pre-1.17 正式排除。
+- **定案：legacy/ 独立文件夹方案作废**，1.7.10→1.20.1+ 全谱统一 stonecutter 单仓；
+  1.7.10/1.12.2 的源码条件化迁移按用户指示推迟（版本项可先注册）。
+- 实装注意：① root build/libs 产物同名互相覆盖 → archivesName 必须带 stonecutter 版本；
+  ② unimined `devFallbackNamespace` 已 deprecated 可删；③ 旧版本 runClient dev 运行时未验证
+  （M2 待补项）；④ 1.7.10 Block 构造器 protected，dummy 需子类。

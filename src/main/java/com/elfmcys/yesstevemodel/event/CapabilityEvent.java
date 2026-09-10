@@ -15,16 +15,34 @@ import com.elfmcys.yesstevemodel.network.message.S2CSyncProjectileModelPacket;
 import com.elfmcys.yesstevemodel.network.message.S2CSyncStarModelsPacket;
 import com.elfmcys.yesstevemodel.network.message.S2CSyncVehicleModelPacket;
 import com.elfmcys.yesstevemodel.network.message.S2CVersionCheckPacket;
+import com.elfmcys.yesstevemodel.platform.forge.capability.AuthModelsCapabilityProvider;
+import com.elfmcys.yesstevemodel.platform.forge.capability.ModelInfoCapabilityProvider;
+import com.elfmcys.yesstevemodel.platform.forge.capability.PlayerCapabilityProvider;
+import com.elfmcys.yesstevemodel.platform.forge.capability.ProjectileCapabilityProvider;
+import com.elfmcys.yesstevemodel.platform.forge.capability.ProjectileModelCapabilityProvider;
+import com.elfmcys.yesstevemodel.platform.forge.capability.StarModelsCapabilityProvider;
+import com.elfmcys.yesstevemodel.platform.forge.capability.VehicleCapabilityProvider;
+import com.elfmcys.yesstevemodel.platform.forge.capability.VehicleModelCapabilityProvider;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraftforge.event.TickEvent;
+//? if >=1.17 {
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
+//?} else {
+/*// 事件名反向差：1.16.x 为 EntityJoinWorldEvent（1.19+ 才改名 JoinLevel），javap 实证
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;*/
+//?}
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+//? if <1.17 {
+/*// 1.16.5 ServerTickEvent 无 getServer()（1.18.2+ 才加），走 ServerLifecycleHooks
+import net.minecraftforge.fml.server.ServerLifecycleHooks;*/
+//?}
+import rip.ysm.api.PlatformAPI;
 
 import java.util.List;
 import java.util.Objects;
@@ -54,11 +72,19 @@ public final class CapabilityEvent {
         }
         ServerPlayer oldPlayer = (ServerPlayer) event.getOriginal();
         ServerPlayer newPlayer = (ServerPlayer) event.getEntity();
+        // 1.16.x reviveCaps/invalidateCaps 是 protected（1.17+ 才改 public）；且 1.16.5 的
+        // PlayerList.recreatePlayerEntity 以 removePlayer(level,true) 保数据直到 copyFrom、clone 事件后
+        // 才 remove(false) 使 caps 失效（forge-1.16.x PlayerList.java.patch 注释实证）——
+        // 事件分发时旧玩家 caps 仍有效，无需 revive/invalidate，两侧语义等价。
+        //? if >=1.17 {
         oldPlayer.reviveCaps();
+        //?}
         Optional<ModelInfoCapability> oldModelInfoCap = getModelInfoCap(oldPlayer);
         Optional<AuthModelsCapability> oldAuthModelsCap = getAuthModelsCap(oldPlayer);
         Optional<StarModelsCapability> oldStarModelsCap = getStarModelsCap(oldPlayer);
+        //? if >=1.17 {
         oldPlayer.invalidateCaps();
+        //?}
         Optional<ModelInfoCapability> modelInfoCap = getModelInfoCap(newPlayer);
         Optional<AuthModelsCapability> authModelsCap = getAuthModelsCap(newPlayer);
         Optional<StarModelsCapability> starModelsCap = getStarModelsCap(newPlayer);
@@ -76,9 +102,19 @@ public final class CapabilityEvent {
         });
     }
 
+    //? if >=1.17 {
     @SubscribeEvent
     public static void onEntityJoinLevel(EntityJoinLevelEvent event) {
-        Entity entity = event.getEntity();
+        onEntityJoin(event.getEntity());
+    }
+    //?} else {
+    /*@SubscribeEvent
+    public static void onEntityJoinLevel(EntityJoinWorldEvent event) {
+        onEntityJoin(event.getEntity());
+    }*/
+//?}
+
+    private static void onEntityJoin(Entity entity) {
         if (!YesSteveModel.isAvailable()) {
             return;
         }
@@ -114,7 +150,10 @@ public final class CapabilityEvent {
         if (event.phase != TickEvent.Phase.END) {
             return;
         }
+        //? if >=1.17
         onServerTickEnd(event.getServer());
+        //? if <1.17
+        /*onServerTickEnd(ServerLifecycleHooks.getCurrentServer());*/
     }
 
     private static void onServerTickEnd(MinecraftServer server) {
@@ -136,7 +175,11 @@ public final class CapabilityEvent {
                     cap.createSyncMessage(serverPlayer, true).ifPresent(message -> {
                         cap.clearDirty();
                         NetworkHandler.sendToTrackingEntityAndSelf(message, serverPlayer);
+                        // 1.16.x 无 Entity.getFirstPassenger()（1.19+ 才有），取乘客列表首元素等价
+                        //? if >=1.17
                         if (serverPlayer.getVehicle() != null && serverPlayer.getVehicle().getFirstPassenger() == serverPlayer) {
+                        //? if <1.17
+                        /*if (serverPlayer.getVehicle() != null && !serverPlayer.getVehicle().getPassengers().isEmpty() && serverPlayer.getVehicle().getPassengers().get(0) == serverPlayer) {*/
                             syncVehicleModel(serverPlayer.getVehicle(), serverPlayer);
                         }
                     });
@@ -181,5 +224,30 @@ public final class CapabilityEvent {
 
     public static Optional<StarModelsCapability> getStarModelsCap(Player player) {
         return StarModelsCapability.get(player);
+    }
+
+    /**
+     * 1.16.5 capability 注册枢纽。1.16.x 无 {@code CapabilityManager.get(CapabilityToken)}（1.17+ 才有），
+     * 须显式 CapabilityManager.INSTANCE.register，再由 @CapabilityInject 注入各 Provider 的 CAP 字段
+     * （实证：forge-1.16.x CapabilityManager.java:37 register(Class,IStorage,Callable)、CapabilityInject
+     * 字段注入；unimined 1.16.5 mojmap forge jar javap 复核）。客户端专属能力（Player/Projectile/Vehicle，
+     * Provider 带 @OnlyIn(Dist.CLIENT)）仅在客户端注册，防专用服务端 @OnlyIn 剥离后类缺失崩载——
+     * 与 ForgeCapabilityHooks 的 dist 守卫同款，方法引用惰性解析保证 server 侧不触达。
+     * 1.20.1 侧为 no-op（token 机制在 Provider 字段初始化时自取，无需注册）。
+     * 由 YsmEventBootstrap.register() 于 mod 构造期调用；CapabilityManager#register 注释声明并行 mod loading 安全。
+     */
+    public static void register() {
+        //? if <1.17 {
+        /*AuthModelsCapabilityProvider.registerCapability();
+        ModelInfoCapabilityProvider.registerCapability();
+        ProjectileModelCapabilityProvider.registerCapability();
+        StarModelsCapabilityProvider.registerCapability();
+        VehicleModelCapabilityProvider.registerCapability();
+        if (!PlatformAPI.isServer()) {
+            PlayerCapabilityProvider.registerCapability();
+            ProjectileCapabilityProvider.registerCapability();
+            VehicleCapabilityProvider.registerCapability();
+        }*/
+//?}
     }
 }

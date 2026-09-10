@@ -14,7 +14,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.Component;
 // RandomSource 为 1.17+ 类；1.16.5 用 java.util.Random（消费面仅 nextFloat/nextInt）
-//? if < 1.17 {
+//? if <1.17 {
 // import java.util.Random;
 //? } else {
 import net.minecraft.util.RandomSource;
@@ -43,9 +43,9 @@ public interface IContext<TEntity> {
     @Nullable
     PlaybackFlags getPlaybackFlags();
 
-    //? if < 1.17
+    //? if <1.17
     // Random random();
-    //? if >= 1.17
+    //? if >=1.17
     RandomSource random();
 
     <TChild> IContext<TChild> createChild(TChild tchild);

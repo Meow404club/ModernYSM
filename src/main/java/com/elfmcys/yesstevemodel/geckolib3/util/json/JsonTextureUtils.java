@@ -5,7 +5,7 @@ import com.elfmcys.yesstevemodel.client.texture.OuterFileTexture;
 import com.elfmcys.yesstevemodel.util.data.OrderedStringMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-//? if >= 1.17 {
+//? if >=1.17 {
 import org.apache.commons.compress.utils.Lists;
 //? }
 import org.apache.commons.lang3.tuple.Pair;
@@ -29,7 +29,7 @@ public class JsonTextureUtils {
 
         if (!element.isJsonArray()) return null;
 
-        //? if < 1.17 {
+        //? if <1.17 {
         // List<String> keys = new ArrayList<>();
         // List<OuterFileTexture> values = new ArrayList<>();
         //? } else {

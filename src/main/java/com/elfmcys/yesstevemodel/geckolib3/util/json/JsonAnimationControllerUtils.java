@@ -36,7 +36,7 @@ public class JsonAnimationControllerUtils {
     public static List<JsonElement> getAnimations(JsonObject json) {
         JsonArray animations = json.getAsJsonArray("animations");
         // gson 2.8.0（1.16.5）无 JsonArray.asList()（2.8.1+），手工拷贝
-        //? if < 1.17 {
+        //? if <1.17 {
         // if (animations == null) {
             // return Collections.emptyList();
         // }

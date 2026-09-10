@@ -3,7 +3,7 @@ package com.elfmcys.yesstevemodel.platform.forge.event;
 import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.client.event.RenderFirstPlayerBackground;
 import net.minecraftforge.api.distmarker.Dist;
-//? if < 1.17 {
+//? if <1.17 {
 // import net.minecraftforge.event.TickEvent;
 //? } else {
 import net.minecraftforge.client.event.RenderLevelStageEvent;
@@ -20,7 +20,7 @@ public final class RenderFirstPlayerForgeHook {
     private RenderFirstPlayerForgeHook() {
     }
 
-    //? if < 1.17 {
+    //? if <1.17 {
     // @SubscribeEvent
     // public static void onRenderTick(TickEvent.RenderTickEvent event) {
     //     if (event.phase == TickEvent.Phase.START) {
@@ -39,7 +39,7 @@ public final class RenderFirstPlayerForgeHook {
     @SubscribeEvent
     public static void onRenderHand(RenderHandEvent event) {
         // 1.16.x getter：getMatrixStack/getBuffers/getLight/getPartialTicks
-        //? if < 1.17 {
+        //? if <1.17 {
         // RenderFirstPlayerBackground.onRenderHand(event.getMatrixStack(), event.getBuffers(), event.getLight(), event.getPartialTicks());
         //? } else {
         RenderFirstPlayerBackground.onRenderHand(event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight(), event.getPartialTick());

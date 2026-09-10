@@ -20,7 +20,7 @@ import net.minecraft.client.model.PlayerModel;
 // 1.16.5 无 EntityRendererProvider/ModelLayers（1.17 模型重写产物），渲染器构造参数为
 // EntityRenderDispatcher、模型为传统手写构造（new PlayerModel(0.0f, slim)，1.16.5 vanilla
 // PlayerRenderer 同款）；两类 import 仅 1.17+ 存在，1.16.5 生成分支用 EntityRenderDispatcher
-//? if >= 1.17 {
+//? if >=1.17 {
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 //? }
@@ -56,7 +56,7 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
 
     private IRenderCycle currentModelRenderCycle = EModelRenderCycle.INITIAL;
 
-    //? if < 1.17 {
+    //? if <1.17 {
     // public GeoReplacedEntityRenderer(net.minecraft.client.renderer.entity.EntityRenderDispatcher dispatcher) {
     //     super(dispatcher, new PlayerModel(0.0f, true), 0.5f);
     //     this.rtb = null;
@@ -120,7 +120,7 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
                     if (vector3f != null) {
                         // 1.16.5 moj Quaternion(x,y,z,degrees=false) 与 joml rotateZYX(z,y,x) 同为
                     // Rx·Ry·Rz 列向量约定（两版源码推导对照），单位四元数 conj==invert
-                    //? if < 1.17 {
+                    //? if <1.17 {
                     // com.mojang.math.Quaternion vehicleRot = new com.mojang.math.Quaternion(vector3f.z, 0.0f, vector3f.x, false);
                     // vehicleRot.conj();
                     // poseStack.mulPose(vehicleRot);
@@ -180,9 +180,9 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
         if (tentity.onClimbable()) {
             Optional<BlockPos> lastClimbablePos = tentity.getLastClimbablePos();
             if (lastClimbablePos.isPresent()) {
-                //? if < 1.17
+                //? if <1.17
                 // Optional<Direction> optionalValue = tentity.level.getBlockState(lastClimbablePos.get()).getOptionalValue(HorizontalDirectionalBlock.FACING);
-                //? if >= 1.17
+                //? if >=1.17
                 Optional<Direction> optionalValue = tentity.level().getBlockState(lastClimbablePos.get()).getOptionalValue(HorizontalDirectionalBlock.FACING);
                 if (optionalValue.isPresent()) {
                     rotationYaw = optionalValue.get().getOpposite().get2DDataValue() * 90;

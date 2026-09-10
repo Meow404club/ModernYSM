@@ -1,6 +1,6 @@
 package com.elfmcys.yesstevemodel.geckolib3.core.molang.builtin.query;
 
-//? if < 1.17 {
+//? if <1.17 {
 // import net.minecraft.tags.ItemTags;
 // import net.minecraft.tags.Tag;
 //? } else {
@@ -33,17 +33,17 @@ public class EquippedItemAllTags extends LivingEntityFunction {
             if (key == null) {
                 return null;
             }
-            //? if < 1.17
+            //? if <1.17
             // if (!stack.getItem().is((Tag<net.minecraft.world.item.Item>) ItemTags.getAllTags().getTagOrEmpty(key))) {
-            //? if < 1.17
+            //? if <1.17
                 // return false;
-            //? if < 1.17
+            //? if <1.17
             // }
-            //? if >= 1.17
+            //? if >=1.17
             if (!stack.is(TagKey.create(Registries.ITEM, key))) {
-            //? if >= 1.17
+            //? if >=1.17
                 return false;
-            //? if >= 1.17
+            //? if >=1.17
             }
         }
         return true;

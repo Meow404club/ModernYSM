@@ -13,7 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
-//? if >= 1.17 {
+//? if >=1.17 {
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import com.mojang.math.Axis;
 //? }
@@ -33,7 +33,7 @@ public abstract class GeoEntityRenderer<TEntity extends Entity, T extends Animat
 
     public MultiBufferSource bufferSource;
 
-    //? if < 1.17 {
+    //? if <1.17 {
     // public GeoEntityRenderer(net.minecraft.client.renderer.entity.EntityRenderDispatcher context) {
     //     super(context);
     //     this.worldMatrix = new Matrix4f();
@@ -65,9 +65,9 @@ public abstract class GeoEntityRenderer<TEntity extends Entity, T extends Animat
                 this.worldMatrix = new Matrix4f(MatrixBridge.pose(poseStack.last()));
                 setCurrentModelRenderCycle(EModelRenderCycle.INITIAL);
                 poseStack.pushPose();
-                //? if < 1.17
+                //? if <1.17
                 // poseStack.mulPose(com.mojang.math.Vector3f.YP.rotationDegrees(180.0f - f));
-                //? if >= 1.17
+                //? if >=1.17
                 // poseStack.mulPose(Axis.YP.rotationDegrees(180.0f - f));
                 renderWithBoneAndRenderType(model, t, f2, renderType, poseStack, multiBufferSource, 0, null, i, packOverlayCoords(entity, 0.0f), color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, color.getAlpha() / 255.0f);
                 poseStack.popPose();

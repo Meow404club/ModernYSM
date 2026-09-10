@@ -29,7 +29,7 @@ public final class MatrixBridge {
     private MatrixBridge() {
     }
 
-    //? if < 1.17 {
+    //? if <1.17 {
     // private static final java.lang.reflect.Field[] MOJ_M3_FIELDS = cacheMojFields();
     //
     // private static java.lang.reflect.Field[] cacheMojFields() {

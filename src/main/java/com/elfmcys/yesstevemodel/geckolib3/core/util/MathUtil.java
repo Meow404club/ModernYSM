@@ -6,7 +6,7 @@ import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 public class MathUtil {
-    //? if < 1.17 {
+    //? if <1.17 {
     // private static final float DEGREES_TO_RADIANS = (float) (Math.PI / 180.0);
     // private static final float RADIANS_TO_DEGREES = 180.0F / (float) Math.PI;
     //? } else {

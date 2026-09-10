@@ -18,7 +18,7 @@ public final class ReplacePlayerRenderForgeHook {
         // RenderPlayerEvent 两代参数名：1.16.x getPartialRenderTick/getMatrixStack/getBuffers/
         // getLight + getPlayer；1.17+ getPartialTick/getPoseStack/getMultiBufferSource/getPackedLight
         // + getEntity（forge-1.16.x / forge-1.20.1 源码实证）
-        //? if < 1.17 {
+        //? if <1.17 {
         // if (ReplacePlayerRenderEvent.onRenderPlayerPre(event.getPlayer(), event.getPartialRenderTick(), event.getMatrixStack(), event.getBuffers(), event.getLight())) {
         //     event.setCanceled(true);
         // }

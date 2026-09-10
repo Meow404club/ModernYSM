@@ -1,0 +1,4 @@
+[submodule "native/openysm-cpp"]
+	path = native/openysm-cpp
+	url = https://github.com/Meow404club/openysm.cpp
+	branch = openysm-align

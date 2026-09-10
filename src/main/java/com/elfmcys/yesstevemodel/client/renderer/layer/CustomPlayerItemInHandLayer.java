@@ -14,9 +14,15 @@ import net.minecraft.client.renderer.ItemInHandRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
+//? if < 1.17 {
+// import net.minecraft.client.renderer.block.model.ItemTransforms;
+//? } else {
 import net.minecraft.world.item.ItemDisplayContext;
+//? }
 import net.minecraft.world.item.ItemStack;
+//? if >= 1.17 {
 import com.mojang.math.Axis;
+//? }
 
 public class CustomPlayerItemInHandLayer extends GeoLayerRenderer<CustomPlayerEntity> {
 
@@ -43,6 +49,9 @@ public class CustomPlayerItemInHandLayer extends GeoLayerRenderer<CustomPlayerEn
                     SlashBladeRenderer.renderOnEntity(entity, animatedGeoModel, poseStack, bufferSource, packedLightIn, mainHandItem, partialTick);
                 } else {
                     TacCompat.handleGunSound(entity, mainHandItem);
+                    //? if < 1.17
+                    // renderItem(animatedGeoModel, entity, mainHandItem, ItemTransforms.TransformType.THIRD_PERSON_RIGHT_HAND, HumanoidArm.RIGHT, poseStack, bufferSource, packedLightIn);
+                    //? if >= 1.17
                     renderItem(animatedGeoModel, entity, mainHandItem, ItemDisplayContext.THIRD_PERSON_RIGHT_HAND, HumanoidArm.RIGHT, poseStack, bufferSource, packedLightIn);
                     if (useExtraPlayer && !mainHandItem.isEmpty() && (bufferSource instanceof BufferSourceAccessor)) {
                         ((BufferSourceAccessor) bufferSource).initialize();
@@ -55,6 +64,9 @@ public class CustomPlayerItemInHandLayer extends GeoLayerRenderer<CustomPlayerEn
                     SlashBladeRenderer.renderRightWaist(animatedGeoModel, poseStack, bufferSource, packedLightIn, offhandItem);
                 } else {
                     if (!SWarfareCompat.isGunItem(offhandItem)) {
+                        //? if < 1.17
+                        // renderItem(animatedGeoModel, entity, offhandItem, ItemTransforms.TransformType.THIRD_PERSON_LEFT_HAND, HumanoidArm.LEFT, poseStack, bufferSource, packedLightIn);
+                        //? if >= 1.17
                         renderItem(animatedGeoModel, entity, offhandItem, ItemDisplayContext.THIRD_PERSON_LEFT_HAND, HumanoidArm.LEFT, poseStack, bufferSource, packedLightIn);
                     }
                     if (useExtraPlayer && !offhandItem.isEmpty() && (bufferSource instanceof BufferSourceAccessor)) {
@@ -68,12 +80,18 @@ public class CustomPlayerItemInHandLayer extends GeoLayerRenderer<CustomPlayerEn
         }
     }
 
+    //? if < 1.17
+    // public void renderItem(AnimatedGeoModel model, LivingEntity livingEntity, ItemStack itemStack, ItemTransforms.TransformType itemDisplayContext, HumanoidArm humanoidArm, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
+    //? if >= 1.17
     public void renderItem(AnimatedGeoModel model, LivingEntity livingEntity, ItemStack itemStack, ItemDisplayContext itemDisplayContext, HumanoidArm humanoidArm, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
         if (!itemStack.isEmpty()) {
             boolean isLeftHand = humanoidArm == HumanoidArm.LEFT;
             poseStack.pushPose();
             if (!applyItemBoneTransform(humanoidArm, poseStack, model)) {
                 poseStack.translate(0.0d, -0.0625d, -0.1d);
+                //? if < 1.17
+                // poseStack.mulPose(com.mojang.math.Vector3f.XP.rotationDegrees(-90.0f));
+                //? if >= 1.17
                 poseStack.mulPose(Axis.XP.rotationDegrees(-90.0f));
                 if (SWarfareCompat.isGunItem(itemStack)) {
                     poseStack.translate(0.1d, 0.0d, 0.0d);
@@ -86,6 +104,9 @@ public class CustomPlayerItemInHandLayer extends GeoLayerRenderer<CustomPlayerEn
                 poseStack.pushPose();
                 if (!RenderUtils.prepMatrixForLocator(poseStack, list)) {
                     poseStack.translate(0.0d, -0.0625d, -0.1d);
+                    //? if < 1.17
+                    // poseStack.mulPose(com.mojang.math.Vector3f.XP.rotationDegrees(-90.0f));
+                    //? if >= 1.17
                     poseStack.mulPose(Axis.XP.rotationDegrees(-90.0f));
                     if (SWarfareCompat.isGunItem(itemStack)) {
                         poseStack.scale(1.25f, 1.25f, 1.25f);

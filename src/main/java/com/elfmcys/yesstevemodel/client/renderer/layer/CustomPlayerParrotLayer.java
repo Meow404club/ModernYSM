@@ -6,16 +6,21 @@ import com.elfmcys.yesstevemodel.geckolib3.geo.animated.AnimatedGeoModel;
 import com.elfmcys.yesstevemodel.geckolib3.util.RenderUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.ParrotModel;
+// 1.16.5 无 ModelLayers/EntityRendererProvider（1.17 模型重写），ParrotModel 为无参传统构造
+//? if >= 1.17 {
 import net.minecraft.client.model.geom.ModelLayers;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+//? }
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.ParrotRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Parrot;
 import net.minecraft.world.entity.player.Player;
+//? if >= 1.17 {
 import com.mojang.math.Axis;
+//? }
 
 public class CustomPlayerParrotLayer extends GeoLayerRenderer<CustomPlayerEntity> {
 
@@ -25,9 +30,15 @@ public class CustomPlayerParrotLayer extends GeoLayerRenderer<CustomPlayerEntity
 
     private final ParrotModel parrotModel;
 
+    //? if < 1.17 {
+    // public CustomPlayerParrotLayer(net.minecraft.client.renderer.entity.EntityRenderDispatcher context) {
+    //     this.parrotModel = new ParrotModel();
+    // }
+    //? } else {
     public CustomPlayerParrotLayer(EntityRendererProvider.Context context) {
         this.parrotModel = new ParrotModel(context.bakeLayer(ModelLayers.PARROT));
     }
+    //? }
 
     @Override
     public void render(PoseStack poseStack, MultiBufferSource bufferSource, int packedLightIn, CustomPlayerEntity entityLivingBaseIn, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
@@ -50,7 +61,15 @@ public class CustomPlayerParrotLayer extends GeoLayerRenderer<CustomPlayerEntity
             poseStack.pushPose();
             applyParrotTransform(poseStack, model, isLeftShoulder);
             poseStack.translate(0.0d, 1.5d, 0.0d);
+            //? if < 1.17
+            // poseStack.mulPose(com.mojang.math.Vector3f.ZP.rotationDegrees(180.0f));
+            //? if >= 1.17
             poseStack.mulPose(Axis.ZP.rotationDegrees(180.0f));
+            // 1.16.5 无 Parrot.Variant/ParrotRenderer.getVariantTexture：variant 为 int，
+            // 贴图查 ParrotRenderer.PARROT_LOCATIONS[variant]（vanilla 1.16.5 同款索引，越界防护取模）
+            //? if < 1.17
+            // this.parrotModel.renderOnShoulder(poseStack, bufferSource.getBuffer(this.parrotModel.renderType(ParrotRenderer.PARROT_LOCATIONS[Math.floorMod(shoulderEntityLeft.getInt(TAG_VARIANT), ParrotRenderer.PARROT_LOCATIONS.length)])), packedLightIn, OverlayTexture.NO_OVERLAY, limbSwing, limbSwingAmount, netHeadYaw, headPitch, player.tickCount);
+            //? if >= 1.17
             this.parrotModel.renderOnShoulder(poseStack, bufferSource.getBuffer(this.parrotModel.renderType(ParrotRenderer.getVariantTexture(Parrot.Variant.byId(shoulderEntityLeft.getInt(TAG_VARIANT))))), packedLightIn, OverlayTexture.NO_OVERLAY, limbSwing, limbSwingAmount, netHeadYaw, headPitch, player.tickCount);
             poseStack.popPose();
         });

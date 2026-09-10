@@ -7,18 +7,23 @@ import com.elfmcys.yesstevemodel.geckolib3.geo.animated.AnimatedGeoModel;
 import com.elfmcys.yesstevemodel.geckolib3.util.RenderUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.ElytraModel;
+// 1.16.5 无 ModelLayers/EntityRendererProvider，ElytraModel 为无参传统构造
+//? if >= 1.17 {
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+//? }
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.PlayerModelPart;
 import net.minecraft.world.item.ItemStack;
+//? if >= 1.17 {
 import com.mojang.math.Axis;
+//? }
 
 public class CustomPlayerElytraLayer extends GeoLayerRenderer<CustomPlayerEntity> {
 
@@ -26,9 +31,15 @@ public class CustomPlayerElytraLayer extends GeoLayerRenderer<CustomPlayerEntity
 
     private final ElytraModel<LivingEntity> elytraModel;
 
+    //? if < 1.17 {
+    // public CustomPlayerElytraLayer(net.minecraft.client.renderer.entity.EntityRenderDispatcher context) {
+    //     this.elytraModel = new ElytraModel<>();
+    // }
+    //? } else {
     public CustomPlayerElytraLayer(EntityRendererProvider.Context context) {
         this.elytraModel = new ElytraModel<>(context.getModelSet().bakeLayer(ModelLayers.ELYTRA));
     }
+    //? }
 
     @Override
     public void render(PoseStack poseStack, MultiBufferSource bufferSource, int packedLightIn, CustomPlayerEntity entityLivingBaseIn, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
@@ -48,6 +59,9 @@ public class CustomPlayerElytraLayer extends GeoLayerRenderer<CustomPlayerEntity
             poseStack.pushPose();
             renderElytra(poseStack, animatedGeoModel);
             poseStack.translate(0.0d, 1.5d, 0.0d);
+            //? if < 1.17
+            // poseStack.mulPose(com.mojang.math.Vector3f.ZP.rotationDegrees(180.0f));
+            //? if >= 1.17
             poseStack.mulPose(Axis.ZP.rotationDegrees(180.0f));
             poseStack.scale(2.0f, 2.0f, 2.0f);
             this.elytraModel.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);

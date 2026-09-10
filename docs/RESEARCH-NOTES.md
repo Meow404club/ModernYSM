@@ -96,3 +96,19 @@
 - 实装注意：① root build/libs 产物同名互相覆盖 → archivesName 必须带 stonecutter 版本；
   ② unimined `devFallbackNamespace` 已 deprecated 可删；③ 旧版本 runClient dev 运行时未验证
   （M2 待补项）；④ 1.7.10 Block 构造器 protected，dummy 需子类。
+
+## 2026-09-11 · stonecutter 0.7 条件语法钉死（规范卡）
+
+- **唯一合法块条件：`//? if <1.17 {` … `//?}`**（条件紧跟 if 后，{ 收尾）；`//? if { <1.17 }`
+  非法——Lexer.kt:60-66 遇 `{` 截断报 "Unknown token"，构建硬失败。插件源码（tag 0.7）+
+  Celeritas 生产（stonecutter_version=0.7.11）双源铁证。
+- **书写铁则**：共享源恒为 1.20.1 展开态（活跃分支裸写直编；非活跃分支整段预包 `/* */`，
+  收尾 `*///?}`）；方法签名条件化照 Celeritas 模式（`//? if <1.17 {`+`/*旧签名{*/`+`//?} else`+
+  裸写新签名+`//?}`）；行内仅限类型名单参数级（`/*? if <1.17 {*/ Old /*?} else {*/ New /*?}*/`）；
+  单行条件 `//? if <1.17` 只作用下一行（下一行须预包）；嵌套二级非活跃用 `/^ … ^/` 转义；
+  `!=` 比较器 0.7 不支持；**JSON 文件禁止写条件**（mixin 条目级版本化放 Java 类内部）。
+- 比较器集：`<1.17 <=1.16.5 >1.17 >=1.17 =1.20.1 ~1.16.5 ^1.16`，语义=与当前构建子项目比较；
+  组合 `! && || ()`；forge/fabric 常量。1.20.1 验证口径：共享源即展开态 ⇒ build 绿+jar 无回退即过。
+- ⚠️ wiki 现行文档是 0.9/0.10 版，勿按新文档写 0.7 代码。源码已收
+  `tmp/harvest/stonecutter-src-07/`，Celeritas 实据 `tmp/harvest/celeritas-mva/`。
+- 此规范已广播三张条件卡（render-pipeline 中途纠偏；thinlayer/mixin 交付卡审查时核合规）。

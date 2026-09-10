@@ -37,7 +37,9 @@
 | m2-skeleton-unimined | merged | 3483e9d | 1.16.5 版本项落地：工具链全链路过（FG3/mojmap/SRG），compileJava 188 错全语法类=下沉卡基线 |
 | m2-java8-downshift | merged | acd46c8 | 116 文件次 Java8 下沉；12 处语义等价抽查全过；进世界 27 models/169ms |
 | m2-gate-compat | merged | c5606ae | 修复复验过：包级错 94→0、独立对账 1951 错全漂移、shim 同步抽查 5 处零漂移 |
-| m2 条件卡×3 | in_progress | work/m2-* | 波次①：forge-thinlayer/render-pipeline/mixin-versioning（1.16.5 基线 1951 错） |
+| m2-forge-thinlayer-condition | merged | 8f23248 | 64 条件块合规全过；capability 双分支语义核证；协议字节零变化 |
+| m2-mixin-versioning | merged | 5b6d3ac | 18 条版本化+两条任务卡证伪；mixins.json 1.20.1 md5 等价；embedMixinExtras 过铁律 5 |
+| m2-gui-hud-port | in_progress | work/m2-gui-hud-port | GuiGraphics→PoseStack 对位 ~20 文件（依赖就绪开跑） |
 | m2 条件卡×3 + gui/native-poc/双门禁 | queued | - | 见 decisions.adr-m2-1165-stonecutter-entry 十卡序 |
 | mig-purge-architectury | queued | - | M1 收尾门禁：全仓 dev.architectury=0 |
 | poc-forge-1165 | done | - | 定案：unimined 线三代全 PASS，legacy/ 作废；1.7.10/1.12.2 源码条件化推迟 M5 |

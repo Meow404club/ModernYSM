@@ -7,6 +7,7 @@ import com.elfmcys.yesstevemodel.network.message.S2CSetModelAndTexturePacket;
 import com.elfmcys.yesstevemodel.network.message.S2CSyncAuthModelsPacket;
 import com.elfmcys.yesstevemodel.network.message.S2CSyncStarModelsPacket;
 import com.elfmcys.yesstevemodel.network.message.S2CVersionCheckPacket;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 

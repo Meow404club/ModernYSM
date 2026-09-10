@@ -1,24 +1,23 @@
 package rip.ysm.api;
 
-import dev.architectury.injectables.annotations.ExpectPlatform;
-import rip.ysm.api.platform.forge.PlatformAPIImpl;
+import com.elfmcys.yesstevemodel.platform.YsmPlatform;
+import net.minecraftforge.api.distmarker.Dist;
 
+/**
+ * 平台门面（rip.ysm.api 公共 API 面，兼容旧调用点）。M1 起内部委托
+ * {@link YsmPlatform}（Forge 原生），不再依赖 architectury @ExpectPlatform/织入。
+ * 调用方签名不变：isServer/getPlatformName。
+ */
 public final class PlatformAPI {
     private PlatformAPI() {
     }
 
-    /**
-     * M0 无织入降级：构造期即被 YesSteveModel.init/YsmEventBootstrap 调用，
-     * stub 体按 ADR 替换矩阵①直调平移进树的 forge 实现（1.20.1-forge 单版本，
-     * 多版本条件化留给 M1 mig-* 卡）。
-     */
-    @ExpectPlatform
+    /** 专用服为 true（对齐原 PlatformAPIImpl.isServer 的 Dist.DEDICATED_SERVER 语义）。 */
     public static boolean isServer() {
-        return PlatformAPIImpl.isServer();
+        return YsmPlatform.getEnv() == Dist.DEDICATED_SERVER;
     }
 
-    @ExpectPlatform
     public static String getPlatformName() {
-        return PlatformAPIImpl.getPlatformName();
+        return "Forge";
     }
 }

@@ -97,6 +97,14 @@ dependencies {
     compileOnly("net.fabricmc:fabric-loader:${property("deps.fabric_loader")}")
     // avif/webp/jpeg 解码库（rip.ysm.imagestream 包名）
     implementation("com.github.TartaricAlkaline:ImageStream:-SNAPSHOT")
+    // ImageStream 进 dev 运行时游戏类路径（m0 P2 NCDFE 修复）：
+    // MDG legacyforge 的 dev run 由 NFRT 生成 *LegacyClasspath.txt（仅 userdev 内置库），
+    // BootstrapLauncher.loadLegacyClassPath 优先按 -DlegacyClassPath.file 重建游戏类路径，
+    // 项目 implementation/runtimeOnly 依赖一律不可见（plain jar 也不会像带 mods.toml 的
+    // jar 那样被当 mod 发现）→ mod 代码 new AvifDecoder() 必 NCDFE。
+    // additionalRuntimeClasspath 是 MDG 官方注入口（README "External Dependencies: Runs"，
+    // MC ≤1.21.8 必需），NFRT 将其并入 dev 运行时类路径。
+    // 生产 jar 内嵌（旧仓 JIJ include）属发布策略，仍在 m1_queue JIJ 项，本卡不动。
     // MixinExtras：EntityRenderDispatcherMixin 使用 @WrapOperation
     compileOnly("io.github.llamalad7:mixinextras-common:${property("deps.mixinextras")}")
     annotationProcessor("io.github.llamalad7:mixinextras-common:${property("deps.mixinextras")}")
@@ -143,6 +151,12 @@ legacyForge {
             sourceSet(sourceSets["main"])
         }
     }
+}
+
+// additionalRuntimeClasspath configuration 由 MDG runs 装配期（上方 legacyForge 块求值时）
+// 创建，故依赖声明必须置于其后（Kotlin DSL 无类型安全访问器，按名引用，cache 安全）
+dependencies {
+    "additionalRuntimeClasspath"("com.github.TartaricAlkaline:ImageStream:-SNAPSHOT")
 }
 
 tasks {

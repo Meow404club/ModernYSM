@@ -24,11 +24,20 @@ public class InputStateKey {
         MinecraftForge.EVENT_BUS.addListener(InputStateKey::onMouseEvent);
     }
 
+    //? if >=1.17 {
     private static void onKeyEvent(InputEvent.Key event) {
+    //?} else {
+    /*private static void onKeyEvent(InputEvent.KeyInputEvent event) {*/
+//?}
         onKeyInput(event.getKey(), event.getAction());
     }
 
+    //? if >=1.17 {
     private static void onMouseEvent(InputEvent.MouseButton.Pre event) {
+    //?} else {
+    /*// 1.16.5 无 MouseButton.Pre，可取消的 pre-click 事件为 RawMouseEvent（getButton/getAction 同名）
+    private static void onMouseEvent(InputEvent.RawMouseEvent event) {*/
+//?}
         onMouseInput(event.getButton(), event.getAction());
     }
 

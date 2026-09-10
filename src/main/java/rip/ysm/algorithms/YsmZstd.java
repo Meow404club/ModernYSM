@@ -59,13 +59,23 @@ public class YsmZstd {
 
             int rawSize = ((b0 & 0x1F) << 16) | b1 | (b2 << 8);
             int cSize = rawSize ^ 0xD4E9;
-            int blockTypeStd = switch (blockTypeYSM) {
-                case 0 -> 2;
-                case 1 -> 1;
-                case 2 -> 3;
-                case 3 -> 0;
-                default -> throw new IllegalStateException("Unknown block type");
-            };
+            int blockTypeStd;
+            switch (blockTypeYSM) {
+                case 0:
+                    blockTypeStd = 2;
+                    break;
+                case 1:
+                    blockTypeStd = 1;
+                    break;
+                case 2:
+                    blockTypeStd = 3;
+                    break;
+                case 3:
+                    blockTypeStd = 0;
+                    break;
+                default:
+                    throw new IllegalStateException("Unknown block type");
+            }
 
             int stdHeader = lastBlock | (blockTypeStd << 1) | (cSize << 3);
 
@@ -109,13 +119,23 @@ public class YsmZstd {
 
             int blockDataSize = (blockTypeStd == 1) ? 1 : cSize;
 
-            int blockTypeYSM = switch (blockTypeStd) {
-                case 0 -> 3;
-                case 1 -> 1;
-                case 2 -> 0;
-                case 3 -> 2;
-                default -> throw new IllegalStateException("Unknown block type");
-            };
+            int blockTypeYSM;
+            switch (blockTypeStd) {
+                case 0:
+                    blockTypeYSM = 3;
+                    break;
+                case 1:
+                    blockTypeYSM = 1;
+                    break;
+                case 2:
+                    blockTypeYSM = 0;
+                    break;
+                case 3:
+                    blockTypeYSM = 2;
+                    break;
+                default:
+                    throw new IllegalStateException("Unknown block type");
+            }
 
             int rawSize = cSize ^ 0xD4E9;
             int ysmB0 = (lastBlock << 7) | (blockTypeYSM << 5) | ((rawSize >> 16) & 0x1F);

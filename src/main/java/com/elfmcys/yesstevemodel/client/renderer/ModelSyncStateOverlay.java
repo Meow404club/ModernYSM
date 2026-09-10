@@ -164,11 +164,22 @@ public class ModelSyncStateOverlay implements HudOverlay {
         int drawX;
         int textWidth = font.width(textComponent);
 
-        drawX = switch (LoadingStateConfig.LOADING_STATE_POSITION.get()) {
-            case TOP_LEFT, BOTTOM_LEFT -> baseX;
-            case TOP_CENTER, BOTTOM_CENTER -> (screenWidth - textWidth) / 2;
-            case TOP_RIGHT, BOTTOM_RIGHT -> baseX - textWidth;
-        };
+        switch (LoadingStateConfig.LOADING_STATE_POSITION.get()) {
+            case TOP_LEFT:
+            case BOTTOM_LEFT:
+                drawX = baseX;
+                break;
+            case TOP_CENTER:
+            case BOTTOM_CENTER:
+                drawX = (screenWidth - textWidth) / 2;
+                break;
+            case TOP_RIGHT:
+            case BOTTOM_RIGHT:
+                drawX = baseX - textWidth;
+                break;
+            default:
+                throw new IllegalStateException("Unexpected loading state position: " + LoadingStateConfig.LOADING_STATE_POSITION.get());
+        }
         guiGraphics.drawString(font, textComponent, drawX, textY, 16777215);
     }
 }

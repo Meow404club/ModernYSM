@@ -159,27 +159,43 @@ public final class ModelUploadSession {
     }
 
     private static String getRequestErrorText(byte status) {
-        return switch (status) {
-            case 1 -> "Model ID already exists";
-            case 2 -> "File exceeds server limit";
-            case 3 -> "No upload permission";
-            case 4 -> "Server busy, try again later";
-            case 5 -> "Invalid model ID or hash";
-            case 6 -> "Uploads disabled on server";
-            default -> "error: " + status;
-        };
+        switch (status) {
+            case 1:
+                return "Model ID already exists";
+            case 2:
+                return "File exceeds server limit";
+            case 3:
+                return "No upload permission";
+            case 4:
+                return "Server busy, try again later";
+            case 5:
+                return "Invalid model ID or hash";
+            case 6:
+                return "Uploads disabled on server";
+            default:
+                return "error: " + status;
+        }
+
     }
 
     private static String getResponseErrorText(byte status) {
-        return switch (status) {
-            case 1 -> "Hash mismatch";
-            case 2 -> "Server failed to parse model";
-            case 3 -> "Server storage error";
-            case 4 -> "Session expired";
-            case 5 -> "Incomplete upload";
-            case 6 -> "Server rejected write";
-            default -> "error: " + status;
-        };
+        switch (status) {
+            case 1:
+                return "Hash mismatch";
+            case 2:
+                return "Server failed to parse model";
+            case 3:
+                return "Server storage error";
+            case 4:
+                return "Session expired";
+            case 5:
+                return "Incomplete upload";
+            case 6:
+                return "Server rejected write";
+            default:
+                return "error: " + status;
+        }
+
     }
 
     private synchronized void tick() {

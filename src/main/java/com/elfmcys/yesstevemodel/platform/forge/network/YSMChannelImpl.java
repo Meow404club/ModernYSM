@@ -120,10 +120,14 @@ public final class YSMChannelImpl {
     }
 
     private static NetworkDirection toForge(PacketDirection direction) {
-        return switch (direction) {
-            case PLAY_TO_CLIENT -> NetworkDirection.PLAY_TO_CLIENT;
-            case PLAY_TO_SERVER -> NetworkDirection.PLAY_TO_SERVER;
-        };
+        switch (direction) {
+            case PLAY_TO_CLIENT:
+                return NetworkDirection.PLAY_TO_CLIENT;
+            case PLAY_TO_SERVER:
+                return NetworkDirection.PLAY_TO_SERVER;
+            default:
+                throw new IllegalArgumentException("Unknown packet direction: " + direction);
+        }
     }
 
     private static byte[] encode(Object packet) {

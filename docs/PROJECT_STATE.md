@@ -13,6 +13,8 @@
 |---|---|---|---|
 | rag-bootstrap | merged | dev | cfeaae1；407308 块；共享库 402946 块净化副本 |
 | native-openysm-cpp | closed | - | 用户裁决：自带实现已完整，上游仅档案存查（tmp/harvest/openysm-cpp） |
+| native-align-src | in_progress | work/native-align-src | 仓内 native 只有二进制——上游 MIT 源码打底，重建 nInitSIMD+stateArray，对拍验证 |
+| harvest-curator-1 | merged | - | stonecutter-template 入 RAG（17 文件）；openysm-cpp 不入库零污染 |
 | arch-stonecutter-refactor | planning | - | 目标收窄：1.16.5+ 仅 forge/neoforge，fabric 代码保留不建项；legacy 推迟 |
 | poc-forge-1165 | research | - | 1.16.5 Forge 能否进 stonecutter 单 Gradle（FG4/5 vs parchment-loom vs 拆 legacy） |
 

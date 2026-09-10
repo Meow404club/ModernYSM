@@ -6,54 +6,46 @@ import com.elfmcys.yesstevemodel.geckolib3.core.event.predicate.AnimationEvent;
 import com.elfmcys.yesstevemodel.geckolib3.core.enums.PlayState;
 import com.elfmcys.yesstevemodel.geckolib3.geo.animated.AnimatedGeoModel;
 import com.mojang.blaze3d.vertex.PoseStack;
-import dev.architectury.injectables.annotations.ExpectPlatform;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import rip.ysm.compat.gun.swarfare.platform.forge.SWarfareCompatImpl;
 
 public final class SWarfareCompat {
 
     private SWarfareCompat() {
     }
 
-    @ExpectPlatform
     public static boolean isLoaded() {
-        throw new AssertionError();
+        return SWarfareCompatImpl.isLoaded();
     }
 
-    @ExpectPlatform
     public static boolean isGunItem(ItemStack itemStack) {
-        throw new AssertionError();
+        return SWarfareCompatImpl.isGunItem(itemStack);
     }
 
-    @ExpectPlatform
     public static boolean isPlayerAiming(Player player) {
-        throw new AssertionError();
+        return SWarfareCompatImpl.isPlayerAiming(player);
     }
 
-    @ExpectPlatform
     public static void applyGunTransform(ItemStack stack, AnimatedGeoModel model, LivingEntity entity, PoseStack poseStack, int packedLightIn, float partialTicks) {
-        throw new AssertionError();
+        SWarfareCompatImpl.applyGunTransform(stack, model, entity, poseStack, packedLightIn, partialTicks);
     }
 
-    @ExpectPlatform
     public static PlayState handleTaczAnim(LivingEntity entity, AnimationEvent<? extends LivingAnimatable<? extends LivingEntity>> event, String str, ILoopType loopType) {
-        throw new AssertionError();
+        return SWarfareCompatImpl.handleTaczAnim(entity, event, str, loopType);
     }
 
-    @ExpectPlatform
     public static PlayState handleGunHoldAnim(ItemStack stack, AnimationEvent<? extends LivingAnimatable<? extends LivingEntity>> event) {
-        throw new AssertionError();
+        return SWarfareCompatImpl.handleGunHoldAnim(stack, event);
     }
 
-    @ExpectPlatform
     public static PlayState handleGunActionAnim(ItemStack stack, AnimationEvent<? extends LivingAnimatable<? extends LivingEntity>> event) {
-        throw new AssertionError();
+        return SWarfareCompatImpl.handleGunActionAnim(stack, event);
     }
 
-    @ExpectPlatform
     public static ResourceLocation getGunTexture(ItemStack stack) {
-        throw new AssertionError();
+        return SWarfareCompatImpl.getGunTexture(stack);
     }
 }

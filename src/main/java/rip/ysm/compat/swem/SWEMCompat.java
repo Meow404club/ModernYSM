@@ -1,26 +1,23 @@
 package rip.ysm.compat.swem;
 
 import com.elfmcys.yesstevemodel.client.animation.molang.CtrlBinding;
-import dev.architectury.injectables.annotations.ExpectPlatform;
 import net.minecraft.world.entity.LivingEntity;
+import rip.ysm.compat.swem.platform.forge.SWEMCompatImpl;
 
 public final class SWEMCompat {
 
     private SWEMCompat() {
     }
 
-    @ExpectPlatform
     public static boolean isLoaded() {
-        throw new AssertionError();
+        return SWEMCompatImpl.isLoaded();
     }
 
-    @ExpectPlatform
     public static String getHorseGaitName(LivingEntity livingEntity) {
-        throw new AssertionError();
+        return SWEMCompatImpl.getHorseGaitName(livingEntity);
     }
 
-    @ExpectPlatform
     public static void registerControllerFunctions(CtrlBinding ctrlBinding) {
-        throw new AssertionError();
+        SWEMCompatImpl.registerControllerFunctions(ctrlBinding);
     }
 }

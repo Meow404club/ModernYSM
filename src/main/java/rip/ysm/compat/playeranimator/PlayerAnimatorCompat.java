@@ -1,20 +1,18 @@
 package rip.ysm.compat.playeranimator;
 
-import dev.architectury.injectables.annotations.ExpectPlatform;
 import net.minecraft.client.player.AbstractClientPlayer;
+import rip.ysm.compat.playeranimator.platform.forge.PlayerAnimatorCompatImpl;
 
 public final class PlayerAnimatorCompat {
 
     private PlayerAnimatorCompat() {
     }
 
-    @ExpectPlatform
     public static boolean isLoaded() {
-        throw new AssertionError();
+        return PlayerAnimatorCompatImpl.isLoaded();
     }
 
-    @ExpectPlatform
     public static boolean isPlayerAnimated(AbstractClientPlayer abstractClientPlayer) {
-        throw new AssertionError();
+        return PlayerAnimatorCompatImpl.isPlayerAnimated(abstractClientPlayer);
     }
 }

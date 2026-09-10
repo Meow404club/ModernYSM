@@ -7,85 +7,71 @@ import com.elfmcys.yesstevemodel.client.model.PlayerModelBundle;
 import com.elfmcys.yesstevemodel.geckolib3.core.enums.PlayState;
 import com.elfmcys.yesstevemodel.geckolib3.core.event.predicate.AnimationEvent;
 import com.elfmcys.yesstevemodel.geckolib3.geo.GeoReplacedEntityRenderer;
-import dev.architectury.injectables.annotations.ExpectPlatform;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import org.jetbrains.annotations.Nullable;
+import rip.ysm.compat.touhoulittlemaid.platform.forge.TouhouLittleMaidCompatImpl;
 
 public final class TouhouLittleMaidCompat {
 
     private TouhouLittleMaidCompat() {
     }
 
-    @ExpectPlatform
     public static boolean isLoaded() {
-        throw new AssertionError();
+        return TouhouLittleMaidCompatImpl.isLoaded();
     }
 
-    @ExpectPlatform
     public static boolean isMaidEntity(Entity entity) {
-        throw new AssertionError();
+        return TouhouLittleMaidCompatImpl.isMaidEntity(entity);
     }
 
-    @ExpectPlatform
     public static boolean isMaidRideable(Entity entity) {
-        throw new AssertionError();
+        return TouhouLittleMaidCompatImpl.isMaidRideable(entity);
     }
 
-    @ExpectPlatform
     public static boolean isSimplePlanesEntity(Entity entity) {
-        throw new AssertionError();
+        return TouhouLittleMaidCompatImpl.isSimplePlanesEntity(entity);
     }
 
-    @ExpectPlatform
     public static boolean isImmersiveAircraftEntity(Entity entity) {
-        throw new AssertionError();
+        return TouhouLittleMaidCompatImpl.isImmersiveAircraftEntity(entity);
     }
 
-    @ExpectPlatform
     public static boolean isMaidItem(Item item) {
-        throw new AssertionError();
+        return TouhouLittleMaidCompatImpl.isMaidItem(item);
     }
 
-    @ExpectPlatform
     public static String getMaidEntityId(Entity entity) {
-        throw new AssertionError();
+        return TouhouLittleMaidCompatImpl.getMaidEntityId(entity);
     }
 
-    @ExpectPlatform
     public static boolean isMaidSitting(LivingEntity livingEntity) {
-        throw new AssertionError();
+        return TouhouLittleMaidCompatImpl.isMaidSitting(livingEntity);
     }
 
-    @ExpectPlatform
     public static void registerMaidAnimStates(TLMBinding tlmBinding) {
-        throw new AssertionError();
+        TouhouLittleMaidCompatImpl.registerMaidAnimStates(tlmBinding);
     }
 
-    @ExpectPlatform
     public static PlayState handleMaidInteraction(AnimationEvent<LivingAnimatable<?>> event, LivingEntity livingEntity, Entity entity) {
-        throw new AssertionError();
+        return TouhouLittleMaidCompatImpl.handleMaidInteraction(event, livingEntity, entity);
     }
 
-    @ExpectPlatform
     public static boolean isMaidChatAvailable() {
-        throw new AssertionError();
+        return TouhouLittleMaidCompatImpl.isMaidChatAvailable();
     }
 
-    @ExpectPlatform
     public static void openMaidChat() {
-        throw new AssertionError();
+        TouhouLittleMaidCompatImpl.openMaidChat();
     }
 
-    @ExpectPlatform
     public static Object buildControllers(PlayerModelBundle modelBundle, ModelResourceBundle resourceBundle) {
-        throw new AssertionError();
+        return TouhouLittleMaidCompatImpl.buildControllers(modelBundle, resourceBundle);
     }
 
-    @ExpectPlatform
     @Nullable
     public static GeoReplacedEntityRenderer<?, ?> getMaidPreviewRenderer(LivingAnimatable<?> animatable) {
-        throw new AssertionError();
+        return TouhouLittleMaidCompatImpl.getMaidPreviewRenderer(animatable);
     }
 }

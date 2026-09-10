@@ -1,34 +1,30 @@
 package rip.ysm.compat.oculus;
 
-import dev.architectury.injectables.annotations.ExpectPlatform;
+import rip.ysm.compat.oculus.platform.forge.OculusCompatImpl;
+
 
 public final class OculusCompat {
 
     private OculusCompat() {
     }
 
-    @ExpectPlatform
     public static boolean isLoaded() {
-        throw new AssertionError();
+        return OculusCompatImpl.isLoaded();
     }
 
-    @ExpectPlatform
     public static boolean isPBRActive() {
-        throw new AssertionError();
+        return OculusCompatImpl.isPBRActive();
     }
 
-    @ExpectPlatform
     public static void updatePBRState() {
-        throw new AssertionError();
+        OculusCompatImpl.updatePBRState();
     }
 
-    @ExpectPlatform
     public static boolean isShaderPackInUse() {
-        throw new AssertionError();
+        return OculusCompatImpl.isShaderPackInUse();
     }
 
-    @ExpectPlatform
     public static boolean isRenderingShadowPass() {
-        throw new AssertionError();
+        return OculusCompatImpl.isRenderingShadowPass();
     }
 }

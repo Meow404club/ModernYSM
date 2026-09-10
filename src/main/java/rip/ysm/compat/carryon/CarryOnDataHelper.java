@@ -1,8 +1,8 @@
 package rip.ysm.compat.carryon;
 
-import dev.architectury.injectables.annotations.ExpectPlatform;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import rip.ysm.compat.carryon.platform.forge.CarryOnDataHelperImpl;
 
 public final class CarryOnDataHelper {
 
@@ -16,13 +16,11 @@ public final class CarryOnDataHelper {
     private CarryOnDataHelper() {
     }
 
-    @ExpectPlatform
     public static boolean isPlayerCarrying(LivingEntity livingEntity) {
-        throw new AssertionError();
+        return CarryOnDataHelperImpl.isPlayerCarrying(livingEntity);
     }
 
-    @ExpectPlatform
     public static CarryType getCarryType(Player player) {
-        throw new AssertionError();
+        return CarryOnDataHelperImpl.getCarryType(player);
     }
 }

@@ -4,26 +4,23 @@ import com.elfmcys.yesstevemodel.client.animation.molang.CtrlBinding;
 import com.elfmcys.yesstevemodel.client.entity.LivingAnimatable;
 import com.elfmcys.yesstevemodel.geckolib3.core.event.predicate.AnimationEvent;
 import com.elfmcys.yesstevemodel.geckolib3.core.enums.PlayState;
-import dev.architectury.injectables.annotations.ExpectPlatform;
 import net.minecraft.world.entity.LivingEntity;
+import rip.ysm.compat.ironsspellbooks.platform.forge.SpellbooksCompatImpl;
 
 public final class SpellbooksCompat {
 
     private SpellbooksCompat() {
     }
 
-    @ExpectPlatform
     public static boolean isLoaded() {
-        throw new AssertionError();
+        return SpellbooksCompatImpl.isLoaded();
     }
 
-    @ExpectPlatform
     public static void registerBindings(CtrlBinding binding) {
-        throw new AssertionError();
+        SpellbooksCompatImpl.registerBindings(binding);
     }
 
-    @ExpectPlatform
     public static PlayState resolvePlayState(AnimationEvent<LivingAnimatable<?>> event, LivingEntity entity) {
-        throw new AssertionError();
+        return SpellbooksCompatImpl.resolvePlayState(event, entity);
     }
 }

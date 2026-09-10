@@ -1,29 +1,25 @@
 package rip.ysm.compat.firstperson;
 
-import dev.architectury.injectables.annotations.ExpectPlatform;
+import rip.ysm.compat.firstperson.platform.forge.FirstPersonCompatImpl;
 
 public final class FirstPersonCompat {
 
     private FirstPersonCompat() {
     }
 
-    @ExpectPlatform
     public static boolean isLoaded() {
-        throw new AssertionError();
+        return FirstPersonCompatImpl.isLoaded();
     }
 
-    @ExpectPlatform
     public static boolean isFirstPersonActive() {
-        throw new AssertionError();
+        return FirstPersonCompatImpl.isFirstPersonActive();
     }
 
-    @ExpectPlatform
     public static boolean shouldHideHead() {
-        throw new AssertionError();
+        return FirstPersonCompatImpl.shouldHideHead();
     }
 
-    @ExpectPlatform
     public static void setCameraDistance(float distance) {
-        throw new AssertionError();
+        FirstPersonCompatImpl.setCameraDistance(distance);
     }
 }

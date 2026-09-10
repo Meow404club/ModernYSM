@@ -3,45 +3,39 @@ package rip.ysm.compat.parcool;
 import com.elfmcys.yesstevemodel.client.animation.molang.CtrlBinding;
 import com.elfmcys.yesstevemodel.client.entity.CustomPlayerEntity;
 import com.elfmcys.yesstevemodel.geckolib3.core.controller.IAnimationController;
-import dev.architectury.injectables.annotations.ExpectPlatform;
 import net.minecraft.world.entity.player.Player;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Optional;
 import java.util.function.BiFunction;
+import rip.ysm.compat.parcool.platform.forge.ParcoolCompatImpl;
 
 public final class ParcoolCompat {
 
     private ParcoolCompat() {
     }
 
-    @ExpectPlatform
     public static boolean isLoaded() {
-        throw new AssertionError();
+        return ParcoolCompatImpl.isLoaded();
     }
 
-    @ExpectPlatform
     public static Optional<Pair<String, String>> getInCompatibleInfo() {
-        throw new AssertionError();
+        return ParcoolCompatImpl.getInCompatibleInfo();
     }
 
-    @ExpectPlatform
     public static Optional<BiFunction<String, CustomPlayerEntity, IAnimationController<CustomPlayerEntity>>> getControllerFactory() {
-        throw new AssertionError();
+        return ParcoolCompatImpl.getControllerFactory();
     }
 
-    @ExpectPlatform
     public static boolean isPlayerParcooling(Player player) {
-        throw new AssertionError();
+        return ParcoolCompatImpl.isPlayerParcooling(player);
     }
 
-    @ExpectPlatform
     public static String getActionName(Player player) {
-        throw new AssertionError();
+        return ParcoolCompatImpl.getActionName(player);
     }
 
-    @ExpectPlatform
     public static void registerBindings(CtrlBinding binding) {
-        throw new AssertionError();
+        ParcoolCompatImpl.registerBindings(binding);
     }
 }

@@ -24,7 +24,13 @@ public abstract class PauseScreenMixin extends Screen {
         List<Button> buttons = PauseScreenButtonBuilder.createButtons((PauseScreen) (Object) this);
         if (buttons != null && !buttons.isEmpty()) {
             for (Button button : buttons) {
+                // 1.16.5 Screen 无 addRenderableWidget（1.17+ 引入），等价方法 addButton(T extends AbstractWidget)
+                //（1.16.5 Screen.java:104）
+                //? if >=1.17 {
                 addRenderableWidget(button);
+                //?} else {
+                /*addButton(button);
+                *///?}
             }
         }
     }

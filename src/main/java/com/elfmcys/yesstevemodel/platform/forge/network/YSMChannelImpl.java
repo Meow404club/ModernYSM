@@ -1,4 +1,4 @@
-package rip.ysm.api.network.platform.forge;
+package com.elfmcys.yesstevemodel.platform.forge.network;
 
 import com.elfmcys.yesstevemodel.mixin.ConnectionAccessor;
 import com.elfmcys.yesstevemodel.network.NetworkHandler;
@@ -43,6 +43,9 @@ public final class YSMChannelImpl {
     }
 
     public static void init(ResourceLocation channelId, String version) {
+        // [M4 锚点] 1.20.5+ NeoForge：SimpleChannel/NetworkRegistry 已移除，此处改走
+        // RegisterPayloadHandlersEvent + PayloadRegistrar（version(String) + playToClient/playToServer
+        // 注册 CustomPacketPayload）；本类 FragmentPacket 同步改造为 Payload。1.20.1-forge 维持 Forge 47 原生 SimpleChannel。
         channel = NetworkRegistry.newSimpleChannel(channelId, () -> version, str -> true, str -> true);
         channel.registerMessage(FRAGMENT_DISCRIMINATOR, FragmentPacket.class,
                 FragmentPacket::encode, FragmentPacket::decode,

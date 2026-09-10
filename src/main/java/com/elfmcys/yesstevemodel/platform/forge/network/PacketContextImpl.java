@@ -1,4 +1,4 @@
-package rip.ysm.api.network.platform.forge;
+package com.elfmcys.yesstevemodel.platform.forge.network;
 
 import net.minecraft.network.Connection;
 import net.minecraft.server.level.ServerPlayer;

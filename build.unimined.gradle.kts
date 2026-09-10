@@ -1,3 +1,9 @@
+import java.util.jar.JarFile
+import java.util.zip.ZipInputStream
+import java.util.zip.ZipOutputStream
+import java.util.zip.ZipEntry
+import java.io.FileInputStream
+import java.io.FileOutputStream
 // unimined 版本路由构建脚本（MC <1.17 的 forge 线；>=1.17 走 build.forge.gradle.kts / MDG legacyforge）
 // 配置范式实证来源：
 //  - 本仓 POC：tmp/poc-1165/unimined/（RUN-REPORT.md：1.16.5/1.12.2/1.7.10 三代 forge 全 PASS，SRG 发布 jar）
@@ -31,6 +37,10 @@ java {
 }
 tasks.withType<JavaCompile>().configureEach {
     options.release = 8
+    // javac 默认 -Xmaxerrs=100 会截断报错清单（1951 错基线只见首 100），
+    // 放开上限让各条件卡的"域内错误清零"可按 file:line diff 取证
+    //（与 work/m2-render-pipeline-condition a2183c9 同行同内容，合并自动收敛）
+    options.compilerArgs.addAll(listOf("-Xmaxerrs", "10000"))
 }
 
 repositories {
@@ -65,6 +75,11 @@ unimined.minecraft {
 }
 
 dependencies {
+    // JOML：共享源 geckolib3 渲染/动画栈 49 文件 import org.joml（MC 1.19.3 才内置，
+    // 1.16.5 类路径缺失→"程序包org.joml不存在"）。选 1.10.5（=MC 1.20.1 自带版本，
+    // API 与共享源口径一致）；字节码 major 46（Java 1.2），Java 8 运行时可直接载入。
+    //（与 work/m2-render-pipeline-condition a2183c9 同行同内容，合并自动收敛）
+    implementation("org.joml:joml:1.10.5")
     // ImageStream（rip.ysm.imagestream 纯 Java 库）：编译期可见，保编译基线干净；
     // 生产 jar 内嵌（照 1.20.1 的 ImageStream 先例）属后续卡
     implementation("com.github.TartaricAlkaline:ImageStream:-SNAPSHOT")
@@ -118,9 +133,74 @@ tasks {
         exclude("yes_steve_model_forge.mixins.json")
     }
 
+    // ===== MixinExtras 1.16.5 运行时内嵌（m2-mixin-versioning）=====
+    // 1.16.5 Forge 不自带 MixinExtras（Forge 47.x 起才内置）；无它时 @WrapWithCondition 被
+    // 纯 Mixin 静默忽略（不崩但弹射物/载具自定义渲染钩子失效）。方案：mixinextras-common
+    // 0.3.6 运行时类平铺进 remapJar 产物（字节码 major 52=Java 8，1.16.5 运行时可载入，
+    // 缓存 jar 实测），引导=MixinTweaker.onLoad 的 MixinExtrasBootstrap.init()（<1.17 条件化）。
+    // 合并规则：目标 jar 条目流式原样保留（MANIFEST 保持首位，Forge 用 JarInputStream 探测），
+    // 追加 mixinextras jar 条目时剔除其 META-INF/**（含 javax.annotation.processing.Processor
+    // 服务声明——运行时 jar 不该声明注解处理器）与签名文件，重名跳过（目标优先）。
+    // 合并算法已用 tmp/m2-refmap-poc 产物 + 缓存 jar 独立实证（manifest-first/类可载入）。
+    val embedMixinExtras = register("embedMixinExtras") {
+        group = "build"
+        val remapJarTask = named("remapJar")
+        dependsOn(remapJarTask)
+        val jarFile = remapJarTask.map { it.outputs.files.singleFile }
+        inputs.file(jarFile)
+        outputs.file(jarFile)
+        doLast {
+            val target = jarFile.get()
+            val mixinExtrasJar = configurations.compileClasspath.get().files
+                .filter { it.name.startsWith("mixinextras-common") }
+                .firstOrNull()
+                ?: throw GradleException("mixinextras-common not found on compileClasspath")
+            val tmp = File(target.parentFile, target.name + ".mixinextras-merging")
+            tmp.delete()
+            ZipOutputStream(FileOutputStream(tmp)).use { out ->
+                // 第一遍：目标 jar 原样流式拷贝（保持条目顺序=MANIFEST 首位）
+                ZipInputStream(FileInputStream(target)).use { zin ->
+                    while (true) {
+                        val e = zin.nextEntry ?: break
+                        out.putNextEntry(ZipEntry(e.name).apply {
+                            method = e.method
+                            time = e.time
+                        })
+                        if (!e.isDirectory) zin.copyTo(out)
+                        out.closeEntry()
+                    }
+                }
+                // 第二遍：追加 MixinExtras 运行时条目（META-INF/** 与签名文件剔除，重名跳过）
+                ZipInputStream(FileInputStream(mixinExtrasJar)).use { zin ->
+                    val existing = HashSet<String>()
+                    JarFile(target).use { jf ->
+                        val en = jf.entries()
+                        while (en.hasMoreElements()) existing.add(en.nextElement().name)
+                    }
+                    while (true) {
+                        val e = zin.nextEntry ?: break
+                        val name = e.name
+                        if (name.startsWith("META-INF/") || name == "module-info.class" ||
+                            name.endsWith(".SF") || name.endsWith(".DSA") || name.endsWith(".RSA")
+                        ) continue
+                        if (e.isDirectory || name in existing) continue
+                        out.putNextEntry(ZipEntry(name))
+                        zin.copyTo(out)
+                        out.closeEntry()
+                    }
+                }
+            }
+            val old = File(target.parentFile, target.name + ".mixinextras-old")
+            old.delete()
+            if (!target.renameTo(old)) throw GradleException("cannot swap merged jar in place")
+            if (!tmp.renameTo(target)) throw GradleException("cannot promote merged jar")
+            old.delete()
+        }
+    }
+
     register<Copy>("buildAndCollect") {
         group = "build"
-        from(named("remapJar")) // unimined 产物：已重映射到 SRG 的发布 jar
+        from(embedMixinExtras) // unimined 产物：已重映射到 SRG 且内嵌 MixinExtras 的发布 jar
         into(rootProject.layout.buildDirectory.file("libs/${project.property("mod_version")}"))
         dependsOn("build")
     }

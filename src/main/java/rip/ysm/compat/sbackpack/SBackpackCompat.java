@@ -7,6 +7,7 @@ import net.minecraft.world.item.ItemStack;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Optional;
+import rip.ysm.compat.sbackpack.platform.forge.SBackpackCompatImpl;
 
 public final class SBackpackCompat {
 
@@ -15,12 +16,12 @@ public final class SBackpackCompat {
 
     @ExpectPlatform
     public static boolean isLoaded() {
-        throw new AssertionError();
+        return SBackpackCompatImpl.isLoaded();
     }
 
     @ExpectPlatform
     public static void setupRenderLayers() {
-        throw new AssertionError();
+        SBackpackCompatImpl.setupRenderLayers();
     }
 
     @ExpectPlatform
@@ -30,11 +31,11 @@ public final class SBackpackCompat {
 
     @ExpectPlatform
     public static void registerControllerFunctions(CtrlBinding binding) {
-        throw new AssertionError();
+        SBackpackCompatImpl.registerControllerFunctions(binding);
     }
 
     @ExpectPlatform
     public static ItemStack getBackpackItem(LivingEntity livingEntity) {
-        throw new AssertionError();
+        return SBackpackCompatImpl.getBackpackItem(livingEntity);
     }
 }

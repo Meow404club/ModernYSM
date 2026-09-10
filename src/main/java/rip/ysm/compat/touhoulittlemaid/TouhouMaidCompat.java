@@ -6,6 +6,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.Projectile;
+import rip.ysm.compat.touhoulittlemaid.platform.forge.TouhouMaidCompatImpl;
 
 public final class TouhouMaidCompat {
 
@@ -14,32 +15,32 @@ public final class TouhouMaidCompat {
 
     @ExpectPlatform
     public static boolean isLoaded() {
-        throw new AssertionError();
+        return TouhouMaidCompatImpl.isLoaded();
     }
 
     @ExpectPlatform
     public static void init() {
-        throw new AssertionError();
+        TouhouMaidCompatImpl.init();
     }
 
     @ExpectPlatform
     public static boolean isMaidEntity(Entity entity) {
-        throw new AssertionError();
+        return TouhouMaidCompatImpl.isMaidEntity(entity);
     }
 
     @ExpectPlatform
     public static void handleProjectileOwner(Projectile projectile, Entity entity) {
-        throw new AssertionError();
+        TouhouMaidCompatImpl.handleProjectileOwner(projectile, entity);
     }
 
     @ExpectPlatform
     public static void registerAnimationRoulette(Entity entity, String str, int i) {
-        throw new AssertionError();
+        TouhouMaidCompatImpl.registerAnimationRoulette(entity, str, i);
     }
 
     @ExpectPlatform
     public static void applyFeedback(Entity entity, FeedbackData message) {
-        throw new AssertionError();
+        TouhouMaidCompatImpl.applyFeedback(entity, message);
     }
 
     @ExpectPlatform    @Environment(EnvType.CLIENT)

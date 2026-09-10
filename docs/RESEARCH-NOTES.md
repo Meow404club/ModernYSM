@@ -61,3 +61,24 @@
   未检索到 1.16.5×Forge 的 stonecutter 公开先例。
 - 模板源码已收割 `tmp/harvest/stonecutter-template/`（settings/stonecutter/build.*.gradle.kts
   全量，迁移期反复参考）。
+
+## 2026-09-10 · 1.16.5 Forge 工具链 POC + Unimined 专题（researcher 研究卡）
+
+- **结论：1.16.5 进 stonecutter，路线 = unimined**。工具链定版：stonecutter 0.7.x +
+  Gradle 9.2.1 + unimined 1.4.1(LTS，DSL 报错退 1.3.16-SNAPSHOT) + JDK21 daemon/toolchain
+  + `options.release` 分段（<1.17→8），无需本地 JDK8。
+- **决定性先例**：GTNH/Celeritas more-version-agnostic 分支生产级构建 1.16.5-forge——
+  settings.gradle.kts 显式路由：forge<1.17→unimined、≥1.17→legacyforge 2.0.134、
+  fabric→loom；全仓 Gradle 9.2.1 + stonecutter 0.7.11，`./gradlew packageJar` 一键全版本。
+- **候选淘汰**：legacyforge 官方明文 1.17~1.20.1（LEGACY.md:3）；FG4/5/6 死路（FG5=Gradle
+  7.x 线，FG6≥8.1.1，单仓无法混跑）；architectury-loom 被 unimined 替代（Gradle 9 兼容未证）。
+- **版本路由表**：1.16.5-forge→unimined+mojmap/searge（已证）；1.17~1.20.1→legacyforge
+  （已证）；1.20.5+→moddev（已证）；**1.12.2-forge→unimined+mcp(stable,39-1.12)+
+  forge 14.23.5.2860（文档级，官方 testing 样例在）**；**1.7.10-forge→unimined+
+  mcp(stable,12-1.7.10)+forge 10.13.4.1614（文档级）**。1.12.2 双线：原版 Forge 线
+  `minecraftForge{}`（主线）；Cleanroom 线 `cleanroom{loader "0.3.0-alpha"}`（Java21/LWJGL3
+  运行时，构建产物不变）。
+- **架构影响**：1.12.2/1.7.10 若实跑通过 → **legacy/ 独立文件夹方案作废**，三代全入
+  stonecutter 单一源码树（condition 切版本差异）。
+- 脚手架就绪：`tmp/poc-1165/unimined/`（三版本 + mdg-force 对照 + README 逐条命令），
+  gradle 实跑为唯一 gating。

@@ -2,7 +2,7 @@ package rip.ysm.gui.components;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import rip.ysm.gui.YsmGui;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import rip.ysm.gui.OptionRow;
@@ -22,7 +22,7 @@ public final class TipsRow extends OptionRow<Object> {
     private void recomputeLines() {
         if (cachedWidth == width && cachedLines != null) return;
         Font font = Minecraft.getInstance().font;
-        cachedLines = font.split(Component.literal(text), Math.max(20, width - 16));
+        cachedLines = font.split(YsmGui.text(text), Math.max(20, width - 16));
         cachedWidth = width;
         this.height = Math.max(18, cachedLines.size() * 10 + 8);
     }
@@ -36,7 +36,7 @@ public final class TipsRow extends OptionRow<Object> {
     }
 
     @Override
-    protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    protected void renderWidget(YsmGui g, int mouseX, int mouseY, float partialTick) {
         recomputeLines();
         g.fill(getX(), getY(), getX() + width, getY() + height, 0x90000000);
         Font font = Minecraft.getInstance().font;
@@ -48,6 +48,6 @@ public final class TipsRow extends OptionRow<Object> {
     }
 
     @Override
-    protected void renderControl(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    protected void renderControl(YsmGui g, int mouseX, int mouseY, float partialTick) {
     }
 }

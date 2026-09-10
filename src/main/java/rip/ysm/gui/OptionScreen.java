@@ -2,7 +2,10 @@ package rip.ysm.gui;
 
 import com.elfmcys.yesstevemodel.config.GeneralConfig;
 import net.minecraft.client.Minecraft;
+//? if >1.17 {
 import net.minecraft.client.gui.GuiGraphics;
+//?}
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
@@ -154,14 +157,21 @@ public abstract class OptionScreen extends Screen {
         int btnW = 70;
         int btnH = 20;
         int gap = 4;
-        cancelBtn = new FooterButton(panelRight - btnW, footerY, btnW, btnH, Component.translatable("gui.yes_steve_model.config.cancel"), this::onCancel);
-        saveBtn = new FooterButton(cancelBtn.getX() - btnW - gap, footerY, btnW, btnH, Component.translatable("gui.yes_steve_model.config.save"), this::onSave);
-        applyBtn = new FooterButton(saveBtn.getX() - btnW - gap, footerY, btnW, btnH, Component.translatable("gui.yes_steve_model.config.apply"), this::onApply);
-        undoBtn = new FooterButton(panelLeft, footerY, btnW, btnH, Component.translatable("gui.yes_steve_model.config.undo"), this::onUndo);
+        cancelBtn = new FooterButton(panelRight - btnW, footerY, btnW, btnH, YsmGui.trans("gui.yes_steve_model.config.cancel"), this::onCancel);
+        saveBtn = new FooterButton(cancelBtn.getX() - btnW - gap, footerY, btnW, btnH, YsmGui.trans("gui.yes_steve_model.config.save"), this::onSave);
+        applyBtn = new FooterButton(saveBtn.getX() - btnW - gap, footerY, btnW, btnH, YsmGui.trans("gui.yes_steve_model.config.apply"), this::onApply);
+        undoBtn = new FooterButton(panelLeft, footerY, btnW, btnH, YsmGui.trans("gui.yes_steve_model.config.undo"), this::onUndo);
+        //? if <1.17 {
+        /*addButton(undoBtn);
+        addButton(applyBtn);
+        addButton(saveBtn);
+        addButton(cancelBtn);
+         *///?} else {
         addRenderableWidget(undoBtn);
         addRenderableWidget(applyBtn);
         addRenderableWidget(saveBtn);
         addRenderableWidget(cancelBtn);
+        //?}
 
         if (!groups.isEmpty()) {
             OptionGroup toSelect = groups.get(0);
@@ -176,6 +186,17 @@ public abstract class OptionScreen extends Screen {
             }
             selectGroup(toSelect);
         }
+    }
+
+    /** 从 children/buttons 列表摘除控件：1.20.1 removeWidget ↔ 1.16.5 手工移除（1.16.5 Screen 无 removeWidget）。 */
+    protected void removeFooter(FooterButton btn) {
+        if (btn == null) return;
+        //? if <1.17 {
+        /*this.buttons.remove(btn);
+        this.children.remove(btn);
+         *///?} else {
+        removeWidget(btn);
+        //?}
     }
 
     protected int computePanelWidth() {
@@ -266,9 +287,22 @@ public abstract class OptionScreen extends Screen {
         if (activeGroup != null) activeGroup.undo();
     }
 
+    // Screen.render 签名双轴：1.20.1 render(GuiGraphics,...) ↔ 1.16.5 render(PoseStack,...)
+    //（1.16.5 Screen.java:73），主体收敛进版本中性 renderScreen(YsmGui,...)
+    //? if <1.17 {
+    /*@Override
+    public void render(PoseStack pose, int mouseX, int mouseY, float partialTick) {
+        this.renderScreen(new YsmGui(pose), mouseX, mouseY, partialTick);
+    }
+     *///?} else {
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        renderBackground(g);
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderScreen(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+    //?}
+
+    protected void renderScreen(YsmGui g, int mouseX, int mouseY, float partialTick) {
+        g.renderScreenBackground(this);
 
         renderPanelBackdrop(g);
 
@@ -304,7 +338,11 @@ public abstract class OptionScreen extends Screen {
         applyBtn.active = dirty;
         undoBtn.active = activeGroup != null && activeGroup.isDirty();
 
-        super.render(g, mouseX, mouseY, partialTick);
+        //? if <1.17 {
+        /*super.render(g.pose(), mouseX, mouseY, partialTick);
+         *///?} else {
+        super.render(g.graphics(), mouseX, mouseY, partialTick);
+        //?}
 
         if (!tabButtons.isEmpty()) {
             boolean inTabArea = mouseX >= tabAreaLeft && mouseX < tabAreaRight && mouseY >= tabAreaTop && mouseY < tabAreaBottom;
@@ -320,7 +358,7 @@ public abstract class OptionScreen extends Screen {
             if (compactTabs) g.pose().translate(-tabScrollDisplay, 0, 0);
             else g.pose().translate(0, -tabScrollDisplay, 0);
             for (TabButton tb : tabButtons) {
-                tb.render(g, adjTabMouseX, adjTabMouseY, partialTick);
+                g.renderWidget(tb, adjTabMouseX, adjTabMouseY, partialTick);
             }
             g.pose().popPose();
             g.disableScissor();
@@ -331,7 +369,7 @@ public abstract class OptionScreen extends Screen {
         g.pose().pushPose();
         g.pose().translate(0, -rowScrollDisplay, 0);
         for (OptionRow<?> row : activeRows) {
-            row.render(g, mouseX, adjMouseY, partialTick);
+            g.renderWidget(row, mouseX, adjMouseY, partialTick);
         }
         g.pose().popPose();
         g.disableScissor();
@@ -348,7 +386,7 @@ public abstract class OptionScreen extends Screen {
         }
     }
 
-    protected void renderExtras(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    protected void renderExtras(YsmGui g, int mouseX, int mouseY, float partialTick) {
     }
 
     protected void collectBlurRegions(List<int[]> out) {
@@ -392,7 +430,7 @@ public abstract class OptionScreen extends Screen {
         out.add(new int[]{btn.getX(), btn.getY(), btn.getWidth(), btn.getHeight()});
     }
 
-    private void renderPanelBackdrop(GuiGraphics g) {
+    private void renderPanelBackdrop(YsmGui g) {
         if (GeneralConfig.BLUR_GUI == null || !GeneralConfig.BLUR_GUI.get()) return;
         List<int[]> regions = new ArrayList<>();
         collectBlurRegions(regions);
@@ -400,10 +438,10 @@ public abstract class OptionScreen extends Screen {
             if (r[2] <= 0 || r[3] <= 0) continue;
             BlurStack.pushBlur(r[0], r[1], r[2], r[3], 0.0f, 24.0f);
         }
-        BlurStack.flush(g);
+        BlurStack.flush(g.pose());
     }
 
-    private void renderRowScrollbar(GuiGraphics g) {
+    private void renderRowScrollbar(YsmGui g) {
         int trackX = rowAreaRight - 1;
         int trackTop = rowAreaTop + 1;
         int trackBot = rowAreaBottom - 1;
@@ -414,7 +452,7 @@ public abstract class OptionScreen extends Screen {
         g.fill(trackX, thumbY, trackX + 1, thumbY + thumbH, draggingRowScrollbar ? 0xFFFFFFFF : 0xFFAAAAAA);
     }
 
-    private void renderTabScrollbar(GuiGraphics g) {
+    private void renderTabScrollbar(YsmGui g) {
         if (compactTabs) {
             int trackY = tabAreaBottom - 1;
             int trackLeft = tabAreaLeft + 1;
@@ -436,7 +474,7 @@ public abstract class OptionScreen extends Screen {
         g.fill(trackX, thumbY, trackX + 1, thumbY + thumbH, draggingTabScrollbar ? 0xFFFFFFFF : 0xFFAAAAAA);
     }
 
-    protected void renderDescription(GuiGraphics g, int descY) {
+    protected void renderDescription(YsmGui g, int descY) {
         if (hoveredRow == null || hoveredRow.getOption() == null) return;
         g.fill(panelLeft, descY, panelRight, descY + 28, 0x80000000);
         Option<?> opt = hoveredRow.getOption();

@@ -1,7 +1,7 @@
 package rip.ysm.gui.components;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import rip.ysm.gui.YsmGui;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import rip.ysm.gui.Option;
@@ -32,7 +32,7 @@ public class SliderOptionRow extends OptionRow<Double> {
     }
 
     @Override
-    protected void renderControl(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    protected void renderControl(YsmGui g, int mouseX, int mouseY, float partialTick) {
         int cx = controlX();
         int cy = controlY();
         int cw = controlWidth();
@@ -50,7 +50,7 @@ public class SliderOptionRow extends OptionRow<Double> {
 
         String text = format.format(value) + suffix;
         int tw = Minecraft.getInstance().font.width(text);
-        g.drawString(Minecraft.getInstance().font, Component.literal(text), cx + (cw - tw) / 2, cy + (ch - 8) / 2, 0xFFFFFFFF, true);
+        g.drawString(Minecraft.getInstance().font, YsmGui.text(text), cx + (cw - tw) / 2, cy + (ch - 8) / 2, 0xFFFFFFFF, true);
     }
 
     @Override

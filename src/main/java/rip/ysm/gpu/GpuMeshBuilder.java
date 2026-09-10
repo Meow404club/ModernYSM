@@ -11,7 +11,9 @@ import java.nio.ByteOrder;
 public final class GpuMeshBuilder {
     public static GpuMesh build(GeoModel model) {
         if (model.bakedBones == null || model.bakedBones.isEmpty()) return null;
+        //? if >1.17 {
         RenderSystem.assertOnRenderThread();
+        //?}
         ByteBuffer modelBuf = serializeModel(model);
         int[] meta = new int[9];
         long handle = GeoModel.nBuildGpuMesh(modelBuf, meta);

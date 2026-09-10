@@ -1,17 +1,18 @@
 package rip.ysm.gui;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
-public abstract class OptionRow<T> extends AbstractWidget {
+/**
+ * 选项行基类：继承 YsmWidget 消化双版 AbstractWidget 差异
+ * （渲染钩子 renderWidget(GuiGraphics)↔renderButton(PoseStack)、getX/getY/setX/setY 桥接、narration 剔除）。
+ */
+public abstract class OptionRow<T> extends YsmWidget {
     protected final Option<T> option;
 
     protected OptionRow(int x, int y, int width, int height, Option<T> option) {
-        super(x, y, width, height, option == null ? Component.empty() : option.getLabel());
+        super(x, y, width, height, option == null ? YsmGui.text("") : option.getLabel());
         this.option = option;
     }
 
@@ -23,7 +24,7 @@ public abstract class OptionRow<T> extends AbstractWidget {
     }
 
     @Override
-    protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    protected void renderWidget(YsmGui g, int mouseX, int mouseY, float partialTick) {
         boolean dirty = option != null && option.isDirty();
         int bg = isHovered() ? 0x90171717 : (dirty ? 0x90060606 : 0x90000000);
         g.fill(getX(), getY(), getX() + width, getY() + height, bg);
@@ -36,7 +37,7 @@ public abstract class OptionRow<T> extends AbstractWidget {
         renderControl(g, mouseX, mouseY, partialTick);
     }
 
-    protected abstract void renderControl(GuiGraphics g, int mouseX, int mouseY, float partialTick);
+    protected abstract void renderControl(YsmGui g, int mouseX, int mouseY, float partialTick);
 
     protected int controlX() {
         return getX() + width - controlWidth() - 6;
@@ -67,7 +68,7 @@ public abstract class OptionRow<T> extends AbstractWidget {
     public void closeOverlay() {
     }
 
-    public void renderOverlay(GuiGraphics g, int mouseX, int mouseY, float partialTick, float scrollDisplay) {
+    public void renderOverlay(YsmGui g, int mouseX, int mouseY, float partialTick, float scrollDisplay) {
     }
 
     public boolean overlayMouseClicked(double mouseX, double mouseY, int button, float scrollDisplay) {
@@ -85,10 +86,5 @@ public abstract class OptionRow<T> extends AbstractWidget {
         int gn = Mth.clamp(((base >> 8) & 0xFF) + 40, 0, 255);
         int b = Mth.clamp((base & 0xFF) + 40, 0, 255);
         return (a << 24) | (r << 16) | (gn << 8) | b;
-    }
-
-    @Override
-    protected void updateWidgetNarration(NarrationElementOutput out) {
-        defaultButtonNarrationText(out);
     }
 }

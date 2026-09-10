@@ -31,7 +31,7 @@ public class ModernModelInfoScreen extends OptionScreen {
     private final List<IResourceLocatable> avatarLocatables = new ArrayList<>();
 
     public ModernModelInfoScreen(PlayerModelScreen parent, ModelAssembly modelAssembly) {
-        super(Component.translatable("gui.yes_steve_model.model_info.title"), parent);
+        super(YsmGui.trans("gui.yes_steve_model.model_info.title"), parent);
         this.renderContext = modelAssembly;
         this.modelData = modelAssembly.getModelData();
         resolveAvatarTextures();
@@ -101,15 +101,15 @@ public class ModernModelInfoScreen extends OptionScreen {
     @Override
     protected void init() {
         super.init();
-        removeWidget(applyBtn);
-        removeWidget(undoBtn);
-        removeWidget(cancelBtn);
+        removeFooter(applyBtn);
+        removeFooter(undoBtn);
+        removeFooter(cancelBtn);
         applyBtn.visible = false;
         undoBtn.visible = false;
         cancelBtn.visible = false;
         applyBtn.active = false;
         undoBtn.active = false;
-        saveBtn.setMessage(Component.translatable("gui.yes_steve_model.config.done"));
+        saveBtn.setMessage(YsmGui.trans("gui.yes_steve_model.config.done"));
         saveBtn.setX(panelRight - saveBtn.getWidth());
     }
 

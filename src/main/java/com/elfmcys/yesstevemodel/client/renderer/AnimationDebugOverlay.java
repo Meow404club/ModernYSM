@@ -11,7 +11,10 @@ import com.elfmcys.yesstevemodel.client.entity.GeoEntity;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+//? if >1.17 {
 import net.minecraft.client.gui.GuiGraphics;
+//?}
+import rip.ysm.gui.YsmGui;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -34,8 +37,9 @@ public class AnimationDebugOverlay {
     private static WeakReference<GeoEntity<?>> activeModel = null;
 
     public static HudOverlay createOverlay() {
+        // lambda 参数类型随 HudOverlay 双轴推断（GuiGraphics/PoseStack），YsmGui 构造器两侧各取对应签名
         return (guiGraphics, font, partialTick, screenWidth, screenHeight) -> {
-            renderOverlay(font, guiGraphics, screenWidth, screenHeight);
+            renderOverlay(font, new YsmGui(guiGraphics), screenWidth, screenHeight);
         };
     }
 
@@ -92,10 +96,10 @@ public class AnimationDebugOverlay {
         Entity entity = geoEntity.getEntity();
         LocalPlayer localPlayer = Minecraft.getInstance().player;
         if (localPlayer != null) {
-            MutableComponent mutableComponentAppend = Component.translatable("message.yes_steve_model.model.debug_animation.true").append(" -> ");
+            MutableComponent mutableComponentAppend = YsmGui.trans("message.yes_steve_model.model.debug_animation.true").append(" -> ");
             Component customName = entity.getCustomName();
             Objects.requireNonNull(entity);
-            localPlayer.sendSystemMessage(mutableComponentAppend.append(customName != null ? customName : entity.getDisplayName()));
+            localPlayer.displayClientMessage(mutableComponentAppend.append(customName != null ? customName : entity.getDisplayName()), false);
         }
     }
 
@@ -108,7 +112,7 @@ public class AnimationDebugOverlay {
             activeModel = null;
             LocalPlayer localPlayer = Minecraft.getInstance().player;
             if (localPlayer != null) {
-                localPlayer.sendSystemMessage(Component.translatable("message.yes_steve_model.model.debug_animation.false"));
+                localPlayer.displayClientMessage(YsmGui.trans("message.yes_steve_model.model.debug_animation.false"), false);
             }
         }
     }
@@ -134,7 +138,7 @@ public class AnimationDebugOverlay {
         return null;
     }
 
-    public static void renderOverlay(Font font, GuiGraphics guiGraphics, int screenWidth, int screenHeight) {
+    public static void renderOverlay(Font font, YsmGui guiGraphics, int screenWidth, int screenHeight) {
         GeoEntity<?> geoEntity = getActiveModel();
         if (geoEntity == null) {
             return;
@@ -149,14 +153,14 @@ public class AnimationDebugOverlay {
         });
     }
 
-    public static void renderDebugOverlay(Font font, GuiGraphics guiGraphics, int[] currentY, String key, String value, int screenWidth, int screenHeight) {
+    public static void renderDebugOverlay(Font font, YsmGui guiGraphics, int[] currentY, String key, String value, int screenWidth, int screenHeight) {
         if ((currentY[0] - 5) % 20 == 0) {
             guiGraphics.fill(2, currentY[0] - 1, screenWidth, currentY[0] + 9, -1068478384);
         } else {
             guiGraphics.fill(2, currentY[0] - 1, screenWidth, currentY[0] + 9, -1068474288);
         }
-        guiGraphics.drawString(font, key, 5, currentY[0], 16777215);
-        guiGraphics.drawString(font, value, screenWidth / 2, currentY[0], 16777215);
+        guiGraphics.drawString(font, key, 5, currentY[0], 16777215, true);
+        guiGraphics.drawString(font, value, screenWidth / 2, currentY[0], 16777215, true);
         currentY[0] = currentY[0] + 10;
     }
 }

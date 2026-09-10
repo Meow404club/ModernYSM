@@ -3,11 +3,15 @@ package com.elfmcys.yesstevemodel.client.renderer;
 import com.elfmcys.yesstevemodel.client.ClientModelManager;
 import com.elfmcys.yesstevemodel.config.LoadingStateConfig;
 import net.minecraft.ChatFormatting;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.Font;
+//? if >1.17 {
 import net.minecraft.client.gui.GuiGraphics;
+//?}
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import rip.ysm.api.client.HudOverlay;
+import rip.ysm.gui.YsmGui;
 
 public class ModelSyncStateOverlay implements HudOverlay {
 
@@ -19,8 +23,20 @@ public class ModelSyncStateOverlay implements HudOverlay {
     private static long lastFrameNanos = 0L;
     private static float shimmerPhase = 0.0f;
 
+    // HudOverlay 首参双轴（GuiGraphics↔PoseStack），主体收敛进版本中性 render(YsmGui,...)
+    //? if <1.17 {
+    /*@Override
+    public void render(PoseStack poseStack, Font font, float partialTick, int screenWidth, int screenHeight) {
+        this.render(new YsmGui(poseStack), font, screenWidth, screenHeight);
+    }
+     *///?} else {
     @Override
     public void render(GuiGraphics guiGraphics, Font font, float partialTick, int screenWidth, int screenHeight) {
+        this.render(new YsmGui(guiGraphics), font, screenWidth, screenHeight);
+    }
+    //?}
+
+    private void render(YsmGui guiGraphics, Font font, int screenWidth, int screenHeight) {
         int textX;
         int textY;
         int barX;
@@ -82,7 +98,7 @@ public class ModelSyncStateOverlay implements HudOverlay {
             if (pendingModelCount > 0) {
                 int loadedModelCount = ClientModelManager.getModelAssemblyMap().size();
                 int totalModelCount = loadedModelCount + pendingModelCount;
-                MutableComponent loadingText = Component.translatable("gui.yes_steve_model.sync_hint.title").append(Component.translatable("gui.yes_steve_model.sync_hint.loading_models", pendingModelCount, totalModelCount).withStyle(ChatFormatting.YELLOW));
+                MutableComponent loadingText = YsmGui.trans("gui.yes_steve_model.sync_hint.title").append(YsmGui.trans("gui.yes_steve_model.sync_hint.loading_models", pendingModelCount, totalModelCount).withStyle(ChatFormatting.YELLOW));
                 renderSyncText(font, guiGraphics, loadingText, textX, textY, screenWidth);
                 drawAnimatedBar(guiGraphics, barX, barY, (float) loadedModelCount / totalModelCount, 0xFFFFD11A, true);
             } else {
@@ -91,27 +107,27 @@ public class ModelSyncStateOverlay implements HudOverlay {
             return;
         }
 
-        MutableComponent prefixText = Component.translatable("gui.yes_steve_model.sync_hint.title");
+        MutableComponent prefixText = YsmGui.trans("gui.yes_steve_model.sync_hint.title");
 
         switch (syncStatus.getCurrentState()) {
             case WAITING:
-                prefixText.append(Component.translatable("gui.yes_steve_model.sync_hint.waiting").withStyle(ChatFormatting.AQUA));
+                prefixText.append(YsmGui.trans("gui.yes_steve_model.sync_hint.waiting").withStyle(ChatFormatting.AQUA));
                 resetAnimation();
                 break;
             case LOADING:
-                prefixText.append(Component.translatable("gui.yes_steve_model.sync_hint.loading").withStyle(ChatFormatting.GOLD));
+                prefixText.append(YsmGui.trans("gui.yes_steve_model.sync_hint.loading").withStyle(ChatFormatting.GOLD));
                 resetAnimation();
                 break;
             case PREPARING:
-                prefixText.append(Component.translatable("gui.yes_steve_model.sync_hint.preparing").withStyle(ChatFormatting.LIGHT_PURPLE));
+                prefixText.append(YsmGui.trans("gui.yes_steve_model.sync_hint.preparing").withStyle(ChatFormatting.LIGHT_PURPLE));
                 resetAnimation();
                 break;
             case SYNCING:
                 if (syncStatus.getSyncedModels() == 0) {
-                    prefixText.append(Component.translatable("gui.yes_steve_model.sync_hint.syncing").withStyle(ChatFormatting.RED));
+                    prefixText.append(YsmGui.trans("gui.yes_steve_model.sync_hint.syncing").withStyle(ChatFormatting.RED));
                     resetAnimation();
                 } else {
-                    prefixText.append(Component.literal(String.format("%s/%s", syncStatus.getSyncedModels(), syncStatus.getTotalModels())).withStyle(ChatFormatting.GREEN));
+                    prefixText.append(YsmGui.text(String.format("%s/%s", syncStatus.getSyncedModels(), syncStatus.getTotalModels())).withStyle(ChatFormatting.GREEN));
                     drawAnimatedBar(guiGraphics, barX, barY, (float) syncStatus.getSyncedModels() / syncStatus.getTotalModels(), 0xFF55FF55, true);
                 }
                 break;
@@ -119,7 +135,7 @@ public class ModelSyncStateOverlay implements HudOverlay {
         renderSyncText(font, guiGraphics, prefixText, textX, textY, screenWidth);
     }
 
-    private static void drawAnimatedBar(GuiGraphics g, int x, int y, float target, int fgColor, boolean shimmer) {
+    private static void drawAnimatedBar(YsmGui g, int x, int y, float target, int fgColor, boolean shimmer) {
         long now = System.nanoTime();
         if (lastFrameNanos == 0L) lastFrameNanos = now;
         float dt = Math.min(0.1f, (now - lastFrameNanos) / 1.0e9f);
@@ -160,7 +176,7 @@ public class ModelSyncStateOverlay implements HudOverlay {
         shimmerPhase = 0.0f;
     }
 
-    private void renderSyncText(Font font, GuiGraphics guiGraphics, MutableComponent textComponent, int baseX, int textY, int screenWidth) {
+    private void renderSyncText(Font font, YsmGui guiGraphics, MutableComponent textComponent, int baseX, int textY, int screenWidth) {
         int drawX;
         int textWidth = font.width(textComponent);
 
@@ -180,6 +196,6 @@ public class ModelSyncStateOverlay implements HudOverlay {
             default:
                 throw new IllegalStateException("Unexpected loading state position: " + LoadingStateConfig.LOADING_STATE_POSITION.get());
         }
-        guiGraphics.drawString(font, textComponent, drawX, textY, 16777215);
+        guiGraphics.drawString(font, textComponent, drawX, textY, 16777215, true);
     }
 }

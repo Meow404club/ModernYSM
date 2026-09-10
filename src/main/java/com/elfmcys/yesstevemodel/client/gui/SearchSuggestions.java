@@ -324,7 +324,7 @@ public class SearchSuggestions {
         boolean blurred = GeneralConfig.BLUR_GUI.get() && GpuCapability.isAvailable();
         if (blurred) {
             BlurStack.pushBlur(left, top, width, height, 3.0f, 16.0f, 0xFF4F4F4F);
-            BlurStack.flush(guiGraphics);
+            BlurStack.flush(guiGraphics.pose());
         }
 
         guiGraphics.fill(left, top, left + width, top + height, blurred ? 0x99000000 : 0xE6100010);

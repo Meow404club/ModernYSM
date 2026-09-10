@@ -19,7 +19,7 @@ public class OptionGroup {
     }
 
     public Component getTitle() {
-        return Component.translatable("gui.yes_steve_model.config.group." + translationKey);
+        return YsmGui.trans("gui.yes_steve_model.config.group." + translationKey);
     }
 
     public OptionGroup add(OptionRow<?> row) {

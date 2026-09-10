@@ -2,9 +2,11 @@ package rip.ysm.gpu;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.BufferUploader;
-import net.minecraft.client.gui.GuiGraphics;
+//? if >1.17 {
 import org.joml.Matrix4f;
+//?}
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
@@ -14,9 +16,11 @@ import java.util.List;
 
 public final class BlurStack {
     private static final List<Region> regions = new ArrayList<>();
+    //? if >1.17 {
     private static final Matrix4f mvpScratch = new Matrix4f();
     private static final float[] mvpFloats = new float[16];
     private static long frameCounter = 0L;
+    //?}
 
     private BlurStack() {
     }
@@ -73,7 +77,23 @@ public final class BlurStack {
         return regions.isEmpty();
     }
 
-    public static void flush(GuiGraphics graphics) {
+    // flush 参数改 PoseStack（调用方传 graphics.pose()）；1.16.5 降级为空实现：
+    // 毛玻璃依赖 1.17+ capture/shader 批处理管线（RenderSystem.getProjectionMatrix 1.16.5 不存在），
+    // 1.16.5 记录功能差：GUI 背景不模糊（半透明底色仍可读），区域队列清空防泄漏
+    public static void flush(PoseStack pose) {
+        //? if <1.17 {
+        /*flushLegacy();
+         *///?} else {
+        flushModern(pose);
+        //?}
+    }
+
+    //? if <1.17 {
+    /*private static void flushLegacy() {
+        regions.clear();
+    }
+     *///?} else {
+    private static void flushModern(PoseStack pose) {
         if (regions.isEmpty()) return;
         if (!BlurShader.ensureCompiled()) {
             regions.clear();
@@ -84,7 +104,7 @@ public final class BlurStack {
         BlurShader.captureScreen(frameCounter);
 
         RenderSystem.getProjectionMatrix().mul(RenderSystem.getModelViewMatrix(), mvpScratch);
-        mvpScratch.mul(graphics.pose().last().pose());
+        mvpScratch.mul(pose.last().pose());
         mvpScratch.get(mvpFloats);
 
         RenderSystem.enableBlend();
@@ -137,6 +157,7 @@ public final class BlurStack {
 
         regions.clear();
     }
+    //?}
 
     private static final class Region {
         boolean isPie;

@@ -1,14 +1,13 @@
 package rip.ysm.gui.components.buttons;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
 import rip.ysm.gui.OptionGroup;
+import rip.ysm.gui.YsmGui;
+import rip.ysm.gui.YsmWidget;
 
 import java.util.function.Consumer;
 
-public class TabButton extends AbstractWidget {
+public class TabButton extends YsmWidget {
 
     private final OptionGroup group;
     private final Consumer<OptionGroup> onSelect;
@@ -34,7 +33,7 @@ public class TabButton extends AbstractWidget {
     }
 
     @Override
-    protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    protected void renderWidget(YsmGui g, int mouseX, int mouseY, float partialTick) {
         int bg = selected ? 0x90171717 : (isHovered() ? 0x900B0B0B : 0x90000000);
         g.fill(getX(), getY(), getX() + width, getY() + height, bg);
         if (selected) {
@@ -54,10 +53,5 @@ public class TabButton extends AbstractWidget {
     @Override
     public void onClick(double mouseX, double mouseY) {
         onSelect.accept(group);
-    }
-
-    @Override
-    protected void updateWidgetNarration(NarrationElementOutput out) {
-        defaultButtonNarrationText(out);
     }
 }

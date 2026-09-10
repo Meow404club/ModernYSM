@@ -16,10 +16,14 @@ import com.elfmcys.yesstevemodel.network.message.C2SPlayAnimationPacket;
 import com.elfmcys.yesstevemodel.util.data.OrderedStringMap;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+import rip.ysm.gui.YsmGui;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+//? if >1.17 {
 import net.minecraft.client.gui.GuiGraphics;
+//?}
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -69,7 +73,7 @@ public class ModernAnimationRouletteScreen extends Screen {
     private final ModelAssembly renderContext;
 
     public ModernAnimationRouletteScreen(String modelId, ModelAssembly modelAssembly, AnimatableEntity<?> animatable) {
-        super(Component.literal("YSM Roulette"));
+        super(YsmGui.text("YSM Roulette"));
         this.renderContext = modelAssembly;
         this.animatableModel = animatable;
         this.textProperties = modelAssembly.getModelData().getModelProperties().getExtraAnimationClassify();
@@ -109,8 +113,20 @@ public class ModernAnimationRouletteScreen extends Screen {
         return -Pie.tau / 16.0f;
     }
 
+    // Screen.render 签名双轴：1.16.5 render(PoseStack,int,int,float)（1.16.5 Screen.java:73）
+    //? if <1.17 {
+    /*@Override
+    public void render(PoseStack pose, int mouseX, int mouseY, float partialTick) {
+        this.renderRoot(new YsmGui(pose), mouseX, mouseY, partialTick);
+    }
+     *///?} else {
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderRoot(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+    //?}
+
+    private void renderRoot(YsmGui g, int mouseX, int mouseY, float partialTick) {
         if (GeneralConfig.BLUR_GUI != null && GeneralConfig.BLUR_GUI.get()) collectAndFlushBlur(g);
 
         updateHover(mouseX, mouseY);
@@ -120,10 +136,14 @@ public class ModernAnimationRouletteScreen extends Screen {
         renderPageButtons(g);
         renderPathAndPage(g, mouseX, mouseY);
 
-        super.render(g, mouseX, mouseY, partialTick);
+        //? if <1.17 {
+        /*super.render(g.pose(), mouseX, mouseY, partialTick);
+         *///?} else {
+        super.render(g.graphics(), mouseX, mouseY, partialTick);
+        //?}
     }
 
-    private void collectAndFlushBlur(GuiGraphics g) {
+    private void collectAndFlushBlur(YsmGui g) {
         float sliceSpan = Pie.tau / 8.0f;
         for (int i = 0; i < 8; i++) {
             int absoluteIdx = i + page() * 8;
@@ -136,7 +156,7 @@ public class ModernAnimationRouletteScreen extends Screen {
             BlurStack.pushBlurPie(centerX - 128.0f, centerY, 0.0f, 16.0f, 0.0f, Pie.tau, 20.0f);
             BlurStack.pushBlurPie(centerX + 128.0f, centerY, 0.0f, 16.0f, 0.0f, Pie.tau, 20.0f);
         }
-        BlurStack.flush(g);
+        BlurStack.flush(g.pose());
     }
 
     private void updateHover(int mouseX, int mouseY) {
@@ -164,7 +184,7 @@ public class ModernAnimationRouletteScreen extends Screen {
         hoveredNext = (page() + 1) * 8 < currentProperties.size() && (nextDx * nextDx + btnDy * btnDy) <= 16.0f * 16.0f;
     }
 
-    private void renderSlices(GuiGraphics g) {
+    private void renderSlices(YsmGui g) {
         float sliceSpan = Pie.tau / 8.0f;
         for (int i = 0; i < 8; i++) {
             int absoluteIdx = i + page() * 8;
@@ -188,13 +208,13 @@ public class ModernAnimationRouletteScreen extends Screen {
         }
     }
 
-    private void drawSlice(GuiGraphics g, int sliceIndex, float sliceSpan, float inner, float outer, int color) {
+    private void drawSlice(YsmGui g, int sliceIndex, float sliceSpan, float inner, float outer, int color) {
         float start = sliceStartOffset() + sliceIndex * sliceSpan + 0.02f;
         float end = sliceStartOffset() + (sliceIndex + 1) * sliceSpan - 0.02f;
-        Pie.draw(g, centerX, centerY, inner, outer, start, end, color, 1.0f);
+        Pie.draw(g.pose(), centerX, centerY, inner, outer, start, end, color, 1.0f);
     }
 
-    private void drawSettingsIcon(GuiGraphics g, int sliceIndex, float sliceSpan, boolean hover) {
+    private void drawSettingsIcon(YsmGui g, int sliceIndex, float sliceSpan, boolean hover) {
         float mid = sliceStartOffset() + (sliceIndex + 0.5f) * sliceSpan;
         float r = 34.0f;
         int ix = centerX + (int) (r * Math.cos(mid)) - 8;
@@ -207,7 +227,7 @@ public class ModernAnimationRouletteScreen extends Screen {
         RenderSystem.disableBlend();
     }
 
-    private void renderLabels(GuiGraphics g) {
+    private void renderLabels(YsmGui g) {
         float sliceSpan = Pie.tau / 8.0f;
         for (int i = 0; i < 8; i++) {
             int absoluteIdx = i + page() * 8;
@@ -220,7 +240,7 @@ public class ModernAnimationRouletteScreen extends Screen {
             int ly = centerY + (int) (labelR * Math.sin(midAngle));
             String text = displayLabel(absoluteIdx);
             if (StringUtils.isBlank(text)) continue;
-            MutableComponent comp = Component.literal(text);
+            MutableComponent comp = YsmGui.text(text);
             if (isSubmenuLink) comp = comp.withStyle(ChatFormatting.GOLD);
             boolean showKey = page() == 0 && navigationStack.size() == 1 && absoluteIdx < ExtraAnimationKey.KEY_MAPPINGS.size();
             int wrapWidth = (int) ((100.0f - (hasGear ? 46.0f : 22.0f)) * 0.9f);
@@ -235,11 +255,11 @@ public class ModernAnimationRouletteScreen extends Screen {
         }
     }
 
-    private void renderKeyBinding(GuiGraphics g, int slot, int x, int y) {
+    private void renderKeyBinding(YsmGui g, int slot, int x, int y) {
         if (slot >= ExtraAnimationKey.KEY_MAPPINGS.size()) return;
         KeyMapping km = ExtraAnimationKey.KEY_MAPPINGS.get(slot);
-        MutableComponent label = Component.literal("[ ").withStyle(ChatFormatting.YELLOW);
-        if (km.isUnbound()) label.append(Component.translatable("key.yes_steve_model.extra_animation.none"));
+        MutableComponent label = YsmGui.text("[ ").withStyle(ChatFormatting.YELLOW);
+        if (km.isUnbound()) label.append(YsmGui.trans("key.yes_steve_model.extra_animation.none"));
         else label.append(km.getTranslatedKeyMessage());
         label.append(" ]");
         g.drawCenteredString(this.font, label, x, y, 0xFFCFB058);
@@ -257,7 +277,7 @@ public class ModernAnimationRouletteScreen extends Screen {
         return ModelMetadataPresenter.getLocalizedModelString(renderContext, String.format("properties.extra_animation.%s", key), display);
     }
 
-    private void renderCenter(GuiGraphics g) {
+    private void renderCenter(YsmGui g) {
         if (animatableModel.getEntity() instanceof Player) {
             ResourceLocation tex = AnimationLockEvent.isLocked() ? lockIcon : unlockIcon;
             RenderSystem.enableBlend();
@@ -265,33 +285,33 @@ public class ModernAnimationRouletteScreen extends Screen {
             g.blit(tex, centerX - 16, centerY - 16, 32, 32, 0.0f, 0.0f, 64, 64, 64, 64);
             RenderSystem.disableBlend();
         } else {
-            g.drawCenteredString(this.font, Component.translatable("gui.yes_steve_model.roulette.stop"), centerX, centerY - 4, 0xFFFFFFFF);
+            g.drawCenteredString(this.font, YsmGui.trans("gui.yes_steve_model.roulette.stop"), centerX, centerY - 4, 0xFFFFFFFF);
         }
     }
 
-    private void renderPageButtons(GuiGraphics g) {
+    private void renderPageButtons(YsmGui g) {
         if (pageCount() <= 1) return;
         drawPageButton(g, centerX - 128.0f, centerY, page() > 0, hoveredPrev, "<");
         drawPageButton(g, centerX + 128.0f, centerY, (page() + 1) * 8 < currentProperties.size(), hoveredNext, ">");
     }
 
-    private void drawPageButton(GuiGraphics g, float cx, float cy, boolean enabled, boolean hover, String arrow) {
+    private void drawPageButton(YsmGui g, float cx, float cy, boolean enabled, boolean hover, String arrow) {
         int color = !enabled ? 0x40000000 : (hover ? 0xD0FFFFFF : 0x90000000);
-        Pie.draw(g, cx, cy, 0.0f, 16.0f, 0.0f, Pie.tau, color, 1.0f);
+        Pie.draw(g.pose(), cx, cy, 0.0f, 16.0f, 0.0f, Pie.tau, color, 1.0f);
         int textColor = enabled ? (hover ? 0xFF000000 : 0xFFFFFFFF) : 0x60FFFFFF;
         g.drawCenteredString(this.font, arrow, (int) cx, (int) cy - 4, textColor);
     }
 
-    private void renderPathAndPage(GuiGraphics g, int mouseX, int mouseY) {
+    private void renderPathAndPage(YsmGui g, int mouseX, int mouseY) {
         layoutAndDrawPath(g, mouseX, mouseY);
         String pageStr = String.format("%d/%d", page() + 1, pageCount());
-        g.drawCenteredString(this.font, Component.literal(pageStr).withStyle(ChatFormatting.AQUA), centerX, centerY + 108, 0xFFFFFFFF);
+        g.drawCenteredString(this.font, YsmGui.text(pageStr).withStyle(ChatFormatting.AQUA), centerX, centerY + 108, 0xFFFFFFFF);
     }
 
-    private void layoutAndDrawPath(GuiGraphics g, int mouseX, int mouseY) {
+    private void layoutAndDrawPath(YsmGui g, int mouseX, int mouseY) {
         int pathY = centerY - 118;
-        String prefix = Component.translatable("gui.yes_steve_model.roulette.path.prefix").getString();
-        String rootLabel = Component.translatable("gui.yes_steve_model.roulette.path.root").getString();
+        String prefix = YsmGui.trans("gui.yes_steve_model.roulette.path.prefix").getString();
+        String rootLabel = YsmGui.trans("gui.yes_steve_model.roulette.path.root").getString();
         int prefixW = this.font.width(prefix);
         int sep = this.font.width(" > ");
         int total = prefixW;
@@ -406,7 +426,7 @@ public class ModernAnimationRouletteScreen extends Screen {
     private void navigateToSubmenu(String value) {
         if (navigationStack.size() > 5) {
             LocalPlayer p = Minecraft.getInstance().player;
-            if (p != null) p.sendSystemMessage(Component.translatable("gui.yes_steve_model.roulette.too_long"));
+            if (p != null) p.displayClientMessage(YsmGui.trans("gui.yes_steve_model.roulette.too_long"), false);
             return;
         }
         String sub = value.substring(1);
@@ -437,7 +457,7 @@ public class ModernAnimationRouletteScreen extends Screen {
             PlayerCapability.get(player).ifPresent(cap -> cap.requestModelSwitch(key));
         }
         if (player != null && GeneralConfig.PRINT_ANIMATION_ROULETTE_MSG.get()) {
-            player.sendSystemMessage(Component.translatable("message.yes_steve_model.model.animation_roulette.play", key));
+            player.displayClientMessage(YsmGui.trans("message.yes_steve_model.model.animation_roulette.play", key), false);
         }
         Minecraft.getInstance().setScreen(null);
     }

@@ -34,12 +34,12 @@ public class Option<T> {
     }
 
     public Component getLabel() {
-        return Component.translatable("gui.yes_steve_model.config." + translationKey);
+        return YsmGui.trans("gui.yes_steve_model.config." + translationKey);
     }
 
     public Component getDescription() {
         String descKey = "gui.yes_steve_model.config." + translationKey + ".desc";
-        return Component.translatable(descKey);
+        return YsmGui.trans(descKey);
     }
 
     public T get() {

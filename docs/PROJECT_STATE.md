@@ -50,6 +50,11 @@
 | m0-merge-sources | in_review | work/m0-merge-sources | 5 commits：1749 文件 R100 平移+过渡依赖+42 stub 直调；build 过/runClient 主菜单零 FATAL；review-merge 审查中 |
 | harvest-curator-1 | merged | - | stonecutter-template 入 RAG（17 文件）；openysm-cpp 不入库零污染 |
 
+## M3 平铺原则（用户指示 2026-09-11，tasks.m3-flat-tiling）
+- **铺到 1.16.5+ forge/neoforge 支持的全部版本**（地图玩家友好：地图绑定 MC 版本）；
+- 枚举以 Forge/NeoForge maven 官方清单为准不凭记忆；Forge 终点 1.20.4、NeoForge 1.20.1(47.1 一 jar 双跑)+1.20.2 起全谱；
+- 相邻补丁版 API 面一致可共享条件组；20+ 条目考虑 settings/properties 生成脚本化。
+
 ## 功能差债务清单（tasks.feature-debts-1165，发卡补齐前排期）
 | id | 功能差 | 现状 | 可行性 | 卡 |
 |---|---|---|---|---|

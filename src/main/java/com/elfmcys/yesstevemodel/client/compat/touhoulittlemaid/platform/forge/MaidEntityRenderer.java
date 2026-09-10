@@ -24,12 +24,14 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 
+import rip.ysm.util.YsmCollections;
+
 import java.util.List;
 import java.util.Set;
 
 @OnlyIn(Dist.CLIENT)
 public class MaidEntityRenderer extends GeoReplacedEntityRenderer<EntityMaid, MaidCapability> implements IGeoEntityRenderer<EntityMaid> {
-    private static final Set<EntityType> CUSTOM_RIDERS = Set.of(EntityType.MINECART, EntityType.BOAT, InitEntities.BROOM.get());
+    private static final Set<EntityType> CUSTOM_RIDERS = YsmCollections.immutableSetOf(EntityType.MINECART, EntityType.BOAT, InitEntities.BROOM.get());
     public final List<GeoLayerRenderer<EntityMaid, MaidEntityRenderer>> maidLayerRenderer;
 
     public MaidEntityRenderer(EntityRendererProvider.Context context) {

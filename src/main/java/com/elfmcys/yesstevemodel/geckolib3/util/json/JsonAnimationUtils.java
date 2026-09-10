@@ -32,17 +32,17 @@ public class JsonAnimationUtils {
 
     public static List<Map.Entry<String, JsonElement>> getBones(JsonObject json) {
         JsonObject bones = json.getAsJsonObject("bones");
-        return bones == null ? List.of() : new ArrayList<>(bones.entrySet());
+        return bones == null ? Collections.emptyList() : new ArrayList<>(bones.entrySet());
     }
 
     public static List<Map.Entry<String, JsonElement>> getSoundEffects(JsonObject json) {
         JsonObject bones = json.getAsJsonObject("sound_effects");
-        return bones == null ? List.of() : new ArrayList<>(bones.entrySet());
+        return bones == null ? Collections.emptyList() : new ArrayList<>(bones.entrySet());
     }
 
     public static List<Map.Entry<String, JsonElement>> getCustomInstructionKeyFrames(JsonObject json) {
         JsonObject customInstructions = json.getAsJsonObject("timeline");
-        return customInstructions == null ? List.of() : new ArrayList<>(customInstructions.entrySet());
+        return customInstructions == null ? Collections.emptyList() : new ArrayList<>(customInstructions.entrySet());
     }
 
     private static JsonElement getObjectByKey(Set<Map.Entry<String, JsonElement>> json, String key)

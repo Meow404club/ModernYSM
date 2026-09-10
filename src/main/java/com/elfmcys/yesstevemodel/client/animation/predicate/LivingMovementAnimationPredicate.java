@@ -27,7 +27,10 @@ import java.util.Objects;
 public class LivingMovementAnimationPredicate implements IAnimationPredicate<LivingAnimatable<?>> {
     @Override
     public PlayState predicate(AnimationEvent<LivingAnimatable<?>> event, ExpressionEvaluator<?> evaluator) {
-        return Objects.requireNonNullElse(renderRidingAnimation(event), PlayState.STOP);
+        {
+            PlayState ridingState = renderRidingAnimation(event);
+            return ridingState != null ? ridingState : PlayState.STOP;
+        }
     }
 
     @Nullable

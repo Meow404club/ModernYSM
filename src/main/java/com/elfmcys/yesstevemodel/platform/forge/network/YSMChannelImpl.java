@@ -17,6 +17,7 @@ import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 import rip.ysm.api.network.PacketContext;
 import rip.ysm.api.network.PacketDirection;
+import rip.ysm.util.YsmCollections;
 
 import java.io.ByteArrayOutputStream;
 import java.util.*;
@@ -100,7 +101,7 @@ public final class YSMChannelImpl {
     public static List<Packet<?>> toClientboundPackets(Object packet) {
         byte[] encoded = encode(packet);
         if (encoded.length <= FRAGMENT_DATA_SIZE) {
-            return List.of(channel.toVanillaPacket(packet, NetworkDirection.PLAY_TO_CLIENT));
+            return YsmCollections.immutableListOf(channel.toVanillaPacket(packet, NetworkDirection.PLAY_TO_CLIENT));
         }
         List<Packet<?>> packets = new ArrayList<>();
         int transferId = nextTransferId.incrementAndGet();

@@ -29,13 +29,15 @@ import rip.ysm.gui.components.groups.TextureGroup;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import rip.ysm.util.YsmCollections;
+
 import java.util.List;
 import java.util.Map;
 
 public class ModernPlayerTextureScreen extends OptionScreen {
 
     private static final ResourceLocation ICON_TEXTURE = new ResourceLocation(YesSteveModel.MOD_ID, "texture/icon.png");
-    private static final List<String> CATEGORY_ORDER = List.of("_textures", "main", "extra", "arm", "fp_arm", "tac", "carryon", "parcool", "swem", "slashblade", "tlm", "immersive_melodies", "irons_spell_books", "arrow");
+    private static final List<String> CATEGORY_ORDER = YsmCollections.immutableListOf("_textures", "main", "extra", "arm", "fp_arm", "tac", "carryon", "parcool", "swem", "slashblade", "tlm", "immersive_melodies", "irons_spell_books", "arrow");
 
     public final ModelAssembly renderContext;
     public final String modelId;

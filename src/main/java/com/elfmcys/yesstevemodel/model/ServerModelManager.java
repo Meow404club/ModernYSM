@@ -68,6 +68,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class ServerModelManager {
@@ -206,10 +207,9 @@ public final class ServerModelManager {
 
         extractBuiltinModels();
 
-        Files.writeString(BUILT.resolve("notice.txt"),
-                "This directory is cleared every time the game starts!\n" +
-                        "该目录会在每次游戏启动时清空！",
-                StandardCharsets.UTF_8);
+        Files.write(BUILT.resolve("notice.txt"),
+                ("This directory is cleared every time the game starts!\n" +
+                        "该目录会在每次游戏启动时清空！").getBytes(StandardCharsets.UTF_8));
 
         Path blacklistFile = FOLDER.resolve("blacklist.txt");
         if (!Files.exists(blacklistFile)) {
@@ -277,7 +277,7 @@ public final class ServerModelManager {
                             "\n" +
                             "# 示例4：禁用所有内置模型 | Example 4: Disable all built-in models\n" +
                             "# .*";
-            Files.writeString(blacklistFile, content, StandardCharsets.UTF_8);
+            Files.write(blacklistFile, content.getBytes(StandardCharsets.UTF_8));
         }
         processBlacklist(blacklistFile);
 
@@ -286,7 +286,7 @@ public final class ServerModelManager {
 
         if (Files.exists(serverIndex)) {
             try {
-                String jsonStr = Files.readString(serverIndex, StandardCharsets.UTF_8);
+                String jsonStr = new String(Files.readAllBytes(serverIndex), StandardCharsets.UTF_8);
                 JsonObject jsonElement = JsonParser.parseString(jsonStr).getAsJsonObject();
 
                 if (jsonElement.get("server_key") != null && jsonElement.get("server_key").getAsJsonPrimitive().isString()) {
@@ -298,21 +298,21 @@ public final class ServerModelManager {
                     serverKeyBytes = new byte[56];
                     new SecureRandom().nextBytes(serverKeyBytes);
                     jsonElement.addProperty("server_key", Base64.getEncoder().encodeToString(serverKeyBytes));
-                    Files.writeString(serverIndex, jsonElement.toString(), StandardCharsets.UTF_8);
+                    Files.write(serverIndex, jsonElement.toString().getBytes(StandardCharsets.UTF_8));
                 }
             } catch (Exception e) {
                 serverKeyBytes = new byte[56];
                 new SecureRandom().nextBytes(serverKeyBytes);
                 JsonObject jsonElement = new JsonObject();
                 jsonElement.addProperty("server_key", Base64.getEncoder().encodeToString(serverKeyBytes));
-                Files.writeString(serverIndex, jsonElement.toString(), StandardCharsets.UTF_8);
+                Files.write(serverIndex, jsonElement.toString().getBytes(StandardCharsets.UTF_8));
             }
         } else {
             serverKeyBytes = new byte[56];
             new SecureRandom().nextBytes(serverKeyBytes);
             JsonObject jsonElement = new JsonObject();
             jsonElement.addProperty("server_key", Base64.getEncoder().encodeToString(serverKeyBytes));
-            Files.writeString(serverIndex, jsonElement.toString(), StandardCharsets.UTF_8);
+            Files.write(serverIndex, jsonElement.toString().getBytes(StandardCharsets.UTF_8));
         }
 
         serverKey = serverKeyBytes;
@@ -655,7 +655,7 @@ public final class ServerModelManager {
         List<Path> ysmFiles = new ArrayList<>();
 
         try {
-            Files.walkFileTree(searchRoot, EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE, new SimpleFileVisitor<>() {
+            Files.walkFileTree(searchRoot, EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE, new SimpleFileVisitor<Path>() {
                 @Override
                 public @NotNull FileVisitResult preVisitDirectory(@NotNull Path dir, @NotNull BasicFileAttributes attrs) {
                     if (dir.equals(searchRoot)) return FileVisitResult.CONTINUE;
@@ -804,10 +804,10 @@ public final class ServerModelManager {
         } else {
             List<Path> files;
             try (Stream<Path> stream = Files.walk(source, FileVisitOption.FOLLOW_LINKS)) {
-                files = stream.filter(Files::isRegularFile).sorted(Comparator.comparing(path -> source.relativize(path).toString())).toList();
+                files = stream.filter(Files::isRegularFile).sorted(Comparator.comparing(path -> source.relativize(path).toString())).collect(Collectors.toCollection(ArrayList::new));
             } catch (FileSystemLoopException e) {
                 YesSteveModel.LOGGER.warn("Symlink loop while snapshotting: " + source, e);
-                files = List.of();
+                files = Collections.emptyList();
             }
             Map<Path, SourceFileState> parallel;
             try {
@@ -1031,7 +1031,7 @@ public final class ServerModelManager {
                         String rel = searchRoot.relativize(path).toString().replace('\\', '/');
                         packData.folderPath = prefix + rel + (rel.endsWith("/") ? "" : "/");
 
-                        String jsonStr = Files.readString(packJson, StandardCharsets.UTF_8);
+                        String jsonStr = new String(Files.readAllBytes(packJson), StandardCharsets.UTF_8);
                         JsonObject json = JsonParser.parseString(jsonStr).getAsJsonObject();
                         if (json.has("name")) packData.name = json.get("name").getAsString();
                         if (json.has("description")) packData.description = json.get("description").getAsString();
@@ -1224,7 +1224,7 @@ public final class ServerModelManager {
                 outBuf.writeVarInt(32); // format
             }
 
-            Collection<ServerPackData> visiblePacks = shouldHideModelsFrom(uuid) ? List.of() : packs.values();
+            Collection<ServerPackData> visiblePacks = shouldHideModelsFrom(uuid) ? Collections.emptyList() : packs.values();
             outBuf.writeVarInt(visiblePacks.size());
             for (ServerPackData pack : visiblePacks) {
                 outBuf.writeString(pack.folderPath);
@@ -1443,7 +1443,7 @@ public final class ServerModelManager {
     private static void addSourceTreeState(Path root, String group, MessageDigest digest) throws IOException {
         if (!Files.isDirectory(root)) return;
         try (Stream<Path> stream = Files.walk(root, FileVisitOption.FOLLOW_LINKS)) {
-            for (Path file : stream.filter(Files::isRegularFile).sorted(Comparator.comparing(path -> root.relativize(path).toString())).toList()) {
+            for (Path file : stream.filter(Files::isRegularFile).sorted(Comparator.comparing(path -> root.relativize(path).toString())).collect(Collectors.toCollection(ArrayList::new))) {
                 String relative = group + '/' + root.relativize(file).toString().replace('\\', '/');
                 digest.update(relative.getBytes(StandardCharsets.UTF_8));
                 digest.update((byte) 0);
@@ -1466,7 +1466,7 @@ public final class ServerModelManager {
                 }
             }
             arrayList.sort((a, b) -> Float.compare(a.firstFloat(), b.firstFloat()));
-            nativeSyncModels(new UUID[]{serverPlayer.getUUID()}, new String[]{serverPlayer.getGameProfile().getName()}, collectPlayerModelIds(arrayList.stream().map(it.unimi.dsi.fastutil.Pair::second).toList()), consumer);
+            nativeSyncModels(new UUID[]{serverPlayer.getUUID()}, new String[]{serverPlayer.getGameProfile().getName()}, collectPlayerModelIds(arrayList.stream().map(it.unimi.dsi.fastutil.Pair::second).collect(Collectors.toCollection(ArrayList::new))), consumer);
         });
     }
 

@@ -45,7 +45,7 @@ public class ServerModelInfo {
         this.hashId = FileTypeUtil.parseHexId(modelHash);
         LinkedHashMap<String, Map<String, String>> copy = new LinkedHashMap<>();
         if (translations != null) {
-            translations.forEach((locale, values) -> copy.put(locale, values == null ? Map.of() : Collections.unmodifiableMap(new LinkedHashMap<>(values))));
+            translations.forEach((locale, values) -> copy.put(locale, values == null ? Collections.emptyMap() : Collections.unmodifiableMap(new LinkedHashMap<>(values))));
         }
         this.translations = Collections.unmodifiableMap(copy);
     }

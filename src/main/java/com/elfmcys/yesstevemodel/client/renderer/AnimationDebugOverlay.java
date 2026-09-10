@@ -95,7 +95,7 @@ public class AnimationDebugOverlay {
             MutableComponent mutableComponentAppend = Component.translatable("message.yes_steve_model.model.debug_animation.true").append(" -> ");
             Component customName = entity.getCustomName();
             Objects.requireNonNull(entity);
-            localPlayer.sendSystemMessage(mutableComponentAppend.append(Objects.requireNonNullElseGet(customName, entity::getDisplayName)));
+            localPlayer.sendSystemMessage(mutableComponentAppend.append(customName != null ? customName : entity.getDisplayName()));
         }
     }
 

@@ -10,6 +10,7 @@ import com.elfmcys.yesstevemodel.molang.runtime.binding.StandardBindings;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -43,8 +44,8 @@ public class PrimaryBinding implements ObjectBinding {
         this.bindings.put("c", this.foreignBinding);
         this.bindings.put("temp", this.tempBinding);
         this.bindings.put("t", this.tempBinding);
-        this.closeables = this.bindings.values().stream().filter(obj -> obj instanceof CloseVariable).map(obj2 -> (CloseVariable) obj2).collect(Collectors.toList());
-        this.resettables = this.bindings.values().stream().filter(obj3 -> obj3 instanceof ResetVariable).map(obj4 -> (ResetVariable) obj4).collect(Collectors.toList());
+        this.closeables = this.bindings.values().stream().filter(obj -> obj instanceof CloseVariable).map(obj2 -> (CloseVariable) obj2).collect(Collectors.toCollection(ArrayList::new));
+        this.resettables = this.bindings.values().stream().filter(obj3 -> obj3 instanceof ResetVariable).map(obj4 -> (ResetVariable) obj4).collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Override

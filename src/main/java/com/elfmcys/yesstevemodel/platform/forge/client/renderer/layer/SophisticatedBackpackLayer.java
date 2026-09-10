@@ -22,7 +22,7 @@ public class SophisticatedBackpackLayer extends GeoLayerRenderer<CustomPlayerEnt
     }
 
     private static EntityModel<Player> createBackpackModel() {
-        return new EntityModel<>() {
+        return new EntityModel<Player>() {
             public void setupAnim(Player player, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
             }
 

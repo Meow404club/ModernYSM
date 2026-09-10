@@ -19,6 +19,8 @@ import org.jetbrains.annotations.Nullable;
 import rip.ysm.api.network.PacketDirection;
 import rip.ysm.api.network.YSMChannel;
 
+import rip.ysm.util.YsmCollections;
+
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -144,7 +146,7 @@ public final class NetworkHandler {
 
     public static List<Packet<?>> toClientboundPackets(Object obj, UUID receiver) {
         if (!clientsSupportingModelSyncFragments.contains(receiver)) {
-            return List.of(YSMChannel.toClientboundPacket(obj));
+            return YsmCollections.immutableListOf(YSMChannel.toClientboundPacket(obj));
         }
         return YSMChannel.toClientboundPackets(obj);
     }

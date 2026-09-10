@@ -10,7 +10,9 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @OnlyIn(Dist.CLIENT)
 public class TouhouMaidBoneProcessor {
@@ -119,6 +121,6 @@ public class TouhouMaidBoneProcessor {
     }
 
     private static List<ILocationBone> getTouhouMaidBones(List<IBone> list) {
-        return list.stream().map(bone -> (ILocationBone) ((AnimatedGeoBone) bone).getTouhouMaidBone()).toList();
+        return list.stream().map(bone -> (ILocationBone) ((AnimatedGeoBone) bone).getTouhouMaidBone()).collect(Collectors.toCollection(ArrayList::new));
     }
 }

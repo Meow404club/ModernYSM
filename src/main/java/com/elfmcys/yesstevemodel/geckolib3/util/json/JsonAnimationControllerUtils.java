@@ -31,12 +31,12 @@ public class JsonAnimationControllerUtils {
 
     public static List<Map.Entry<String, JsonElement>> getStates(JsonObject json) {
         JsonObject states = json.getAsJsonObject("states");
-        return states == null ? List.of() : new ArrayList<>(states.entrySet());
+        return states == null ? Collections.emptyList() : new ArrayList<>(states.entrySet());
     }
 
     public static List<JsonElement> getAnimations(JsonObject json) {
         JsonArray animations = json.getAsJsonArray("animations");
-        return animations == null ? List.of() : animations.asList();
+        return animations == null ? Collections.emptyList() : animations.asList();
     }
 
     @SuppressWarnings("unchecked")

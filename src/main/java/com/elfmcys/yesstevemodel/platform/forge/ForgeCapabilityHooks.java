@@ -99,7 +99,11 @@ public final class ForgeCapabilityHooks {
                 Optional<S2CSetModelAndTexturePacket> optional = cap.createSyncMessage(trackPlayer, false);
                 Consumer<? super S2CSetModelAndTexturePacket> consumer = message -> NetworkHandler.sendToClientPlayer(message, entity);
                 Objects.requireNonNull(cap);
-                optional.ifPresentOrElse(consumer, cap::markDirty);
+                if (optional.isPresent()) {
+                    consumer.accept(optional.get());
+                } else {
+                    cap.markDirty();
+                }
             });
             return;
         }

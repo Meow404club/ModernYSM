@@ -23,6 +23,7 @@ import net.minecraftforge.event.RegisterCommandsEvent;
 import rip.ysm.api.PlatformAPI;
 
 import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,9 +35,11 @@ public final class CommandRegistry {
     public static final SuggestionProvider<CommandSourceStack> MODEL_IDS = SuggestionProviders.register(new ResourceLocation(YesSteveModel.MOD_ID, "models"), (commandContext, suggestionsBuilder) -> {
         if (commandContext.getSource() instanceof SharedSuggestionProvider) {
             if (PlatformAPI.isServer()) {
-                return SharedSuggestionProvider.suggest(ServerModelManager.getServerModelInfo().keySet().stream().map(CommandRegistry::escapeIfRequired).toList(), suggestionsBuilder);
+                List<String> serverModelIds = ServerModelManager.getServerModelInfo().keySet().stream().map(CommandRegistry::escapeIfRequired).collect(Collectors.toCollection(ArrayList::new));
+                return SharedSuggestionProvider.suggest(serverModelIds, suggestionsBuilder);
             }
-            return SharedSuggestionProvider.suggest(ClientModelManager.getModelAssemblyMap().keySet().stream().map(CommandRegistry::escapeIfRequired).toList(), suggestionsBuilder);
+            List<String> clientModelIds = ClientModelManager.getModelAssemblyMap().keySet().stream().map(CommandRegistry::escapeIfRequired).collect(Collectors.toCollection(ArrayList::new));
+            return SharedSuggestionProvider.suggest(clientModelIds, suggestionsBuilder);
         }
         return Suggestions.empty();
     });
@@ -48,7 +51,7 @@ public final class CommandRegistry {
             }
             Object2ReferenceMap<String, Animation> map = ClientModelManager.getLocalModelContext().getAnimationBundle().getMainAnimations();
             HashSet<String> set = Sets.newHashSet();
-            set.addAll(map.keySet().stream().map(CommandRegistry::escapeIfRequired).toList());
+            set.addAll(map.keySet().stream().map(CommandRegistry::escapeIfRequired).collect(Collectors.toCollection(ArrayList::new)));
             set.add("stop");
             return SharedSuggestionProvider.suggest(set, suggestionsBuilder);
         }
@@ -60,12 +63,12 @@ public final class CommandRegistry {
             String str = commandContext.getArgument("model_id", String.class);
             if (PlatformAPI.isServer()) {
                 if (ServerModelManager.getServerModelInfo().containsKey(str)) {
-                    List<String> list = ServerModelManager.getServerModelInfo().get(str).getModelInfo().getTextures().stream().map(CommandRegistry::escapeIfRequired).collect(Collectors.toList());
+                    List<String> list = ServerModelManager.getServerModelInfo().get(str).getModelInfo().getTextures().stream().map(CommandRegistry::escapeIfRequired).collect(Collectors.toCollection(ArrayList::new));
                     list.add(0, "-");
                     return SharedSuggestionProvider.suggest(list, suggestionsBuilder);
                 }
             } else if (ClientModelManager.getModelAssemblyMap().containsKey(str)) {
-                List<String> list2 = ClientModelManager.getModelContext(str).map(context -> context.getAnimationBundle().getTextures().getKeys().stream().map(CommandRegistry::escapeIfRequired).collect(Collectors.toList())).orElseGet(Lists::newArrayList);
+                List<String> list2 = ClientModelManager.getModelContext(str).map(context -> context.getAnimationBundle().getTextures().getKeys().stream().map(CommandRegistry::escapeIfRequired).collect(Collectors.toCollection(ArrayList::new))).orElseGet(Lists::newArrayList);
                 list2.add(0, "-");
                 return SharedSuggestionProvider.suggest(list2, suggestionsBuilder);
             }

@@ -27,7 +27,7 @@ public class ItemUseAnimationPredicate implements IAnimationPredicate<LivingAnim
             if (playState == null) {
                 playState = SWarfareCompat.handleGunActionAnim(itemInHand, event);
             }
-            return Objects.requireNonNullElse(playState, PlayState.STOP);
+            return playState != null ? playState : PlayState.STOP;
         }
         return PlayState.STOP;
     }

@@ -8,8 +8,11 @@ import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.server.ServerLifecycleHooks;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * architectury {@code Platform}/{@code GameInstance} 的 Forge 原生薄封装
@@ -68,8 +71,9 @@ public final class YsmPlatform {
 
     /** 原 Platform.getMods（不可变快照）。 */
     public static Collection<YsmModInfo> getMods() {
-        return Collections.unmodifiableList(ModList.get().getMods().stream()
+        List<YsmModInfo> mods = ModList.get().getMods().stream()
                 .map(YsmModInfo::new)
-                .toList());
+                .collect(Collectors.toCollection(ArrayList::new));
+        return Collections.unmodifiableList(mods);
     }
 }

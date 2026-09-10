@@ -5,13 +5,12 @@ import com.elfmcys.yesstevemodel.capability.PlayerCapability;
 import com.elfmcys.yesstevemodel.client.input.AnimationRouletteKey;
 import com.elfmcys.yesstevemodel.network.NetworkHandler;
 import com.elfmcys.yesstevemodel.network.message.C2SPlayAnimationPacket;
-import dev.architectury.event.EventResult;
-import dev.architectury.event.events.client.ClientRawInputEvent;
-import dev.architectury.event.events.client.ClientTickEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.Input;
 import net.minecraft.client.player.LocalPlayer;
-import rip.ysm.api.PlatformAPI;
+import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.TickEvent;
 
 public class AnimationLockEvent {
 
@@ -21,13 +20,23 @@ public class AnimationLockEvent {
     }
 
     public static void register() {
-        ClientRawInputEvent.KEY_PRESSED.register((client, keyCode, scanCode, action, modifiers) -> {
-            if (YesSteveModel.isAvailable() && action == 1 && AnimationRouletteKey.KEY_LOCK.matches(keyCode, scanCode)) {
-                animationLocked = !animationLocked;
-            }
-            return EventResult.pass();
-        });
-        ClientTickEvent.CLIENT_POST.register(AnimationLockEvent::onClientTick);
+        // ClientRawInputEvent.KEY_PRESSED → InputEvent.Key（不可取消，原恒 pass）
+        MinecraftForge.EVENT_BUS.addListener(AnimationLockEvent::onKeyEvent);
+        // ClientTickEvent.CLIENT_POST → TickEvent.ClientTickEvent phase END
+        MinecraftForge.EVENT_BUS.addListener(AnimationLockEvent::onClientTickEvent);
+    }
+
+    private static void onKeyEvent(InputEvent.Key event) {
+        if (YesSteveModel.isAvailable() && event.getAction() == 1 && AnimationRouletteKey.KEY_LOCK.matches(event.getKey(), event.getScanCode())) {
+            animationLocked = !animationLocked;
+        }
+    }
+
+    private static void onClientTickEvent(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) {
+            return;
+        }
+        onClientTick(Minecraft.getInstance());
     }
 
     private static void onClientTick(Minecraft client) {

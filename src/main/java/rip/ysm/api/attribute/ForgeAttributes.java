@@ -4,6 +4,7 @@ import dev.architectury.injectables.annotations.ExpectPlatform;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import org.jetbrains.annotations.Nullable;
+import rip.ysm.api.attribute.platform.forge.ForgeAttributesImpl;
 
 public final class ForgeAttributes {
 
@@ -13,37 +14,37 @@ public final class ForgeAttributes {
     @ExpectPlatform
     @Nullable
     public static Attribute blockReach() {
-        throw new AssertionError();
+        return ForgeAttributesImpl.blockReach();
     }
 
     @ExpectPlatform
     @Nullable
     public static Attribute entityReach() {
-        throw new AssertionError();
+        return ForgeAttributesImpl.entityReach();
     }
 
     @ExpectPlatform
     @Nullable
     public static Attribute swimSpeed() {
-        throw new AssertionError();
+        return ForgeAttributesImpl.swimSpeed();
     }
 
     @ExpectPlatform
     @Nullable
     public static Attribute entityGravity() {
-        throw new AssertionError();
+        return ForgeAttributesImpl.entityGravity();
     }
 
     @ExpectPlatform
     @Nullable
     public static Attribute stepHeightAddition() {
-        throw new AssertionError();
+        return ForgeAttributesImpl.stepHeightAddition();
     }
 
     @ExpectPlatform
     @Nullable
     public static Attribute nametagDistance() {
-        throw new AssertionError();
+        return ForgeAttributesImpl.nametagDistance();
     }
 
     public static double getValue(LivingEntity entity, @Nullable Attribute attribute, double defaultValue) {

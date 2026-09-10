@@ -2,6 +2,7 @@ package rip.ysm.api.capability;
 
 import dev.architectury.injectables.annotations.ExpectPlatform;
 import net.minecraft.world.entity.Entity;
+import rip.ysm.api.capability.platform.forge.CapabilityLifecycleImpl;
 
 public final class CapabilityLifecycle {
 
@@ -10,11 +11,11 @@ public final class CapabilityLifecycle {
 
     @ExpectPlatform
     public static void revive(Entity entity) {
-        throw new AssertionError();
+        CapabilityLifecycleImpl.revive(entity);
     }
 
     @ExpectPlatform
     public static void invalidate(Entity entity) {
-        throw new AssertionError();
+        CapabilityLifecycleImpl.invalidate(entity);
     }
 }

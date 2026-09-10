@@ -11,6 +11,7 @@ import net.minecraft.world.entity.player.Player;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import rip.ysm.api.network.platform.forge.YSMChannelImpl;
 
 public final class YSMChannel {
 
@@ -19,51 +20,51 @@ public final class YSMChannel {
 
     @ExpectPlatform
     public static void init(ResourceLocation channelId, String version) {
-        throw new AssertionError();
+        YSMChannelImpl.init(channelId, version);
     }
 
     @ExpectPlatform
     public static <T> void register(int discriminator, Class<T> type, BiConsumer<T, FriendlyByteBuf> encoder, Function<FriendlyByteBuf, T> decoder, BiConsumer<T, PacketContext> handler, PacketDirection direction) {
-        throw new AssertionError();
+        YSMChannelImpl.register(discriminator, type, encoder, decoder, handler, direction);
     }
 
     @ExpectPlatform
     public static void sendToServer(Object packet) {
-        throw new AssertionError();
+        YSMChannelImpl.sendToServer(packet);
     }
 
     @ExpectPlatform
     public static void sendToClientPlayer(Object packet, ServerPlayer player) {
-        throw new AssertionError();
+        YSMChannelImpl.sendToClientPlayer(packet, player);
     }
 
     @ExpectPlatform
     public static void sendToAll(Object packet) {
-        throw new AssertionError();
+        YSMChannelImpl.sendToAll(packet);
     }
 
     @ExpectPlatform
     public static void sendToTrackingEntity(Object packet, Entity entity) {
-        throw new AssertionError();
+        YSMChannelImpl.sendToTrackingEntity(packet, entity);
     }
 
     @ExpectPlatform
     public static void sendToTrackingEntityAndSelf(Object packet, Player player) {
-        throw new AssertionError();
+        YSMChannelImpl.sendToTrackingEntityAndSelf(packet, player);
     }
 
     @ExpectPlatform
     public static Packet<?> toClientboundPacket(Object packet) {
-        throw new AssertionError();
+        return YSMChannelImpl.toClientboundPacket(packet);
     }
 
     @ExpectPlatform
     public static List<Packet<?>> toClientboundPackets(Object packet) {
-        throw new AssertionError();
+        return YSMChannelImpl.toClientboundPackets(packet);
     }
 
     @ExpectPlatform
     public static Packet<?> toServerboundPacket(Object packet) {
-        throw new AssertionError();
+        return YSMChannelImpl.toServerboundPacket(packet);
     }
 }

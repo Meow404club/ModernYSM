@@ -21,7 +21,65 @@ repositories {
     flatDir { dirs(rootProject.file("libs")) }
 }
 
+// architectury 过渡依赖的 dev 运行时改造（两步）：
+// ① remapArchitecturyDevJar：生产 jar 为 SRG 成员名（m_135782_ 等），mojmap dev 运行时
+//    NoSuchMethodError（旧仓由 loom 重映射）。用 MDG 产出的 intermediateToNamed.srg
+//    + SpecialSource 做 SRG→mojmap 字节码重映射；
+// ② patchArchitecturyDevJar：剥 manifest MixinConfigs——其内置 mixin 挂 SRG refmap，
+//    重映射后 @Shadow 成员仍为 SRG 字面量，apply 必炸；mod 身份（mods.toml
+//    modId=architectury）保留。M1 mig-purge-architectury 删依赖后两任务一并删除。
+configurations.runtimeClasspath {
+    exclude(group = "dev.architectury", module = "architectury-forge")
+}
+val architecturyOriginal: Configuration by configurations.creating {
+    isCanBeResolved = true
+    isTransitive = false
+}
+val specialSourceRuntime: Configuration by configurations.creating {
+    isCanBeResolved = true
+    isTransitive = false
+}
 dependencies {
+    architecturyOriginal("dev.architectury:architectury-forge:${property("deps.architectury")}")
+    specialSourceRuntime("net.md-5:SpecialSource:1.11.4:shaded")
+}
+tasks.register<JavaExec>("remapArchitecturyDevJar") {
+    dependsOn("createMinecraftArtifacts")
+    // 配置期显式解析：Configuration 直接进任务会破坏 configuration cache
+    val archJar: File = architecturyOriginal.singleFile
+    val ssFiles: Set<File> = specialSourceRuntime.files
+    val srg = layout.buildDirectory.file("moddev/artifacts/intermediateToNamed.srg")
+    val out = layout.buildDirectory.file("architectury-devpatch/architectury-forge-remapped.jar")
+    inputs.file(archJar)
+    inputs.file(srg)
+    outputs.file(out)
+    classpath(ssFiles)
+    mainClass = "net.md_5.specialsource.SpecialSource"
+    doFirst { out.get().asFile.parentFile.mkdirs() }
+    argumentProviders += CommandLineArgumentProvider {
+        listOf(
+            "--in-jar", archJar.absolutePath,
+            "--out-jar", out.get().asFile.absolutePath,
+            "--srg-in", srg.get().asFile.absolutePath,
+        )
+    }
+}
+tasks.register<Jar>("patchArchitecturyDevJar") {
+    val remapped = tasks.named("remapArchitecturyDevJar").map { it.outputs.files.singleFile }
+    inputs.files(remapped)
+    from({ remapped.get().let { zipTree(it) } }) {
+        exclude("META-INF/MANIFEST.MF", "META-INF/*.SF", "META-INF/*.RSA", "META-INF/*.DSA")
+    }
+    manifest {
+        attributes("Manifest-Version" to "1.0")
+        // 故意不含 MixinConfigs
+    }
+    destinationDirectory = layout.buildDirectory.dir("architectury-devpatch")
+    archiveFileName = "architectury-forge-devpatch.jar"
+}
+
+dependencies {
+
     // ===== 过渡期依赖（M1 逐域清零后由 mig-purge-architectury 删除）=====
     // @ExpectPlatform 注解 + dev.architectury 事件/Platform API 的编译与运行时载体。
     // 无 architectury-plugin 织入：@ExpectPlatform stub 运行时直调必 AssertionError，
@@ -30,6 +88,9 @@ dependencies {
     // 注：勿引 dev.architectury:architectury（common 工件）——其签名为 intermediary
     // 命名（class_310 等），需 loom 重映射；architectury-forge 工件本身为 mojmap
     // 命名且含全套 dev.architectury API（382 类，Platform/Event/EventBuses 实测）
+    // dev 运行时换装剥 MixinConfigs 的补丁 jar；生产 reobfJar 链路不受影响
+    // （用户侧安装的 architectury mod 为 SRG 运行时，其自带 mixin 正常工作）
+    runtimeOnly(files(tasks.named("patchArchitecturyDevJar")))
     // @ExpectPlatform/@PlatformOnly 注解本体（旧仓由 architectury-plugin 自动注入，此处显式声明）
     compileOnly("dev.architectury:architectury-injectables:1.0.13")
     // common 侧 @Environment(EnvType)/EnvType 注解仅编译期使用（forge 运行时不读取）

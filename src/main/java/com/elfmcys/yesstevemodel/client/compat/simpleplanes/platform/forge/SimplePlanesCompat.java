@@ -32,7 +32,8 @@ public class SimplePlanesCompat {
     public static Optional<Vector3f> getSimplePlanesRotation(AnimationEvent<GeckoVehicleEntity> event) {
         if (IS_LOADED) {
             Object entity = event.getAnimatable().getEntity();
-            if (entity instanceof PlaneEntity planeEntity) {
+            if (entity instanceof PlaneEntity) {
+                PlaneEntity planeEntity = (PlaneEntity) entity;
                 Quaternionf quaternionfLerpQ = xyz.przemyk.simpleplanes.misc.MathUtil.lerpQ(event.getFrameTime(), planeEntity.getQ_Prev(), planeEntity.getQ_Client());
                 quaternionfLerpQ.premul(Axis.YP.rotation(-MathUtil.degreesToRadians(planeEntity.getViewYRot(event.getFrameTime()))));
                 float timeSinceHit = planeEntity.getTimeSinceHit() - event.getFrameTime();

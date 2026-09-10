@@ -145,11 +145,18 @@ public class ModelUploadScreen extends Screen implements ModelUploadSession.List
     private void renderSessionState(GuiGraphics guiGraphics, ModelUploadSession session) {
         int cx = this.width / 2;
         int cy = this.height / 2;
-        ChatFormatting color = switch (session.getState()) {
-            case COMPLETED -> ChatFormatting.GREEN;
-            case FAILED -> ChatFormatting.RED;
-            default -> ChatFormatting.YELLOW;
-        };
+        ChatFormatting color;
+        switch (session.getState()) {
+            case COMPLETED:
+                color = ChatFormatting.GREEN;
+                break;
+            case FAILED:
+                color = ChatFormatting.RED;
+                break;
+            default:
+                color = ChatFormatting.YELLOW;
+                break;
+        }
         Component title = Component.literal(session.getMessage()).withStyle(color);
         int tw = this.font.width(title);
         guiGraphics.drawString(this.font, title, cx - tw / 2, cy - 32, 0xFFFFFFFF);

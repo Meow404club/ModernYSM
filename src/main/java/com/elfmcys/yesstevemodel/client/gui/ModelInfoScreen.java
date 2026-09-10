@@ -11,7 +11,6 @@ import com.elfmcys.yesstevemodel.client.gui.button.FlatColorButton;
 import com.elfmcys.yesstevemodel.model.format.ServerModelInfo;
 import com.elfmcys.yesstevemodel.client.upload.IResourceLocatable;
 import com.elfmcys.yesstevemodel.mixin.client.ScreenAccessor;
-import com.google.common.collect.ImmutableMap;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -23,6 +22,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
+import rip.ysm.util.YsmCollections;
 
 import java.util.*;
 
@@ -30,7 +30,7 @@ public class ModelInfoScreen extends Screen {
 
     private static final ResourceLocation DEFAULT_AVATAR = new ResourceLocation(YesSteveModel.MOD_ID, "texture/default_avatar.png");
 
-    private static final Map<String, Component> URL_LABELS = ImmutableMap.of("home", Component.translatable("gui.yes_steve_model.url.home"), "donate", Component.translatable("gui.yes_steve_model.url.donate"));
+    private static final Map<String, Component> URL_LABELS = YsmCollections.immutableMapOf("home", Component.translatable("gui.yes_steve_model.url.home"), "donate", Component.translatable("gui.yes_steve_model.url.donate"));
 
     private final List<IResourceLocatable> textureList;
 

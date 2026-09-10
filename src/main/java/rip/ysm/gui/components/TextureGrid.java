@@ -99,7 +99,7 @@ public final class TextureGrid extends OptionRow<Object> {
         int bg = selected ? 0x90333333 : (hover ? 0x90171717 : 0x90000000);
         g.fill(x, y, x + TEX_BTN_W, y + TEX_BTN_H, bg);
         renderHolderPreview(x, y, holder, pt);
-        Component label = Component.literal(ModelMetadataPresenter.getLocalizedModelString(owner.renderContext, "files.player.texture.%s".formatted(name), name));
+        Component label = Component.literal(ModelMetadataPresenter.getLocalizedModelString(owner.renderContext, String.format("files.player.texture.%s", name), name));
         int textY = y + TEX_BTN_H - 12;
         int tw = Minecraft.getInstance().font.width(label);
         g.drawString(Minecraft.getInstance().font, label, x + (TEX_BTN_W - tw) / 2, textY, 0xFFFFFFFF, true);

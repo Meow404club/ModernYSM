@@ -473,7 +473,8 @@ public class AnimationControllerRuntime<T extends AnimatableEntity<?>> implement
                         hasData = true;
                         if (isFirst) {
                             isFirst = false;
-                            if (animationPoint instanceof TransitionPoint transition) {
+                            if (animationPoint instanceof TransitionPoint) {
+                                TransitionPoint transition = (TransitionPoint) animationPoint;
                                 isTransition = true;
                                 offsetPoint = transition.getOffsetPoint();
                                 lerpFactor = transition.getLerpFactor();
@@ -532,7 +533,8 @@ public class AnimationControllerRuntime<T extends AnimatableEntity<?>> implement
                         hasData = true;
                         if (isFirst) {
                             isFirst = false;
-                            if (point instanceof TransitionPoint transition) {
+                            if (point instanceof TransitionPoint) {
+                                TransitionPoint transition = (TransitionPoint) point;
                                 isTransition = true;
                                 offsetPoint = transition.getOffsetPoint();
                                 lerpFactor = transition.getLerpFactor();
@@ -591,7 +593,8 @@ public class AnimationControllerRuntime<T extends AnimatableEntity<?>> implement
                         hasData = true;
                         if (isFirst) {
                             isFirst = false;
-                            if (point instanceof TransitionPoint transition) {
+                            if (point instanceof TransitionPoint) {
+                                TransitionPoint transition = (TransitionPoint) point;
                                 isTransition = true;
                                 offsetPoint = transition.getOffsetPoint();
                                 lerpFactor = transition.getLerpFactor();

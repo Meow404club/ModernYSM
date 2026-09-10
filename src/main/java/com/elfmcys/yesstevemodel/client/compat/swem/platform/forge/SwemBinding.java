@@ -27,7 +27,8 @@ public class SwemBinding {
     @Nullable
     public static String getHorseGait(IContext<LivingEntity> context) {
         Entity vehicle = context.entity().getVehicle();
-        if (vehicle instanceof SWEMHorseEntityBase sWEMHorseEntityBase) {
+        if (vehicle instanceof SWEMHorseEntityBase) {
+            SWEMHorseEntityBase sWEMHorseEntityBase = (SWEMHorseEntityBase) vehicle;
             SWEMHorseEntityBase.Gait gait = sWEMHorseEntityBase.getGait();
             double jumpHeight = sWEMHorseEntityBase.jumpHeight;
             if (jumpHeight > 0.0d) {

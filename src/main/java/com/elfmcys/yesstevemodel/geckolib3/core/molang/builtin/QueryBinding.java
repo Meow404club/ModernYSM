@@ -113,7 +113,8 @@ public class QueryBinding extends ContextBinding {
 
     private static boolean isFlying(IContext<Player> context) {
         AnimatableEntity<?> abstractC0235x5da32a01Mo322x83eb685f = context.geoInstance();
-        if (abstractC0235x5da32a01Mo322x83eb685f instanceof PlayerCapability playerCapability) {
+        if (abstractC0235x5da32a01Mo322x83eb685f instanceof PlayerCapability) {
+            PlayerCapability playerCapability = (PlayerCapability) abstractC0235x5da32a01Mo322x83eb685f;
             if (!playerCapability.isLocalPlayerModel()) {
                 return playerCapability.getPositionTracker().isFlying();
             }
@@ -123,7 +124,8 @@ public class QueryBinding extends ContextBinding {
 
     private static int getPlayerLevel(IContext<Player> context) {
         AnimatableEntity<?> abstractC0235x5da32a01Mo322x83eb685f = context.geoInstance();
-        if (abstractC0235x5da32a01Mo322x83eb685f instanceof PlayerCapability playerCapability) {
+        if (abstractC0235x5da32a01Mo322x83eb685f instanceof PlayerCapability) {
+            PlayerCapability playerCapability = (PlayerCapability) abstractC0235x5da32a01Mo322x83eb685f;
             if (!playerCapability.isLocalPlayerModel()) {
                 return playerCapability.getPositionTracker().getExperienceLevel();
             }
@@ -133,7 +135,8 @@ public class QueryBinding extends ContextBinding {
 
     private static Object getHealth(IContext<LivingEntity> context) {
         AnimatableEntity<?> abstractC0235x5da32a01Mo322x83eb685f = context.geoInstance();
-        if (abstractC0235x5da32a01Mo322x83eb685f instanceof PlayerCapability playerCapability) {
+        if (abstractC0235x5da32a01Mo322x83eb685f instanceof PlayerCapability) {
+            PlayerCapability playerCapability = (PlayerCapability) abstractC0235x5da32a01Mo322x83eb685f;
             if (!playerCapability.isLocalPlayerModel()) {
                 return playerCapability.getPositionTracker().getHealth();
             }
@@ -143,7 +146,8 @@ public class QueryBinding extends ContextBinding {
 
     private static Object getMaxHealth(IContext<LivingEntity> context) {
         AnimatableEntity<?> abstractC0235x5da32a01Mo322x83eb685f = context.geoInstance();
-        if (abstractC0235x5da32a01Mo322x83eb685f instanceof PlayerCapability playerCapability) {
+        if (abstractC0235x5da32a01Mo322x83eb685f instanceof PlayerCapability) {
+            PlayerCapability playerCapability = (PlayerCapability) abstractC0235x5da32a01Mo322x83eb685f;
             if (!playerCapability.isLocalPlayerModel()) {
                 return playerCapability.getPositionTracker().getMaxHealth();
             }

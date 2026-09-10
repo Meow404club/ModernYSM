@@ -41,9 +41,10 @@ public class MaidEventHandler {
     }
 
     public static boolean isYsmModelMaid(Entity entity) {
-        if (!(entity instanceof EntityMaid entityMaid)) {
+        if (!(entity instanceof EntityMaid)) {
             return false;
         }
+        EntityMaid entityMaid = (EntityMaid) entity;
         return entityMaid.getCapability(MaidCapabilityProvider.MAID_CAP).isPresent() && entityMaid.isYsmModel();
     }
 

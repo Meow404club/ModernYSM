@@ -171,7 +171,8 @@ public final class MolangParserImpl implements MolangParser {
         Token current = lexer.current();
 
         // 保留第一个的逻辑，仅优化内部混淆的变量名
-        if (left instanceof CallExpression callExpression) {
+        if (left instanceof CallExpression) {
+            CallExpression callExpression = (CallExpression) left;
             if (current.kind() == TokenKind.LPAREN) {
                 if (callExpression.arguments() != CallExpression.EMPTY) {
                     throw new ParseException("Multiple '()' after function name", lexer.cursor());

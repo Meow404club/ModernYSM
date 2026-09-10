@@ -6,6 +6,7 @@ import com.elfmcys.yesstevemodel.molang.runtime.ExpressionEvaluator;
 import org.joml.Vector3f;
 
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.Map;
 
 public class Vector3v {
@@ -40,9 +41,9 @@ public class Vector3v {
     }
 
     public Vector3v(float x, float y, float z, IValue xExpression, IValue yExpression, IValue zExpression) {
-        this.x = xExpression instanceof FloatValue value ? value.value() : x;
-        this.y = yExpression instanceof FloatValue value ? value.value() : y;
-        this.z = zExpression instanceof FloatValue value ? value.value() : z;
+        this.x = xExpression instanceof FloatValue ? ((FloatValue) xExpression).value() : x;
+        this.y = yExpression instanceof FloatValue ? ((FloatValue) yExpression).value() : y;
+        this.z = zExpression instanceof FloatValue ? ((FloatValue) zExpression).value() : z;
 
         IValue resolvedX = xExpression instanceof FloatValue ? null : xExpression;
         IValue resolvedY = yExpression instanceof FloatValue ? null : yExpression;
@@ -66,6 +67,34 @@ public class Vector3v {
         );
     }
 
-    private record ConstantKey(int x, int y, int z) {
+    private static final class ConstantKey {
+        final int x;
+        final int y;
+        final int z;
+
+        ConstantKey(int x, int y, int z) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof ConstantKey)) {
+                return false;
+            }
+            ConstantKey other = (ConstantKey) obj;
+            return this.x == other.x && this.y == other.y && this.z == other.z;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.x, this.y, this.z);
+        }
+
+        @Override
+        public String toString() {
+            return "ConstantKey[x=" + this.x + ", y=" + this.y + ", z=" + this.z + "]";
+        }
     }
 }

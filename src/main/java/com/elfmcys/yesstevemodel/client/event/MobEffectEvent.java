@@ -15,7 +15,8 @@ public class MobEffectEvent {
         if (!YesSteveModel.isAvailable() || entity.level().isClientSide()) {
             return;
         }
-        if (entity instanceof ServerPlayer serverPlayer && effect != null) {
+        if (entity instanceof ServerPlayer) {
+            ServerPlayer serverPlayer = (ServerPlayer) entity;
             ModelInfoCapability.get(serverPlayer).ifPresent(cap -> cap.getAnimSync().syncEffectAdded(serverPlayer, effect, amplifier + 1));
         }
     }
@@ -24,7 +25,8 @@ public class MobEffectEvent {
         if (!YesSteveModel.isAvailable() || entity.level().isClientSide()) {
             return;
         }
-        if (entity instanceof ServerPlayer serverPlayer && effect != null) {
+        if (entity instanceof ServerPlayer) {
+            ServerPlayer serverPlayer = (ServerPlayer) entity;
             ModelInfoCapability.get(serverPlayer).ifPresent(cap -> cap.getAnimSync().syncEffectRemoved(serverPlayer, effect));
         }
     }

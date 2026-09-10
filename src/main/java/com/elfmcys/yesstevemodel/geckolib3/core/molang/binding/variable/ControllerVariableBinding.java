@@ -8,6 +8,8 @@ import com.elfmcys.yesstevemodel.molang.runtime.AssignableVariable;
 import com.elfmcys.yesstevemodel.molang.runtime.ExecutionContext;
 import com.elfmcys.yesstevemodel.molang.runtime.binding.ObjectBinding;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
+
+import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("MapOrSetKeyShouldOverrideHashCodeEquals")
@@ -24,7 +26,17 @@ public class ControllerVariableBinding implements ObjectBinding, ResetVariable {
         variableMap.clear();
     }
 
-    private record ControllerVariable(int name) implements AssignableVariable {
+    private static final class ControllerVariable implements AssignableVariable {
+        private final int name;
+
+        ControllerVariable(int name) {
+            this.name = name;
+        }
+
+        public int name() {
+            return this.name;
+        }
+
         @Override
         @SuppressWarnings("unchecked")
         public Object evaluate(@NotNull ExecutionContext<?> context) {
@@ -42,6 +54,25 @@ public class ControllerVariableBinding implements ObjectBinding, ResetVariable {
             if (storage != null) {
                 storage.setControllerVariable(this.name, value);
             }
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof ControllerVariable)) {
+                return false;
+            }
+            ControllerVariable other = (ControllerVariable) obj;
+            return this.name == other.name;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.name);
+        }
+
+        @Override
+        public String toString() {
+            return "ControllerVariable[name=" + this.name + "]";
         }
     }
 }

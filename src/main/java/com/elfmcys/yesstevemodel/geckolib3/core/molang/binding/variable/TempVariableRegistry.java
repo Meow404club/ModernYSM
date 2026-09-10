@@ -9,6 +9,8 @@ import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
+
 public class TempVariableRegistry implements ObjectBinding, CloseVariable {
 
     private final Object2ReferenceMap<String, TempVariable> variableMap = new Object2ReferenceOpenHashMap();
@@ -30,7 +32,17 @@ public class TempVariableRegistry implements ObjectBinding, CloseVariable {
         this.topPointer = 0;
     }
 
-    private record TempVariable(int address) implements AssignableVariable {
+    private static final class TempVariable implements AssignableVariable {
+        private final int address;
+
+        TempVariable(int address) {
+            this.address = address;
+        }
+
+        public int address() {
+            return this.address;
+        }
+
         @Override
         @SuppressWarnings("unchecked")
         public Object evaluate(@NotNull ExecutionContext<?> context) {
@@ -41,6 +53,25 @@ public class TempVariableRegistry implements ObjectBinding, CloseVariable {
         @SuppressWarnings("unchecked")
         public void assign(@NotNull ExecutionContext<?> context, Object value) {
             ((IContext<Object>) context.entity()).tempStorage().setElement(this.address, value);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof TempVariable)) {
+                return false;
+            }
+            TempVariable other = (TempVariable) obj;
+            return this.address == other.address;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.address);
+        }
+
+        @Override
+        public String toString() {
+            return "TempVariable[address=" + this.address + "]";
         }
     }
 }

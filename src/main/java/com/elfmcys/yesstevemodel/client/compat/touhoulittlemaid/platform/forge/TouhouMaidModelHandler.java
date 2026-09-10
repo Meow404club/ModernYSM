@@ -31,9 +31,10 @@ public class TouhouMaidModelHandler {
 
     @OnlyIn(Dist.CLIENT)
     public static void executeMaidMolang(Entity entity, String str) {
-        if (!(entity instanceof EntityMaid entityMaid)) {
+        if (!(entity instanceof EntityMaid)) {
             return;
         }
+        EntityMaid entityMaid = (EntityMaid) entity;
         if (!entityMaid.isYsmModel()) {
             return;
         }
@@ -47,9 +48,10 @@ public class TouhouMaidModelHandler {
     }
 
     public static void applyProjectileModelFromMaid(Projectile projectile, Entity entity) {
-        if (!(entity instanceof EntityMaid entityMaid)) {
+        if (!(entity instanceof EntityMaid)) {
             return;
         }
+        EntityMaid entityMaid = (EntityMaid) entity;
         if (entityMaid.isYsmModel()) {
             projectile.getCapability(ProjectileModelCapabilityProvider.PROJECTILE_MODEL).ifPresent(cap -> {
                 cap.setModel(entityMaid.getYsmModelId(), new Object2FloatOpenHashMap<>());
@@ -59,9 +61,10 @@ public class TouhouMaidModelHandler {
     }
 
     public static void applyVehicleModelFromMaid(Entity entity, Entity entity2) {
-        if (!(entity2 instanceof EntityMaid entityMaid)) {
+        if (!(entity2 instanceof EntityMaid)) {
             return;
         }
+        EntityMaid entityMaid = (EntityMaid) entity2;
         if (entityMaid.isYsmModel() && entity.getFirstPassenger() == entity2) {
             entity.getCapability(VehicleModelCapabilityProvider.VEHICLE_MODEL_CAP).ifPresent(cap -> {
                 cap.setModel(entityMaid.getYsmModelId(), new Object2FloatOpenHashMap<>());
@@ -71,9 +74,10 @@ public class TouhouMaidModelHandler {
     }
 
     public static void activateRouletteAnimation(Entity entity, String str, int i) {
-        if (!(entity instanceof EntityMaid entityMaid)) {
+        if (!(entity instanceof EntityMaid)) {
             return;
         }
+        EntityMaid entityMaid = (EntityMaid) entity;
         if (!entityMaid.isYsmModel()) {
             return;
         }

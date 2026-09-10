@@ -8,6 +8,7 @@ import net.sourceforge.pinyin4j.format.HanyuPinyinVCharType;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class PinyinMatcher {
@@ -106,6 +107,55 @@ public final class PinyinMatcher {
         return new Forms(full.toString(), initials.toString(), fullIndex, initialsIndex);
     }
 
-    private record Forms(String full, String initials, int[] fullSourceIndex, int[] initialsSourceIndex) {
+    private static final class Forms {
+        final String full;
+        final String initials;
+        final int[] fullSourceIndex;
+        final int[] initialsSourceIndex;
+
+        Forms(String full, String initials, int[] fullSourceIndex, int[] initialsSourceIndex) {
+            this.full = full;
+            this.initials = initials;
+            this.fullSourceIndex = fullSourceIndex;
+            this.initialsSourceIndex = initialsSourceIndex;
+        }
+
+        String full() {
+            return this.full;
+        }
+
+        String initials() {
+            return this.initials;
+        }
+
+        int[] fullSourceIndex() {
+            return this.fullSourceIndex;
+        }
+
+        int[] initialsSourceIndex() {
+            return this.initialsSourceIndex;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof Forms)) {
+                return false;
+            }
+            Forms other = (Forms) obj;
+            return Objects.equals(this.full, other.full) && Objects.equals(this.initials, other.initials)
+                    && Objects.equals(this.fullSourceIndex, other.fullSourceIndex)
+                    && Objects.equals(this.initialsSourceIndex, other.initialsSourceIndex);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.full, this.initials, this.fullSourceIndex, this.initialsSourceIndex);
+        }
+
+        @Override
+        public String toString() {
+            return "Forms[full=" + this.full + ", initials=" + this.initials + ", fullSourceIndex="
+                    + this.fullSourceIndex + ", initialsSourceIndex=" + this.initialsSourceIndex + "]";
+        }
     }
 }

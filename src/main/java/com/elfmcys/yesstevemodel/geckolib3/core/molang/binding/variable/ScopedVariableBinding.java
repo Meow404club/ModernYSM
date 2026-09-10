@@ -7,6 +7,8 @@ import com.elfmcys.yesstevemodel.molang.runtime.AssignableVariable;
 import com.elfmcys.yesstevemodel.molang.runtime.ExecutionContext;
 import com.elfmcys.yesstevemodel.molang.runtime.binding.ObjectBinding;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
+
+import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
 
 
@@ -25,7 +27,17 @@ public class ScopedVariableBinding implements ObjectBinding, ResetVariable {
         this.variableMap.clear();
     }
 
-    private record ScopedVariable(int name) implements AssignableVariable {
+    private static final class ScopedVariable implements AssignableVariable {
+        private final int name;
+
+        ScopedVariable(int name) {
+            this.name = name;
+        }
+
+        public int name() {
+            return this.name;
+        }
+
         @Override
         @SuppressWarnings("unchecked")
         public Object evaluate(final @NotNull ExecutionContext<?> context) {
@@ -36,6 +48,25 @@ public class ScopedVariableBinding implements ObjectBinding, ResetVariable {
         @SuppressWarnings("unchecked")
         public void assign(@NotNull ExecutionContext<?> context, Object value) {
             ((IContext<Object>) context.entity()).scopedStorage().setScoped(name, value);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof ScopedVariable)) {
+                return false;
+            }
+            ScopedVariable other = (ScopedVariable) obj;
+            return this.name == other.name;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.name);
+        }
+
+        @Override
+        public String toString() {
+            return "ScopedVariable[name=" + this.name + "]";
         }
     }
 }

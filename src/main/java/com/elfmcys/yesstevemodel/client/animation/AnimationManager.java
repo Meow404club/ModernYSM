@@ -63,7 +63,7 @@ public class AnimationManager implements IAnimationPredicate<CustomPlayerEntity>
                     if (taczPlayState == null) {
                         taczPlayState = SWarfareCompat.handleTaczAnim(player, event, name, loopType);
                     }
-                    return Objects.requireNonNullElseGet(taczPlayState, () -> IAnimationPredicate.playAnimationWithLoop(event, name, loopType));
+                    return taczPlayState != null ? taczPlayState : IAnimationPredicate.playAnimationWithLoop(event, name, loopType);
                 }
             }
         }

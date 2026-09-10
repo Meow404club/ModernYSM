@@ -22,12 +22,20 @@ public class SetAnimation extends ContextFunction<Object> {
         if (arguments.size() == 1) {
             loopType = null;
         } else {
-            loopType = switch (arguments.getAsInt(context, 1)) {
-                case 10 -> ILoopType.EDefaultLoopTypes.LOOP;
-                case 11 -> ILoopType.EDefaultLoopTypes.PLAY_ONCE;
-                case 12 -> ILoopType.EDefaultLoopTypes.HOLD_ON_LAST_FRAME;
-                default -> null;
-            };
+            switch (arguments.getAsInt(context, 1)) {
+                case 10:
+                    loopType = ILoopType.EDefaultLoopTypes.LOOP;
+                    break;
+                case 11:
+                    loopType = ILoopType.EDefaultLoopTypes.PLAY_ONCE;
+                    break;
+                case 12:
+                    loopType = ILoopType.EDefaultLoopTypes.HOLD_ON_LAST_FRAME;
+                    break;
+                default:
+                    loopType = null;
+                    break;
+            }
         }
         animationController.setAnimation(animationName, loopType);
         return null;

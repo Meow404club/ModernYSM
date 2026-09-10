@@ -23,7 +23,8 @@ public final class ModScreenForgeHook {
         InterModComms.getMessages(YesSteveModel.MOD_ID).findFirst().ifPresent(message -> {
             if (ModScreenEvent.IMC_METHOD.equals(message.method())) {
                 Object screenObj = message.messageSupplier().get();
-                if (screenObj instanceof Screen screen) {
+                if (screenObj instanceof Screen) {
+                    Screen screen = (Screen) screenObj;
                     ModScreenEvent.setReceivedScreen(screen);
                 }
             }

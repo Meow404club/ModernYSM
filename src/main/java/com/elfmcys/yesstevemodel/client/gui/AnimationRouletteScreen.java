@@ -231,7 +231,8 @@ public class AnimationRouletteScreen extends Screen {
     }
 
     private void renderConfigFormItem(AbstractConfig abstractConfig, int[] iArr, int[] iArr2) {
-        if (abstractConfig instanceof CheckboxConfig config) {
+        if (abstractConfig instanceof CheckboxConfig) {
+            CheckboxConfig config = (CheckboxConfig) abstractConfig;
             executeExpression(abstractConfig.getValue(), str -> {
                 this.minecraft.execute(() -> {
                     addRenderableWidget(createCheckbox(config, str, iArr, iArr2));
@@ -241,7 +242,8 @@ public class AnimationRouletteScreen extends Screen {
                 });
             });
         }
-        if (abstractConfig instanceof RangeConfig config) {
+        if (abstractConfig instanceof RangeConfig) {
+            RangeConfig config = (RangeConfig) abstractConfig;
             executeExpression(abstractConfig.getValue(), str2 -> {
                 this.minecraft.execute(() -> {
                     addRenderableWidget(createSlider(config, str2, iArr, iArr2));
@@ -251,7 +253,8 @@ public class AnimationRouletteScreen extends Screen {
                 });
             });
         }
-        if (abstractConfig instanceof RadioConfig config) {
+        if (abstractConfig instanceof RadioConfig) {
+            RadioConfig config = (RadioConfig) abstractConfig;
             executeExpression(abstractConfig.getValue(), str3 -> {
                 this.minecraft.execute(() -> {
                     renderRadioGroup(config, str3, iArr, iArr2);
@@ -270,15 +273,15 @@ public class AnimationRouletteScreen extends Screen {
         int i = 0;
         Iterator<String> it = orderedStringMap.getKeys().iterator();
         while (it.hasNext()) {
-            iMax = Math.max(iMax, this.font.width(ModelMetadataPresenter.getLocalizedModelString(this.renderContext, CONFIG_LABEL_FORMAT.formatted(this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0]), Integer.valueOf(i)), it.next())) + 16);
+            iMax = Math.max(iMax, this.font.width(ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format(CONFIG_LABEL_FORMAT, this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0]), Integer.valueOf(i)), it.next())) + 16);
             i++;
         }
         if (iMax == 0) {
             iMax = 115;
         }
         int iMax2 = Math.max(1, 115 / iMax);
-        String str2 = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, CONFIG_TITLE_FORMAT.formatted(this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0])), radioConfig.getTitle());
-        String str3 = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, CONFIG_DESC_FORMAT.formatted(this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0])), radioConfig.getDescription());
+        String str2 = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format(CONFIG_TITLE_FORMAT, this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0])), radioConfig.getTitle());
+        String str3 = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format(CONFIG_DESC_FORMAT, this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0])), radioConfig.getDescription());
         MutableComponent mutableComponentLiteral = Component.literal(str2);
         Tooltip tooltipCreate = Tooltip.create(Component.literal(str3));
         int size = ((((orderedStringMap.size() - 1) / iMax2) + 1) * 14) + 14;
@@ -288,7 +291,7 @@ public class AnimationRouletteScreen extends Screen {
         int rowY = iArr[0] + 14;
         int idx = 0;
         while (idx < orderedStringMap.size()) {
-            MutableComponent mutableComponentLiteral2 = Component.literal(ModelMetadataPresenter.getLocalizedModelString(this.renderContext, CONFIG_LABEL_FORMAT.formatted(this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0]), Integer.valueOf(idx)), orderedStringMap.getKeyAt(idx)));
+            MutableComponent mutableComponentLiteral2 = Component.literal(ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format(CONFIG_LABEL_FORMAT, this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0]), Integer.valueOf(idx)), orderedStringMap.getKeyAt(idx)));
             String str4 = orderedStringMap.getValueAt(idx);
             boolean isSelected = iRound == idx;
             int iRound2 = Math.round(110.0f / iMax2);
@@ -313,8 +316,8 @@ public class AnimationRouletteScreen extends Screen {
 
     @NotNull
     private AnimationSlider createSlider(RangeConfig rangeConfig, String str, int[] iArr, int[] iArr2) {
-        String str2 = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, CONFIG_TITLE_FORMAT.formatted(this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0])), rangeConfig.getTitle());
-        String str3 = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, CONFIG_DESC_FORMAT.formatted(this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0])), rangeConfig.getDescription());
+        String str2 = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format(CONFIG_TITLE_FORMAT, this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0])), rangeConfig.getTitle());
+        String str3 = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format(CONFIG_DESC_FORMAT, this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0])), rangeConfig.getDescription());
         MutableComponent mutableComponentLiteral = Component.literal(str2);
         Tooltip tooltipCreate = Tooltip.create(Component.literal(str3));
         AnimationSlider animationSlider = new AnimationSlider(this.centerX + 125, this.centerY + iArr[0], mutableComponentLiteral, parseFloatValue(str), this.animatableModel, rangeConfig.getValue(), rangeConfig.getStep(), rangeConfig.getMin(), rangeConfig.getMax());
@@ -324,8 +327,8 @@ public class AnimationRouletteScreen extends Screen {
 
     @NotNull
     private ConfigCheckBox createCheckbox(CheckboxConfig checkboxConfig, String str, int[] iArr, int[] iArr2) throws NumberFormatException {
-        String str3 = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, CONFIG_TITLE_FORMAT.formatted(this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0])), checkboxConfig.getTitle());
-        String str4 = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, CONFIG_DESC_FORMAT.formatted(this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0])), checkboxConfig.getDescription());
+        String str3 = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format(CONFIG_TITLE_FORMAT, this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0])), checkboxConfig.getTitle());
+        String str4 = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format(CONFIG_DESC_FORMAT, this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0])), checkboxConfig.getDescription());
         MutableComponent mutableComponentLiteral = Component.literal(str3);
         Tooltip tooltipCreate = Tooltip.create(Component.literal(str4));
         float parsedValue = parseFloatValue(str);
@@ -394,7 +397,7 @@ public class AnimationRouletteScreen extends Screen {
 
     private void renderHoverTooltip(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         if (-1 < this.hoveredIndex && this.hoveredIndex < this.currentProperties.size()) {
-            String str = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, "properties.extra_animation.%s.desc".formatted(this.currentProperties.getKeyAt(this.hoveredIndex)), StringPool.EMPTY);
+            String str = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format("properties.extra_animation.%s.desc", this.currentProperties.getKeyAt(this.hoveredIndex)), StringPool.EMPTY);
             if (StringUtils.isNotBlank(str)) {
                 guiGraphics.renderTooltip(this.font, this.font.split(Component.literal(str), 240), mouseX, mouseY);
             }
@@ -591,9 +594,9 @@ public class AnimationRouletteScreen extends Screen {
                 }
             }
             if (StringUtils.isNoneBlank(str)) {
-                renderWrappedLabel(guiGraphics, Component.literal(ModelMetadataPresenter.getLocalizedModelString(this.renderContext, "properties.extra_animation.%s".formatted(this.currentProperties.getKeyAt(iIntValue)), str)), iCos, labelY, zStartsWith);
+                renderWrappedLabel(guiGraphics, Component.literal(ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format("properties.extra_animation.%s", this.currentProperties.getKeyAt(iIntValue)), str)), iCos, labelY, zStartsWith);
             } else {
-                guiGraphics.drawCenteredString(this.font, Component.literal(ModelMetadataPresenter.getLocalizedModelString(this.renderContext, "properties.extra_animation.%s".formatted(this.currentProperties.getKeyAt(iIntValue)), String.valueOf(iIntValue))), iCos, labelY - 8, 15986656);
+                guiGraphics.drawCenteredString(this.font, Component.literal(ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format("properties.extra_animation.%s", this.currentProperties.getKeyAt(iIntValue)), String.valueOf(iIntValue))), iCos, labelY - 8, 15986656);
             }
             if (this.currentNavEntry.getRight().intValue() == 0 && navigationStack.size() == 1) {
                 renderKeyBindings(guiGraphics, iIntValue, iCos, labelY);

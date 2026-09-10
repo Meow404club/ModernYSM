@@ -254,7 +254,7 @@ public class ModernAnimationRouletteScreen extends Screen {
             if (renderGroups.containsKey(sub)) display = renderGroups.get(sub).getName();
         }
         if (StringUtils.isBlank(display)) display = key;
-        return ModelMetadataPresenter.getLocalizedModelString(renderContext, "properties.extra_animation.%s".formatted(key), display);
+        return ModelMetadataPresenter.getLocalizedModelString(renderContext, String.format("properties.extra_animation.%s", key), display);
     }
 
     private void renderCenter(GuiGraphics g) {

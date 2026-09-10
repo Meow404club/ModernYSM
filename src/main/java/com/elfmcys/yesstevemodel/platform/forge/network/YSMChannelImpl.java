@@ -17,6 +17,7 @@ import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 import rip.ysm.api.network.PacketContext;
 import rip.ysm.api.network.PacketDirection;
+import rip.ysm.util.YsmCollections;
 
 import java.io.ByteArrayOutputStream;
 import java.util.*;
@@ -100,7 +101,7 @@ public final class YSMChannelImpl {
     public static List<Packet<?>> toClientboundPackets(Object packet) {
         byte[] encoded = encode(packet);
         if (encoded.length <= FRAGMENT_DATA_SIZE) {
-            return List.of(channel.toVanillaPacket(packet, NetworkDirection.PLAY_TO_CLIENT));
+            return YsmCollections.immutableListOf(channel.toVanillaPacket(packet, NetworkDirection.PLAY_TO_CLIENT));
         }
         List<Packet<?>> packets = new ArrayList<>();
         int transferId = nextTransferId.incrementAndGet();
@@ -119,10 +120,14 @@ public final class YSMChannelImpl {
     }
 
     private static NetworkDirection toForge(PacketDirection direction) {
-        return switch (direction) {
-            case PLAY_TO_CLIENT -> NetworkDirection.PLAY_TO_CLIENT;
-            case PLAY_TO_SERVER -> NetworkDirection.PLAY_TO_SERVER;
-        };
+        switch (direction) {
+            case PLAY_TO_CLIENT:
+                return NetworkDirection.PLAY_TO_CLIENT;
+            case PLAY_TO_SERVER:
+                return NetworkDirection.PLAY_TO_SERVER;
+            default:
+                throw new IllegalArgumentException("Unknown packet direction: " + direction);
+        }
     }
 
     private static byte[] encode(Object packet) {
@@ -188,7 +193,56 @@ public final class YSMChannelImpl {
         }
     }
 
-    private record FragmentPacket(int transferId, int fragmentIndex, int fragmentCount, byte[] data) {
+    private static final class FragmentPacket {
+        final int transferId;
+        final int fragmentIndex;
+        final int fragmentCount;
+        final byte[] data;
+
+        FragmentPacket(int transferId, int fragmentIndex, int fragmentCount, byte[] data) {
+            this.transferId = transferId;
+            this.fragmentIndex = fragmentIndex;
+            this.fragmentCount = fragmentCount;
+            this.data = data;
+        }
+
+        int transferId() {
+            return this.transferId;
+        }
+
+        int fragmentIndex() {
+            return this.fragmentIndex;
+        }
+
+        int fragmentCount() {
+            return this.fragmentCount;
+        }
+
+        byte[] data() {
+            return this.data;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof FragmentPacket)) {
+                return false;
+            }
+            FragmentPacket other = (FragmentPacket) obj;
+            return this.transferId == other.transferId && this.fragmentIndex == other.fragmentIndex
+                    && this.fragmentCount == other.fragmentCount && Objects.equals(this.data, other.data);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.transferId, this.fragmentIndex, this.fragmentCount, this.data);
+        }
+
+        @Override
+        public String toString() {
+            return "FragmentPacket[transferId=" + this.transferId + ", fragmentIndex=" + this.fragmentIndex
+                    + ", fragmentCount=" + this.fragmentCount + ", data=" + this.data + "]";
+        }
+
         private static void encode(FragmentPacket packet, FriendlyByteBuf buf) {
             buf.writeVarInt(packet.transferId);
             buf.writeVarInt(packet.fragmentIndex);
@@ -239,10 +293,59 @@ public final class YSMChannelImpl {
         }
     }
 
-    private record LocalCodec<T>(Class<T> type, Function<FriendlyByteBuf, T> decoder,
-                                 BiConsumer<T, PacketContext> handler, PacketDirection direction) {
+    private static final class LocalCodec<T> {
+        final Class<T> type;
+        final Function<FriendlyByteBuf, T> decoder;
+        final BiConsumer<T, PacketContext> handler;
+        final PacketDirection direction;
+
+        LocalCodec(Class<T> type, Function<FriendlyByteBuf, T> decoder,
+                   BiConsumer<T, PacketContext> handler, PacketDirection direction) {
+            this.type = type;
+            this.decoder = decoder;
+            this.handler = handler;
+            this.direction = direction;
+        }
+
+        Class<T> type() {
+            return this.type;
+        }
+
+        Function<FriendlyByteBuf, T> decoder() {
+            return this.decoder;
+        }
+
+        BiConsumer<T, PacketContext> handler() {
+            return this.handler;
+        }
+
+        PacketDirection direction() {
+            return this.direction;
+        }
+
         private void dispatch(FriendlyByteBuf buf, PacketContext context) {
             handler.accept(decoder.apply(buf), context);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof LocalCodec)) {
+                return false;
+            }
+            LocalCodec<?> other = (LocalCodec<?>) obj;
+            return Objects.equals(this.type, other.type) && Objects.equals(this.decoder, other.decoder)
+                    && Objects.equals(this.handler, other.handler) && Objects.equals(this.direction, other.direction);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.type, this.decoder, this.handler, this.direction);
+        }
+
+        @Override
+        public String toString() {
+            return "LocalCodec[type=" + this.type + ", decoder=" + this.decoder + ", handler=" + this.handler
+                    + ", direction=" + this.direction + "]";
         }
     }
 }

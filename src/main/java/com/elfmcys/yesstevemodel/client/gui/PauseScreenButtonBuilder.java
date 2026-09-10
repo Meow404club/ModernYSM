@@ -11,6 +11,8 @@ import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
+import rip.ysm.util.YsmCollections;
+
 import java.util.List;
 
 public class PauseScreenButtonBuilder {
@@ -46,7 +48,7 @@ public class PauseScreenButtonBuilder {
                 }
             }).bounds((pauseScreen.width / 2) + 69, pauseScreen.height - 35, 50, 30).build();
             buttonBuild3.setTooltip(Tooltip.create(Component.translatable("key.yes_steve_model.animation_roulette.desc")));
-            return List.of(buttonBuild, buttonBuild2, buttonBuild3);
+            return YsmCollections.immutableListOf(buttonBuild, buttonBuild2, buttonBuild3);
         }
         return null;
     }

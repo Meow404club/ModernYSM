@@ -82,7 +82,8 @@ public final class CapabilityEvent {
         if (!YesSteveModel.isAvailable()) {
             return;
         }
-        if (entity instanceof ServerPlayer player) {
+        if (entity instanceof ServerPlayer) {
+            ServerPlayer player = (ServerPlayer) entity;
             getModelInfoCap(player).ifPresent(modelInfoCap -> {
                 if (!NetworkHandler.isPlayerConnected(player) && !modelInfoCap.isMandatory()) {
                     modelInfoCap.markDirty();
@@ -92,7 +93,11 @@ public final class CapabilityEvent {
                 Optional<S2CSetModelAndTexturePacket> optional = modelInfoCap.createSyncMessage(player, false);
                 Consumer<? super S2CSetModelAndTexturePacket> consumer = message -> NetworkHandler.sendToClientPlayer(message, player);
                 Objects.requireNonNull(modelInfoCap);
-                optional.ifPresentOrElse(consumer, modelInfoCap::markDirty);
+                if (optional.isPresent()) {
+                consumer.accept(optional.get());
+            } else {
+                modelInfoCap.markDirty();
+            }
             });
             getAuthModelsCap(player).ifPresent(authModelsCap -> {
                 for (String modelId : ServerModelManager.getAuthModels()) {

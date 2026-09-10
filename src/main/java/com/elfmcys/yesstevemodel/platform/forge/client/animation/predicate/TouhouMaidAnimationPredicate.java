@@ -56,9 +56,8 @@ public class TouhouMaidAnimationPredicate implements IAnimationPredicate<MaidCap
                     if (playState != null) {
                         return playState;
                     }
-                    return Objects.requireNonNullElseGet(TacCompat.handleTaczAnimState(entity, event, str, loopType), () -> {
-                        return IAnimationPredicate.playAnimationWithLoop(event, str, loopType);
-                    });
+                    {PlayState tacState = TacCompat.handleTaczAnimState(entity, event, str, loopType);
+                    return tacState != null ? tacState : IAnimationPredicate.playAnimationWithLoop(event, str, loopType);}
                 }
             }
         }

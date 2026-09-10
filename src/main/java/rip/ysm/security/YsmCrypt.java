@@ -11,6 +11,7 @@ import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Base64;
 
 public class YsmCrypt {
@@ -29,7 +30,41 @@ public class YsmCrypt {
             (byte) 0xF9, (byte) 0xE5, 0x7A, 0x5C, 0x3C, (byte) 0xDB, 0x2C, 0x76
     };
 
-    public record EncryptedPacket(byte[] data, byte[] nextKey) {
+    public static final class EncryptedPacket {
+        private final byte[] data;
+        private final byte[] nextKey;
+
+        public EncryptedPacket(byte[] data, byte[] nextKey) {
+            this.data = data;
+            this.nextKey = nextKey;
+        }
+
+        public byte[] data() {
+            return this.data;
+        }
+
+        public byte[] nextKey() {
+            return this.nextKey;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof EncryptedPacket)) {
+                return false;
+            }
+            EncryptedPacket other = (EncryptedPacket) obj;
+            return Objects.equals(this.data, other.data) && Objects.equals(this.nextKey, other.nextKey);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.data, this.nextKey);
+        }
+
+        @Override
+        public String toString() {
+            return "EncryptedPacket[data=" + this.data + ", nextKey=" + this.nextKey + "]";
+        }
     }
 
     public static long[] calculateModelHashes(String modelHashStr, byte[] serverKey) {
@@ -489,7 +524,41 @@ public class YsmCrypt {
         }
     }
 
-    public record CachePayload(byte[] data, int formatVersion) {
+    public static final class CachePayload {
+        private final byte[] data;
+        private final int formatVersion;
+
+        public CachePayload(byte[] data, int formatVersion) {
+            this.data = data;
+            this.formatVersion = formatVersion;
+        }
+
+        public byte[] data() {
+            return this.data;
+        }
+
+        public int formatVersion() {
+            return this.formatVersion;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof CachePayload)) {
+                return false;
+            }
+            CachePayload other = (CachePayload) obj;
+            return this.formatVersion == other.formatVersion && Objects.equals(this.data, other.data);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.data, this.formatVersion);
+        }
+
+        @Override
+        public String toString() {
+            return "CachePayload[data=" + this.data + ", formatVersion=" + this.formatVersion + "]";
+        }
     }
 
     public static CachePayload read(byte[] cacheFileData, byte[] clientKey) throws Exception { // 1

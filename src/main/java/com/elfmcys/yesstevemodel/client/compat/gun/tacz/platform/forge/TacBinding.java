@@ -36,7 +36,7 @@ public class TacBinding {
             return StringPool.EMPTY;
         }
         Optional<CommonGunIndex> commonGunIndex = TimelessAPI.getCommonGunIndex(iGunOrNull.getGunId(mainHandItem));
-        if (commonGunIndex.isEmpty()) {
+        if (!commonGunIndex.isPresent()) {
             return StringPool.EMPTY;
         }
         return commonGunIndex.get().getType();

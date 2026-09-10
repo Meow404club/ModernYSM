@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.capability;
 
 import com.elfmcys.yesstevemodel.model.ServerModelManager;
+import com.elfmcys.yesstevemodel.model.format.ServerModelData;
 import com.elfmcys.yesstevemodel.network.sync.PlayerStateSynchronizer;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.util.StringPool;
 import com.elfmcys.yesstevemodel.network.message.S2CSetModelAndTexturePacket;
@@ -123,13 +124,15 @@ public class ModelInfoCapability {
     }
 
     public void withMolangVars(Consumer<Object2FloatOpenHashMap<String>> consumer) {
-        ServerModelManager.getModelDefinition(this.modelId).ifPresentOrElse(value -> {
+        Optional<ServerModelData> definition = ServerModelManager.getModelDefinition(this.modelId);
+        if (definition.isPresent()) {
+            ServerModelData value = definition.get();
             consumer.accept(this.molangStorage.computeIfAbsent(value.getLoadedModelData().getHashId(), i -> {
                 return new Object2FloatOpenHashMap(0);
             }));
-        }, () -> {
+        } else {
             this.pendingCallbacks.add(consumer);
-        });
+        }
     }
 
     public Optional<Object2FloatOpenHashMap<String>> getMolangVars() {

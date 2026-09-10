@@ -19,9 +19,10 @@ public class SlashBladeStateAccess {
 
     public static String getComboState(SlashBladeState slashBladeState, long j) {
         Object object = UnsafeUtil.getUnsafe().getObject(slashBladeState, comboSeqFieldOffset);
-        if (!(object instanceof ComboState comboState)) {
+        if (!(object instanceof ComboState)) {
             return StringPool.EMPTY;
         }
+        ComboState comboState = (ComboState) object;
         if (j > comboState.getTimeoutMS()) {
             return StringPool.EMPTY;
         }

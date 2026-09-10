@@ -51,7 +51,8 @@ public final class ForgeCapabilityHooks {
             return;
         }
         Entity entity = event.getObject();
-        if (entity instanceof Player player) {
+        if (entity instanceof Player) {
+            Player player = (Player) entity;
             if (!entity.level().isClientSide() && !player.getCapability(ModelInfoCapabilityProvider.MODEL_INFO_CAP).isPresent() && !event.getCapabilities().containsKey(MODEL_INFO_CAP)) {
                 event.addCapability(MODEL_INFO_CAP, new ModelInfoCapabilityProvider());
             }
@@ -69,7 +70,8 @@ public final class ForgeCapabilityHooks {
             event.addCapability(VEHICLE_MODEL_CAP, new VehicleModelCapabilityProvider());
         }
         if (!PlatformAPI.isServer() && entity.level().isClientSide()) {
-            if (entity instanceof AbstractClientPlayer abstractClientPlayer) {
+            if (entity instanceof AbstractClientPlayer) {
+                AbstractClientPlayer abstractClientPlayer = (AbstractClientPlayer) entity;
                 if (!abstractClientPlayer.getCapability(PlayerCapabilityProvider.PLAYER_CAP).isPresent() && !event.getCapabilities().containsKey(PLAYER_CAP)) {
                     event.addCapability(PLAYER_CAP, new PlayerCapabilityProvider(abstractClientPlayer));
                     return;
@@ -90,7 +92,8 @@ public final class ForgeCapabilityHooks {
             return;
         }
         Entity target = startTracking.getTarget();
-        if (target instanceof ServerPlayer trackPlayer) {
+        if (target instanceof ServerPlayer) {
+            ServerPlayer trackPlayer = (ServerPlayer) target;
             Player entity = startTracking.getEntity();
             CapabilityEvent.getModelInfoCap(trackPlayer).ifPresent(cap -> {
                 if (!NetworkHandler.isPlayerConnected(trackPlayer) && !cap.isMandatory()) {
@@ -99,11 +102,16 @@ public final class ForgeCapabilityHooks {
                 Optional<S2CSetModelAndTexturePacket> optional = cap.createSyncMessage(trackPlayer, false);
                 Consumer<? super S2CSetModelAndTexturePacket> consumer = message -> NetworkHandler.sendToClientPlayer(message, entity);
                 Objects.requireNonNull(cap);
-                optional.ifPresentOrElse(consumer, cap::markDirty);
+                if (optional.isPresent()) {
+                    consumer.accept(optional.get());
+                } else {
+                    cap.markDirty();
+                }
             });
             return;
         }
-        if (target instanceof Projectile projectile) {
+        if (target instanceof Projectile) {
+            Projectile projectile = (Projectile) target;
             projectile.getCapability(ProjectileModelCapabilityProvider.PROJECTILE_MODEL).ifPresent(cap -> {
                 if (cap.isInitialized()) {
                     NetworkHandler.sendToClientPlayer(new S2CSyncProjectileModelPacket(projectile.getId(), cap), startTracking.getEntity());

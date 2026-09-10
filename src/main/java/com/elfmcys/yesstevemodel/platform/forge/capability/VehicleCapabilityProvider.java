@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 @OnlyIn(Dist.CLIENT)
 public class VehicleCapabilityProvider implements ICapabilityProvider {
 
-    public static Capability<VehicleCapability> VEHICLE_CAP = CapabilityManager.get(new CapabilityToken<>() {
+    public static Capability<VehicleCapability> VEHICLE_CAP = CapabilityManager.get(new CapabilityToken<VehicleCapability>() {
     });
 
     private VehicleCapability capability;

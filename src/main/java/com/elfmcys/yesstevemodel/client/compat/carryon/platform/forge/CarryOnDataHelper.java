@@ -17,7 +17,7 @@ public class CarryOnDataHelper {
 
     public static boolean isPlayerCarrying(LivingEntity livingEntity) {
         Entity vehicle = livingEntity.getVehicle();
-        return (vehicle instanceof Player player) && getCarryType(player) == CarryType.PLAYER;
+        return vehicle instanceof Player && getCarryType((Player) vehicle) == CarryType.PLAYER;
     }
 
     public static CarryType getCarryType(Player player) {

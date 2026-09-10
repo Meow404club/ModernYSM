@@ -17,7 +17,9 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Objects;
 
 public final class NativeLibLoader {
     private static boolean available = false;
@@ -26,11 +28,11 @@ public final class NativeLibLoader {
     private static ErrorState lastError = null;
 
     private enum TargetPlatform {
-        WINDOWS_X64("windows-x64", "ysm-core.dll", Path.of(System.getProperty("java.io.tmpdir"), "ysm")),
-        WINDOWS_X86("windows-x86", "ysm-core.dll", Path.of(System.getProperty("java.io.tmpdir"), "ysm")),
-        LINUX_X64("linux-x64", "libysm-core.so", Path.of(System.getProperty("user.home"), ".ysm")),
-        MACOS_X64("macos-x64", "libysm-core.dylib", Path.of(System.getProperty("user.home"), ".ysm")),
-        MACOS_ARM64("macos-arm64", "libysm-core.dylib", Path.of(System.getProperty("user.home"), ".ysm")),
+        WINDOWS_X64("windows-x64", "ysm-core.dll", Paths.get(System.getProperty("java.io.tmpdir"), "ysm")),
+        WINDOWS_X86("windows-x86", "ysm-core.dll", Paths.get(System.getProperty("java.io.tmpdir"), "ysm")),
+        LINUX_X64("linux-x64", "libysm-core.so", Paths.get(System.getProperty("user.home"), ".ysm")),
+        MACOS_X64("macos-x64", "libysm-core.dylib", Paths.get(System.getProperty("user.home"), ".ysm")),
+        MACOS_ARM64("macos-arm64", "libysm-core.dylib", Paths.get(System.getProperty("user.home"), ".ysm")),
         ANDROID_ARM64("android-arm64", "libysm-core.so", null);
 
         final String resDir;
@@ -50,7 +52,38 @@ public final class NativeLibLoader {
 
     private enum LibcType {UNSUPPORTED, GNU, BIONIC}
 
-    private record ErrorState(Component component, String key, Object[] args, String logMsg) {
+    private static final class ErrorState {
+        final Component component;
+        final String key;
+        final Object[] args;
+        final String logMsg;
+
+        ErrorState(Component component, String key, Object[] args, String logMsg) {
+            this.component = component;
+            this.key = key;
+            this.args = args;
+            this.logMsg = logMsg;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof ErrorState)) {
+                return false;
+            }
+            ErrorState other = (ErrorState) obj;
+            return Objects.equals(this.component, other.component) && Objects.equals(this.key, other.key)
+                    && Objects.equals(this.args, other.args) && Objects.equals(this.logMsg, other.logMsg);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.component, this.key, this.args, this.logMsg);
+        }
+
+        @Override
+        public String toString() {
+            return "ErrorState[component=" + this.component + ", key=" + this.key + ", args=" + this.args + ", logMsg=" + this.logMsg + "]";
+        }
     }
 
     public static void init() throws IOException {
@@ -77,7 +110,7 @@ public final class NativeLibLoader {
                 return null;
             }
             isAndroid = true;
-            storageDir = Path.of(androidRuntime);
+            storageDir = Paths.get(androidRuntime);
         }
 
         byte[] data = readResource(platform.getResourcePath());

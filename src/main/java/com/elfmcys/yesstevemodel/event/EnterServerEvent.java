@@ -39,7 +39,11 @@ public final class EnterServerEvent {
             Optional<S2CSetModelAndTexturePacket> optional = modelInfoCap.createSyncMessage(player, false);
             Consumer<? super S2CSetModelAndTexturePacket> consumer = message -> NetworkHandler.sendToClientPlayer(message, player);
             Objects.requireNonNull(modelInfoCap);
-            optional.ifPresentOrElse(consumer, modelInfoCap::markDirty);
+            if (optional.isPresent()) {
+                consumer.accept(optional.get());
+            } else {
+                modelInfoCap.markDirty();
+            }
         });
         CapabilityEvent.getAuthModelsCap(player).ifPresent(authModelsCap -> {
             for (String modelId : ServerModelManager.getAuthModels()) {

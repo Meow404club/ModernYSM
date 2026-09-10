@@ -135,13 +135,13 @@ public class ModelMetadataPresenter {
     private static Function<AuthorInfo, String> createAuthorNameMapper(ModelAssembly modelAssembly, String locale, int[] index) {
         return authorInfo -> {
             index[0] = index[0] + 1;
-            String localizedAuthorName = getLocalizedModelStringForLocale(modelAssembly, locale, "metadata.authors.%d.name".formatted(Integer.valueOf(index[0])), authorInfo.getName());
+            String localizedAuthorName = getLocalizedModelStringForLocale(modelAssembly, locale, String.format("metadata.authors.%d.name", Integer.valueOf(index[0])), authorInfo.getName());
 
             if (authorInfo.getRole().isEmpty()) {
                 return localizedAuthorName;
             }
 
-            String localizedRole = getLocalizedModelStringForLocale(modelAssembly, locale, "metadata.authors.%d.role".formatted(Integer.valueOf(index[0])), authorInfo.getRole());
+            String localizedRole = getLocalizedModelStringForLocale(modelAssembly, locale, String.format("metadata.authors.%d.role", Integer.valueOf(index[0])), authorInfo.getRole());
             return localizedRole + ": " + localizedAuthorName;
         };
     }

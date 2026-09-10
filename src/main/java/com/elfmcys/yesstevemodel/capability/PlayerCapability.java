@@ -189,7 +189,8 @@ public final class PlayerCapability extends CustomPlayerEntity {
     public void tickAnimations() {
         if (isLocalPlayerModel() && this.currentModelHashId != 0) {
             Struct struct = this.serverVarContainer;
-            if (struct instanceof RoamingStruct roamingStruct) {
+            if (struct instanceof RoamingStruct) {
+                RoamingStruct roamingStruct = (RoamingStruct) struct;
                 if (roamingStruct.hasPendingChanges()) {
                     RoamingSyncBatch syncBatch = roamingStruct.consumePendingBoneData();
                     applyMolangDelta(syncBatch.modelHashId(), syncBatch.changedVariables());

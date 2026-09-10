@@ -25,7 +25,8 @@ public class AnimationRegister {
         register("ladder_down", Priority.HIGHEST, (player, event) -> player.onClimbable() && getVerticalSpeed(player) < 0.0f);
         register("fly", Priority.HIGH, (player, event) -> {
             AnimatableEntity<Player> animatable = event.getAnimatable();
-            if (animatable instanceof PlayerCapability cap) {
+            if (animatable instanceof PlayerCapability) {
+                PlayerCapability cap = (PlayerCapability) animatable;
                 if (!cap.isLocalPlayerModel()) {
                     return cap.getPositionTracker().isFlying();
                 }

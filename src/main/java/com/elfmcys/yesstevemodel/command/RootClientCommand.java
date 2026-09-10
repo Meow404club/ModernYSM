@@ -44,7 +44,8 @@ public class RootClientCommand {
                 geo.getEvaluationContext().forEachPropertyName(str -> set.add(String.format("v.%s", str)));
                 if (geo instanceof RoamingPropertyHolder) {
                     Struct struct = ((RoamingPropertyHolder) geo).getServerVarContainer();
-                    if (struct instanceof RoamingStruct roamingStruct) {
+                    if (struct instanceof RoamingStruct) {
+                        RoamingStruct roamingStruct = (RoamingStruct) struct;
                         roamingStruct.forEachVar(str2 -> {
                             if (roamingStruct.getProperty(StringPool.getName(str2)) != null) {
                                 set.add(String.format("v.roaming.%s", str2));

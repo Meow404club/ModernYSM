@@ -121,7 +121,7 @@ public class SearchSuggestions {
             }
             int authorIndex = 0;
             for (AuthorInfo author : metadata.getAuthors()) {
-                String name = ModelMetadataPresenter.getLocalizedModelString(entry.getValue(), "metadata.authors.%d.name".formatted(authorIndex), author.getName());
+                String name = ModelMetadataPresenter.getLocalizedModelString(entry.getValue(), String.format("metadata.authors.%d.name", authorIndex), author.getName());
                 authorIndex++;
                 if (StringUtils.isBlank(name)) {
                     continue;

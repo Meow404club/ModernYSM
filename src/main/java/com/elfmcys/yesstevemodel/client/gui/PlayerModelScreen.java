@@ -324,7 +324,7 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
         int i = 0;
         Iterator<AuthorInfo> it = metadata2.getAuthors().iterator();
         while (it.hasNext()) {
-            if (PinyinMatcher.contains(ModelMetadataPresenter.getLocalizedModelString(modelAssembly, "metadata.authors.%d.name".formatted(Integer.valueOf(i)), it.next().getName()), str)) {
+            if (PinyinMatcher.contains(ModelMetadataPresenter.getLocalizedModelString(modelAssembly, String.format("metadata.authors.%d.name", Integer.valueOf(i)), it.next().getName()), str)) {
                 return false;
             }
             i++;

@@ -14,7 +14,8 @@ public class ParcoolBinding {
 
     private static String getParcoolState(IContext<LivingEntity> context) {
         Entity entity = context.entity();
-        if (entity instanceof Player player) {
+        if (entity instanceof Player) {
+            Player player = (Player) entity;
             String animationName = ParcoolAnimationHandler.getParcoolAnimationName(player);
             if (animationName != null) {
                 return animationName.substring("parcool:".length());

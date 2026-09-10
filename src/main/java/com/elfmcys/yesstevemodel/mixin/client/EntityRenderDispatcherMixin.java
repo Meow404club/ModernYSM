@@ -24,9 +24,11 @@ public class EntityRenderDispatcherMixin {
         if (!YesSteveModel.isAvailable()) {
             return true;
         }
-        if (entity instanceof Projectile projectile) {
+        if (entity instanceof Projectile) {
+            Projectile projectile = (Projectile) entity;
             if (!GeneralConfig.DISABLE_PROJECTILE_MODEL.get()) {
-                if (projectile instanceof FishingHook fishingHook) {
+                if (projectile instanceof FishingHook) {
+                    FishingHook fishingHook = (FishingHook) projectile;
                     return CustomFishingHookRenderer.tryRenderCustomHook(fishingHook, entityYaw, partialTicks, poseStack, multiBufferSource, packedLight);
                 }
                 return CustomProjectileRenderer.renderProjectile(projectile, entityYaw, partialTicks, poseStack, multiBufferSource, packedLight);

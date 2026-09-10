@@ -114,16 +114,18 @@ public abstract class GeoEntity<T extends Entity> extends AnimatableEntity<T> {
     }
 
     private void refreshModel() {
-        ClientModelManager.getModelContext(this.modelId).ifPresentOrElse(assembly -> {
+        Optional<ModelAssembly> modelContext = ClientModelManager.getModelContext(this.modelId);
+        if (modelContext.isPresent()) {
+            ModelAssembly assembly = modelContext.get();
             if (this.renderShape == null || this.renderShape.isDefault || assembly != this.renderShape.context) {
                 this.renderShape = buildRenderShape(assembly, false);
             }
-        }, () -> {
+        } else {
             ModelAssembly modelAssembly = ClientModelManager.getLocalModelContext();
             if (this.renderShape == null || !this.renderShape.isDefault || modelAssembly != this.renderShape.context) {
                 this.renderShape = buildRenderShape(modelAssembly, true);
             }
-        });
+        }
         if (this.renderShape != null) {
             if ((this.renderShape.context != this.modelAssembly || this.renderShape.isDefault != this.loaded) && this.renderShape.isValid()) {
                 this.modelAssembly = this.renderShape.context;

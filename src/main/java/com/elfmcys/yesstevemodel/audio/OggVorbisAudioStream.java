@@ -59,7 +59,8 @@ public class OggVorbisAudioStream implements IAudioStreamSupport {
         if (this.oggStream.getFormat().getChannels() == 2) {
             ByteBuffer byteBufferOrder = byteBufferSlice.duplicate().order(ByteOrder.nativeOrder());
             if (!byteBufferSlice.isReadOnly()) {
-                byteBufferCreateByteBuffer = byteBufferSlice.duplicate().order(ByteOrder.nativeOrder()).limit(byteBufferOrder.remaining() / 2);
+                byteBufferCreateByteBuffer = byteBufferSlice.duplicate().order(ByteOrder.nativeOrder());
+                byteBufferCreateByteBuffer.limit(byteBufferOrder.remaining() / 2);
             } else {
                 byteBufferCreateByteBuffer = BufferUtils.createByteBuffer(byteBufferOrder.remaining() / 2);
             }

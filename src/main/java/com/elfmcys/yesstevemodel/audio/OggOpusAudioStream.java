@@ -55,7 +55,10 @@ public class OggOpusAudioStream implements IAudioStreamSupport {
             this.endOfStream = true;
             return EMPTY_BUFFER;
         }
-        ByteBuffer byteBufferSlice = byteBufferNioBuffer.slice(0, i2);
+        ByteBuffer windowBuffer = byteBufferNioBuffer.duplicate();
+        windowBuffer.position(0);
+        windowBuffer.limit(i2);
+        ByteBuffer byteBufferSlice = windowBuffer.slice();
         if (this.cacheBuilder != null) {
             this.cacheBuilder.appendAudio(byteBufferSlice.slice());
         }

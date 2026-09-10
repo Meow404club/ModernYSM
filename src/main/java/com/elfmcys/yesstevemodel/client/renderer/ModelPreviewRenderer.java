@@ -283,7 +283,8 @@ public final class ModelPreviewRenderer {
         float oldXRotO = livingEntity.xRotO;
         float oldHeadRotO = livingEntity.yHeadRotO;
         float oldHeadRot = livingEntity.yHeadRot;
-        if (hideEquipment && (livingEntity instanceof Player player)) {
+        if (hideEquipment && (livingEntity instanceof Player)) {
+            Player player = (Player) livingEntity;
             savedEquipment = new ItemStack[EquipmentSlot.values().length];
             int slotIndex = 0;
             for (EquipmentSlot equipmentSlot : EquipmentSlot.values()) {

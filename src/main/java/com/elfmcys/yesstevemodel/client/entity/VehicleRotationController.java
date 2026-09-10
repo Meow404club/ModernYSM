@@ -15,6 +15,7 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 public class VehicleRotationController implements IAnimationController<GeckoVehicleEntity> {
@@ -56,9 +57,11 @@ public class VehicleRotationController implements IAnimationController<GeckoVehi
 
     @Override
     public void process(AnimationEvent<GeckoVehicleEntity> event, ExpressionEvaluator<AnimationContext<?>> evaluator, boolean isFirstPerson) {
-        ImmersiveAirCraftCompat.getAircraftRotation(event).or(() -> {
-            return SimplePlanesCompat.getSimplePlanesRotation(event);
-        }).ifPresent(vector3f -> {
+        Optional<Vector3f> aircraftRotation = ImmersiveAirCraftCompat.getAircraftRotation(event);
+        if (!aircraftRotation.isPresent()) {
+            aircraftRotation = SimplePlanesCompat.getSimplePlanesRotation(event);
+        }
+        aircraftRotation.ifPresent(vector3f -> {
             this.vehicleRotation = new TransitionVector3f(vector3f);
             this.vehicleRotation.setPercentCompleted(0.0f);
         });

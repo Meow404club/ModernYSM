@@ -90,7 +90,8 @@ public final class ExpressionEvaluatorImpl<TEntity> implements ExpressionEvaluat
                         val = ((Struct) val).copy();
                     }
                     var.assign(evaluator, val);
-                } else if (a instanceof StructAccessExpression exp) {
+                } else if (a instanceof StructAccessExpression) {
+                    StructAccessExpression exp = (StructAccessExpression) a;
                     if (val instanceof Struct) {
                         // 不允许结构体嵌套
                         return val;
@@ -199,10 +200,12 @@ public final class ExpressionEvaluatorImpl<TEntity> implements ExpressionEvaluat
 
     // 算术子树原生递归，跳过中间 Float 装箱；遇到不能在 primitive 域处理的节点回退到 visit
     private float evalFloat(@NotNull Expression expr) {
-        if (expr instanceof FloatExpression fe) {
+        if (expr instanceof FloatExpression) {
+            FloatExpression fe = (FloatExpression) expr;
             return fe.value();
         }
-        if (expr instanceof BinaryExpression be) {
+        if (expr instanceof BinaryExpression) {
+            BinaryExpression be = (BinaryExpression) expr;
             switch (be.op()) {
                 case ADD: return evalFloat(be.left()) + evalFloat(be.right());
                 case SUB: return evalFloat(be.left()) - evalFloat(be.right());
@@ -221,7 +224,8 @@ public final class ExpressionEvaluatorImpl<TEntity> implements ExpressionEvaluat
                 default: break;
             }
         }
-        if (expr instanceof UnaryExpression ue) {
+        if (expr instanceof UnaryExpression) {
+            UnaryExpression ue = (UnaryExpression) expr;
             switch (ue.op()) {
                 case ARITHMETICAL_NEGATION: return -evalFloat(ue.expression());
                 case PLUS: return evalFloat(ue.expression());
@@ -230,7 +234,8 @@ public final class ExpressionEvaluatorImpl<TEntity> implements ExpressionEvaluat
                 default: break;
             }
         }
-        if (expr instanceof TernaryConditionalExpression te) {
+        if (expr instanceof TernaryConditionalExpression) {
+            TernaryConditionalExpression te = (TernaryConditionalExpression) expr;
             return evalBool(te.condition())
                     ? evalFloat(te.trueExpression())
                     : evalFloat(te.falseExpression());
@@ -239,10 +244,12 @@ public final class ExpressionEvaluatorImpl<TEntity> implements ExpressionEvaluat
     }
 
     private boolean evalBool(@NotNull Expression expr) {
-        if (expr instanceof FloatExpression fe) {
+        if (expr instanceof FloatExpression) {
+            FloatExpression fe = (FloatExpression) expr;
             return fe.value() != 0.0f;
         }
-        if (expr instanceof BinaryExpression be) {
+        if (expr instanceof BinaryExpression) {
+            BinaryExpression be = (BinaryExpression) expr;
             switch (be.op()) {
                 case AND: return evalBool(be.left()) && evalBool(be.right());
                 case OR:  return evalBool(be.left()) || evalBool(be.right());
@@ -265,7 +272,8 @@ public final class ExpressionEvaluatorImpl<TEntity> implements ExpressionEvaluat
                 default: break;
             }
         }
-        if (expr instanceof UnaryExpression ue) {
+        if (expr instanceof UnaryExpression) {
+            UnaryExpression ue = (UnaryExpression) expr;
             switch (ue.op()) {
                 case LOGICAL_NEGATION: return !evalBool(ue.expression());
                 case ARITHMETICAL_NEGATION: return evalBool(ue.expression());
@@ -274,7 +282,8 @@ public final class ExpressionEvaluatorImpl<TEntity> implements ExpressionEvaluat
                 default: break;
             }
         }
-        if (expr instanceof TernaryConditionalExpression te) {
+        if (expr instanceof TernaryConditionalExpression) {
+            TernaryConditionalExpression te = (TernaryConditionalExpression) expr;
             return evalBool(te.condition())
                     ? evalBool(te.trueExpression())
                     : evalBool(te.falseExpression());
@@ -290,7 +299,8 @@ public final class ExpressionEvaluatorImpl<TEntity> implements ExpressionEvaluat
         }
         Object objValueOf = DOUBLE_ZERO;
         try {
-            if (iterable instanceof List<Expression> list) {
+            if (iterable instanceof List) {
+                List<Expression> list = (List<Expression>) iterable;
                 final int size = list.size();
                 for (int i = 0; i < size; i++) {
                     objValueOf = list.get(i).visit(this);
@@ -448,7 +458,8 @@ public final class ExpressionEvaluatorImpl<TEntity> implements ExpressionEvaluat
             if (iIntValue < 0) {
                 iIntValue = 0;
             }
-            if (objMo2074xaffeef43 instanceof List list) {
+            if (objMo2074xaffeef43 instanceof List) {
+                List list = (List) objMo2074xaffeef43;
                 if (list.size() > iIntValue) {
                     return list.get(iIntValue);
                 }

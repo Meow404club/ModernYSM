@@ -198,7 +198,8 @@ public class YSMBinding extends ContextBinding {
     private static String getHitTargetId(IContext<LocalPlayer> context) {
         ClientLevel clientLevel;
         HitResult hitResult = Minecraft.getInstance().hitResult;
-        if (hitResult instanceof BlockHitResult blockHitResult) {
+        if (hitResult instanceof BlockHitResult) {
+            BlockHitResult blockHitResult = (BlockHitResult) hitResult;
             if (blockHitResult.getType() == HitResult.Type.MISS || (clientLevel = Minecraft.getInstance().level) == null) {
                 return StringPool.EMPTY;
             }
@@ -261,7 +262,8 @@ public class YSMBinding extends ContextBinding {
 
     private static float getXxa(IContext<LivingEntity> context) {
         AnimatableEntity<?> abstractC0235x5da32a01Mo322x83eb685f = context.geoInstance();
-        if (abstractC0235x5da32a01Mo322x83eb685f instanceof PlayerCapability playerCapability) {
+        if (abstractC0235x5da32a01Mo322x83eb685f instanceof PlayerCapability) {
+            PlayerCapability playerCapability = (PlayerCapability) abstractC0235x5da32a01Mo322x83eb685f;
             if (!playerCapability.isLocalPlayerModel()) {
                 return playerCapability.getPositionTracker().getStrafeInput();
             }
@@ -271,7 +273,8 @@ public class YSMBinding extends ContextBinding {
 
     private static float getYya(IContext<LivingEntity> context) {
         AnimatableEntity<?> abstractC0235x5da32a01Mo322x83eb685f = context.geoInstance();
-        if (abstractC0235x5da32a01Mo322x83eb685f instanceof PlayerCapability playerCapability) {
+        if (abstractC0235x5da32a01Mo322x83eb685f instanceof PlayerCapability) {
+            PlayerCapability playerCapability = (PlayerCapability) abstractC0235x5da32a01Mo322x83eb685f;
             if (!playerCapability.isLocalPlayerModel()) {
                 return playerCapability.getPositionTracker().getVerticalInput();
             }
@@ -281,7 +284,8 @@ public class YSMBinding extends ContextBinding {
 
     private static float getZza(IContext<LivingEntity> context) {
         AnimatableEntity<?> abstractC0235x5da32a01Mo322x83eb685f = context.geoInstance();
-        if (abstractC0235x5da32a01Mo322x83eb685f instanceof PlayerCapability playerCapability) {
+        if (abstractC0235x5da32a01Mo322x83eb685f instanceof PlayerCapability) {
+            PlayerCapability playerCapability = (PlayerCapability) abstractC0235x5da32a01Mo322x83eb685f;
             if (!playerCapability.isLocalPlayerModel()) {
                 return playerCapability.getPositionTracker().getForwardInput();
             }
@@ -327,7 +331,8 @@ public class YSMBinding extends ContextBinding {
 
     private static Object getFoodLevel(IContext<LivingEntity> context) {
         AnimatableEntity<?> abstractC0235x5da32a01Mo322x83eb685f = context.geoInstance();
-        if (abstractC0235x5da32a01Mo322x83eb685f instanceof PlayerCapability playerCapability) {
+        if (abstractC0235x5da32a01Mo322x83eb685f instanceof PlayerCapability) {
+            PlayerCapability playerCapability = (PlayerCapability) abstractC0235x5da32a01Mo322x83eb685f;
             if (!playerCapability.isLocalPlayerModel()) {
                 return Integer.valueOf(playerCapability.getPositionTracker().getFoodLevel());
             }

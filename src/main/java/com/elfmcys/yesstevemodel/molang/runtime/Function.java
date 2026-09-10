@@ -72,7 +72,8 @@ public interface Function {
         public ResourceLocation getResourceLocation(@NotNull ExecutionContext<? extends IContext<?>> ctx, final int index) {
             Object obj;
             Object obj2 = getValue(ctx, index);
-            if (obj2 instanceof StringExpression stringExpression) {
+            if (obj2 instanceof StringExpression) {
+                StringExpression stringExpression = (StringExpression) obj2;
                 if (stringExpression.getResourceLocation() != null) {
                     return stringExpression.getResourceLocation();
                 }
@@ -82,7 +83,8 @@ public interface Function {
                     return resourceLocationTryParse;
                 }
                 obj = stringExpression.getName();
-            } else if (obj2 instanceof String str) {
+            } else if (obj2 instanceof String) {
+                String str = (String) obj2;
                 ResourceLocation resourceLocationTryParse2 = ResourceLocation.tryParse(str);
                 if (resourceLocationTryParse2 != null) {
                     return resourceLocationTryParse2;

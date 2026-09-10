@@ -68,9 +68,9 @@ public class AuthorButton extends Button {
             guiGraphics.fillGradient(getX(), getY(), getX() + this.width, getY() + this.height, -1891417534, -1891417534);
         }
         guiGraphics.blit(this.resourceLocation, getX() + 3, getY() + 3, 64, 64, 0.0f, 0.0f, 64, 64, 64, 64);
-        String str = ModelMetadataPresenter.getLocalizedModelString(this.modelAssembly, "metadata.authors.%d.name".formatted(this.authorIndex), this.authorInfo.getName());
-        String str2 = ModelMetadataPresenter.getLocalizedModelString(this.modelAssembly, "metadata.authors.%d.role".formatted(this.authorIndex), this.authorInfo.getRole());
-        String str3 = ModelMetadataPresenter.getLocalizedModelString(this.modelAssembly, "metadata.authors.%d.comment".formatted(this.authorIndex), this.authorInfo.getComment());
+        String str = ModelMetadataPresenter.getLocalizedModelString(this.modelAssembly, String.format("metadata.authors.%d.name", this.authorIndex), this.authorInfo.getName());
+        String str2 = ModelMetadataPresenter.getLocalizedModelString(this.modelAssembly, String.format("metadata.authors.%d.role", this.authorIndex), this.authorInfo.getRole());
+        String str3 = ModelMetadataPresenter.getLocalizedModelString(this.modelAssembly, String.format("metadata.authors.%d.comment", this.authorIndex), this.authorInfo.getComment());
         renderScrollingString(guiGraphics, font, Component.literal(str), getX() + 2, getY() + 72, (getX() + this.width) - 2, getY() + 82, ChatFormatting.GOLD.getColor().intValue());
         guiGraphics.drawCenteredString(font, str2, getX() + 35, getY() + 82, ChatFormatting.GREEN.getColor().intValue());
         drawWrappedText(guiGraphics, Component.literal(str3), getX() + 3, getY() + 95, 64, -1);

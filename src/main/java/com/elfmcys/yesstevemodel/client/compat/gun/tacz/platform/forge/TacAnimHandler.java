@@ -98,7 +98,7 @@ public class TacAnimHandler {
             return PlayState.STOP;
         }
         Optional<CommonGunIndex> commonGunIndex = TimelessAPI.getCommonGunIndex(iGunOrNull.getGunId(stack));
-        if (commonGunIndex.isEmpty()) {
+        if (!commonGunIndex.isPresent()) {
             return PlayState.STOP;
         }
         String type = commonGunIndex.get().getType();
@@ -125,7 +125,7 @@ public class TacAnimHandler {
             return PlayState.STOP;
         }
         Optional<CommonGunIndex> commonGunIndex = TimelessAPI.getCommonGunIndex(iGunOrNull.getGunId(stack));
-        if (commonGunIndex.isEmpty()) {
+        if (!commonGunIndex.isPresent()) {
             return PlayState.STOP;
         }
         String type = commonGunIndex.get().getType();

@@ -17,7 +17,8 @@ public class SWEMHorseUtils {
     @Nullable
     public static String getGaitName(LivingEntity livingEntity) {
         Entity vehicle = livingEntity.getVehicle();
-        if (vehicle instanceof SWEMHorseEntityBase sWEMHorseEntityBase) {
+        if (vehicle instanceof SWEMHorseEntityBase) {
+            SWEMHorseEntityBase sWEMHorseEntityBase = (SWEMHorseEntityBase) vehicle;
             SWEMHorseEntityBase.Gait gait = sWEMHorseEntityBase.getGait();
             double jumpHeight = sWEMHorseEntityBase.jumpHeight;
             if (jumpHeight > 0.0d) {

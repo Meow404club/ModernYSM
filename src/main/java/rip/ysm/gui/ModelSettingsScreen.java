@@ -117,7 +117,7 @@ public class ModelSettingsScreen extends OptionScreen {
         previewBottom = panelBottom - 60;
         if (initialGroupId != null) {
             for (OptionGroup g : groups) {
-                if (g instanceof IdentifiedGroup ig && initialGroupId.equals(ig.id)) {
+                if (g instanceof IdentifiedGroup && initialGroupId.equals(((IdentifiedGroup) g).id)) {
                     selectGroup(g);
                     break;
                 }
@@ -154,25 +154,28 @@ public class ModelSettingsScreen extends OptionScreen {
 
     private String groupLabel(ExtraAnimationButtons group) {
         String fallback = group.getName() == null || group.getName().isEmpty() ? group.getId() : group.getName();
-        return ModelMetadataPresenter.getLocalizedModelString(modelAssembly, "properties.extra_animation_buttons.%s.name".formatted(group.getId()), fallback);
+        return ModelMetadataPresenter.getLocalizedModelString(modelAssembly, String.format("properties.extra_animation_buttons.%s.name", group.getId()), fallback);
     }
 
     @Nullable
     private OptionRow<?> buildRow(String groupId, int formIndex, AbstractConfig form) {
-        String title = ModelMetadataPresenter.getLocalizedModelString(modelAssembly, "properties.extra_animation_buttons.%s.config_forms.%d.title".formatted(groupId, formIndex), form.getTitle());
-        String desc = ModelMetadataPresenter.getLocalizedModelString(modelAssembly, "properties.extra_animation_buttons.%s.config_forms.%d.description".formatted(groupId, formIndex), form.getDescription());
-        if (form instanceof CheckboxConfig cfg) {
+        String title = ModelMetadataPresenter.getLocalizedModelString(modelAssembly, String.format("properties.extra_animation_buttons.%s.config_forms.%d.title", groupId, formIndex), form.getTitle());
+        String desc = ModelMetadataPresenter.getLocalizedModelString(modelAssembly, String.format("properties.extra_animation_buttons.%s.config_forms.%d.description", groupId, formIndex), form.getDescription());
+        if (form instanceof CheckboxConfig) {
+            CheckboxConfig cfg = (CheckboxConfig) form;
             return new BooleanOptionRow(0, 0, 0, 22, MolangOption.ofBoolean(title, desc, animatable, cfg.getValue()));
         }
-        if (form instanceof RangeConfig cfg) {
+        if (form instanceof RangeConfig) {
+            RangeConfig cfg = (RangeConfig) form;
             return new SliderOptionRow(0, 0, 0, 22, MolangOption.ofDouble(title, desc, animatable, cfg.getValue()), cfg.getMin(), cfg.getMax(), cfg.getStep(), "");
         }
-        if (form instanceof RadioConfig cfg) {
+        if (form instanceof RadioConfig) {
+            RadioConfig cfg = (RadioConfig) form;
             OrderedStringMap<String, String> labels = cfg.getLabels();
             List<String> texts = new ArrayList<>(labels.size());
             String[] writeExprs = new String[labels.size()];
             for (int i = 0; i < labels.size(); i++) {
-                texts.add(ModelMetadataPresenter.getLocalizedModelString(modelAssembly, "properties.extra_animation_buttons.%s.config_forms.%d.labels.%d".formatted(groupId, formIndex, i), labels.getKeyAt(i)));
+                texts.add(ModelMetadataPresenter.getLocalizedModelString(modelAssembly, String.format("properties.extra_animation_buttons.%s.config_forms.%d.labels.%d", groupId, formIndex, i), labels.getKeyAt(i)));
                 writeExprs[i] = labels.getValueAt(i);
             }
             return new RadioOptionRow(0, 0, 0, 22, MolangOption.ofIndex(title, desc, animatable, cfg.getValue(), writeExprs), texts);
@@ -188,7 +191,8 @@ public class ModelSettingsScreen extends OptionScreen {
 
     private void renderPreview(GuiGraphics g, float partialTick) {
         if (this.minecraft == null || this.minecraft.player == null) return;
-        if (!(animatable instanceof LivingAnimatable<?> la)) return;
+        if (!(animatable instanceof LivingAnimatable<?>)) return;
+        LivingAnimatable<?> la = (LivingAnimatable<?>) animatable;
         GeoReplacedEntityRenderer<?, ?> renderer = la instanceof CustomPlayerEntity ? RendererManager.getPlayerRenderer() : TouhouLittleMaidCompat.getMaidPreviewRenderer(la);
         if (renderer == null) return;
         double scale = this.minecraft.getWindow().getGuiScale();

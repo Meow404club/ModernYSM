@@ -662,15 +662,30 @@ public class YSMFolderDeserializer implements AutoCloseable {
         Vector3f p7 = new Vector3f(x2, y2, z1);
         Vector3f p8 = new Vector3f(x2, y2, z2);
 
-        Vector3f[] positions = switch (faceType) {
-            case "west" -> new Vector3f[]{p4, p3, p1, p2};
-            case "east" -> new Vector3f[]{p7, p8, p6, p5};
-            case "north" -> new Vector3f[]{p3, p7, p5, p1};
-            case "south" -> new Vector3f[]{p8, p4, p2, p6};
-            case "up" -> new Vector3f[]{p4, p8, p7, p3};
-            case "down" -> new Vector3f[]{p1, p5, p6, p2};
-            default -> null;
-        };
+        Vector3f[] positions;
+        switch (faceType) {
+            case "west":
+                positions = new Vector3f[]{p4, p3, p1, p2};
+                break;
+            case "east":
+                positions = new Vector3f[]{p7, p8, p6, p5};
+                break;
+            case "north":
+                positions = new Vector3f[]{p3, p7, p5, p1};
+                break;
+            case "south":
+                positions = new Vector3f[]{p8, p4, p2, p6};
+                break;
+            case "up":
+                positions = new Vector3f[]{p4, p8, p7, p3};
+                break;
+            case "down":
+                positions = new Vector3f[]{p1, p5, p6, p2};
+                break;
+            default:
+                positions = null;
+                break;
+        }
 
         Vector4f tempPos = new Vector4f();
         for (int i = 0; i < 4; i++) {
@@ -969,7 +984,48 @@ public class YSMFolderDeserializer implements AutoCloseable {
     }
 
 
-    private record ImageMeta(int width, int height, int format) {}
+    private static final class ImageMeta {
+        final int width;
+        final int height;
+        final int format;
+
+        ImageMeta(int width, int height, int format) {
+            this.width = width;
+            this.height = height;
+            this.format = format;
+        }
+
+        int width() {
+            return this.width;
+        }
+
+        int height() {
+            return this.height;
+        }
+
+        int format() {
+            return this.format;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof ImageMeta)) {
+                return false;
+            }
+            ImageMeta other = (ImageMeta) obj;
+            return this.width == other.width && this.height == other.height && this.format == other.format;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.width, this.height, this.format);
+        }
+
+        @Override
+        public String toString() {
+            return "ImageMeta[width=" + this.width + ", height=" + this.height + ", format=" + this.format + "]";
+        }
+    }
 
 
     private static ImageMeta parseImageMeta(byte[] data, String path) {
@@ -991,9 +1047,16 @@ public class YSMFolderDeserializer implements AutoCloseable {
         try {
             BufferedImage img = null;
             switch (format) {
-                case 1, 3 -> img = ImageIO.read(new ByteArrayInputStream(data));
-                case 4 -> img = new WebpDecoder().read(data);
-                case 5 -> img = new AvifDecoder().read(data);
+                case 1:
+                case 3:
+                    img = ImageIO.read(new ByteArrayInputStream(data));
+                    break;
+                case 4:
+                    img = new WebpDecoder().read(data);
+                    break;
+                case 5:
+                    img = new AvifDecoder().read(data);
+                    break;
             }
             if (img != null) {
                 return new ImageMeta(img.getWidth(), img.getHeight(), format);
@@ -1014,41 +1077,70 @@ public class YSMFolderDeserializer implements AutoCloseable {
     }
 
     public static int getAnimTypeFromKey(String key) {
-        return switch (key) {
-            case "main" -> 1;
-            case "arm" -> 2;
-            case "extra" -> 3;
-            case "tac" -> 4;
-            case "arrow" -> 5;
-            case "carryon" -> 6;
-            case "parcool" -> 7;
-            case "swem" -> 8;
-            case "slashblade" -> 9;
-            case "tlm" -> 10;
-            case "fp.arm", "fp_arm" -> 11;
-            case "immersive_melodies" -> 12;
-            case "irons_spell_books" -> 13;
-            default -> 0;
-        };
+        switch (key) {
+            case "main":
+                return 1;
+            case "arm":
+                return 2;
+            case "extra":
+                return 3;
+            case "tac":
+                return 4;
+            case "arrow":
+                return 5;
+            case "carryon":
+                return 6;
+            case "parcool":
+                return 7;
+            case "swem":
+                return 8;
+            case "slashblade":
+                return 9;
+            case "tlm":
+                return 10;
+            case "fp.arm":
+            case "fp_arm":
+                return 11;
+            case "immersive_melodies":
+                return 12;
+            case "irons_spell_books":
+                return 13;
+            default:
+                return 0;
+        }
     }
 
     public static String getAnimKeyFromType(int type) {
-        return switch (type) {
-            case 1 -> "main";
-            case 2 -> "arm";
-            case 3 -> "extra";
-            case 4 -> "tac";
-            case 5 -> "arrow";
-            case 6 -> "carryon";
-            case 7 -> "parcool";
-            case 8 -> "swem";
-            case 9 -> "slashblade";
-            case 10 -> "tlm";
-            case 11 -> "fp_arm";
-            case 12 -> "immersive_melodies";
-            case 13 -> "irons_spell_books";
-            default -> "unknown";
-        };
+        switch (type) {
+            case 1:
+                return "main";
+            case 2:
+                return "arm";
+            case 3:
+                return "extra";
+            case 4:
+                return "tac";
+            case 5:
+                return "arrow";
+            case 6:
+                return "carryon";
+            case 7:
+                return "parcool";
+            case 8:
+                return "swem";
+            case 9:
+                return "slashblade";
+            case 10:
+                return "tlm";
+            case 11:
+                return "fp_arm";
+            case 12:
+                return "immersive_melodies";
+            case 13:
+                return "irons_spell_books";
+            default:
+                return "unknown";
+        }
     }
 
     private static String getStr(JsonObject obj, String key, String def) {

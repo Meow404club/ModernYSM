@@ -351,7 +351,33 @@ public class ClientModelManager {
         }
     }
 
-    private record ModelHash(long hash1, long hash2) {
+    private static final class ModelHash {
+        final long hash1;
+        final long hash2;
+
+        ModelHash(long hash1, long hash2) {
+            this.hash1 = hash1;
+            this.hash2 = hash2;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof ModelHash)) {
+                return false;
+            }
+            ModelHash other = (ModelHash) obj;
+            return this.hash1 == other.hash1 && this.hash2 == other.hash2;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.hash1, this.hash2);
+        }
+
+        @Override
+        public String toString() {
+            return "ModelHash[hash1=" + this.hash1 + ", hash2=" + this.hash2 + "]";
+        }
     }
 
     private static final List<ModelHash> cachedModelHashes = new ArrayList<>();
@@ -373,7 +399,7 @@ public class ClientModelManager {
         if (!cacheDir.exists()) cacheDir.mkdirs();
 
         boolean useLocalModelCatalog = Minecraft.getInstance().isLocalServer() && isLazyModelLoadingEnabled();
-        Map<UUID, File> localCacheMap = useLocalModelCatalog ? Map.of() : YSMClientCache.buildCacheIndex(cacheDir, clientKey);
+        Map<UUID, File> localCacheMap = useLocalModelCatalog ? Collections.emptyMap() : YSMClientCache.buildCacheIndex(cacheDir, clientKey);
         List<ModelHash> modelsToRequest = new ArrayList<>();
 
         int unkSize = buf.readVarInt();
@@ -683,7 +709,7 @@ public class ClientModelManager {
         ArrayList<Runnable> discardedModelTasks = new ArrayList<>();
         modelPhraseExecutor.getQueue().drainTo(discardedModelTasks);
         for (Runnable task : discardedModelTasks) {
-            if (task instanceof CancellableModelTask cancellableTask) cancellableTask.cancel();
+            if (task instanceof CancellableModelTask) ((CancellableModelTask) task).cancel();
         }
         modelPrepareExecutor.getQueue().clear();
 
@@ -1081,7 +1107,8 @@ public class ClientModelManager {
             forEachGuiWidget(guiWidget -> {
                 guiWidget.onSyncMessage(obj == null ? null : (Component) obj);
             });
-            if (obj instanceof Component component) {
+            if (obj instanceof Component) {
+                Component component = (Component) obj;
                 if (Minecraft.getInstance().player != null) {
                     Minecraft.getInstance().player.sendSystemMessage(component);
                 }
@@ -1248,9 +1275,62 @@ public class ClientModelManager {
         }
     }
 
-    private record LazyModelSource(Path cacheFile, byte[] key, ServerModelInfo modelInfo, boolean isAuth, boolean alwaysLazy) {
-        private LazyModelSource {
+    private static final class LazyModelSource {
+        final Path cacheFile;
+        final byte[] key;
+        final ServerModelInfo modelInfo;
+        final boolean isAuth;
+        final boolean alwaysLazy;
+
+        private LazyModelSource(Path cacheFile, byte[] key, ServerModelInfo modelInfo, boolean isAuth, boolean alwaysLazy) {
             key = key.clone();
+            this.cacheFile = cacheFile;
+            this.key = key;
+            this.modelInfo = modelInfo;
+            this.isAuth = isAuth;
+            this.alwaysLazy = alwaysLazy;
+        }
+
+        Path cacheFile() {
+            return this.cacheFile;
+        }
+
+        byte[] key() {
+            return this.key;
+        }
+
+        ServerModelInfo modelInfo() {
+            return this.modelInfo;
+        }
+
+        boolean isAuth() {
+            return this.isAuth;
+        }
+
+        boolean alwaysLazy() {
+            return this.alwaysLazy;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof LazyModelSource)) {
+                return false;
+            }
+            LazyModelSource other = (LazyModelSource) obj;
+            return this.isAuth == other.isAuth && this.alwaysLazy == other.alwaysLazy
+                    && Objects.equals(this.cacheFile, other.cacheFile) && Objects.equals(this.key, other.key)
+                    && Objects.equals(this.modelInfo, other.modelInfo);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.cacheFile, this.key, this.modelInfo, this.isAuth, this.alwaysLazy);
+        }
+
+        @Override
+        public String toString() {
+            return "LazyModelSource[cacheFile=" + this.cacheFile + ", key=" + this.key + ", modelInfo=" + this.modelInfo
+                    + ", isAuth=" + this.isAuth + ", alwaysLazy=" + this.alwaysLazy + "]";
         }
     }
 
@@ -1365,7 +1445,7 @@ public class ClientModelManager {
         private final ModelResourceBundle metadataResources;
 
         private LazyModelAssembly(String modelId, LazyModelSource source) {
-            super(null, Map.of(), Map.of(), createLazyResourceBundle(source.modelInfo()), source.modelInfo(), new ModelDisplayAssets(source.modelInfo().getModelProperties().getDefaultTexture(), source.isAuth(), Map.of(), Map.of()), List.of());
+            super(null, Collections.emptyMap(), Collections.emptyMap(), createLazyResourceBundle(source.modelInfo()), source.modelInfo(), new ModelDisplayAssets(source.modelInfo().getModelProperties().getDefaultTexture(), source.isAuth(), Collections.emptyMap(), Collections.emptyMap()), Collections.emptyList());
             this.modelId = modelId;
             this.modelInfo = source.modelInfo();
             this.displayAssets = super.getTextureRegistry();
@@ -1373,7 +1453,7 @@ public class ClientModelManager {
         }
 
         private static ModelResourceBundle createLazyResourceBundle(ServerModelInfo modelInfo) {
-            return new ModelResourceBundle(Map.of(), new Object2ReferenceOpenHashMap<>(), new Object2ReferenceOpenHashMap<>(), modelInfo.getTranslations());
+            return new ModelResourceBundle(Collections.emptyMap(), new Object2ReferenceOpenHashMap<>(), new Object2ReferenceOpenHashMap<>(), modelInfo.getTranslations());
         }
 
         private ModelAssembly loadedAssembly() {
@@ -1404,14 +1484,14 @@ public class ClientModelManager {
         public Map<ResourceLocation, ProjectileModelBundle> getProjectileModels() {
             requestLazyModel(modelId);
             ModelAssembly assembly = loadedAssembly();
-            return assembly == null ? Map.of() : assembly.getProjectileModels();
+            return assembly == null ? Collections.emptyMap() : assembly.getProjectileModels();
         }
 
         @Override
         public Map<ResourceLocation, VehicleModelBundle> getVehicleModels() {
             requestLazyModel(modelId);
             ModelAssembly assembly = loadedAssembly();
-            return assembly == null ? Map.of() : assembly.getVehicleModels();
+            return assembly == null ? Collections.emptyMap() : assembly.getVehicleModels();
         }
 
         @Override
@@ -1429,7 +1509,7 @@ public class ClientModelManager {
         @Override
         public List<AbstractTexture> getTextures() {
             ModelAssembly assembly = loadedAssembly();
-            return assembly == null ? List.of() : assembly.getTextures();
+            return assembly == null ? Collections.emptyList() : assembly.getTextures();
         }
     }
 

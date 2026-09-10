@@ -21,6 +21,7 @@ import com.elfmcys.yesstevemodel.geckolib3.util.IInterpolable;
 import com.elfmcys.yesstevemodel.geckolib3.util.TicksInterpolator;
 import com.elfmcys.yesstevemodel.molang.runtime.ExpressionEvaluator;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 
@@ -165,7 +166,7 @@ public class PredicateBasedController<T extends AnimatableEntity<?>> implements 
     @Override
     public void forEachTransform(Consumer<BoneTransformProvider> consumer) {
         if (!this.needsReset) {
-            final var queues = this.transitionInterpolator.getActiveBoneAnimationQueues();
+            final ReferenceArrayList<BoneAnimationQueue> queues = this.transitionInterpolator.getActiveBoneAnimationQueues();
             final int size = queues.size();
             for (int i = 0; i < size; i++) {
                 consumer.accept(queues.get(i).transformProviderRecord);
@@ -233,7 +234,8 @@ public class PredicateBasedController<T extends AnimatableEntity<?>> implements 
                 if (blendWeight != 1.0f) {
                     mutableVector.mul(blendWeight);
                 }
-            } else if (point instanceof TransitionPoint transition) {
+            } else if (point instanceof TransitionPoint) {
+                TransitionPoint transition = (TransitionPoint) point;
                 Vector3f vector3fMul = transition.evaluateRaw(evaluator).mul(this.data.getBlendWeight());
                 MathUtil.nlerpEulerAngles(transition.getLerpFactor(), transition.getOffsetPoint(), vector3fMul, this.data.topLevelSnapshot.bone.getInitialRotation(), vector3fMul, this.rotScratch);
                 mutableVector.set(vector3fMul);
@@ -301,7 +303,7 @@ public class PredicateBasedController<T extends AnimatableEntity<?>> implements 
         public boolean equals(Object obj) {
             if (obj == this) return true;
             if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (TransformProviderRecord) obj;
+            TransformProviderRecord that = (TransformProviderRecord) obj;
             return Objects.equals(this.data, that.data);
         }
 

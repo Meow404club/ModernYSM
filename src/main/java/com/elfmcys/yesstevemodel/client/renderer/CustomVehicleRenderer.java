@@ -37,7 +37,8 @@ public class CustomVehicleRenderer {
 
         if (entity.isPassenger() && entity.getVehicle() != null && EntityDataBridge.shouldRiderSit(entity.getVehicle())) {
             Entity vehicle = entity.getVehicle();
-            if (vehicle instanceof LivingEntity livingVehicle) {
+            if (vehicle instanceof LivingEntity) {
+                LivingEntity livingVehicle = (LivingEntity) vehicle;
                 float vehicleBodyYaw = Mth.rotLerp(partialTick, livingVehicle.yBodyRotO, livingVehicle.yBodyRot);
                 float yawDiff = Mth.clamp(Mth.wrapDegrees(headYaw - vehicleBodyYaw), -85.0f, 85.0f);
                 bodyYaw = headYaw - yawDiff;

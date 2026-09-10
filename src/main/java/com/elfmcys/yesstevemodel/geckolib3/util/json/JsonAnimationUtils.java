@@ -11,7 +11,6 @@ import com.elfmcys.yesstevemodel.geckolib3.core.event.ParticleEventKeyFrame;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.MolangParser;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.value.IValue;
 import com.elfmcys.yesstevemodel.geckolib3.util.AnimationUtils;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -27,22 +26,22 @@ public class JsonAnimationUtils {
         if (json.has("animations")) {
             return json.getAsJsonObject("animations").entrySet();
         }
-        return ImmutableSet.of();
+        return Collections.emptySet();
     }
 
     public static List<Map.Entry<String, JsonElement>> getBones(JsonObject json) {
         JsonObject bones = json.getAsJsonObject("bones");
-        return bones == null ? List.of() : new ArrayList<>(bones.entrySet());
+        return bones == null ? Collections.emptyList() : new ArrayList<>(bones.entrySet());
     }
 
     public static List<Map.Entry<String, JsonElement>> getSoundEffects(JsonObject json) {
         JsonObject bones = json.getAsJsonObject("sound_effects");
-        return bones == null ? List.of() : new ArrayList<>(bones.entrySet());
+        return bones == null ? Collections.emptyList() : new ArrayList<>(bones.entrySet());
     }
 
     public static List<Map.Entry<String, JsonElement>> getCustomInstructionKeyFrames(JsonObject json) {
         JsonObject customInstructions = json.getAsJsonObject("timeline");
-        return customInstructions == null ? List.of() : new ArrayList<>(customInstructions.entrySet());
+        return customInstructions == null ? Collections.emptyList() : new ArrayList<>(customInstructions.entrySet());
     }
 
     private static JsonElement getObjectByKey(Set<Map.Entry<String, JsonElement>> json, String key)
@@ -64,11 +63,11 @@ public class JsonAnimationUtils {
             throws ClassCastException, IllegalStateException {
         JsonObject animationJsonObject = element.getValue().getAsJsonObject();
 
-        var animationName = element.getKey();
+        String animationName = element.getKey();
         JsonElement animationLength = animationJsonObject.get("animation_length");
-        var animationLengthTicks = animationLength == null ? -1 : AnimationUtils.convertSecondsToTicks(animationLength.getAsFloat());
+        float animationLengthTicks = animationLength == null ? -1 : AnimationUtils.convertSecondsToTicks(animationLength.getAsFloat());
 
-        var loop = ILoopType.fromJson(animationJsonObject.get("loop"));
+        ILoopType loop = ILoopType.fromJson(animationJsonObject.get("loop"));
 
         IValue blendWeight = null;
         if (animationJsonObject.has("blend_weight"))
@@ -79,9 +78,9 @@ public class JsonAnimationUtils {
             overridePrevAnim = animationJsonObject.get("override_previous_animation").getAsBoolean();
         }
 
-        var boneAnimations = new ReferenceArrayList<BoneAnimation>();
-        var customInstructionKeyframes = new ReferenceArrayList<EventKeyFrame<IValue[]>>();
-        var soundKeyFrames = new ReferenceArrayList<EventKeyFrame<String>>();
+        ReferenceArrayList<BoneAnimation> boneAnimations = new ReferenceArrayList<>();
+        ReferenceArrayList<EventKeyFrame<IValue[]>> customInstructionKeyframes = new ReferenceArrayList<>();
+        ReferenceArrayList<EventKeyFrame<String>> soundKeyFrames = new ReferenceArrayList<>();
 
         for (Map.Entry<String, JsonElement> keyFrame : getSoundEffects(animationJsonObject)) {
             double startTick = Double.parseDouble(keyFrame.getKey()) * 20;

@@ -40,16 +40,18 @@ public class TouhouMaidModelScreen extends PlayerModelScreen {
 
     @Override
     public PlayerTextureScreen createTextureScreen(PlayerModelScreen modelScreen, String str, ModelAssembly modelAssembly) {
-        return new TouhouMaidTextureScreen(modelScreen, str, Objects.requireNonNullElse(this.maid.getCapability(MaidCapabilityProvider.MAID_CAP).map((v0) -> {
+        ModelAssembly current = this.maid.getCapability(MaidCapabilityProvider.MAID_CAP).map((v0) -> {
             return v0.getModelAssembly();
-        }).orElse(null), modelAssembly), this.maid);
+        }).orElse(null);
+        return new TouhouMaidTextureScreen(modelScreen, str, current != null ? current : modelAssembly, this.maid);
     }
 
     @Override
     public ModelInfoScreen createModelInfoScreen(PlayerModelScreen modelScreen, ModelAssembly modelAssembly) {
-        return new ModelInfoScreen(modelScreen, Objects.requireNonNullElse(this.maid.getCapability(MaidCapabilityProvider.MAID_CAP).map((v0) -> {
+        ModelAssembly current = this.maid.getCapability(MaidCapabilityProvider.MAID_CAP).map((v0) -> {
             return v0.getModelAssembly();
-        }).orElse(null), modelAssembly));
+        }).orElse(null);
+        return new ModelInfoScreen(modelScreen, current != null ? current : modelAssembly);
     }
 
     @Override

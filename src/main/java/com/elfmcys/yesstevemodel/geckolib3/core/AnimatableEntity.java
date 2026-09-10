@@ -248,7 +248,8 @@ public abstract class AnimatableEntity<TEntity extends Entity> {
             netHeadYaw = lerpHeadRot - lerpBodyRot;
         }
 
-        if (shouldSit && (entity.getVehicle() instanceof LivingEntity vehicle)) {
+        if (shouldSit && (entity.getVehicle() instanceof LivingEntity)) {
+            LivingEntity vehicle = (LivingEntity) entity.getVehicle();
             lerpBodyRot = Mth.rotLerp(partialTick, vehicle.yBodyRotO, vehicle.yBodyRot);
             netHeadYaw = lerpHeadRot - lerpBodyRot;
             float clampedHeadYaw = Mth.clamp(Mth.wrapDegrees(lerpHeadRot - lerpBodyRot), -85.0f, 85.0f);

@@ -40,3 +40,24 @@
   环境变量 `YSM_CORE_LIB` 直指、`OYSM_DISABLE_SMID` 禁用。CPU 无 AVX2 时 JNI_OnLoad
   直接返回 JNI_ERR（load 失败→走兼容渲染路径）。
 - 源码副本：`tmp/harvest/openysm-cpp/`（build 产物 zig-out/ 同目录）。
+
+## 2026-09-10 · StonecutterTemplate 调研（researcher 研究卡）
+
+- **覆盖面**：模板官方 Fabric 1.14+ / Forge 1.17+ / NeoForge 1.20.5+。Forge 1.20.1 走
+  `net.neoforged.moddev.legacyforge`（官方声明仅支持 Forge 1.17~1.20.1）；**1.16.5 不在
+  模板支持范围**，需自写 buildscript（FG4/5 或 parchment-loom），对模板 Gradle 9.2.1 的
+  兼容性未验证 → **1.16.5 必须 POC 先行再定案**。
+- **组织方式**：每个「MC版本×加载器」= 一个 stonecutter 版本项（`vers("1.20.1-forge")`
+  + 独立 `build.forge.gradle.kts` + `versions/<mcver>-<loader>/gradle.properties`）；
+  源码只有一份共享 `src/main`，加载器差异用 `constants.match(loader)` 生成常量 +
+  `//? if forge {` 条件块（现版语法，旧版 `/*?*/` 行内写法仍支持）。预处理挂在
+  processResources/编译前，每版本生成源码变体。
+- **迁移路径**：官方文档明示 "从模板新建工程，把 src 挪进去"；@ExpectPlatform 抽象层的
+  社区常见做法是用 stonecutter condition 平铺替代，architectury-api 依赖可留可去。
+  stonecutter 插件稳定版 0.9.8（模板用 0.7），Gradle 9.2.1，fabric-loom 1.11，MDG 2.0.141。
+- **同版本 Forge+NeoForge 双生态**：1.20.1 NeoForge(47.1.x) 与 Forge 47 同 API 面，可
+  注册两个版本项各出自建脚本；1.20.4+ 只有 NeoForge。
+- **案例**：elytra-trims（分加载器脚本）、YACL（Modstitch）、PatPat（24+ 版本）；
+  未检索到 1.16.5×Forge 的 stonecutter 公开先例。
+- 模板源码已收割 `tmp/harvest/stonecutter-template/`（settings/stonecutter/build.*.gradle.kts
+  全量，迁移期反复参考）。

@@ -3,15 +3,18 @@
 > 由主 Agent 在每次 state_update 重要变更后同步镜像。
 
 ## 阶段
-- phase: RAG 基础设施搭建（已完成）→ 架构重构调研期
-- done: [agent-team-template 应用(端口8999), gregtech6 材料迁移+索引移植194617块, 34资料源全部索引(407308块), rag-shared 共享库落盘并核验]
-- current: Stonecutter 重构方向已定，调研未开始
-- next: 调研 IAFEnvoy/StonecutterTemplate（任务 arch-stonecutter-refactor, status=research）
+- phase: 架构重构（Stonecutter 迁移）规划期
+- done: [RAG 34 源全量索引(407308块), openysm.cpp 研究(zig 构建可复现,JNI 漂移点已记录, b573c7b), StonecutterTemplate 调研（研究卡见 RESEARCH-NOTES.md）]
+- current: architect 出迁移 ADR/模块卡；1.16.5 Forge 工具链 POC 并行；harvest 审查入库
+- next: 收 ADR → 拆卡派发 coder（里程碑 M1 = 1.20.1 forge+neoforge 编译通过）
 
 ## 任务板摘要
 | slug | status | branch | note |
 |---|---|---|---|
 | rag-bootstrap | merged | dev | cfeaae1；407308 块；共享库 402946 块净化副本 |
+| native-openysm-cpp | research-done | - | 上游 zig 构建 OK；nInitSIMD 漂移待对齐 |
+| arch-stonecutter-refactor | planning | - | 目标收窄：1.16.5+ 仅 forge/neoforge，fabric 代码保留不建项；legacy 推迟 |
+| poc-forge-1165 | research | - | 1.16.5 Forge 能否进 stonecutter 单 Gradle（FG4/5 vs parchment-loom vs 拆 legacy） |
 
 ## 最近决策
 - 2026-09-10 架构重构方向：脱离 Architectury——1.16.5+ 用 StonecutterTemplate(IAFEnvoy)

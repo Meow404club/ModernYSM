@@ -8,7 +8,8 @@ import com.elfmcys.yesstevemodel.client.upload.ModelUploadSession;
 import com.elfmcys.yesstevemodel.client.upload.UploadManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import rip.ysm.api.PlatformAPI;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.TickEvent;
 
 public final class ClientTickEvent {
 
@@ -20,7 +21,15 @@ public final class ClientTickEvent {
     }
 
     public static void register() {
-        dev.architectury.event.events.client.ClientTickEvent.CLIENT_PRE.register(ClientTickEvent::onClientPreTick);
+        // architectury ClientTickEvent.CLIENT_PRE 在 forge 端 = TickEvent.ClientTickEvent phase START
+        MinecraftForge.EVENT_BUS.addListener(ClientTickEvent::onClientTick);
+    }
+
+    private static void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.START) {
+            return;
+        }
+        onClientPreTick(Minecraft.getInstance());
     }
 
     private static void onClientPreTick(Minecraft client) {

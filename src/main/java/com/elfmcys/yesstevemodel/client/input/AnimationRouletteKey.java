@@ -9,10 +9,10 @@ import com.elfmcys.yesstevemodel.config.ServerConfig;
 import com.elfmcys.yesstevemodel.network.NetworkHandler;
 import com.elfmcys.yesstevemodel.util.InputUtil;
 import com.mojang.blaze3d.platform.InputConstants;
-import dev.architectury.event.EventResult;
-import dev.architectury.event.events.client.ClientRawInputEvent;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.common.MinecraftForge;
 import rip.ysm.api.PlatformAPI;
 import rip.ysm.api.client.KeyMappingFactory;
 import rip.ysm.compat.touhoulittlemaid.TouhouLittleMaidCompat;
@@ -31,31 +31,35 @@ public final class AnimationRouletteKey {
         if (PlatformAPI.isServer()) {
             return;
         }
-        ClientRawInputEvent.KEY_PRESSED.register((client, keyCode, scanCode, action, modifiers) -> {
-            if (YesSteveModel.isAvailable() && InputUtil.isPlayerReady() && action == 1 && InputUtil.isKeyPressed(keyCode, scanCode, KEY_ROULETTE)) {
-                if (!NetworkHandler.isClientConnected() || ServerConfig.CAN_SWITCH_MODEL.get()) {
-                    if (TouhouLittleMaidCompat.isMaidChatAvailable()) {
-                        TouhouLittleMaidCompat.openMaidChat();
-                    } else if (Minecraft.getInstance().player != null) {
-                        PlayerCapability.get(Minecraft.getInstance().player).ifPresent(cap -> {
-                            String modelId = cap.getModelId();
-                            ModelAssembly modelAssembly = cap.getModelAssembly();
-                            if (modelAssembly != null && !modelAssembly.getModelData().getModelProperties().getExtraAnimation().isEmpty()) {
-                                if (Minecraft.getInstance().screen == null) {
-                                    if (GeneralConfig.effectiveModernRoulette()) {
-                                        Minecraft.getInstance().setScreen(new ModernAnimationRouletteScreen(modelId, modelAssembly, cap));
-                                    } else {
-                                        Minecraft.getInstance().setScreen(new AnimationRouletteScreen(modelId, modelAssembly, cap));
-                                    }
-                                } else if (Minecraft.getInstance().screen instanceof AnimationRouletteScreen || Minecraft.getInstance().screen instanceof ModernAnimationRouletteScreen) {
-                                    Minecraft.getInstance().setScreen(null);
+        // architectury ClientRawInputEvent.KEY_PRESSED 在 forge 端即 InputEvent.Key（不可取消，原 EventResult 被丢弃）
+        MinecraftForge.EVENT_BUS.addListener(AnimationRouletteKey::onKeyInput);
+    }
+
+    private static void onKeyInput(InputEvent.Key event) {
+        int keyCode = event.getKey();
+        int scanCode = event.getScanCode();
+        if (YesSteveModel.isAvailable() && InputUtil.isPlayerReady() && event.getAction() == 1 && InputUtil.isKeyPressed(keyCode, scanCode, KEY_ROULETTE)) {
+            if (!NetworkHandler.isClientConnected() || ServerConfig.CAN_SWITCH_MODEL.get()) {
+                if (TouhouLittleMaidCompat.isMaidChatAvailable()) {
+                    TouhouLittleMaidCompat.openMaidChat();
+                } else if (Minecraft.getInstance().player != null) {
+                    PlayerCapability.get(Minecraft.getInstance().player).ifPresent(cap -> {
+                        String modelId = cap.getModelId();
+                        ModelAssembly modelAssembly = cap.getModelAssembly();
+                        if (modelAssembly != null && !modelAssembly.getModelData().getModelProperties().getExtraAnimation().isEmpty()) {
+                            if (Minecraft.getInstance().screen == null) {
+                                if (GeneralConfig.effectiveModernRoulette()) {
+                                    Minecraft.getInstance().setScreen(new ModernAnimationRouletteScreen(modelId, modelAssembly, cap));
+                                } else {
+                                    Minecraft.getInstance().setScreen(new AnimationRouletteScreen(modelId, modelAssembly, cap));
                                 }
+                            } else if (Minecraft.getInstance().screen instanceof AnimationRouletteScreen || Minecraft.getInstance().screen instanceof ModernAnimationRouletteScreen) {
+                                Minecraft.getInstance().setScreen(null);
                             }
-                        });
-                    }
+                        }
+                    });
                 }
             }
-            return EventResult.pass();
-        });
+        }
     }
 }

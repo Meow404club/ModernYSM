@@ -5,11 +5,12 @@ import com.elfmcys.yesstevemodel.client.ClientModelManager;
 import com.elfmcys.yesstevemodel.client.ClientOnlyMode;
 import com.elfmcys.yesstevemodel.config.GeneralConfig;
 import com.elfmcys.yesstevemodel.network.NetworkHandler;
-import dev.architectury.event.events.client.ClientPlayerEvent;
-import dev.architectury.event.events.client.ClientTickEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.TickEvent;
 
 public final class ClientPlayerJoinNotification {
 
@@ -36,9 +37,30 @@ public final class ClientPlayerJoinNotification {
     }
 
     public static void register() {
-        ClientPlayerEvent.CLIENT_PLAYER_JOIN.register(ClientPlayerJoinNotification::onPlayerJoin);
-        ClientPlayerEvent.CLIENT_PLAYER_QUIT.register(ClientPlayerJoinNotification::onPlayerQuit);
-        ClientTickEvent.CLIENT_PRE.register(ClientPlayerJoinNotification::onClientTick);
+        // ClientPlayerEvent.CLIENT_PLAYER_JOIN/QUIT → ClientPlayerNetworkEvent.LoggingIn/LoggingOut（均不可取消）
+        MinecraftForge.EVENT_BUS.addListener(ClientPlayerJoinNotification::onLoggingIn);
+        MinecraftForge.EVENT_BUS.addListener(ClientPlayerJoinNotification::onLoggingOut);
+        // ClientTickEvent.CLIENT_PRE → TickEvent.ClientTickEvent phase START
+        MinecraftForge.EVENT_BUS.addListener(ClientPlayerJoinNotification::onClientTickEvent);
+    }
+
+    private static void onLoggingIn(ClientPlayerNetworkEvent.LoggingIn event) {
+        onPlayerJoin(event.getPlayer());
+    }
+
+    /**
+     * LoggingOut 的 getPlayer() 可为 null（新建集成服/连接远程服时也会触发，
+     * forge-api 1.20.1 ClientPlayerNetworkEvent.java:85-125），原逻辑本就不读该参数。
+     */
+    private static void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
+        onPlayerQuit(event.getPlayer());
+    }
+
+    private static void onClientTickEvent(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.START) {
+            return;
+        }
+        onClientTick(Minecraft.getInstance());
     }
 
     private static void onPlayerJoin(LocalPlayer player) {

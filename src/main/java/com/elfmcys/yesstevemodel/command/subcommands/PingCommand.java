@@ -11,7 +11,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import dev.architectury.platform.Platform;
+import net.minecraftforge.fml.ModList;
 
 public class PingCommand {
 
@@ -23,7 +23,7 @@ public class PingCommand {
 
     private static int executePing(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         ServerPlayer playerOrException = context.getSource().getPlayerOrException();
-        playerOrException.sendSystemMessage(Component.translatable("message.yes_steve_model.client.ping_result", Platform.getMod(YesSteveModel.MOD_ID).getVersion()));
+        playerOrException.sendSystemMessage(Component.translatable("message.yes_steve_model.client.ping_result", ModList.get().getModContainerById(YesSteveModel.MOD_ID).map(container -> container.getModInfo().getVersion().toString()).orElse("unknown")));
         if (!NetworkHandler.isPlayerConnected(playerOrException)) {
             NetworkHandler.sendToClientPlayer(new S2CVersionCheckPacket(), playerOrException);
             return Command.SINGLE_SUCCESS;

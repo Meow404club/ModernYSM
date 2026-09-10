@@ -1,9 +1,9 @@
 package com.elfmcys.yesstevemodel.client.event;
 
 import com.elfmcys.yesstevemodel.YesSteveModel;
+import com.elfmcys.yesstevemodel.event.api.EventResult;
 import com.elfmcys.yesstevemodel.event.api.SpecialPlayerRenderEvent;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
-import dev.architectury.event.EventResult;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.resources.ResourceLocation;

@@ -3,11 +3,11 @@ package com.elfmcys.yesstevemodel.event;
 import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import dev.architectury.event.EventResult;
-import dev.architectury.event.events.common.EntityEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import rip.ysm.api.PlatformAPI;
 
 import java.util.ArrayList;
@@ -26,19 +26,21 @@ public class EntityJoinCallbackEvent {
         if (PlatformAPI.isServer()) {
             return;
         }
-        EntityEvent.ADD.register((entity, level) -> {
-            if (!YesSteveModel.isAvailable() || !level.isClientSide()) {
-                return EventResult.pass();
+        MinecraftForge.EVENT_BUS.addListener(EntityJoinCallbackEvent::onEntityJoinLevel);
+    }
+
+    private static void onEntityJoinLevel(EntityJoinLevelEvent event) {
+        Entity entity = event.getEntity();
+        if (!YesSteveModel.isAvailable() || !event.getLevel().isClientSide()) {
+            return;
+        }
+        List<Consumer<Entity>> list = callbackCache.getIfPresent(entity.getId());
+        if (list != null) {
+            for (Consumer<Entity> entityConsumer : list) {
+                entityConsumer.accept(entity);
             }
-            List<Consumer<Entity>> list = callbackCache.getIfPresent(entity.getId());
-            if (list != null) {
-                for (Consumer<Entity> entityConsumer : list) {
-                    entityConsumer.accept(entity);
-                }
-            }
-            callbackCache.invalidate(entity.getId());
-            return EventResult.pass();
-        });
+        }
+        callbackCache.invalidate(entity.getId());
     }
 
     public static void addCallback(int i, Consumer<Entity> consumer) {

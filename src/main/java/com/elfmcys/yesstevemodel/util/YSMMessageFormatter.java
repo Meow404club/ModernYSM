@@ -6,7 +6,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import dev.architectury.utils.GameInstance;
+import net.minecraftforge.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.Nullable;
 import rip.ysm.api.PlatformAPI;
 
@@ -37,7 +37,7 @@ public class YSMMessageFormatter {
     }
 
     public static void sendServerMessage(@Nullable CommandSourceStack commandSourceStack, Component component, boolean broadcastToOps) {
-        MinecraftServer currentServer = GameInstance.getServer();
+        MinecraftServer currentServer = ServerLifecycleHooks.getCurrentServer();
         if (currentServer == null) {
             return;
         }

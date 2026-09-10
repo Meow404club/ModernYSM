@@ -5,19 +5,19 @@ import com.elfmcys.yesstevemodel.util.YSMMessageFormatter;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import dev.architectury.event.events.client.ClientCommandRegistrationEvent;
 import net.minecraft.client.Minecraft;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 
 public class CacheCommand {
 
-    public static LiteralArgumentBuilder<ClientCommandRegistrationEvent.ClientCommandSourceStack> register() {
-        return LiteralArgumentBuilder.<ClientCommandRegistrationEvent.ClientCommandSourceStack>literal("cache")
-                .then(LiteralArgumentBuilder.<ClientCommandRegistrationEvent.ClientCommandSourceStack>literal("dump")
+    public static LiteralArgumentBuilder<CommandSourceStack> register() {
+        return LiteralArgumentBuilder.<CommandSourceStack>literal("cache")
+                .then(LiteralArgumentBuilder.<CommandSourceStack>literal("dump")
                         .executes(CacheCommand::dumpCache));
     }
 
-    private static int dumpCache(CommandContext<ClientCommandRegistrationEvent.ClientCommandSourceStack> context) {
+    private static int dumpCache(CommandContext<CommandSourceStack> context) {
         var player = Minecraft.getInstance().player;
         if (player == null) {
             return 0;

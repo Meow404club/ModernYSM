@@ -29,8 +29,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import dev.architectury.platform.Platform;
-import dev.architectury.utils.GameInstance;
 import io.netty.buffer.Unpooled;
 import it.unimi.dsi.fastutil.floats.FloatReferencePair;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -41,6 +39,9 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.forgespi.language.IModFileInfo;
+import net.minecraftforge.server.ServerLifecycleHooks;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -320,7 +321,10 @@ public final class ServerModelManager {
 
     private static void extractBuiltinModels() {
         try {
-            Path assetsBuiltin = Platform.getMod(YesSteveModel.MOD_ID).findResource("assets", YesSteveModel.MOD_ID, "builtin").orElse(null);
+            Path assetsBuiltin = Optional.ofNullable(ModList.get().getModFileById(YesSteveModel.MOD_ID))
+                    .map(IModFileInfo::getFile)
+                    .map(file -> file.findResource("assets", YesSteveModel.MOD_ID, "builtin"))
+                    .orElse(null);
 
             if (assetsBuiltin == null || !Files.isDirectory(assetsBuiltin)) return;
 
@@ -1138,7 +1142,7 @@ public final class ServerModelManager {
         initRateLimit();
         YSMThreadPool.submitSync(() -> {
             try {
-                MinecraftServer currentServer = GameInstance.getServer();
+                MinecraftServer currentServer = ServerLifecycleHooks.getCurrentServer();
                 if (currentServer == null) return;
 
                 for (UUID uuid : uuids) {
@@ -1452,7 +1456,7 @@ public final class ServerModelManager {
     }
 
     public static void requestPlayerAuth(ServerPlayer serverPlayer, @Nullable Consumer<UUIDComponentData> consumer) {
-        MinecraftServer currentServer = GameInstance.getServer();
+        MinecraftServer currentServer = ServerLifecycleHooks.getCurrentServer();
         currentServer.execute(() -> {
             List<ServerPlayer> players = currentServer.getPlayerList().getPlayers();
             ArrayList<FloatReferencePair<ServerPlayer>> arrayList = new ArrayList<>();
@@ -1471,7 +1475,7 @@ public final class ServerModelManager {
             if (consumer != null) {
                 consumer.accept(modelLoadResult);
             }
-            MinecraftServer currentServer = GameInstance.getServer();
+            MinecraftServer currentServer = ServerLifecycleHooks.getCurrentServer();
             if (currentServer == null) {
                 return;
             }
@@ -1492,7 +1496,7 @@ public final class ServerModelManager {
 
     private static void onModelLoadComplete(ModelLoadResult modelLoadResult, @Nullable Object obj) {
         Consumer<ModelLoadResult> consumer = (Consumer<ModelLoadResult>) obj;
-        MinecraftServer currentServer = GameInstance.getServer();
+        MinecraftServer currentServer = ServerLifecycleHooks.getCurrentServer();
         if (modelLoadResult.isSuccess()) {
             IntOpenHashSet hashes = new IntOpenHashSet(modelLoadResult.getModelDefinitions().size());
             for (ServerModelData data : modelLoadResult.getModelDefinitions().values()) {
@@ -1529,7 +1533,7 @@ public final class ServerModelManager {
 
     private static Connection getPlayerConnection(UUID uuid) {
         ServerPlayer player;
-        MinecraftServer currentServer = GameInstance.getServer();
+        MinecraftServer currentServer = ServerLifecycleHooks.getCurrentServer();
         if (currentServer == null || (player = currentServer.getPlayerList().getPlayer(uuid)) == null) {
             return null;
         }

@@ -12,13 +12,14 @@ import com.google.common.collect.Sets;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.Suggestions;
-import dev.architectury.event.events.client.ClientCommandRegistrationEvent;
-import dev.architectury.event.events.common.CommandRegistrationEvent;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.synchronization.SuggestionProviders;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.client.event.RegisterClientCommandsEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import rip.ysm.api.PlatformAPI;
 
 import java.util.HashSet;
@@ -73,13 +74,14 @@ public final class CommandRegistry {
     });
 
     public static void register() {
-        ClientCommandRegistrationEvent.EVENT.register((dispatcher, context) -> {
+        MinecraftForge.EVENT_BUS.addListener((RegisterClientCommandsEvent event) -> {
             if (!YesSteveModel.isAvailable()) {
                 return;
             }
-            OpenYSMClientCommand.registerClientCommands(dispatcher);
+            OpenYSMClientCommand.registerClientCommands(event.getDispatcher());
         });
-        CommandRegistrationEvent.EVENT.register((dispatcher, registry, selection) -> {
+        MinecraftForge.EVENT_BUS.addListener((RegisterCommandsEvent event) -> {
+            var dispatcher = event.getDispatcher();
             if (!YesSteveModel.isAvailable()) {
                 RootCommand.registerFallbackCommands(dispatcher);
                 return;

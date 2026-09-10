@@ -6,8 +6,8 @@
 - phase: 架构重构（Stonecutter 迁移）——M1 已收官，M2（1.16.5）规划期
 - done: [M0 骨架 e9f0b61+源码合并 d086af3, native 子模块 7db591f, M1 七卡迁移+门禁 0f81660（8/8 approve）]
 - done: [RAG 34 源全量索引(407308块), openysm.cpp 研究(b573c7b), Stonecutter 调研(a780867), ADR 定案(decisions.adr-stonecutter-2026-09-10), curator 入库]
-- current: **M1 收官**（0f81660 合入，8/8 approve 零打回）；M2 规划中（architect 评估 1.16.5 API 漂移面）
-- next: M2 1.16.5-forge（unimined，POC 就绪）→ M3 平铺 1.18.2/1.19.2/1.19.4/1.20.4 → M4 NeoForge 1.20.5+ → M5 1.12.2/1.7.10 条件化
+- current: M2 批① 双卡并行（m2-skeleton-unimined + m2-java8-downshift）
+- next: 骨架合入后 m2-gate-compat → 条件卡波次（forge-thinlayer/render-pipeline/mixin-versioning 并行）→ gui-hud-port → native-poc(GO/NO-GO) → compile-green-gate → ingame-smoke-gate；M3 平铺 → M4 NeoForge → M5 legacy
 
 ## ADR 摘要（decisions.adr-stonecutter-2026-09-10）
 - architectury-api 彻底移除（@ExpectPlatform 无织入方）；**cardinal 与 forge_config_api_port 直接删**（全仓仅 fabric 源集使用，forge 通道纯 net.minecraftforge capability / ForgeConfigSpec）
@@ -32,6 +32,10 @@
 | mig-events-client | merged | d5362f8 | 键位/输入域全迁移；取消语义清零字节码证实 |
 | mig-platform-util | merged | 7414160 | YsmPlatform+主类接线+NCDFE 修复（NFRT LegacyClasspath 根因，A/B 实证 27 models） |
 | mig-purge-architectury | merged | 0f81660 | **M1 门禁通过**：grep/依赖树/jar 三零命中+进世界实证+runServer Done；WSL 崩溃后重审一次过 |
+| m2-skeleton-unimined | in_progress | work/m2-skeleton-unimined | 1.16.5 版本项注册+unimined 路由（M2 批①） |
+| m2-java8-downshift | in_progress | work/m2-java8-downshift | records/switch-expr/List.of 等 Java8 下沉（M2 批①，结构性前置） |
+| m2-gate-compat | queued | - | compat 桥 1.16.5 闸门（骨架合入后，build.unimined 域交叉） |
+| m2 条件卡×3 + gui/native-poc/双门禁 | queued | - | 见 decisions.adr-m2-1165-stonecutter-entry 十卡序 |
 | mig-purge-architectury | queued | - | M1 收尾门禁：全仓 dev.architectury=0 |
 | poc-forge-1165 | done | - | 定案：unimined 线三代全 PASS，legacy/ 作废；1.7.10/1.12.2 源码条件化推迟 M5 |
 | poc-execute-unimined | merged | - | 实跑闭环：三版本 BUILD SUCCESSFUL+SRG 抽查过；报告 tmp/poc-1165/RUN-REPORT.md |

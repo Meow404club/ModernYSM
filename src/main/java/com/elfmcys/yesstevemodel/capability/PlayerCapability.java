@@ -1,9 +1,9 @@
 package com.elfmcys.yesstevemodel.capability;
 
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import com.elfmcys.yesstevemodel.client.animation.molang.struct.RoamingStruct;
 import com.elfmcys.yesstevemodel.client.animation.molang.struct.RoamingSyncBatch;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import rip.ysm.compat.bettercombat.BetterCombatCompat;
 import rip.ysm.compat.firstperson.FirstPersonCompat;
 import com.elfmcys.yesstevemodel.client.entity.PlayerEntityFrameState;
@@ -37,7 +37,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 
-@Environment(EnvType.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public final class PlayerCapability extends CustomPlayerEntity {
 
     public static Optional<PlayerCapability> get(Player player) {

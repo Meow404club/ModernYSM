@@ -1,8 +1,8 @@
 package com.elfmcys.yesstevemodel.util;
 
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.util.StringPool;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -37,7 +37,7 @@ public class YSMNativeHelper {
         return indexMap.keySet().stream().mapToInt(indexMap::get).toArray();
     }
 
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static UUID getClientPlayerUUID() {
         return Minecraft.getInstance().getUser().getProfileId();
     }

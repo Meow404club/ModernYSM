@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 /**
- * architectury {@code dev.architectury.platform.Mod} 的 Forge 原生对位物，
+ * architectury {@code Platform.Mod} 的 Forge 原生对位物，
  * 仅暴露项目实际消费面（getVersion/getName/getModId/findResource），语义逐一对齐：
  * <ul>
  *   <li>{@code getVersion()} → String（IModInfo.getVersion() 为 ArtifactVersion，

@@ -27,13 +27,6 @@ public class RendererManager {
     }
 
     /**
-     * 资源重载监听已改由 {@link #onRegisterReloadListeners} 经 mod 总线注册；
-     * 该入口保留给 YsmEventBootstrap 调用，无其他副作用。
-     */
-    public static void register() {
-    }
-
-    /**
      * 原 architectury ReloadListenerRegistry.register(CLIENT_RESOURCES, ...) 在 forge 端是直接
      * 向 Minecraft 的 ReloadableResourceManager.registerReloadListener 挂接；
      * Forge 正规入口为 RegisterClientReloadListenersEvent（构造后、首轮资源重载前触发，落到同一管理器）。

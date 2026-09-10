@@ -1,11 +1,11 @@
 package com.elfmcys.yesstevemodel.capability;
 
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import com.elfmcys.yesstevemodel.client.entity.GeckoProjectileEntity;
 import com.elfmcys.yesstevemodel.molang.runtime.Int2FloatOpenHashMapStruct;
 import com.elfmcys.yesstevemodel.platform.forge.capability.ProjectileCapabilityProvider;
 import it.unimi.dsi.fastutil.ints.Int2FloatOpenHashMap;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.Projectile;
 
@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 
-@Environment(EnvType.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class ProjectileCapability extends GeckoProjectileEntity {
 
     public static Optional<ProjectileCapability> get(Entity entity) {

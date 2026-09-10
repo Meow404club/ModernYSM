@@ -1,8 +1,8 @@
 package com.elfmcys.yesstevemodel.network.message;
 
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import com.elfmcys.yesstevemodel.client.upload.ModelUploadSession;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.network.FriendlyByteBuf;
 import rip.ysm.api.network.PacketContext;
 
@@ -32,7 +32,7 @@ public record S2CModelUploadStartPacket(long uploadId, byte status, int chunkSiz
         }
     }
 
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     private static void handleOnClient(S2CModelUploadStartPacket packet) {
         ModelUploadSession.onStartAck(packet.uploadId, packet.status, packet.chunkSize, packet.maxTotalBytes, packet.chunksPerTick, packet.message);
     }

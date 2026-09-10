@@ -47,13 +47,6 @@ public final class CapabilityEvent {
     private CapabilityEvent() {
     }
 
-    /**
-     * 注册已改由 @Mod.EventBusSubscriber 在 mod 构造期自动完成。
-     * 保留空实现仅因 YsmEventBootstrap（events-common 卡域）仍调用本方法，该卡收口时删除调用与本方法。
-     */
-    public static void register() {
-    }
-
     @SubscribeEvent
     public static void onPlayerCloned(PlayerEvent.Clone event) {
         if (!YesSteveModel.isAvailable()) {

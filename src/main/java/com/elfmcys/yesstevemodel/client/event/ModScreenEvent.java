@@ -1,16 +1,16 @@
 package com.elfmcys.yesstevemodel.client.event;
 
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import com.elfmcys.yesstevemodel.client.gui.DownloadScreen;
 import com.elfmcys.yesstevemodel.client.gui.PlayerModelScreen;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
-@Environment(EnvType.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class ModScreenEvent {
 
     public static final String IMC_METHOD = "DownloadScreen";

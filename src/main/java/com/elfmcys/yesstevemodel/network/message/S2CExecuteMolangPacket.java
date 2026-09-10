@@ -1,9 +1,9 @@
 package com.elfmcys.yesstevemodel.network.message;
 
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.capability.PlayerCapability;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import rip.ysm.compat.touhoulittlemaid.TouhouMaidCompat;
 import com.elfmcys.yesstevemodel.geckolib3.resource.GeckoLibCache;
 import com.elfmcys.yesstevemodel.molang.parser.ParseException;
@@ -44,7 +44,7 @@ public class S2CExecuteMolangPacket {
         }
     }
 
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static void handleCapability(S2CExecuteMolangPacket message) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.level == null) {

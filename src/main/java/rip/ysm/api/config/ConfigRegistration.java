@@ -5,7 +5,7 @@ import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
 
 /**
- * 配置注册（Forge 原生）。architectury @ExpectPlatform 门面退役（M1 mig-registry-config）：
+ * 配置注册（Forge 原生）。architectury 织入门面退役（M1 mig-registry-config）：
  * ADR 勘误确认 forge 通道从未引入 forge_config_api_port，GeneralConfig/ServerConfig 本就
  * 直用 ForgeConfigSpec，故 impl（platform/forge/ConfigRegistrationImpl）就地并入门面，
  * 直调 FML {@link ModLoadingContext#registerConfig(ModConfig.Type, net.minecraftforge.fml.config.IConfigSpec)}。

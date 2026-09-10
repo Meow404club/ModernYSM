@@ -36,7 +36,8 @@
 | mig-purge-architectury | merged | 0f81660 | **M1 门禁通过**：grep/依赖树/jar 三零命中+进世界实证+runServer Done；WSL 崩溃后重审一次过 |
 | m2-skeleton-unimined | merged | 3483e9d | 1.16.5 版本项落地：工具链全链路过（FG3/mojmap/SRG），compileJava 188 错全语法类=下沉卡基线 |
 | m2-java8-downshift | merged | acd46c8 | 116 文件次 Java8 下沉；12 处语义等价抽查全过；进世界 27 models/169ms |
-| m2-gate-compat | in_progress（打回修复） | work/m2-gate-compat | shim srcDir 错位阻断（30 shim 未编入）；修复单已发回原 coder，分支已 rebase 9be944e |
+| m2-gate-compat | merged | c5606ae | 修复复验过：包级错 94→0、独立对账 1951 错全漂移、shim 同步抽查 5 处零漂移 |
+| m2 条件卡×3 | in_progress | work/m2-* | 波次①：forge-thinlayer/render-pipeline/mixin-versioning（1.16.5 基线 1951 错） |
 | m2 条件卡×3 + gui/native-poc/双门禁 | queued | - | 见 decisions.adr-m2-1165-stonecutter-entry 十卡序 |
 | mig-purge-architectury | queued | - | M1 收尾门禁：全仓 dev.architectury=0 |
 | poc-forge-1165 | done | - | 定案：unimined 线三代全 PASS，legacy/ 作废；1.7.10/1.12.2 源码条件化推迟 M5 |

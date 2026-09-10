@@ -50,6 +50,15 @@
 | m0-merge-sources | in_review | work/m0-merge-sources | 5 commits：1749 文件 R100 平移+过渡依赖+42 stub 直调；build 过/runClient 主菜单零 FATAL；review-merge 审查中 |
 | harvest-curator-1 | merged | - | stonecutter-template 入 RAG（17 文件）；openysm-cpp 不入库零污染 |
 
+## 功能差债务清单（tasks.feature-debts-1165，发卡补齐前排期）
+| id | 功能差 | 现状 | 可行性 | 卡 |
+|---|---|---|---|---|
+| debt-gui-blur + debt-gui-iris | GUI 毛玻璃 + Iris GPU 路径 | 空实现/恒 false 闸门 | 中：oculus 桥接 vs 自写 shader，合并调研 | debt-gui-blur-1165 |
+| debt-gui-tooltip | 暂停页按钮 tooltip | 桥接未接链 | 高：小卡 | debt-gui-tooltip-1165 |
+| debt-overlay-extraplayer | ExtraPlayerOverlay | 1.16.5 空渲染 | 中：照 ModelSyncStateOverlay 模式 | debt-overlay-extraplayer-1165 |
+| debt-biome-molang | biome molang 查询 | 恒 false（标签体系不存在） | 中：category/name 近似，需模型侧确认语义 | debt-biome-molang-1165 |
+| debt-compat-matrix | 第三方 compat 全矩阵 | 闸门外缺席走 shim | 大：逐桥评估，M3 后立项 | debt-compat-matrix-1165 |
+
 ## 最近决策
 - 2026-09-10 架构重构方向：脱离 Architectury——1.16.5+ 用 StonecutterTemplate(IAFEnvoy)
   多版本模板；1.7.10/1.12.2 独立 legacy 文件夹；跨版本维护策略届时调研。现状代码仍为

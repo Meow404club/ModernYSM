@@ -11,7 +11,8 @@ import java.util.Optional;
 
 public class CosmeticArmorHelper {
     public static ItemStack getArmorItem(LivingEntity entity, EquipmentSlot slot) {
-        if (slot.isArmor() && (entity instanceof Player player)) {
+        if (slot.isArmor() && (entity instanceof Player)) {
+            Player player = (Player) entity;
             if (CosmeticArmorCompat.isLoaded()) {
                 Optional<ItemStack> optional = CosmeticArmorCompat.getCosmeticArmor(player, slot);
                 if (optional.isPresent()) {
@@ -23,7 +24,8 @@ public class CosmeticArmorHelper {
     }
 
     public static ItemStack getElytraItem(LivingEntity livingEntity) {
-        if (livingEntity instanceof Player player) {
+        if (livingEntity instanceof Player) {
+            Player player = (Player) livingEntity;
             if (CosmeticArmorCompat.isLoaded()) {
                 Optional<ItemStack> optional = CosmeticArmorCompat.getCosmeticArmor(player, EquipmentSlot.CHEST);
                 if (optional.isPresent() && optional.get().getItem() == Items.ELYTRA) {

@@ -21,7 +21,8 @@ public class MaidAnimationRoulette {
             return false;
         }
         Entity entity = ((EntityHitResult) hitResult).getEntity();
-        if (entity instanceof EntityMaid entityMaid) {
+        if (entity instanceof EntityMaid) {
+            EntityMaid entityMaid = (EntityMaid) entity;
             if (!entityMaid.isYsmModel()) {
                 return false;
             }

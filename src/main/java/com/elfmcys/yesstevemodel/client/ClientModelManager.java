@@ -709,7 +709,7 @@ public class ClientModelManager {
         ArrayList<Runnable> discardedModelTasks = new ArrayList<>();
         modelPhraseExecutor.getQueue().drainTo(discardedModelTasks);
         for (Runnable task : discardedModelTasks) {
-            if (task instanceof CancellableModelTask cancellableTask) cancellableTask.cancel();
+            if (task instanceof CancellableModelTask) ((CancellableModelTask) task).cancel();
         }
         modelPrepareExecutor.getQueue().clear();
 
@@ -1107,7 +1107,8 @@ public class ClientModelManager {
             forEachGuiWidget(guiWidget -> {
                 guiWidget.onSyncMessage(obj == null ? null : (Component) obj);
             });
-            if (obj instanceof Component component) {
+            if (obj instanceof Component) {
+                Component component = (Component) obj;
                 if (Minecraft.getInstance().player != null) {
                     Minecraft.getInstance().player.sendSystemMessage(component);
                 }

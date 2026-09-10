@@ -11,7 +11,8 @@ public class PlayerBaseAnimationPredicate implements IAnimationPredicate<CustomP
     @Override
     public PlayState predicate(AnimationEvent<CustomPlayerEntity> event, ExpressionEvaluator<?> evaluator) {
         CustomPlayerEntity playerEntity = event.getAnimatable();
-        if (playerEntity instanceof IPreviewAnimatable previewAnimatable) {
+        if (playerEntity instanceof IPreviewAnimatable) {
+            IPreviewAnimatable previewAnimatable = (IPreviewAnimatable) playerEntity;
             if (previewAnimatable.getAnimationStateMachine().hasAnimation()) {
                 return IAnimationPredicate.playLoopAnimation(event, previewAnimatable.getAnimationStateMachine().getCurrentAnimation());
             }

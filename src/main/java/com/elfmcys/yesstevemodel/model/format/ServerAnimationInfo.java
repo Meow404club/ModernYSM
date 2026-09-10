@@ -16,8 +16,8 @@ public class ServerAnimationInfo {
     private final List<String> textures;
 
     public ServerAnimationInfo(Map<String, String[]> animations, String[] textures) {
-        this.animations = Object2ObjectMaps.unmodifiable(new Object2ObjectOpenHashMap<>(animations.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> ObjectSets.unmodifiable(ObjectOpenHashSet.of(entry.getValue()))))));
-        this.textures = ObjectLists.unmodifiable(ObjectArrayList.of(textures));
+        this.animations = Object2ObjectMaps.unmodifiable(new Object2ObjectOpenHashMap<>(animations.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> ObjectSets.unmodifiable(new ObjectOpenHashSet<>(entry.getValue()))))));
+        this.textures = ObjectLists.unmodifiable(new ObjectArrayList<>(textures));
     }
 
     public Map<String, Set<String>> getAnimations() {

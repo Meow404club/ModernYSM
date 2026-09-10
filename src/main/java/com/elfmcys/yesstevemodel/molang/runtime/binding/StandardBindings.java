@@ -48,7 +48,8 @@ public final class StandardBindings {
         final AssignableVariable variableAccess = ((AssignableVariableExpression) variableExpr).target();
 
         Expression exper = args.getExpression(2);
-        if (exper instanceof ExecutionScopeExpression executionScopeExpression) {
+        if (exper instanceof ExecutionScopeExpression) {
+            ExecutionScopeExpression executionScopeExpression = (ExecutionScopeExpression) exper;
             Object obj = args.getValue(ctx, 1);
             if (obj instanceof Iterable) {
                 ((ExpressionEvaluatorImpl<?>) ctx).forEachFunction(executionScopeExpression, variableAccess, (Iterable<?>) obj);

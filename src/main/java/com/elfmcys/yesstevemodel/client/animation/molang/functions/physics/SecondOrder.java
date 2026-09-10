@@ -42,8 +42,8 @@ public class SecondOrder implements IPhysics {
         int cycleTime = (int) Math.ceil(timeStep / maxTimeStep);
         timeStep = timeStep / cycleTime;
 
-        var lastSimulationDot = this.lastSimulationDot;
-        var lastSimulation = this.lastSimulation;
+        float lastSimulationDot = this.lastSimulationDot;
+        float lastSimulation = this.lastSimulation;
         for (; cycleTime > 0; cycleTime--) {
             lastSimulation = lastSimulation + timeStep * lastSimulationDot;
             lastSimulationDot = lastSimulationDot + timeStep * (k3 * inputFunctionDot + input - lastSimulation - k1 * lastSimulationDot) / k2;

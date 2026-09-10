@@ -68,7 +68,7 @@ public class LivingMovementAnimationPredicate implements IAnimationPredicate<Liv
         if (vehicle instanceof Boat) {
             return IAnimationPredicate.playAnimationWithLoop(event, "boat", ILoopType.EDefaultLoopTypes.LOOP);
         }
-        boolean z = (livingEntity instanceof Player var8) && CarryOnCompat.isPlayerCarrying(var8);
+        boolean z = livingEntity instanceof Player && CarryOnCompat.isPlayerCarrying((Player) livingEntity);
         boolean z2 = TouhouLittleMaidCompat.isMaidEntity(livingEntity) && (livingEntity.getVehicle() instanceof Player);
         if (z || z2) {
             return IAnimationPredicate.playAnimationWithLoop(event, "carryon:princess", ILoopType.EDefaultLoopTypes.LOOP);

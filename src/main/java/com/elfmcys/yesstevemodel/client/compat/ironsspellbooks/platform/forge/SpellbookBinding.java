@@ -32,7 +32,8 @@ public class SpellbookBinding {
             return StringPool.EMPTY;
         }
         IAnimation animation = modifierLayer.getAnimation();
-        if (animation instanceof KeyframeAnimationPlayer keyframeAnimationPlayer) {
+        if (animation instanceof KeyframeAnimationPlayer) {
+            KeyframeAnimationPlayer keyframeAnimationPlayer = (KeyframeAnimationPlayer) animation;
             if (event != null && keyframeAnimationPlayer.getTick() == 0) {
                 event.getController().stopTransition();
             }

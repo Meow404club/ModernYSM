@@ -22,9 +22,10 @@ public class ReplacePlayerHandRenderEvent {
         if (!YesSteveModel.isAvailable() || GeneralConfig.DISABLE_SELF_MODEL.get() || GeneralConfig.DISABLE_SELF_HANDS.get()) {
             return false;
         }
-        if (!(player instanceof LocalPlayer localPlayer)) {
+        if (!(player instanceof LocalPlayer)) {
             return false;
         }
+        LocalPlayer localPlayer = (LocalPlayer) player;
         boolean[] cancelled = {false};
         PlayerCapability.get(localPlayer).ifPresent(cap -> {
             if (!cap.isModelActive()) {

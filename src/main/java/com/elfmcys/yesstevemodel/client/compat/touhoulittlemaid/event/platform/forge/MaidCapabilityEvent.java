@@ -19,7 +19,8 @@ public final class MaidCapabilityEvent {
     @SubscribeEvent
     public void onAttachCapabilities(AttachCapabilitiesEvent<Entity> event) {
         Object object = event.getObject();
-        if (object instanceof EntityMaid entityMaid) {
+        if (object instanceof EntityMaid) {
+            EntityMaid entityMaid = (EntityMaid) object;
             if (entityMaid.level().isClientSide()) {
                 event.addCapability(CAPABILITY_KEY, new MaidCapabilityProvider(entityMaid));
             }

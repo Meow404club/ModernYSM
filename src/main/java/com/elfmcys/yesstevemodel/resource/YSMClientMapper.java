@@ -44,6 +44,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gagravarr.ogg.OggFile;
 import org.gagravarr.ogg.OggPacketReader;
+import org.gagravarr.ogg.OggPacket;
 import org.gagravarr.opus.OpusFile;
 import org.gagravarr.vorbis.VorbisFile;
 import rip.ysm.imagestream.avif.AvifDecoder;
@@ -839,7 +840,7 @@ public class YSMClientMapper {
 
             OggPacketReader reader = oggFile.getPacketReader();
             long durationSamples = 0;
-            var packet = reader.getNextPacket();
+            OggPacket packet = reader.getNextPacket();
             while (packet != null) {
                 long granule = packet.getGranulePosition();
                 if (granule > 0) durationSamples = granule;

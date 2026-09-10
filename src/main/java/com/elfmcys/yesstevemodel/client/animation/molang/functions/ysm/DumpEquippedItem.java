@@ -35,7 +35,8 @@ public class DumpEquippedItem extends LivingEntityFunction {
             context.entity().logWarningComponent(Component.literal("Tag ").append(ComponentUtils.copyOnClickText(tagKey.location().toString())));
         });
         for (Tag tag : stack.getEnchantmentTags()) {
-            if (tag instanceof CompoundTag compoundTag) {
+            if (tag instanceof CompoundTag) {
+                CompoundTag compoundTag = (CompoundTag) tag;
                 ResourceLocation resourceLocationTryParse = ResourceLocation.tryParse(compoundTag.getString("id"));
                 if (resourceLocationTryParse != null && (enchantment = BuiltInRegistries.ENCHANTMENT.get(resourceLocationTryParse)) != null) {
                     context.entity().logWarningComponent(Component.literal("Enchantment: display ").append(ComponentUtils.copyOnClickText(enchantment.getFullname(compoundTag.getInt("lvl")).getString(99))).append(Component.literal("  name ").append(ComponentUtils.copyOnClickText(resourceLocationTryParse.toString()))));

@@ -64,7 +64,8 @@ public class MolangUtils {
     @Nullable
     public static EquipmentSlot parseSlotType(ExecutionContext<? extends IContext<?>> ctx, Function.ArgumentCollection args, int index) {
         Expression expr = args.getExpression(index);
-        if (expr instanceof StringExpression se) {
+        if (expr instanceof StringExpression) {
+            StringExpression se = (StringExpression) expr;
             if (se.isSlotResolved()) {
                 return se.getCachedSlot();
             }

@@ -231,7 +231,8 @@ public class AnimationRouletteScreen extends Screen {
     }
 
     private void renderConfigFormItem(AbstractConfig abstractConfig, int[] iArr, int[] iArr2) {
-        if (abstractConfig instanceof CheckboxConfig config) {
+        if (abstractConfig instanceof CheckboxConfig) {
+            CheckboxConfig config = (CheckboxConfig) abstractConfig;
             executeExpression(abstractConfig.getValue(), str -> {
                 this.minecraft.execute(() -> {
                     addRenderableWidget(createCheckbox(config, str, iArr, iArr2));
@@ -241,7 +242,8 @@ public class AnimationRouletteScreen extends Screen {
                 });
             });
         }
-        if (abstractConfig instanceof RangeConfig config) {
+        if (abstractConfig instanceof RangeConfig) {
+            RangeConfig config = (RangeConfig) abstractConfig;
             executeExpression(abstractConfig.getValue(), str2 -> {
                 this.minecraft.execute(() -> {
                     addRenderableWidget(createSlider(config, str2, iArr, iArr2));
@@ -251,7 +253,8 @@ public class AnimationRouletteScreen extends Screen {
                 });
             });
         }
-        if (abstractConfig instanceof RadioConfig config) {
+        if (abstractConfig instanceof RadioConfig) {
+            RadioConfig config = (RadioConfig) abstractConfig;
             executeExpression(abstractConfig.getValue(), str3 -> {
                 this.minecraft.execute(() -> {
                     renderRadioGroup(config, str3, iArr, iArr2);

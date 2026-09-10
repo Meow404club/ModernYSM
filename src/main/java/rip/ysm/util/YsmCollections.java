@@ -2,6 +2,7 @@ package rip.ysm.util;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -31,5 +32,12 @@ public final class YsmCollections {
 
     public static <K, V> Map<K, V> immutableMapOf() {
         return Collections.emptyMap();
+    }
+
+    public static <K, V> Map<K, V> immutableMapOf(K k1, V v1, K k2, V v2) {
+        Map<K, V> map = new LinkedHashMap<>();
+        map.put(k1, v1);
+        map.put(k2, v2);
+        return Collections.unmodifiableMap(map);
     }
 }

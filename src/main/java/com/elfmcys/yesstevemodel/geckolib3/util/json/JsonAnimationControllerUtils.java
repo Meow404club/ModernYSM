@@ -7,7 +7,6 @@ import com.elfmcys.yesstevemodel.geckolib3.core.molang.value.IValue;
 import com.elfmcys.yesstevemodel.geckolib3.util.LinearKeyframeInterpolator;
 import com.elfmcys.yesstevemodel.geckolib3.util.IInterpolable;
 import com.elfmcys.yesstevemodel.geckolib3.util.TicksInterpolator;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -26,7 +25,7 @@ public class JsonAnimationControllerUtils {
         if (json.has("animation_controllers")) {
             return json.getAsJsonObject("animation_controllers").entrySet();
         }
-        return ImmutableSet.of();
+        return Collections.emptySet();
     }
 
     public static List<Map.Entry<String, JsonElement>> getStates(JsonObject json) {
@@ -44,11 +43,11 @@ public class JsonAnimationControllerUtils {
             throws ClassCastException, IllegalStateException {
         JsonObject animCtrlJsonObject = element.getValue().getAsJsonObject();
 
-        var initialState = "default";
+        String initialState = "default";
         if (animCtrlJsonObject.has("initial_state"))
             initialState = animCtrlJsonObject.get("initial_state").getAsString();
 
-        var states = new ReferenceArrayList<AnimationState>();
+        ReferenceArrayList<AnimationState> states = new ReferenceArrayList<>();
 
         for (Map.Entry<String, JsonElement> state : getStates(animCtrlJsonObject)) {
             String name = state.getKey();

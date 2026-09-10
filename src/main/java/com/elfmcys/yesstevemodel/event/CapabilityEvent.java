@@ -82,7 +82,8 @@ public final class CapabilityEvent {
         if (!YesSteveModel.isAvailable()) {
             return;
         }
-        if (entity instanceof ServerPlayer player) {
+        if (entity instanceof ServerPlayer) {
+            ServerPlayer player = (ServerPlayer) entity;
             getModelInfoCap(player).ifPresent(modelInfoCap -> {
                 if (!NetworkHandler.isPlayerConnected(player) && !modelInfoCap.isMandatory()) {
                     modelInfoCap.markDirty();

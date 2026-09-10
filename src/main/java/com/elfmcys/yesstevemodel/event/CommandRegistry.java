@@ -10,6 +10,7 @@ import com.elfmcys.yesstevemodel.model.ServerModelManager;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.mojang.brigadier.StringReader;
+import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.Suggestions;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
@@ -84,7 +85,7 @@ public final class CommandRegistry {
             OpenYSMClientCommand.registerClientCommands(event.getDispatcher());
         });
         MinecraftForge.EVENT_BUS.addListener((RegisterCommandsEvent event) -> {
-            var dispatcher = event.getDispatcher();
+            CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
             if (!YesSteveModel.isAvailable()) {
                 RootCommand.registerFallbackCommands(dispatcher);
                 return;

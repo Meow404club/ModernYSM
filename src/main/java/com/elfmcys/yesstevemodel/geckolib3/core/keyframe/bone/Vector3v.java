@@ -41,9 +41,9 @@ public class Vector3v {
     }
 
     public Vector3v(float x, float y, float z, IValue xExpression, IValue yExpression, IValue zExpression) {
-        this.x = xExpression instanceof FloatValue value ? value.value() : x;
-        this.y = yExpression instanceof FloatValue value ? value.value() : y;
-        this.z = zExpression instanceof FloatValue value ? value.value() : z;
+        this.x = xExpression instanceof FloatValue ? ((FloatValue) xExpression).value() : x;
+        this.y = yExpression instanceof FloatValue ? ((FloatValue) yExpression).value() : y;
+        this.z = zExpression instanceof FloatValue ? ((FloatValue) zExpression).value() : z;
 
         IValue resolvedX = xExpression instanceof FloatValue ? null : xExpression;
         IValue resolvedY = yExpression instanceof FloatValue ? null : yExpression;

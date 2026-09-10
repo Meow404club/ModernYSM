@@ -52,6 +52,7 @@ import rip.ysm.security.YsmCrypt;
 import rip.ysm.security.YsmCrypt.CachePayload;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,6 +61,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.*;
@@ -343,7 +345,7 @@ public final class ServerModelManager {
                                     && Files.size(src) == Files.size(dest)
                                     && Files.getLastModifiedTime(src).toMillis() == Files.getLastModifiedTime(dest).toMillis();
                             if (!unchanged) {
-                                var modified = Files.getLastModifiedTime(src);
+                                FileTime modified = Files.getLastModifiedTime(src);
                                 Files.copy(src, dest, StandardCopyOption.REPLACE_EXISTING);
                                 try {
                                     Files.setLastModifiedTime(dest, modified);
@@ -655,7 +657,7 @@ public final class ServerModelManager {
         List<Path> ysmFiles = new ArrayList<>();
 
         try {
-            Files.walkFileTree(searchRoot, EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE, new SimpleFileVisitor<Path>() {
+            Files.walkFileTree(searchRoot, Collections.singleton(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE, new SimpleFileVisitor<Path>() {
                 @Override
                 public @NotNull FileVisitResult preVisitDirectory(@NotNull Path dir, @NotNull BasicFileAttributes attrs) {
                     if (dir.equals(searchRoot)) return FileVisitResult.CONTINUE;
@@ -765,7 +767,7 @@ public final class ServerModelManager {
 
     private static CatalogFile readCatalog() {
         if (!Files.isRegularFile(CACHE_SERVER_CATALOG_FILE)) return new CatalogFile();
-        try (var reader = Files.newBufferedReader(CACHE_SERVER_CATALOG_FILE, StandardCharsets.UTF_8)) {
+        try (BufferedReader reader = Files.newBufferedReader(CACHE_SERVER_CATALOG_FILE, StandardCharsets.UTF_8)) {
             CatalogFile catalog = GSON.fromJson(reader, CatalogFile.class);
             if (catalog == null || catalog.version != CATALOG_VERSION || catalog.models == null) return new CatalogFile();
             return catalog;
@@ -778,7 +780,7 @@ public final class ServerModelManager {
     private static void writeCatalog(CatalogFile catalog) throws IOException {
         Files.createDirectories(CACHE);
         Path temporary = CACHE_SERVER_CATALOG_FILE.resolveSibling(CACHE_SERVER_CATALOG_FILE.getFileName() + ".tmp");
-        try (var writer = Files.newBufferedWriter(temporary, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+        try (BufferedWriter writer = Files.newBufferedWriter(temporary, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             GSON.toJson(catalog, writer);
         }
         try {
@@ -829,7 +831,7 @@ public final class ServerModelManager {
                     }
                 }));
             } catch (RuntimeException e) {
-                if (e.getCause() instanceof IOException io) throw io;
+                if (e.getCause() instanceof IOException) throw (IOException) e.getCause();
                 throw e;
             }
             for (Path file : files) {
@@ -1021,7 +1023,7 @@ public final class ServerModelManager {
 
     private static void scanDirectoryPacks(Path searchRoot, String prefix) {
         if (searchRoot == null || !Files.isDirectory(searchRoot)) return;
-        try (var stream = Files.walk(searchRoot, 1, FileVisitOption.FOLLOW_LINKS)) {
+        try (Stream<Path> stream = Files.walk(searchRoot, 1, FileVisitOption.FOLLOW_LINKS)) {
             stream.filter(Files::isDirectory).forEach(path -> {
                 if (path.equals(searchRoot)) return;
                 Path packJson = path.resolve("ysm-pack.json");
@@ -1163,7 +1165,7 @@ public final class ServerModelManager {
 //                    System.arraycopy(garbage, 0, payload, 2, garbage.length);
 //                    payload[2 + garbage.length] = 0x01;
 //
-//                    var result = YsmCrypt.encrypt(payload, K0_SERVER, true);
+//                    Object result = YsmCrypt.encrypt(payload, K0_SERVER, true);
 //                    state.key1 = result.nextKey();
 //
 //                    sendModelData(uuid, ByteBuffer.wrap(result.data()), new PendingTransfer());

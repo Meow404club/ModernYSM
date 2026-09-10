@@ -92,9 +92,10 @@ public class CtrlBinding extends ContextBinding {
 
     private static boolean isPlayingExtraAnimation(IContext<Object> context) {
         AnimatableEntity<?> animatableEntity = context.geoInstance();
-        if (!(animatableEntity instanceof CustomPlayerEntity customPlayerEntity)) {
+        if (!(animatableEntity instanceof CustomPlayerEntity)) {
             return false;
         }
+        CustomPlayerEntity customPlayerEntity = (CustomPlayerEntity) animatableEntity;
         return customPlayerEntity.isModelSwitching() && customPlayerEntity.getAnimationState(PlayerAnimationController.CAP_CONTROLLER_KEY) != AnimationState.IDLE;
     }
 
@@ -155,7 +156,8 @@ public class CtrlBinding extends ContextBinding {
 
     private static boolean isFlying(IContext<LivingEntity> context) {
         AnimatableEntity<?> animatableEntity = context.geoInstance();
-        if (animatableEntity instanceof PlayerCapability cap) {
+        if (animatableEntity instanceof PlayerCapability) {
+            PlayerCapability cap = (PlayerCapability) animatableEntity;
             if (!cap.isLocalPlayerModel()) {
                 return cap.getPositionTracker().isFlying();
             }

@@ -117,7 +117,7 @@ public class ModelSettingsScreen extends OptionScreen {
         previewBottom = panelBottom - 60;
         if (initialGroupId != null) {
             for (OptionGroup g : groups) {
-                if (g instanceof IdentifiedGroup ig && initialGroupId.equals(ig.id)) {
+                if (g instanceof IdentifiedGroup && initialGroupId.equals(((IdentifiedGroup) g).id)) {
                     selectGroup(g);
                     break;
                 }
@@ -161,13 +161,16 @@ public class ModelSettingsScreen extends OptionScreen {
     private OptionRow<?> buildRow(String groupId, int formIndex, AbstractConfig form) {
         String title = ModelMetadataPresenter.getLocalizedModelString(modelAssembly, "properties.extra_animation_buttons.%s.config_forms.%d.title".formatted(groupId, formIndex), form.getTitle());
         String desc = ModelMetadataPresenter.getLocalizedModelString(modelAssembly, "properties.extra_animation_buttons.%s.config_forms.%d.description".formatted(groupId, formIndex), form.getDescription());
-        if (form instanceof CheckboxConfig cfg) {
+        if (form instanceof CheckboxConfig) {
+            CheckboxConfig cfg = (CheckboxConfig) form;
             return new BooleanOptionRow(0, 0, 0, 22, MolangOption.ofBoolean(title, desc, animatable, cfg.getValue()));
         }
-        if (form instanceof RangeConfig cfg) {
+        if (form instanceof RangeConfig) {
+            RangeConfig cfg = (RangeConfig) form;
             return new SliderOptionRow(0, 0, 0, 22, MolangOption.ofDouble(title, desc, animatable, cfg.getValue()), cfg.getMin(), cfg.getMax(), cfg.getStep(), "");
         }
-        if (form instanceof RadioConfig cfg) {
+        if (form instanceof RadioConfig) {
+            RadioConfig cfg = (RadioConfig) form;
             OrderedStringMap<String, String> labels = cfg.getLabels();
             List<String> texts = new ArrayList<>(labels.size());
             String[] writeExprs = new String[labels.size()];
@@ -188,7 +191,8 @@ public class ModelSettingsScreen extends OptionScreen {
 
     private void renderPreview(GuiGraphics g, float partialTick) {
         if (this.minecraft == null || this.minecraft.player == null) return;
-        if (!(animatable instanceof LivingAnimatable<?> la)) return;
+        if (!(animatable instanceof LivingAnimatable<?>)) return;
+        LivingAnimatable<?> la = (LivingAnimatable<?>) animatable;
         GeoReplacedEntityRenderer<?, ?> renderer = la instanceof CustomPlayerEntity ? RendererManager.getPlayerRenderer() : TouhouLittleMaidCompat.getMaidPreviewRenderer(la);
         if (renderer == null) return;
         double scale = this.minecraft.getWindow().getGuiScale();

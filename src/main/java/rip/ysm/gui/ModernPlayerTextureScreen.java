@@ -180,7 +180,7 @@ public class ModernPlayerTextureScreen extends OptionScreen {
         int rowY = rowAreaTop;
         int rowW = rowAreaRight - rowAreaLeft;
         for (OptionRow<?> template : activeGroup.getRows()) {
-            if (!s.isEmpty() && template instanceof AnimationRow ar && !ar.matches(s)) continue;
+            if (!s.isEmpty() && template instanceof AnimationRow && !((AnimationRow) template).matches(s)) continue;
             template.setX(rowAreaLeft);
             template.setY(rowY);
             template.setWidth(rowW);
@@ -258,7 +258,8 @@ public class ModernPlayerTextureScreen extends OptionScreen {
                 if (bot > top) out.add(new int[]{tb.getX(), top, tb.getWidth(), bot - top});
             }
         }
-        if (activeGroup instanceof TextureGroup && !activeRows.isEmpty() && activeRows.get(0) instanceof TextureGrid grid) {
+        if (activeGroup instanceof TextureGroup && !activeRows.isEmpty() && activeRows.get(0) instanceof TextureGrid) {
+            TextureGrid grid = (TextureGrid) activeRows.get(0);
             grid.collectBlurRegions(out, Math.round(rowScrollDisplay), rowAreaTop, rowAreaBottom);
         } else {
             int rowScroll = Math.round(rowScrollDisplay);
@@ -306,7 +307,8 @@ public class ModernPlayerTextureScreen extends OptionScreen {
             g.drawString(this.font, hoveredIcon.tooltip, panelLeft + 6, descY + 10, -1, false);
             return;
         }
-        if (hoveredRow instanceof AnimationRow row) {
+        if (hoveredRow instanceof AnimationRow) {
+            AnimationRow row = (AnimationRow) hoveredRow;
             g.fill(panelLeft, descY, panelRight, descY + 28, 0x80000000);
             g.drawString(this.font, row.getMessage(), panelLeft + 6, descY + 4, -1, false);
             g.drawString(this.font, Component.literal(row.animKey).withStyle(ChatFormatting.GRAY), panelLeft + 6, descY + 16, 0xFFAAAAAA, false);

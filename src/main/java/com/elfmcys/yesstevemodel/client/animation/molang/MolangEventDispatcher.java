@@ -29,7 +29,8 @@ public class MolangEventDispatcher {
     public static IValue createUpdateExpression(List<IValue> list, List<?> list2) {
         return evaluator -> {
             Object entity = evaluator.entity();
-            if (entity instanceof IContext context) {
+            if (entity instanceof IContext) {
+                IContext context = (IContext) entity;
                 for (IValue value : list) {
                     context.callFunction(evaluator, value, list2);
                 }

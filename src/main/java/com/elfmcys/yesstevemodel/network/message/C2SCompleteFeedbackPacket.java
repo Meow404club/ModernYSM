@@ -60,7 +60,8 @@ public final class C2SCompleteFeedbackPacket {
         Entity entity = serverLevel.getEntity(message.feedbackData.flags());
         if (TouhouMaidCompat.isMaidEntity(entity)) {
             TouhouMaidCompat.applyFeedback(entity, message.feedbackData);
-        } else if (entity instanceof ServerPlayer serverPlayer) {
+        } else if (entity instanceof ServerPlayer) {
+            ServerPlayer serverPlayer = (ServerPlayer) entity;
             ModelInfoCapability.get(serverPlayer).ifPresent(cap -> {
                 cap.applyFeedback(serverPlayer, message.feedbackData);
                 if (serverPlayer.getVehicle() != null && serverPlayer.getVehicle().getFirstPassenger() == serverPlayer) {

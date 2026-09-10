@@ -11,7 +11,8 @@ public class MaidIdleAnimPredicate implements IAnimationPredicate<MaidCapability
     @Override
     public PlayState predicate(AnimationEvent<MaidCapability> event, ExpressionEvaluator<?> evaluator) {
         MaidCapability capability = event.getAnimatable();
-        if (capability instanceof IPreviewAnimatable previewAnimatable) {
+        if (capability instanceof IPreviewAnimatable) {
+            IPreviewAnimatable previewAnimatable = (IPreviewAnimatable) capability;
             if (previewAnimatable.getAnimationStateMachine().hasAnimation()) {
                 return IAnimationPredicate.playLoopAnimation(event, previewAnimatable.getAnimationStateMachine().getCurrentAnimation());
             }

@@ -28,7 +28,8 @@ public class MolangValue implements IValue {
         Expression onlyOne = (!isScript && list != null && list.size() == 1) ? list.get(0) : null;
         this.single = onlyOne;
 
-        if (onlyOne instanceof FloatExpression fe) {
+        if (onlyOne instanceof FloatExpression) {
+            FloatExpression fe = (FloatExpression) onlyOne;
             this.constant = true;
             this.constFloat = fe.value();
             this.constBoxed = fe.boxed();

@@ -38,7 +38,8 @@ public final class TheOneProbeEntityProvider implements Function<ITheOneProbe, V
         }
 
         public void addProbeEntityInfo(ProbeMode probeMode, IProbeInfo iProbeInfo, Player player, Level level, Entity entity, IProbeHitEntityData iProbeHitEntityData) {
-            if (entity instanceof ServerPlayer serverPlayer) {
+            if (entity instanceof ServerPlayer) {
+                ServerPlayer serverPlayer = (ServerPlayer) entity;
                 serverPlayer.getCapability(ModelInfoCapabilityProvider.MODEL_INFO_CAP).ifPresent(cap -> {
                     if (cap.isMandatory() || NetworkHandler.isPlayerConnected(serverPlayer)) {
                         ServerModelManager.getModelDefinition(cap.getModelId()).ifPresent(data -> {

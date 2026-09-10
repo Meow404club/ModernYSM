@@ -10,10 +10,13 @@ import com.elfmcys.yesstevemodel.client.renderer.RendererManager;
 import com.elfmcys.yesstevemodel.geckolib3.core.builder.Animation;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.util.StringPool;
 import com.elfmcys.yesstevemodel.util.data.OrderedStringMap;
-import com.mojang.blaze3d.systems.RenderSystem;
+import rip.ysm.gui.YsmGui;
+import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
 import net.minecraft.ChatFormatting;
+//? if >1.17 {
 import net.minecraft.client.gui.GuiGraphics;
+//?}
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.network.chat.Component;
@@ -61,7 +64,7 @@ public class ModernPlayerTextureScreen extends OptionScreen {
     private int draggingButton = -1;
 
     public ModernPlayerTextureScreen(PlayerModelScreen parent, String modelId, ModelAssembly modelAssembly) {
-        super(Component.translatable("gui.yes_steve_model.texture_screen.title"), parent);
+        super(YsmGui.trans("gui.yes_steve_model.texture_screen.title"), parent);
         this.renderContext = modelAssembly;
         this.modelId = modelId;
         this.textureMap = modelAssembly.getAnimationBundle().getTextures();
@@ -129,15 +132,15 @@ public class ModernPlayerTextureScreen extends OptionScreen {
     @Override
     protected void init() {
         super.init();
-        removeWidget(applyBtn);
-        removeWidget(undoBtn);
-        removeWidget(cancelBtn);
+        removeFooter(applyBtn);
+        removeFooter(undoBtn);
+        removeFooter(cancelBtn);
         applyBtn.visible = false;
         undoBtn.visible = false;
         cancelBtn.visible = false;
         applyBtn.active = false;
         undoBtn.active = false;
-        saveBtn.setMessage(Component.translatable("gui.yes_steve_model.config.done"));
+        saveBtn.setMessage(YsmGui.trans("gui.yes_steve_model.config.done"));
         saveBtn.setX(panelRight - saveBtn.getWidth());
 
         previewLeft = panelRight - previewWidth();
@@ -148,18 +151,20 @@ public class ModernPlayerTextureScreen extends OptionScreen {
         icons.clear();
         int iconY = panelTop;
         int iconX = panelRight - 18;
-        icons.add(new IconButton(iconX, iconY, 18, 64, 16, () -> this.currentAnimation = "idle", Component.translatable("gui.yes_steve_model.model.stop")));
+        icons.add(new IconButton(iconX, iconY, 18, 64, 16, () -> this.currentAnimation = "idle", YsmGui.trans("gui.yes_steve_model.model.stop")));
         iconX -= 20;
-        icons.add(new IconButton(iconX, iconY, 18, 48, 16, this::resetView, Component.translatable("gui.yes_steve_model.model.reset")));
+        icons.add(new IconButton(iconX, iconY, 18, 48, 16, this::resetView, YsmGui.trans("gui.yes_steve_model.model.reset")));
         iconX -= 20;
-        icons.add(new IconButton(iconX, iconY, 18, 64, 0, () -> this.showGround = !this.showGround, Component.translatable("gui.yes_steve_model.model.ground")));
+        icons.add(new IconButton(iconX, iconY, 18, 64, 0, () -> this.showGround = !this.showGround, YsmGui.trans("gui.yes_steve_model.model.ground")));
 
         int searchW = Mth.clamp(panelRight - panelLeft - 3 * 18 - 2 * 2 - 200, 80, 140);
         int searchX = iconX - 2 - searchW;
         String oldQuery = searchBox != null ? searchBox.getValue() : "";
-        searchBox = new EditBox(this.font, searchX, iconY, searchW, 18, Component.translatable("gui.yes_steve_model.search.placeholder"));
+        searchBox = new EditBox(this.font, searchX, iconY, searchW, 18, YsmGui.trans("gui.yes_steve_model.search.placeholder"));
         searchBox.setTextColor(0xFFFFFF);
-        searchBox.setHint(Component.translatable("gui.yes_steve_model.search.placeholder"));
+        //? if >1.17 {
+        searchBox.setHint(YsmGui.trans("gui.yes_steve_model.search.placeholder"));
+        //?}
         searchBox.setMaxLength(64);
         searchBox.setValue(oldQuery);
         searchBox.setResponder(s -> applySearchFilter());
@@ -217,8 +222,10 @@ public class ModernPlayerTextureScreen extends OptionScreen {
         if (this.minecraft != null) this.minecraft.setScreen(parentScreen);
     }
 
-    @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    // Screen.render 签名双轴（1.16.5 Screen.java:73 ↔ 1.20.1 GuiGraphics 钩子）
+    //? if <1.17 {
+    /*@Override
+    public void render(PoseStack pose, int mouseX, int mouseY, float partialTick) {
         hoveredIcon = null;
         for (IconButton btn : icons) {
             if (btn.contains(mouseX, mouseY)) {
@@ -226,11 +233,27 @@ public class ModernPlayerTextureScreen extends OptionScreen {
                 break;
             }
         }
-        super.render(g, mouseX, mouseY, partialTick);
+        super.render(pose, mouseX, mouseY, partialTick);
+        YsmGui g = new YsmGui(pose);
         for (IconButton btn : icons) drawIcon(g, btn);
     }
+     *///?} else {
+    @Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        hoveredIcon = null;
+        for (IconButton btn : icons) {
+            if (btn.contains(mouseX, mouseY)) {
+                hoveredIcon = btn;
+                break;
+            }
+        }
+        super.render(graphics, mouseX, mouseY, partialTick);
+        YsmGui g = new YsmGui(graphics);
+        for (IconButton btn : icons) drawIcon(g, btn);
+    }
+    //?}
 
-    private void drawIcon(GuiGraphics g, IconButton btn) {
+    private void drawIcon(YsmGui g, IconButton btn) {
         boolean hover = btn == hoveredIcon;
         int bg = hover ? 0x90171717 : 0x90000000;
         g.fill(btn.x, btn.y, btn.x + btn.size, btn.y + btn.size, bg);
@@ -281,7 +304,11 @@ public class ModernPlayerTextureScreen extends OptionScreen {
             out.add(new int[]{btn.x, btn.y, btn.size, btn.size});
         }
         if (searchBox != null && searchBox.visible) {
+            //? if <1.17 {
+            /*out.add(new int[]{searchBox.x, searchBox.y, searchBox.getWidth(), searchBox.getHeight()});
+             *///?} else {
             out.add(new int[]{searchBox.getX(), searchBox.getY(), searchBox.getWidth(), searchBox.getHeight()});
+            //?}
         }
         if (hoveredIcon != null || hoveredRow instanceof AnimationRow) {
             int descY = panelBottom - 32;
@@ -295,13 +322,13 @@ public class ModernPlayerTextureScreen extends OptionScreen {
     }
 
     @Override
-    protected void renderExtras(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    protected void renderExtras(YsmGui g, int mouseX, int mouseY, float partialTick) {
         g.fill(previewLeft, previewTop, previewRight, previewBottom, 0x66000000);
         renderPreview(g, partialTick);
     }
 
     @Override
-    protected void renderDescription(GuiGraphics g, int descY) {
+    protected void renderDescription(YsmGui g, int descY) {
         if (hoveredIcon != null) {
             g.fill(panelLeft, descY, panelRight, descY + 28, 0x80000000);
             g.drawString(this.font, hoveredIcon.tooltip, panelLeft + 6, descY + 10, -1, false);
@@ -311,11 +338,11 @@ public class ModernPlayerTextureScreen extends OptionScreen {
             AnimationRow row = (AnimationRow) hoveredRow;
             g.fill(panelLeft, descY, panelRight, descY + 28, 0x80000000);
             g.drawString(this.font, row.getMessage(), panelLeft + 6, descY + 4, -1, false);
-            g.drawString(this.font, Component.literal(row.animKey).withStyle(ChatFormatting.GRAY), panelLeft + 6, descY + 16, 0xFFAAAAAA, false);
+            g.drawString(this.font, YsmGui.text(row.animKey).withStyle(ChatFormatting.GRAY), panelLeft + 6, descY + 16, 0xFFAAAAAA, false);
         }
     }
 
-    private void renderPreview(GuiGraphics g, float partialTick) {
+    private void renderPreview(YsmGui g, float partialTick) {
         if (this.minecraft == null || this.minecraft.player == null) return;
         if (!modelHolder.getAnimationStateMachine().isCurrentAnimation(currentAnimation)) {
             modelHolder.getAnimationStateMachine().setCurrentAnimation(currentAnimation);
@@ -325,14 +352,14 @@ public class ModernPlayerTextureScreen extends OptionScreen {
         int sy = (int) (this.minecraft.getWindow().getHeight() - previewBottom * scale);
         int sw = (int) ((previewRight - previewLeft) * scale);
         int sh = (int) ((previewBottom - previewTop) * scale);
-        RenderSystem.enableScissor(sx, sy, sw, sh);
+        YsmGui.enableScissorBox(sx, sy, sw, sh);
         PlayerCapability.get(this.minecraft.player).ifPresent(cap -> {
             modelHolder.initModelWithTexture(modelId, cap.getCurrentTextureName());
             float cx = (previewLeft + previewRight) / 2.0f + offsetX;
             float cy = previewTop + (previewBottom - previewTop) * 0.65f + offsetY;
             ModelPreviewRenderer.renderEntityPreview(cx, cy, zoom, pitch, yaw, this.minecraft.getFrameTime(), modelHolder, RendererManager.getPlayerRenderer(), showGround);
         });
-        RenderSystem.disableScissor();
+        YsmGui.disableScissorBox();
     }
 
     @Override

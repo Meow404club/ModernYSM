@@ -1,5 +1,7 @@
 package rip.ysm.gui.components.groups;
 
+import rip.ysm.gui.YsmGui;
+
 import net.minecraft.network.chat.Component;
 import rip.ysm.gui.OptionGroup;
 
@@ -15,6 +17,6 @@ public final class IdentifiedGroup extends OptionGroup {
 
     @Override
     public Component getTitle() {
-        return Component.literal(displayLabel);
+        return YsmGui.text(displayLabel);
     }
 }

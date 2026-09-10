@@ -1,7 +1,7 @@
 package rip.ysm.gui.components;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import rip.ysm.gui.YsmGui;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import rip.ysm.gui.Option;
@@ -27,7 +27,7 @@ public class RadioOptionRow extends OptionRow<Integer> {
     }
 
     @Override
-    protected void renderControl(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    protected void renderControl(YsmGui g, int mouseX, int mouseY, float partialTick) {
         int cx = controlX();
         int cy = controlY();
         int cw = controlWidth();
@@ -37,7 +37,7 @@ public class RadioOptionRow extends OptionRow<Integer> {
         g.fill(cx, cy, cx + cw, cy + ch, blendBg(hover, 0x3EC8C8C8));
         g.renderOutline(cx, cy, cw, ch, 0x60FFFFFF);
 
-        Component text = Component.literal(labelAt(currentIndex()));
+        Component text = YsmGui.text(labelAt(currentIndex()));
         g.drawString(Minecraft.getInstance().font, text, cx + 6, cy + (ch - 8) / 2, 0xFFFFFFFF, false);
 
         int arrowX = cx + cw - 10;
@@ -71,7 +71,7 @@ public class RadioOptionRow extends OptionRow<Integer> {
     }
 
     @Override
-    public void renderOverlay(GuiGraphics g, int mouseX, int mouseY, float partialTick, float scrollDisplay) {
+    public void renderOverlay(YsmGui g, int mouseX, int mouseY, float partialTick, float scrollDisplay) {
         if (!open || labels.isEmpty()) return;
         int cx = controlX();
         int cw = controlWidth();
@@ -94,7 +94,7 @@ public class RadioOptionRow extends OptionRow<Integer> {
             boolean selected = idx == currentIndex();
             int bg = selected ? new Color(255,255,255,60).getRGB() : (hover ? 0xFF333333 : 0);
             if (bg != 0) g.fill(listX + 1, itemY, listX + cw - 1, itemY + 14, bg);
-            g.drawString(Minecraft.getInstance().font, Component.literal(labelAt(idx)), listX + 6, itemY + (14 - 8) / 2, -1, true);
+            g.drawString(Minecraft.getInstance().font, YsmGui.text(labelAt(idx)), listX + 6, itemY + (14 - 8) / 2, -1, true);
         }
         if (labels.size() > visible) {
             int trackX = listX + cw - 3;

@@ -1,5 +1,7 @@
 package rip.ysm.gui.molang;
 
+import rip.ysm.gui.YsmGui;
+
 import net.minecraft.network.chat.Component;
 import rip.ysm.gui.Option;
 
@@ -25,12 +27,12 @@ final class LiveOption<T> extends Option<T> {
 
     @Override
     public Component getLabel() {
-        return Component.literal(titleText);
+        return YsmGui.text(titleText);
     }
 
     @Override
     public Component getDescription() {
-        return Component.literal(descText);
+        return YsmGui.text(descText);
     }
 
     @Override

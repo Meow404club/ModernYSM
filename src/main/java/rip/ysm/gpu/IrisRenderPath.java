@@ -4,9 +4,10 @@ import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.resources.ResourceLocation;
+//? if >1.17 {
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.resources.ResourceLocation;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
@@ -16,12 +17,25 @@ import org.lwjgl.opengl.GL43;
 import rip.ysm.compat.oculus.OculusCompat;
 
 import java.nio.ByteBuffer;
+//?}
 
 public final class IrisRenderPath {
     private static final float[] modelViewScratch = new float[16];
 
 
     public static boolean tryRender(GeoModel model, PoseStack.Pose pose, float[] boneParams, int renderPartMask, int packedLight, int packedOverlay, float r, float g, float b, float a, ResourceLocation textureLocation) {
+        //? if <1.17 {
+        /*return false;
+         *///?} else {
+        return tryRenderModern(model, pose, boneParams, renderPartMask, packedLight, packedOverlay, r, g, b, a, textureLocation);
+        //?}
+    }
+
+    // 1.16.5 降级：整路径不存在（GL43 compute + 1.17+ ShaderInstance uniform 管线 +
+    // RenderSystem.getShader/getProjectionMatrix 均为 1.17+ API；Iris 1.16.5 无官方移植，
+    // oculus 系 compat 包也被 1.16.5 sourceSet 排除——记录功能差，渲染回退 geckolib3 原路径）
+    //? if >1.17 {
+    private static boolean tryRenderModern(GeoModel model, PoseStack.Pose pose, float[] boneParams, int renderPartMask, int packedLight, int packedOverlay, float r, float g, float b, float a, ResourceLocation textureLocation) {
         if (!GpuCapability.isAvailable()) return false;
         if (!BoneXformCompute.ensureCompiled()) return false;
         if (model.bakedBones == null || model.bakedBones.isEmpty()) return false;
@@ -94,4 +108,5 @@ public final class IrisRenderPath {
 
         return true;
     }
+    //?}
 }

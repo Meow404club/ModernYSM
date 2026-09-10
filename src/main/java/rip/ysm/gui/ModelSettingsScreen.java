@@ -16,10 +16,19 @@ import com.elfmcys.yesstevemodel.geckolib3.geo.GeoReplacedEntityRenderer;
 import com.elfmcys.yesstevemodel.util.data.OrderedStringMap;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
+import rip.ysm.gui.YsmGui;
 import com.mojang.blaze3d.vertex.PoseStack;
+//? if <1.17 {
+/*import com.mojang.math.Quaternion;
+import com.mojang.math.Vector3f;
+ *///?} else {
 import com.mojang.math.Axis;
+import org.joml.Quaternionf;
+//?}
 import net.minecraft.client.Minecraft;
+//? if >1.17 {
 import net.minecraft.client.gui.GuiGraphics;
+//?}
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
@@ -27,8 +36,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Quaternionf;
+//? if >1.17 {
 import rip.ysm.compat.touhoulittlemaid.TouhouLittleMaidCompat;
+//?}
 import rip.ysm.gui.components.BooleanOptionRow;
 import rip.ysm.gui.components.RadioOptionRow;
 import rip.ysm.gui.components.SliderOptionRow;
@@ -64,7 +74,7 @@ public class ModelSettingsScreen extends OptionScreen {
     private int draggingButton = -1;
 
     public ModelSettingsScreen(ModelAssembly modelAssembly, AnimatableEntity<?> animatable, @Nullable Screen parent, @Nullable String initialGroupId) {
-        super(Component.translatable("gui.yes_steve_model.model_settings.title"), parent);
+        super(YsmGui.trans("gui.yes_steve_model.model_settings.title"), parent);
         this.modelAssembly = modelAssembly;
         this.animatable = animatable;
         this.initialGroupId = initialGroupId;
@@ -101,15 +111,15 @@ public class ModelSettingsScreen extends OptionScreen {
     @Override
     protected void init() {
         super.init();
-        removeWidget(applyBtn);
-        removeWidget(undoBtn);
-        removeWidget(cancelBtn);
+        removeFooter(applyBtn);
+        removeFooter(undoBtn);
+        removeFooter(cancelBtn);
         applyBtn.visible = false;
         undoBtn.visible = false;
         cancelBtn.visible = false;
         applyBtn.active = false;
         undoBtn.active = false;
-        saveBtn.setMessage(Component.translatable("gui.yes_steve_model.config.done"));
+        saveBtn.setMessage(YsmGui.trans("gui.yes_steve_model.config.done"));
         saveBtn.setX(panelRight - saveBtn.getWidth());
         previewLeft = panelRight - previewWidth();
         previewTop = rowAreaTop;
@@ -184,70 +194,112 @@ public class ModelSettingsScreen extends OptionScreen {
     }
 
     @Override
-    protected void renderExtras(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    protected void renderExtras(YsmGui g, int mouseX, int mouseY, float partialTick) {
         g.fill(previewLeft, previewTop, previewRight, previewBottom, 0x66000000);
         renderPreview(g, partialTick);
     }
 
-    private void renderPreview(GuiGraphics g, float partialTick) {
+    private void renderPreview(YsmGui g, float partialTick) {
         if (this.minecraft == null || this.minecraft.player == null) return;
         if (!(animatable instanceof LivingAnimatable<?>)) return;
         LivingAnimatable<?> la = (LivingAnimatable<?>) animatable;
-        GeoReplacedEntityRenderer<?, ?> renderer = la instanceof CustomPlayerEntity ? RendererManager.getPlayerRenderer() : TouhouLittleMaidCompat.getMaidPreviewRenderer(la);
+        GeoReplacedEntityRenderer<?, ?> renderer;
+        //? if >1.17 {
+        renderer = la instanceof CustomPlayerEntity ? RendererManager.getPlayerRenderer() : TouhouLittleMaidCompat.getMaidPreviewRenderer(la);
+        //?} else {
+        /*renderer = la instanceof CustomPlayerEntity ? RendererManager.getPlayerRenderer() : null;
+         *///?}
         if (renderer == null) return;
         double scale = this.minecraft.getWindow().getGuiScale();
         int sx = (int) (previewLeft * scale);
         int sy = (int) (this.minecraft.getWindow().getHeight() - previewBottom * scale);
         int sw = (int) ((previewRight - previewLeft) * scale);
         int sh = (int) ((previewBottom - previewTop) * scale);
-        RenderSystem.enableScissor(sx, sy, sw, sh);
+        YsmGui.enableScissorBox(sx, sy, sw, sh);
         float cx = (previewLeft + previewRight) / 2.0f + offsetX;
         float cy = previewTop + (previewBottom - previewTop) * 0.65f + offsetY;
         renderPlayerForSettings(cx, cy, zoom, pitch, yaw, partialTick, la, renderer);
-        RenderSystem.disableScissor();
+        YsmGui.disableScissorBox();
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     private static void renderPlayerForSettings(float x, float y, float scale, float pitch, float yaw, float partialTick, LivingAnimatable animatable, GeoReplacedEntityRenderer renderer) {
         ModelPreviewRenderer.setPreviewMode(true);
         LivingEntity livingEntity = (LivingEntity) animatable.getEntity();
+        //? if <1.17 {
+        /*RenderSystem.pushMatrix();
+        RenderSystem.translatef(x, y, 1250.0f);
+        RenderSystem.scalef(1.0f, 1.0f, -1.0f);
+         *///?} else {
         PoseStack modelViewStack = RenderSystem.getModelViewStack();
         modelViewStack.pushPose();
         modelViewStack.translate(x, y, 1250.0d);
         modelViewStack.scale(1.0f, 1.0f, -1.0f);
         RenderSystem.applyModelViewMatrix();
+        //?}
 
         PoseStack poseStack = new PoseStack();
         poseStack.translate(0.0d, 0.0d, 1000.0d);
         poseStack.scale(scale, scale, scale);
         poseStack.translate(0.0d, 0.8d, 0.0d);
 
+        //? if <1.17 {
+        /*Quaternion rotationZ = Vector3f.ZP.rotationDegrees(180.0f);
+        Quaternion rotationX = Vector3f.XP.rotationDegrees(-10.0f + pitch);
+        rotationZ.mul(rotationX);
+        poseStack.mulPose(rotationZ);
+         *///?} else {
         Quaternionf rotationZ = Axis.ZP.rotationDegrees(180.0f);
         Quaternionf rotationX = Axis.XP.rotationDegrees(-10.0f + pitch);
         rotationZ.mul(rotationX);
         poseStack.mulPose(rotationZ);
+        //?}
 
         float oldBodyRot = livingEntity.yBodyRot;
         float oldBodyRotO = livingEntity.yBodyRotO;
+        //? if <1.17 {
+        /*float oldYRot = livingEntity.yRot;
+         *///?} else {
         float oldYRot = livingEntity.getYRot();
+        //?}
         float oldYRotO = livingEntity.yRotO;
+        //? if <1.17 {
+        /*float oldXRot = livingEntity.xRot;
+         *///?} else {
         float oldXRot = livingEntity.getXRot();
+        //?}
         float oldXRotO = livingEntity.xRotO;
         float oldHeadRot = livingEntity.yHeadRot;
         float oldHeadRotO = livingEntity.yHeadRotO;
 
         livingEntity.yBodyRot = -yaw;
         livingEntity.yBodyRotO = -yaw;
+        //? if <1.17 {
+        /*livingEntity.yRot = 180.0f;
+        livingEntity.yRotO = 180.0f;
+        livingEntity.xRot = 0.0f;
+        livingEntity.xRotO = 0.0f;
+         *///?} else {
         livingEntity.setYRot(180.0f);
         livingEntity.yRotO = 180.0f;
         livingEntity.setXRot(0.0f);
         livingEntity.xRotO = 0.0f;
+        //?}
         livingEntity.yHeadRot = -yaw;
         livingEntity.yHeadRotO = -yaw;
 
+        // 1.16.5 Lighting 无 setupForEntityInInventory：turnOff/turnBackOn 承担等价光照切换
+        //? if <1.17 {
+        /*Lighting.turnOff();
+         *///?} else {
         Lighting.setupForEntityInInventory();
+        //?}
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
+        //? if <1.17 {
+        /*rotationX.conj();
+         *///?} else {
         rotationX.conjugate();
+        //?}
         dispatcher.overrideCameraOrientation(rotationX);
         dispatcher.setRenderShadow(false);
         MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
@@ -259,15 +311,27 @@ public class ModelSettingsScreen extends OptionScreen {
             dispatcher.setRenderShadow(true);
             livingEntity.yBodyRot = oldBodyRot;
             livingEntity.yBodyRotO = oldBodyRotO;
+            //? if <1.17 {
+            /*livingEntity.yRot = oldYRot;
+            livingEntity.yRotO = oldYRotO;
+            livingEntity.xRot = oldXRot;
+            livingEntity.xRotO = oldXRotO;
+             *///?} else {
             livingEntity.setYRot(oldYRot);
             livingEntity.yRotO = oldYRotO;
             livingEntity.setXRot(oldXRot);
             livingEntity.xRotO = oldXRotO;
+            //?}
             livingEntity.yHeadRot = oldHeadRot;
             livingEntity.yHeadRotO = oldHeadRotO;
+            //? if <1.17 {
+            /*RenderSystem.popMatrix();
+            Lighting.turnBackOn();
+             *///?} else {
             modelViewStack.popPose();
             RenderSystem.applyModelViewMatrix();
             Lighting.setupFor3DItems();
+            //?}
             ModelPreviewRenderer.setPreviewMode(false);
         }
     }

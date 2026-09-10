@@ -238,14 +238,14 @@ public class ModelButton extends Button {
         float inner = radius - thickness;
         float time = (System.nanoTime() % 10_000_000_000L) / 1.0E9f;
 
-        Pie.draw(guiGraphics, centerX, centerY, inner, radius, 0.0f, Pie.tau, 0x33FFFFFF);
+        Pie.draw(guiGraphics.pose(), centerX, centerY, inner, radius, 0.0f, Pie.tau, 0x33FFFFFF);
 
         float sweepPhase = (time % 2.0f) / 2.0f;
         float eased = 0.5f - 0.5f * Mth.cos(sweepPhase * Pie.tau);
         float sweep = Mth.lerp(eased, 0.12f, 0.78f) * Pie.tau;
         float start = ((time % 1.4f) / 1.4f) * Pie.tau + sweepPhase * Pie.tau;
 
-        Pie.draw(guiGraphics, centerX, centerY, inner, radius, start, start + sweep, 0xFFF3D08A);
+        Pie.draw(guiGraphics.pose(), centerX, centerY, inner, radius, start, start + sweep, 0xFFF3D08A);
     }
 
     public void renderTooltip(GuiGraphics guiGraphics, Screen screen, int mouseX, int mouseY) {

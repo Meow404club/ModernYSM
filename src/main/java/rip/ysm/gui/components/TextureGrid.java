@@ -12,7 +12,7 @@ import com.elfmcys.yesstevemodel.network.NetworkHandler;
 import com.elfmcys.yesstevemodel.network.message.C2SRequestSwitchModelPacket;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import rip.ysm.gui.YsmGui;
 import net.minecraft.network.chat.Component;
 import rip.ysm.gui.ModernPlayerTextureScreen;
 import rip.ysm.gui.OptionRow;
@@ -77,7 +77,7 @@ public final class TextureGrid extends OptionRow<Object> {
     }
 
     @Override
-    protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    protected void renderWidget(YsmGui g, int mouseX, int mouseY, float partialTick) {
         int c = cols();
         int slotW = TEX_BTN_W + TEX_GAP;
         int slotH = TEX_BTN_H + TEX_GAP;
@@ -90,7 +90,7 @@ public final class TextureGrid extends OptionRow<Object> {
         }
     }
 
-    private void renderSlot(GuiGraphics g, int x, int y, int idx, int mx, int my, float pt) {
+    private void renderSlot(YsmGui g, int x, int y, int idx, int mx, int my, float pt) {
         String name = textureNames.get(idx);
         PlayerPreviewEntity holder = holders[idx];
         String currentTex = currentTextureName();
@@ -99,7 +99,7 @@ public final class TextureGrid extends OptionRow<Object> {
         int bg = selected ? 0x90333333 : (hover ? 0x90171717 : 0x90000000);
         g.fill(x, y, x + TEX_BTN_W, y + TEX_BTN_H, bg);
         renderHolderPreview(x, y, holder, pt);
-        Component label = Component.literal(ModelMetadataPresenter.getLocalizedModelString(owner.renderContext, String.format("files.player.texture.%s", name), name));
+        Component label = YsmGui.text(ModelMetadataPresenter.getLocalizedModelString(owner.renderContext, String.format("files.player.texture.%s", name), name));
         int textY = y + TEX_BTN_H - 12;
         int tw = Minecraft.getInstance().font.width(label);
         g.drawString(Minecraft.getInstance().font, label, x + (TEX_BTN_W - tw) / 2, textY, 0xFFFFFFFF, true);
@@ -126,13 +126,13 @@ public final class TextureGrid extends OptionRow<Object> {
         int sy = (int) (mc.getWindow().getHeight() - (y + previewH) * scale);
         int sw = (int) (TEX_BTN_W * scale);
         int sh = (int) (previewH * scale);
-        RenderSystem.enableScissor(sx, sy, sw, sh);
+        YsmGui.enableScissorBox(sx, sy, sw, sh);
         ModelPreviewRenderer.renderLivingEntityPreview(x + TEX_BTN_W / 2.0f, y + TEX_BTN_H / 2.0f + 24.0f, 35.0f, mc.getFrameTime(), holder, RendererManager.getPlayerRenderer(), false, true);
-        RenderSystem.disableScissor();
+        YsmGui.disableScissorBox();
     }
 
     @Override
-    protected void renderControl(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    protected void renderControl(YsmGui g, int mouseX, int mouseY, float partialTick) {
     }
 
     @Override

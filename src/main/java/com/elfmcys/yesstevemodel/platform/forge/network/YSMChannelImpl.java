@@ -11,10 +11,21 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+// 传输层 API 面条件差（1.17+ net.minecraftforge.network ← 1.16.x net.minecraftforge.fml.network）：
+// 包移动条件化，协议字节层面零变化——SimpleChannel/NetworkRegistry/NetworkEvent.Context 方法面
+// 两侧同签名（unimined 1.16.5 mojmap jar javap 实证：registerMessage(int,Class,BiConsumer,Function,
+// BiConsumer,Optional<NetworkDirection>) / newSimpleChannel / PacketDistributor / toVanillaPacket 逐一核对）。
+//? if >=1.17 {
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
+//?} else {
+/*import net.minecraftforge.fml.network.NetworkDirection;
+import net.minecraftforge.fml.network.NetworkRegistry;
+import net.minecraftforge.fml.network.PacketDistributor;
+import net.minecraftforge.fml.network.simple.SimpleChannel;*/
+//?}
 import rip.ysm.api.network.PacketContext;
 import rip.ysm.api.network.PacketDirection;
 import rip.ysm.util.YsmCollections;

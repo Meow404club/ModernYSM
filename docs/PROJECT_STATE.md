@@ -5,8 +5,8 @@
 ## 阶段
 - phase: 架构重构（Stonecutter 迁移）执行期——M0 骨架
 - done: [RAG 34 源全量索引(407308块), openysm.cpp 研究(b573c7b), Stonecutter 调研(a780867), ADR 定案(decisions.adr-stonecutter-2026-09-10), curator 入库]
-- current: 后台并行：m0-merge-sources coder（源码合并）、native-align review-merge（审查中）
-- next: native 合入 → M1 五卡并行；m0-merge-sources 返回 → review-merge → M1 收尾 mig-purge-architectury
+- current: 仅剩 m0-merge-sources coder 在后台（三端源码合并）
+- next: 返回 → review-merge → 派 M1 五卡并行 → mig-purge-architectury 门禁；之后 M2 1.16.5（unimined）
 
 ## ADR 摘要（decisions.adr-stonecutter-2026-09-10）
 - architectury-api 彻底移除（@ExpectPlatform 无织入方）；**cardinal 与 forge_config_api_port 直接删**（全仓仅 fabric 源集使用，forge 通道纯 net.minecraftforge capability / ForgeConfigSpec）
@@ -28,7 +28,7 @@
 | poc-forge-1165 | done | - | 定案：unimined 线三代全 PASS，legacy/ 作废；1.7.10/1.12.2 源码条件化推迟 M5 |
 | poc-execute-unimined | merged | - | 实跑闭环：三版本 BUILD SUCCESSFUL+SRG 抽查过；报告 tmp/poc-1165/RUN-REPORT.md |
 | native-openysm-cpp | closed | - | 用户裁决：自带实现已完整，上游仅档案存查（tmp/harvest/openysm-cpp） |
-| native-align-src | in_review | work/native-align-src | 主仓 1f84541 + 子模块 openysm-align(271f698,af8f642 已推 fork)；对拍 10/10 字节级一致；review-merge 审查中（先 rebase dev） |
+| native-align-src | merged | dev | 7db591f 合入（rebase 后 564da91）；子模块 pin af8f642 可远端解析；对拍 10/10 全绿；主会话决策 natives 二进制暂不换装 |
 | m0-merge-sources | in_progress | work/m0-merge-sources | 三端源码合并进 src/main（common+forge→platform/forge，fabric 原地保留） |
 | harvest-curator-1 | merged | - | stonecutter-template 入 RAG（17 文件）；openysm-cpp 不入库零污染 |
 

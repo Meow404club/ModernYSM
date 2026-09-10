@@ -6,8 +6,8 @@
 - phase: 架构重构（Stonecutter 迁移）——M1 已收官，M2（1.16.5）规划期
 - done: [M0 骨架 e9f0b61+源码合并 d086af3, native 子模块 7db591f, M1 七卡迁移+门禁 0f81660（8/8 approve）]
 - done: [RAG 34 源全量索引(407308块), openysm.cpp 研究(b573c7b), Stonecutter 调研(a780867), ADR 定案(decisions.adr-stonecutter-2026-09-10), curator 入库]
-- current: M2 推进中——java8-downshift 与 gate-compat 双卡 in_review（同会话 ②③/5）
-- next: 双卡合入 → 条件卡波次（forge-thinlayer/render-pipeline/mixin-versioning 并行）→ gui-hud-port → native-poc → 双门禁
+- current: dev=acd46c8（骨架+下沉已合入）；gate-compat 打回修复中
+- next: gate-compat 修复合入 → 条件卡波次（forge-thinlayer/render-pipeline/mixin-versioning 并行）→ gui-hud-port → native-poc(GO/NO-GO) → 双门禁
 - next: java8 下沉+compat 闸门合入 → 条件卡波次（forge-thinlayer/render-pipeline/mixin-versioning 并行）→ gui-hud-port → native-poc(GO/NO-GO) → compile-green-gate → ingame-smoke-gate
 - next: 骨架合入后 m2-gate-compat → 条件卡波次（forge-thinlayer/render-pipeline/mixin-versioning 并行）→ gui-hud-port → native-poc(GO/NO-GO) → compile-green-gate → ingame-smoke-gate；M3 平铺 → M4 NeoForge → M5 legacy
 
@@ -35,8 +35,8 @@
 | mig-platform-util | merged | 7414160 | YsmPlatform+主类接线+NCDFE 修复（NFRT LegacyClasspath 根因，A/B 实证 27 models） |
 | mig-purge-architectury | merged | 0f81660 | **M1 门禁通过**：grep/依赖树/jar 三零命中+进世界实证+runServer Done；WSL 崩溃后重审一次过 |
 | m2-skeleton-unimined | merged | 3483e9d | 1.16.5 版本项落地：工具链全链路过（FG3/mojmap/SRG），compileJava 188 错全语法类=下沉卡基线 |
-| m2-java8-downshift | in_review | work/m2-java8-downshift | 6 commits/116 文件次；审计零语法错+复扫全零+性能三层评估；审查中（②/5） |
-| m2-gate-compat | in_review | work/m2-gate-compat | 5dc1ad3：三棵 compat 树排除+30 shim（mod-absent 语义）+pack_format 6；审查中（③/5） |
+| m2-java8-downshift | merged | acd46c8 | 116 文件次 Java8 下沉；12 处语义等价抽查全过；进世界 27 models/169ms |
+| m2-gate-compat | in_progress（打回修复） | work/m2-gate-compat | shim srcDir 错位阻断（30 shim 未编入）；修复单已发回原 coder，分支已 rebase 9be944e |
 | m2 条件卡×3 + gui/native-poc/双门禁 | queued | - | 见 decisions.adr-m2-1165-stonecutter-entry 十卡序 |
 | mig-purge-architectury | queued | - | M1 收尾门禁：全仓 dev.architectury=0 |
 | poc-forge-1165 | done | - | 定案：unimined 线三代全 PASS，legacy/ 作废；1.7.10/1.12.2 源码条件化推迟 M5 |

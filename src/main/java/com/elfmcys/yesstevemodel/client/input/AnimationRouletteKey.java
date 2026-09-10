@@ -35,10 +35,19 @@ public final class AnimationRouletteKey {
         MinecraftForge.EVENT_BUS.addListener(AnimationRouletteKey::onKeyInput);
     }
 
+    //? if >=1.17 {
     private static void onKeyInput(InputEvent.Key event) {
-        int keyCode = event.getKey();
-        int scanCode = event.getScanCode();
-        if (YesSteveModel.isAvailable() && InputUtil.isPlayerReady() && event.getAction() == 1 && InputUtil.isKeyPressed(keyCode, scanCode, KEY_ROULETTE)) {
+        handleKeyInput(event.getKey(), event.getScanCode(), event.getAction());
+    }
+    //?} else {
+    /*// 1.16.5 无 InputEvent.Key（1.19.3+），键盘事件为 InputEvent.KeyInputEvent（getKey/getScanCode/getAction 同名同义）
+    private static void onKeyInput(InputEvent.KeyInputEvent event) {
+        handleKeyInput(event.getKey(), event.getScanCode(), event.getAction());
+    }*/
+//?}
+
+    private static void handleKeyInput(int keyCode, int scanCode, int action) {
+        if (YesSteveModel.isAvailable() && InputUtil.isPlayerReady() && action == 1 && InputUtil.isKeyPressed(keyCode, scanCode, KEY_ROULETTE)) {
             if (!NetworkHandler.isClientConnected() || ServerConfig.CAN_SWITCH_MODEL.get()) {
                 if (TouhouLittleMaidCompat.isMaidChatAvailable()) {
                     TouhouLittleMaidCompat.openMaidChat();

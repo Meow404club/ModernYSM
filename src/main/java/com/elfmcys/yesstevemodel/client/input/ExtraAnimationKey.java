@@ -53,7 +53,11 @@ public final class ExtraAnimationKey {
         MinecraftForge.EVENT_BUS.addListener(ExtraAnimationKey::onKeyEvent);
     }
 
+    //? if >=1.17 {
     private static void onKeyEvent(InputEvent.Key event) {
+    //?} else {
+    /*private static void onKeyEvent(InputEvent.KeyInputEvent event) {*/
+//?}
         onKeyInput(event.getAction(), event.getKey(), event.getScanCode());
     }
 

@@ -45,6 +45,17 @@ public final class ForgeCapabilityHooks {
     private ForgeCapabilityHooks() {
     }
 
+    /**
+     * 1.16.5 条件差：1.16.x Entity 的 world 访问是 {@code level} 字段（1.20+ 才有 {@code level()} 访问器），
+     * unimined 1.16.5 mojmap jar javap 实证 {@code public Level level}。
+     */
+    private static boolean isClientWorld(Entity entity) {
+        //? if >=1.17
+        return entity.level().isClientSide();
+        //? if <1.17
+        /*return entity.level.isClientSide;*/
+    }
+
     @SubscribeEvent
     public static void onAttachCapabilities(AttachCapabilitiesEvent<Entity> event) {
         if (!YesSteveModel.isAvailable()) {
@@ -53,7 +64,7 @@ public final class ForgeCapabilityHooks {
         Entity entity = event.getObject();
         if (entity instanceof Player) {
             Player player = (Player) entity;
-            if (!entity.level().isClientSide() && !player.getCapability(ModelInfoCapabilityProvider.MODEL_INFO_CAP).isPresent() && !event.getCapabilities().containsKey(MODEL_INFO_CAP)) {
+            if (!isClientWorld(entity) && !player.getCapability(ModelInfoCapabilityProvider.MODEL_INFO_CAP).isPresent() && !event.getCapabilities().containsKey(MODEL_INFO_CAP)) {
                 event.addCapability(MODEL_INFO_CAP, new ModelInfoCapabilityProvider());
             }
             if (!player.getCapability(AuthModelsCapabilityProvider.AUTH_MODELS_CAP).isPresent() && !event.getCapabilities().containsKey(AUTH_MODELS_CAP)) {
@@ -63,13 +74,13 @@ public final class ForgeCapabilityHooks {
                 event.addCapability(STAR_MODELS_CAP, new StarModelsCapabilityProvider());
             }
         } else if (entity instanceof Projectile) {
-            if (!entity.level().isClientSide() && !entity.getCapability(ProjectileModelCapabilityProvider.PROJECTILE_MODEL).isPresent() && !event.getCapabilities().containsKey(PROJECTILE_MODEL_CAP)) {
+            if (!isClientWorld(entity) && !entity.getCapability(ProjectileModelCapabilityProvider.PROJECTILE_MODEL).isPresent() && !event.getCapabilities().containsKey(PROJECTILE_MODEL_CAP)) {
                 event.addCapability(PROJECTILE_MODEL_CAP, new ProjectileModelCapabilityProvider());
             }
-        } else if (!entity.level().isClientSide() && !entity.getCapability(VehicleModelCapabilityProvider.VEHICLE_MODEL_CAP).isPresent() && !event.getCapabilities().containsKey(VEHICLE_MODEL_CAP)) {
+        } else if (!isClientWorld(entity) && !entity.getCapability(VehicleModelCapabilityProvider.VEHICLE_MODEL_CAP).isPresent() && !event.getCapabilities().containsKey(VEHICLE_MODEL_CAP)) {
             event.addCapability(VEHICLE_MODEL_CAP, new VehicleModelCapabilityProvider());
         }
-        if (!PlatformAPI.isServer() && entity.level().isClientSide()) {
+        if (!PlatformAPI.isServer() && isClientWorld(entity)) {
             if (entity instanceof AbstractClientPlayer) {
                 AbstractClientPlayer abstractClientPlayer = (AbstractClientPlayer) entity;
                 if (!abstractClientPlayer.getCapability(PlayerCapabilityProvider.PLAYER_CAP).isPresent() && !event.getCapabilities().containsKey(PLAYER_CAP)) {
@@ -94,7 +105,11 @@ public final class ForgeCapabilityHooks {
         Entity target = startTracking.getTarget();
         if (target instanceof ServerPlayer) {
             ServerPlayer trackPlayer = (ServerPlayer) target;
+            // 1.16.5 StartTracking.getEntity() 无协变 Player 覆写（继承 EntityEvent.getEntity() 返回 Entity）
+            //? if >=1.17
             Player entity = startTracking.getEntity();
+            //? if <1.17
+            /*Player entity = (Player) startTracking.getEntity();*/
             CapabilityEvent.getModelInfoCap(trackPlayer).ifPresent(cap -> {
                 if (!NetworkHandler.isPlayerConnected(trackPlayer) && !cap.isMandatory()) {
                     return;
@@ -114,13 +129,19 @@ public final class ForgeCapabilityHooks {
             Projectile projectile = (Projectile) target;
             projectile.getCapability(ProjectileModelCapabilityProvider.PROJECTILE_MODEL).ifPresent(cap -> {
                 if (cap.isInitialized()) {
+                    //? if >=1.17
                     NetworkHandler.sendToClientPlayer(new S2CSyncProjectileModelPacket(projectile.getId(), cap), startTracking.getEntity());
+                    //? if <1.17
+                    /*NetworkHandler.sendToClientPlayer(new S2CSyncProjectileModelPacket(projectile.getId(), cap), (Player) startTracking.getEntity());*/
                 }
             });
         } else if (target != null) {
             target.getCapability(VehicleModelCapabilityProvider.VEHICLE_MODEL_CAP).ifPresent(cap -> {
                 if (cap.isInitialized()) {
+                    //? if >=1.17
                     NetworkHandler.sendToClientPlayer(new S2CSyncVehicleModelPacket(target.getId(), cap), startTracking.getEntity());
+                    //? if <1.17
+                    /*NetworkHandler.sendToClientPlayer(new S2CSyncVehicleModelPacket(target.getId(), cap), (Player) startTracking.getEntity());*/
                 }
             });
         }

@@ -16,6 +16,8 @@ public final class YsmEventBootstrap {
         PlayerLogoutEvent.register();
         CommonEvent.register();
         CommandRegistry.register();
+        // 1.16.5 capability 旧机制注册枢纽（1.20.1 内部 no-op），须在进世界 attach 前完成
+        CapabilityEvent.register();
         if (!PlatformAPI.isServer()) {
             EntityJoinCallbackEvent.register();
             ClientSetupEvent.register();

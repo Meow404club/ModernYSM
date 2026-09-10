@@ -31,7 +31,11 @@ public final class PlayerModelToggleKey {
         MinecraftForge.EVENT_BUS.addListener(PlayerModelToggleKey::onKeyEvent);
     }
 
+    //? if >=1.17 {
     private static void onKeyEvent(InputEvent.Key event) {
+    //?} else {
+    /*private static void onKeyEvent(InputEvent.KeyInputEvent event) {*/
+//?}
         onKeyInput(event.getAction(), event.getKey(), event.getScanCode());
     }
 

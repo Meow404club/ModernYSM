@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.network;
 
 import com.elfmcys.yesstevemodel.YesSteveModel;
+import com.elfmcys.yesstevemodel.platform.YsmPlatform;
 import com.elfmcys.yesstevemodel.mixin.ConnectionAccessor;
 import com.elfmcys.yesstevemodel.mixin.ServerCommonPacketListenerImplAccessor;
 import com.elfmcys.yesstevemodel.network.message.*;
@@ -11,6 +12,7 @@ import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.Nullable;
@@ -61,6 +63,11 @@ public final class NetworkHandler {
     }
 
     public static boolean isClientConnected() {
+        if (YsmPlatform.getEnv() == Dist.DEDICATED_SERVER) {
+            // 专用服不存在客户端连接语义；同时保证方法体对 Minecraft/ClientPacketListener
+            // 的引用在 server 侧永不解析（client 专用类缺失，body-level 引用保持惰性）
+            return false;
+        }
         if (clientHandshakeComplete) {
             return true;
         }

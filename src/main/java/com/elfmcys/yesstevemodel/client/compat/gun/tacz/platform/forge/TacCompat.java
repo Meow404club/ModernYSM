@@ -1,5 +1,6 @@
 package com.elfmcys.yesstevemodel.client.compat.gun.tacz.platform.forge;
 
+import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.client.entity.LivingAnimatable;
 import com.elfmcys.yesstevemodel.geckolib3.core.builder.ILoopType;
 import com.elfmcys.yesstevemodel.geckolib3.core.event.predicate.AnimationEvent;
@@ -23,7 +24,15 @@ public class TacCompat {
     public static void init() {
         IS_LOADED = ModList.get().isLoaded(MOD_ID);
         if (IS_LOADED) {
-            TacAnimHandler.clearGunState();
+            try {
+                TacAnimHandler.clearGunState();
+            } catch (Throwable t) {
+                // GunFireReloadEvent 的 @SubscribeEvent 监听签名直引 com.tacz.guns.* API 类，
+                // EventBus.register 扫描参数类型即解析：mod 探测为 loaded 而 API 类缺失
+                //（dev probe stub/半安装态）时在此 NCDFE。捕获后降级为不注册枪械事件监听，
+                // 其余 TacCompat 分支仍由 isLoaded() 防护结构守卫（mig-compat 卡语义）。
+                YesSteveModel.LOGGER.warn("[YSM] TACZ gun event listener registration failed, gun fire/reload compat disabled", t);
+            }
         }
     }
 

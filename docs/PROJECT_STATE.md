@@ -12,7 +12,7 @@
 | slug | status | branch | note |
 |---|---|---|---|
 | rag-bootstrap | merged | dev | cfeaae1；407308 块；共享库 402946 块净化副本 |
-| native-openysm-cpp | research-done | - | 上游 zig 构建 OK；nInitSIMD 漂移待对齐 |
+| native-openysm-cpp | closed | - | 用户裁决：自带实现已完整，上游仅档案存查（tmp/harvest/openysm-cpp） |
 | arch-stonecutter-refactor | planning | - | 目标收窄：1.16.5+ 仅 forge/neoforge，fabric 代码保留不建项；legacy 推迟 |
 | poc-forge-1165 | research | - | 1.16.5 Forge 能否进 stonecutter 单 Gradle（FG4/5 vs parchment-loom vs 拆 legacy） |
 

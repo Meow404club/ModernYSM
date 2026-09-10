@@ -5,8 +5,8 @@
 ## 阶段
 - phase: 架构重构（Stonecutter 迁移）执行期——M0 骨架
 - done: [RAG 34 源全量索引(407308块), openysm.cpp 研究(b573c7b), Stonecutter 调研(a780867), ADR 定案(decisions.adr-stonecutter-2026-09-10), curator 入库]
-- current: M1 批① 5/7 已合入（dev HEAD=2a6f219，5/5 approve 零打回）；等 events-client + platform-util 交卷
-- next: 新审查会话接最后两支 → mig-purge-architectury 门禁（dev.architectury=0 + fabricmc 注解清理 + 进世界验收 + CapabilityLifecycle/TouhouMaidCompat 残留）→ M2 1.16.5（unimined）
+- current: M1 6/7 已合入（events-client d5362f8，审查零打回）；仅剩 platform-util 在途
+- next: platform-util 交卷审查合入 → mig-purge-architectury 门禁（dev.architectury=0 + fabricmc 注解/CapabilityLifecycle 门面/YsmEventBootstrap 空入口清理 + 进世界全量验收）→ M2 1.16.5（unimined）
 
 ## ADR 摘要（decisions.adr-stonecutter-2026-09-10）
 - architectury-api 彻底移除（@ExpectPlatform 无织入方）；**cardinal 与 forge_config_api_port 直接删**（全仓仅 fabric 源集使用，forge 通道纯 net.minecraftforge capability / ForgeConfigSpec）
@@ -28,7 +28,8 @@
 | mig-events-common | merged | 2a6f219 | 事件全映射+EventResult 复刻（javap 等价） |
 | mig-compat | merged | 9f6d998 | 29 文件 97 stub；NCDFE 三层防护抽查过 |
 | mig-registry-config | merged | 8657f78 | DeferredRegister+ModLoadingContext 直调 |
-| mig-events-client / mig-platform-util | in_progress | work/mig-* | 最后两支（新审查会话待接，≤5 额度） |
+| mig-events-client | merged | d5362f8 | 键位/输入域全迁移；取消语义清零字节码证实 |
+| mig-platform-util | in_progress | work/mig-platform-util | 主类+音效接线+NCDFE P2——M1 最后一支 |
 | mig-purge-architectury | queued | - | M1 收尾门禁：全仓 dev.architectury=0 |
 | poc-forge-1165 | done | - | 定案：unimined 线三代全 PASS，legacy/ 作废；1.7.10/1.12.2 源码条件化推迟 M5 |
 | poc-execute-unimined | merged | - | 实跑闭环：三版本 BUILD SUCCESSFUL+SRG 抽查过；报告 tmp/poc-1165/RUN-REPORT.md |

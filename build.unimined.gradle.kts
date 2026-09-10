@@ -40,8 +40,9 @@ repositories {
     maven("https://maven.parchmentmc.org") { name = "ParchmentMC" }
     // ImageStream（avif/webp 解码）快照
     maven("https://jitpack.io") { name = "JitPack" }
-    // 第三方 mod 兼容桥编译依赖（libs/ 下 jar），仅编译期；运行时按 isModLoaded 守卫
-    flatDir { dirs(rootProject.file("libs")) }
+    // 注意：1.16.5 线不注册 libs/ flatDir——29 个第三方 jar 全是 1.20.1 口径，
+    // 进 compile classpath 既编译必炸也无意义（m2-gate-compat）。compat 门面符号由
+    // versions/1.16.5-forge/src/main/java 下的版本独有 no-op shim 提供（mod-absent 语义）。
 }
 
 unimined.minecraft {
@@ -67,14 +68,50 @@ dependencies {
     // ImageStream（rip.ysm.imagestream 纯 Java 库）：编译期可见，保编译基线干净；
     // 生产 jar 内嵌（照 1.20.1 的 ImageStream 先例）属后续卡
     implementation("com.github.TartaricAlkaline:ImageStream:-SNAPSHOT")
-    // MixinExtras：EntityRenderDispatcherMixin 的 @WrapOperation 编译期依赖；
-    // 1.16.5 运行时注入方式（内嵌/伴生）未定，本卡只保编译
+    // MixinExtras：保留（查证记录，m2-gate-compat）——本 mod 自有 mixin
+    // EntityRenderDispatcherMixin 用 @WrapWithCondition（mixinextras v2 注解），且它
+    // 注册在 1.16.5 有效的 yes_steve_model.mixins.json（platform/forge 第三方
+    // accessor 配置才是被闸对象）；运行时注入方式（内嵌/伴生）未定，本卡只保编译
     compileOnly("io.github.llamalad7:mixinextras-common:${property("deps.mixinextras")}")
     annotationProcessor("io.github.llamalad7:mixinextras-common:${property("deps.mixinextras")}")
-    // 第三方 mod 兼容桥编译依赖（m2-gate-compat 卡负责 1.16.5 缺失桥的分流）
-    compileOnly(fileTree(rootProject.file("libs")))
+    // 1.16.5 不声明 libs/ fileTree：第三方 compat 依赖整体闸在本版本构建外
+    //（排除规则见下方 stonecutterGenerate 块，门面 shim 见 versions/1.16.5-forge/src/main/java）
 }
 
+// ===== 1.16.5 compat 闸门（m2-gate-compat）=====
+// 第三方触点源码整树不进 1.16.5 编译，core 代码经同包同名 no-op shim 保持符号可解析。
+// 引用图盘点（grep 传递闭包实证，基线 3483e9d）：
+//  - rip/ysm/compat/**（60 文件）：门面 + platform/forge *Impl，Impl 链到 client/compat
+//  - com/elfmcys/yesstevemodel/client/compat/**（76 文件）：第三方 import 集中地
+//  - platform/forge/mixin/client/{create,parcool}/**：yes_steve_model_forge.mixins.json
+//    注册的 8 条第三方 accessor（1.16.5 目标类不存在，配置本身已被 processResources 排除）
+//  - 7 个边界文件（第三方直连或引 client/compat，反向引用全落在排除树内，编译闭环安全）：
+//    ForgeClientSetupHooks（引 24 个 client/compat + 1.20.1-only RegisterGuiOverlaysEvent，
+//    1.16.5 API 不存在本就编不过；被注解自动扫描加载，无代码级引用者）、
+//    TouhouMaidAnimationPredicate、TouhouMaidModelScreen、TouhouMaidTextureScreen、
+//    TouhouMaidModelButton、TouhouMaidTextureButton、SophisticatedBackpackLayer
+sourceSets.main {
+    java {
+        srcDir("src/shim/rip/ysm/compat")
+        exclude(
+            "rip/ysm/compat/**",
+            "com/elfmcys/yesstevemodel/client/compat/**",
+            "com/elfmcys/yesstevemodel/platform/forge/mixin/client/create/**",
+            "com/elfmcys/yesstevemodel/platform/forge/mixin/client/parcool/**",
+            "com/elfmcys/yesstevemodel/platform/forge/ForgeClientSetupHooks.java",
+            "com/elfmcys/yesstevemodel/platform/forge/client/animation/predicate/TouhouMaidAnimationPredicate.java",
+            "com/elfmcys/yesstevemodel/platform/forge/client/gui/TouhouMaidModelScreen.java",
+            "com/elfmcys/yesstevemodel/platform/forge/client/gui/TouhouMaidTextureScreen.java",
+            "com/elfmcys/yesstevemodel/platform/forge/client/gui/button/TouhouMaidModelButton.java",
+            "com/elfmcys/yesstevemodel/platform/forge/client/gui/button/TouhouMaidTextureButton.java",
+            "com/elfmcys/yesstevemodel/platform/forge/client/renderer/layer/SophisticatedBackpackLayer.java",
+        )
+    }
+    // shim 落点说明：srcDir 根即 rip/ysm/compat 包目录（文件相对路径只剩文件名），
+    // 天然不命中上方 "rip/ysm/compat/**" 排除模式——否则排除会把版本独有 shim 一并杀掉
+    //（shim 与被排除源同包同名 FQCN，靠 sourceSets 级 exclude 与生成树互斥）。
+    // shim 内容 = 门面签名镜像 + mod-absent 返回值，运行时语义与 1.20.1 守卫链缺席分支一致。
+}
 tasks {
     processResources {
         // 第三方 accessor mixin（Create/ParCool 桥）：1.16.5 无效且加载即炸 → 不进 1.16.5 jar
@@ -91,9 +128,14 @@ tasks {
 
 // mixin json 的 compatibilityLevel 是 JSON 字面量（stonecutter 注释预处理不适用于 json），
 // 构建期 token 替换：JAVA_17 → JAVA_8（1.16.5 线产物即 Java 8 字节码，与其保持一致）
+// pack.mcmeta 同理：pack_format 未版本化（骨架卡移交项），1.16.5 资源包 = 6（共享源写
+// 的是 1.20.1 口径的 15），同一替换模式按版本 token 替换
 tasks.named<ProcessResources>("processResources") {
     filesMatching("*.mixins.json") {
         filter { line: String -> line.replace("\"JAVA_17\"", "\"JAVA_8\"") }
+    }
+    filesMatching("pack.mcmeta") {
+        filter { line: String -> line.replace("\"pack_format\": 15", "\"pack_format\": 6") }
     }
     val props = mapOf(
         "mod_id" to project.property("archives_name") as String,

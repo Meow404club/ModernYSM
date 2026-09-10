@@ -5,8 +5,8 @@
 ## 阶段
 - phase: 架构重构（Stonecutter 迁移）执行期——M0 骨架
 - done: [RAG 34 源全量索引(407308块), openysm.cpp 研究(b573c7b), Stonecutter 调研(a780867), ADR 定案(decisions.adr-stonecutter-2026-09-10), curator 入库]
-- current: M0 骨架已交付待审（review-merge 审查中，合并锁独占）；POC 实跑收官——unimined 三版本全 PASS，legacy/ 方案作废；native-align coder 在途
-- next: 骨架合入 dev → 派 m0-merge-sources（三端源码合并）→ M1 五卡并行；M2 1.16.5 路线已定（unimined）
+- current: M0 骨架已合入（e9f0b61）；后台并行：m0-merge-sources（源码合并）、native-align（子模块+对齐）
+- next: 两卡返回 → 串行 review-merge → M1 五卡并行（capability/network/events×2/registry）
 
 ## ADR 摘要（decisions.adr-stonecutter-2026-09-10）
 - architectury-api 彻底移除（@ExpectPlatform 无织入方）；**cardinal 与 forge_config_api_port 直接删**（全仓仅 fabric 源集使用，forge 通道纯 net.minecraftforge capability / ForgeConfigSpec）
@@ -21,14 +21,15 @@
 |---|---|---|---|
 | rag-bootstrap | merged | dev | cfeaae1；407308 块；共享库 402946 块净化副本 |
 | arch-stonecutter-refactor | executing | - | ADR 定案，M0~M4 里程碑，11 张任务卡已登记 state |
-| m0-stonecutter-skeleton | in_review | work/m0-stonecutter-skeleton | bda16fe 283eb87；build+runClient 双过；review-merge 审查中 |
+| m0-stonecutter-skeleton | merged | dev | e9f0b61（no-ff+GPG）；审查全项通过；遗留 license=TODO 归 M1 |
 | m0-merge-sources | queued | - | 三端源码合并进 src/main（依赖骨架合并） |
 | mig-* (7卡) | queued | - | M1 并行：capability/network/events×2/registry-config/platform-util/compat |
 | mig-purge-architectury | queued | - | M1 收尾门禁：全仓 dev.architectury=0 |
 | poc-forge-1165 | done | - | 定案：unimined 线三代全 PASS，legacy/ 作废；1.7.10/1.12.2 源码条件化推迟 M5 |
 | poc-execute-unimined | merged | - | 实跑闭环：三版本 BUILD SUCCESSFUL+SRG 抽查过；报告 tmp/poc-1165/RUN-REPORT.md |
 | native-openysm-cpp | closed | - | 用户裁决：自带实现已完整，上游仅档案存查（tmp/harvest/openysm-cpp） |
-| native-align-src | in_progress | work/native-align-src | 仓内 native 只有二进制——上游 MIT 源码打底，重建 nInitSIMD+stateArray，对拍验证 |
+| native-align-src | in_progress | work/native-align-src | 重启重派：复用前任全套反汇编；新增子模块接入（fork pin 3e86bb0，patch 落 native/patches） |
+| m0-merge-sources | in_progress | work/m0-merge-sources | 三端源码合并进 src/main（common+forge→platform/forge，fabric 原地保留） |
 | harvest-curator-1 | merged | - | stonecutter-template 入 RAG（17 文件）；openysm-cpp 不入库零污染 |
 
 ## 最近决策

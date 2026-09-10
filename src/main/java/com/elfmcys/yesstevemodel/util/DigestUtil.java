@@ -1,8 +1,9 @@
 package com.elfmcys.yesstevemodel.util;
 
+import rip.ysm.util.YsmStrings;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HexFormat;
 
 public class DigestUtil {
     private static final ThreadLocal<MessageDigest> MD5_TL = ThreadLocal.withInitial(() -> {
@@ -46,10 +47,10 @@ public class DigestUtil {
     }
 
     public static String md5Hex(byte[] input) {
-        return HexFormat.of().formatHex(md5(input));
+        return YsmStrings.formatHex(md5(input));
     }
 
     public static String sha256Hex(byte[] input) {
-        return HexFormat.of().formatHex(sha256(input));
+        return YsmStrings.formatHex(sha256(input));
     }
 }

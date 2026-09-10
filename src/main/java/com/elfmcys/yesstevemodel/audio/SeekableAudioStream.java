@@ -45,7 +45,10 @@ public class SeekableAudioStream implements IAudioStreamSupport {
             return EMPTY_BUFFER;
         }
         int i2 = this.seekPoints.getInt(this.readLimit);
-        ByteBuffer byteBufferSlice = this.audioData.slice(this.position, i2);
+        ByteBuffer windowBuffer = this.audioData.duplicate();
+        windowBuffer.position(this.position);
+        windowBuffer.limit(this.position + i2);
+        ByteBuffer byteBufferSlice = windowBuffer.slice();
         this.readLimit++;
         this.position += i2;
         return byteBufferSlice;

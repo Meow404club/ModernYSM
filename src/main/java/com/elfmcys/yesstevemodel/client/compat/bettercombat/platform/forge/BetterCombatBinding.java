@@ -9,17 +9,17 @@ import net.bettercombat.api.client.BetterCombatClientEvents;
 import net.bettercombat.client.animation.AttackAnimationSubStack;
 import net.minecraft.client.player.AbstractClientPlayer;
 
-import java.lang.invoke.VarHandle;
+import java.lang.reflect.Field;
 
 public class BetterCombatBinding {
 
-    private static VarHandle attackAnimationHandle;
+    private static Field attackAnimationField;
 
     public static void initialize() {
-        VarHandleHelper.findField(AbstractClientPlayer.class, "attackAnimation", AttackAnimationSubStack.class).ifPresent(varHandle -> {
-            attackAnimationHandle = varHandle;
+        VarHandleHelper.findField(AbstractClientPlayer.class, "attackAnimation", AttackAnimationSubStack.class).ifPresent(field -> {
+            attackAnimationField = field;
         });
-        if (attackAnimationHandle == null) {
+        if (attackAnimationField == null) {
             return;
         }
         BetterCombatClientEvents.ATTACK_START.register(new BetterCombatAttackHandler());
@@ -30,7 +30,11 @@ public class BetterCombatBinding {
     }
 
     private static AttackAnimationSubStack getAttackAnimationStack(AbstractClientPlayer player) {
-        return (AttackAnimationSubStack) attackAnimationHandle.get(player);
+        try {
+            return (AttackAnimationSubStack) attackAnimationField.get(player);
+        } catch (IllegalAccessException e) {
+            return null;
+        }
     }
 
     private static String getAttackAnimationName(IContext<AbstractClientPlayer> context) {

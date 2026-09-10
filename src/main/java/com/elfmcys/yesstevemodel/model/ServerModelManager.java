@@ -65,6 +65,7 @@ import java.nio.file.attribute.FileTime;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.*;
+import rip.ysm.util.YsmStrings;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -844,7 +845,7 @@ public final class ServerModelManager {
                 aggregate.update((byte) 0);
             }
         }
-        current.fingerprint = HexFormat.of().formatHex(aggregate.digest());
+        current.fingerprint = YsmStrings.formatHex(aggregate.digest());
         SourceSnapshot existing = snapshots.putIfAbsent(cacheKey, current);
         return existing != null ? existing : current;
     }
@@ -875,7 +876,7 @@ public final class ServerModelManager {
                 if (read > 0) digest.update(buffer, 0, read);
             }
         }
-        return HexFormat.of().formatHex(digest.digest());
+        return YsmStrings.formatHex(digest.digest());
     }
 
     private static MessageDigest newSha256() {
@@ -1439,7 +1440,7 @@ public final class ServerModelManager {
         addSourceTreeState(BUILT, "built", digest);
         addSourceTreeState(CUSTOM, "custom", digest);
         addSourceTreeState(AUTH, "auth", digest);
-        return HexFormat.of().formatHex(digest.digest());
+        return YsmStrings.formatHex(digest.digest());
     }
 
     private static void addSourceTreeState(Path root, String group, MessageDigest digest) throws IOException {

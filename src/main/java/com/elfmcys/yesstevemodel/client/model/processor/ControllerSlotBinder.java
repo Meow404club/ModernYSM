@@ -22,8 +22,8 @@ public class ControllerSlotBinder<T extends GeoEntity<?>, TModel> implements Mod
     private final BiFunction<String, T, IAnimationController<T>> controllerFactory;
 
     public ControllerSlotBinder(String prefix, String slotName, AnimationDataProvider<TModel> animationDataProvider, BiFunction<String, T, IAnimationController<T>> controllerFactory) {
-        this.controllerNameMatcher = Pattern.compile(String.format("^%s\\.%s(_.+){0,1}$", prefix, slotName)).asMatchPredicate();
-        this.molangEventMatcher = Pattern.compile(String.format("^%s_ctrl_%s(_.+){0,1}$", prefix, slotName)).asMatchPredicate();
+        this.controllerNameMatcher = s -> Pattern.compile(String.format("^%s\\.%s(_.+){0,1}$", prefix, slotName)).matcher(s).matches();
+        this.molangEventMatcher = s -> Pattern.compile(String.format("^%s_ctrl_%s(_.+){0,1}$", prefix, slotName)).matcher(s).matches();
         this.animationDataProvider = animationDataProvider;
         this.controllerFactory = controllerFactory;
     }

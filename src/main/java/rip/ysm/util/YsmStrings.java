@@ -21,4 +21,16 @@ public final class YsmStrings {
         }
         return true;
     }
+
+    /** 替代 Java 17 的 HexFormat.of().formatHex(byte[])：小写十六进制、无分隔符。 */
+    public static String formatHex(byte[] bytes) {
+        char[] out = new char[bytes.length * 2];
+        char[] hex = "0123456789abcdef".toCharArray();
+        for (int i = 0; i < bytes.length; i++) {
+            int v = bytes[i] & 0xFF;
+            out[i * 2] = hex[v >>> 4];
+            out[i * 2 + 1] = hex[v & 0x0F];
+        }
+        return new String(out);
+    }
 }

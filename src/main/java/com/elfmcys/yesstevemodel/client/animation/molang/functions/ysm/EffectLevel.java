@@ -28,8 +28,9 @@ public class EffectLevel extends ContextFunction<Entity> {
             if (effectId != null) {
                 MobEffect mobEffect = BuiltInRegistries.MOB_EFFECT.get(effectId);
                 if (mobEffect != null) {
-                    if (context.entity().geoInstance() instanceof PlayerCapability cap
-                            && !cap.isLocalPlayerModel()) {
+                    if (context.entity().geoInstance() instanceof PlayerCapability
+                            && ((PlayerCapability) context.entity().geoInstance()).isLocalPlayerModel()) {
+                        PlayerCapability cap = (PlayerCapability) context.entity().geoInstance();
                         effects += cap.getPositionTracker().getEffectAmplifier(mobEffect);
                     } else if (((IContext<?>)context.entity()).entity() instanceof LivingEntity) {
                         MobEffectInstance mobEffectInstance = ((LivingEntity)((IContext<?>)context.entity()).entity())

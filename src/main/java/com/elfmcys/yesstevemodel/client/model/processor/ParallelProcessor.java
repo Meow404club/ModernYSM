@@ -33,13 +33,13 @@ public class ParallelProcessor<T extends GeoEntity<?>, TModel> implements ModelP
         this.prefix = prefix;
         this.slotName = slotName;
         if (allowExtraSlots) {
-            this.animationEntryMatcher = Pattern.compile(String.format("^%s\\.%s_.+", prefix, slotName)).asMatchPredicate();
-            this.controllerEntryMatcher = Pattern.compile(String.format("^%s_ctrl_%s_.+", prefix, slotName)).asMatchPredicate();
+            this.animationEntryMatcher = s -> Pattern.compile(String.format("^%s\\.%s_.+", prefix, slotName)).matcher(s).matches();
+            this.controllerEntryMatcher = s -> Pattern.compile(String.format("^%s_ctrl_%s_.+", prefix, slotName)).matcher(s).matches();
         } else {
-            this.animationEntryMatcher = Pattern.compile(String.format("^%s\\.%s_[0-7]$", prefix, slotName)).asMatchPredicate();
-            this.controllerEntryMatcher = Pattern.compile(String.format("^%s_ctrl_%s_[0-7]$", prefix, slotName)).asMatchPredicate();
+            this.animationEntryMatcher = s -> Pattern.compile(String.format("^%s\\.%s_[0-7]$", prefix, slotName)).matcher(s).matches();
+            this.controllerEntryMatcher = s -> Pattern.compile(String.format("^%s_ctrl_%s_[0-7]$", prefix, slotName)).matcher(s).matches();
         }
-        this.animationNameMatcher = Pattern.compile(String.format("^%s[0-7]$", slotName)).asMatchPredicate();
+        this.animationNameMatcher = s -> Pattern.compile(String.format("^%s[0-7]$", slotName)).matcher(s).matches();
         this.animationDataProvider = animationDataProvider;
         this.controllerFactory = controllerFactory;
     }

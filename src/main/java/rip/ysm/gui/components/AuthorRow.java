@@ -46,9 +46,9 @@ public final class AuthorRow extends OptionRow<Object> {
         g.blit(avatar, ax, ay, AVATAR_SIZE, AVATAR_SIZE, 0.0f, 0.0f, 64, 64, 64, 64);
 
         Font font = Minecraft.getInstance().font;
-        String name = ModelMetadataPresenter.getLocalizedModelString(owner.renderContext, "metadata.authors.%d.name".formatted(authorIndex), author.getName());
-        String role = ModelMetadataPresenter.getLocalizedModelString(owner.renderContext, "metadata.authors.%d.role".formatted(authorIndex), author.getRole());
-        String comment = ModelMetadataPresenter.getLocalizedModelString(owner.renderContext, "metadata.authors.%d.comment".formatted(authorIndex), author.getComment());
+        String name = ModelMetadataPresenter.getLocalizedModelString(owner.renderContext, String.format("metadata.authors.%d.name", authorIndex), author.getName());
+        String role = ModelMetadataPresenter.getLocalizedModelString(owner.renderContext, String.format("metadata.authors.%d.role", authorIndex), author.getRole());
+        String comment = ModelMetadataPresenter.getLocalizedModelString(owner.renderContext, String.format("metadata.authors.%d.comment", authorIndex), author.getComment());
 
         int tx = ax + AVATAR_SIZE + 8;
         int textRight = getX() + width - 6;

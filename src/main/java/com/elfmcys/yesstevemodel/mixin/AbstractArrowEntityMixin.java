@@ -3,7 +3,11 @@ package com.elfmcys.yesstevemodel.mixin;
 import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.util.StringPool;
 import com.elfmcys.yesstevemodel.util.accessors.ProjectileStateAccessor;
+//? if >=1.17 {
 import net.minecraft.core.registries.BuiltInRegistries;
+//?} else {
+/*import net.minecraft.core.Registry;
+*///?}
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -48,7 +52,13 @@ public class AbstractArrowEntityMixin implements ProjectileStateAccessor {
     @Inject(at = {@At("RETURN")}, method = {"setOwner(Lnet/minecraft/world/entity/Entity;)V"})
     private void onSetOwner(Entity entity, CallbackInfo callbackInfo) {
         ResourceLocation key;
+        // 1.16.5 无 BuiltInRegistries（1.19.3+），等价入口 Registry.ITEM（1.16.5 Registry.java:140，
+        // DefaultedRegistry<Item>）；getKey 语义一致
+        //? if >=1.17 {
         if (YesSteveModel.isAvailable() && (entity instanceof LivingEntity) && (key = BuiltInRegistries.ITEM.getKey(((LivingEntity) entity).getMainHandItem().getItem())) != null) {
+        //?} else {
+        /*if (YesSteveModel.isAvailable() && (entity instanceof LivingEntity) && (key = Registry.ITEM.getKey(((LivingEntity) entity).getMainHandItem().getItem())) != null) {
+        *///?}
             this.ownerMainHandItem = key.toString();
         }
     }

@@ -1,6 +1,9 @@
 package com.elfmcys.yesstevemodel.mixin.plugin;
 
 import com.elfmcys.yesstevemodel.util.obfuscate.Keep;
+//? if <1.17 {
+/*import com.llamalad7.mixinextras.MixinExtrasBootstrap;
+*///?}
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
@@ -12,6 +15,13 @@ public class MixinTweaker implements IMixinConfigPlugin {
 
     @Keep
     public void onLoad(String str) {
+        // 1.16.5 Forge 不内置 MixinExtras（1.20.1 Forge 47.x 自带）：common jar 已平铺内嵌进
+        // 1.16.5 产物（build.unimined.gradle.kts embedMixinExtras），在此配置加载早期显式引导，
+        // 使 EntityRenderDispatcherMixin 的 @WrapWithCondition 生效；onLoad 先于本配置任何
+        // mixin 应用，时序安全。1.20.1 侧该调用整体剔除，运行时行为零变化。
+        //? if <1.17 {
+        /*MixinExtrasBootstrap.init();
+        *///?}
     }
 
     @Keep

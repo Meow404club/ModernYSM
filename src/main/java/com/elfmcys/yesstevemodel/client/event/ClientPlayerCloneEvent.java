@@ -3,9 +3,9 @@ package com.elfmcys.yesstevemodel.client.event;
 import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.capability.PlayerCapability;
 import com.elfmcys.yesstevemodel.network.NetworkHandler;
-import dev.architectury.event.events.client.ClientPlayerEvent;
 import net.minecraft.client.player.LocalPlayer;
-import rip.ysm.api.PlatformAPI;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
+import net.minecraftforge.common.MinecraftForge;
 import rip.ysm.api.capability.CapabilityLifecycle;
 
 public final class ClientPlayerCloneEvent {
@@ -14,7 +14,12 @@ public final class ClientPlayerCloneEvent {
     }
 
     public static void register() {
-        ClientPlayerEvent.CLIENT_PLAYER_RESPAWN.register(ClientPlayerCloneEvent::onClientPlayerRespawn);
+        // architectury ClientPlayerEvent.CLIENT_PLAYER_RESPAWN 在 forge 端 = ClientPlayerNetworkEvent.Clone（不可取消）
+        MinecraftForge.EVENT_BUS.addListener(ClientPlayerCloneEvent::onClientPlayerClone);
+    }
+
+    private static void onClientPlayerClone(ClientPlayerNetworkEvent.Clone event) {
+        onClientPlayerRespawn(event.getOldPlayer(), event.getNewPlayer());
     }
 
     private static void onClientPlayerRespawn(LocalPlayer oldPlayer, LocalPlayer newPlayer) {

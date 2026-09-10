@@ -1,8 +1,8 @@
 package rip.ysm.compat.touhoulittlemaid;
 
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import com.elfmcys.yesstevemodel.network.message.FeedbackData;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.Projectile;
 import rip.ysm.compat.touhoulittlemaid.platform.forge.TouhouMaidCompatImpl;
@@ -36,7 +36,7 @@ public final class TouhouMaidCompat {
         TouhouMaidCompatImpl.applyFeedback(entity, message);
     }
 
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static void playMaidAnimation(Entity entity, String str) {
         TouhouMaidCompatImpl.playMaidAnimation(entity, str);
     }

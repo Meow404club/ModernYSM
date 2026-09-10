@@ -16,8 +16,8 @@ import java.util.Collections;
  * （ADR 替代矩阵，M1 mig-platform-util）。方法名与语义对齐原 architectury API，
  * 调用方迁移是纯改名替换：
  * <ul>
- *   <li>{@code dev.architectury.platform.Platform} → 本类</li>
- *   <li>{@code dev.architectury.utils.GameInstance.getServer()} → {@link #getServer()}</li>
+ *   <li>architectury {@code Platform} → 本类</li>
+ *   <li>architectury {@code GameInstance.getServer()} → {@link #getServer()}</li>
  * </ul>
  * 实现（Forge 1.20.1 源码核对）：
  * <ul>

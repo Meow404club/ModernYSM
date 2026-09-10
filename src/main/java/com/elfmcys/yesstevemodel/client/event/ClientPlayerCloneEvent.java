@@ -6,7 +6,6 @@ import com.elfmcys.yesstevemodel.network.NetworkHandler;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.common.MinecraftForge;
-import rip.ysm.api.capability.CapabilityLifecycle;
 
 public final class ClientPlayerCloneEvent {
 
@@ -26,8 +25,10 @@ public final class ClientPlayerCloneEvent {
         if (!YesSteveModel.isAvailable() || !NetworkHandler.isClientConnected()) {
             return;
         }
-        CapabilityLifecycle.revive(oldPlayer);
+        // 原 rip.ysm CapabilityLifecycle 门面退役：revive/invalidate 即 Entity 两同名方法直调
+        //（Clone 读旧 caps 时序与 server 侧 CapabilityEvent.onPlayerCloned 一致：revive -> copy -> invalidate）
+        oldPlayer.reviveCaps();
         PlayerCapability.get(oldPlayer).ifPresent(cap -> PlayerCapability.get(newPlayer).ifPresent(cap2 -> cap2.copyFrom(cap)));
-        CapabilityLifecycle.invalidate(oldPlayer);
+        oldPlayer.invalidateCaps();
     }
 }

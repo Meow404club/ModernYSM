@@ -1,13 +1,13 @@
 package com.elfmcys.yesstevemodel.network.message;
 
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import com.elfmcys.yesstevemodel.capability.VehicleCapability;
 import com.elfmcys.yesstevemodel.capability.VehicleModelCapability;
 import com.elfmcys.yesstevemodel.event.EntityJoinCallbackEvent;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.util.StringPool;
 import it.unimi.dsi.fastutil.ints.Int2FloatOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.Entity;
@@ -55,7 +55,7 @@ public class S2CSyncVehicleModelPacket {
         }
     }
 
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static void handleCapability(Entity entity, VehicleModelCapability capability, Int2FloatOpenHashMap floatMap) {
         VehicleCapability.get(entity).ifPresent(vehicleCapability -> {
             vehicleCapability.setOwnerModelId(capability.getOwnerModelId());

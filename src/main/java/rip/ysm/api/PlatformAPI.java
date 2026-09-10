@@ -5,7 +5,7 @@ import net.minecraftforge.api.distmarker.Dist;
 
 /**
  * 平台门面（rip.ysm.api 公共 API 面，兼容旧调用点）。M1 起内部委托
- * {@link YsmPlatform}（Forge 原生），不再依赖 architectury @ExpectPlatform/织入。
+ * {@link YsmPlatform}（Forge 原生），不再依赖 architectury 织入注解。
  * 调用方签名不变：isServer/getPlatformName。
  */
 public final class PlatformAPI {

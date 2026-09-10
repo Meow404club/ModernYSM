@@ -4,7 +4,7 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * 项目内事件结果三元组，语义对齐 architectury 9.2.14 的
- * dev.architectury.event.EventResult（javap 核对：PASS/STOP/TRUE/FALSE
+ * architectury event 包 EventResult 的复刻（javap 核对：PASS/STOP/TRUE/FALSE
  * 四单例 + interruptsFurtherEvaluation/value 两字段）：
  * pass = 不干预且不拦截后续监听；interrupt = 干预并拦截后续监听；
  * fail* 为 interrupt* 别名（新版 architectury 命名，保留以便后续卡迁移）。

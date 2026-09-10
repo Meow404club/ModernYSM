@@ -16,7 +16,6 @@ public final class YsmEventBootstrap {
         PlayerLogoutEvent.register();
         CommonEvent.register();
         CommandRegistry.register();
-        CapabilityEvent.register();
         if (!PlatformAPI.isServer()) {
             EntityJoinCallbackEvent.register();
             ClientSetupEvent.register();
@@ -25,7 +24,6 @@ public final class YsmEventBootstrap {
             ClientPlayerCloneEvent.register();
             AnimationLockEvent.register();
             PlayerSkinTextureManager.register();
-            RendererManager.register();
             PlayerModelToggleKey.register();
             AnimationRouletteKey.register();
             DebugAnimationKey.register();

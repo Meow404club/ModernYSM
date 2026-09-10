@@ -34,7 +34,11 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+//? if >1.17 {
 import net.minecraft.client.gui.components.Renderable;
+//?} else {
+/*import net.minecraft.client.gui.components.Widget;
+ *///?}
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -372,7 +376,7 @@ public class AnimationRouletteScreen extends Screen {
         renderRadialBackground(guiGraphics.pose(), mouseX, mouseY);
         renderRadialButtons(guiGraphics);
         renderPageInfo(guiGraphics);
-        for (Renderable renderable : ((ScreenAccessor) this).ysm$getRenderables()) {
+        for (/*? if <1.17 {*/ /*Widget *//*?} else {*/ Renderable /*?}*/ renderable : ((ScreenAccessor) this).ysm$getRenderables()) {
             if (!(renderable instanceof ISpecialWidget)) {
                 renderable.render(guiGraphics, mouseX, mouseY, partialTick);
             }
@@ -385,7 +389,7 @@ public class AnimationRouletteScreen extends Screen {
         }
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(0.0f, -this.configScrollOffset, 0.0f);
-        for (Renderable renderable2 : ((ScreenAccessor) this).ysm$getRenderables()) {
+        for (/*? if <1.17 {*/ /*Widget *//*?} else {*/ Renderable /*?}*/ renderable2 : ((ScreenAccessor) this).ysm$getRenderables()) {
             if (renderable2 instanceof ISpecialWidget) {
                 renderable2.render(guiGraphics, mouseX, scrolledMouseY, partialTick);
             }

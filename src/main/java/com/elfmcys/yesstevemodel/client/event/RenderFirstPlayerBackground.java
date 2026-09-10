@@ -11,7 +11,9 @@ import com.elfmcys.yesstevemodel.event.api.SpecialPlayerRenderEvent;
 import com.elfmcys.yesstevemodel.geckolib3.geo.NativeModelRenderer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+//? if >=1.17 {
 import com.mojang.math.Axis;
+//? }
 import com.elfmcys.yesstevemodel.event.api.EventResult;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -66,6 +68,10 @@ public class RenderFirstPlayerBackground {
             VertexConsumer buffer = multiBufferSource.getBuffer(CustomEntityTranslucentRenderType.get(resourceLocationB_));
             if (instance != null) {
                 poseStack.pushPose();
+                // 1.16.5 Options.bobView 为 public boolean 字段（1.17+ 才是 OptionInstance 供应商风格）
+                //? if <1.17
+                // if (Minecraft.getInstance().options.bobView) {
+                //? if >=1.17
                 if (Minecraft.getInstance().options.bobView().get()) {
                     applyHandTransform(poseStack, partialTick, player);
                 }
@@ -80,7 +86,13 @@ public class RenderFirstPlayerBackground {
         float walkPhase = -(player.walkDist + ((player.walkDist - player.walkDistO) * partialTick));
         float fLerp = Mth.lerp(partialTick, player.oBob, player.bob);
         poseStack.translate((-Mth.sin(walkPhase * 3.1415927f)) * fLerp * 0.5f, Math.abs(Mth.cos(walkPhase * 3.1415927f) * fLerp), 0.0d);
-        poseStack.mulPose(Axis.ZN.rotationDegrees(Mth.sin(walkPhase * 3.1415927f) * fLerp * 3.0f));
-        poseStack.mulPose(Axis.XN.rotationDegrees(Math.abs(Mth.cos((walkPhase * 3.1415927f) - 0.2f) * fLerp) * 5.0f));
+        //? if <1.17
+        // poseStack.mulPose(com.mojang.math.Vector3f.ZN.rotationDegrees(Mth.sin(walkPhase * 3.1415927f) * fLerp * 3.0f));
+        //? if >=1.17
+        // poseStack.mulPose(Axis.ZN.rotationDegrees(Mth.sin(walkPhase * 3.1415927f) * fLerp * 3.0f));
+        //? if <1.17
+        // poseStack.mulPose(com.mojang.math.Vector3f.XN.rotationDegrees(Math.abs(Mth.cos((walkPhase * 3.1415927f) - 0.2f) * fLerp) * 5.0f));
+        //? if >=1.17
+        // poseStack.mulPose(Axis.XN.rotationDegrees(Math.abs(Mth.cos((walkPhase * 3.1415927f) - 0.2f) * fLerp) * 5.0f));
     }
 }

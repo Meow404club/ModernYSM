@@ -229,8 +229,17 @@ public abstract class AnimatableEntity<TEntity extends Entity> {
         float limbSwingAmount = 0.0f;
         float limbSwing = 0.0f;
         if (!shouldSit && entity.isAlive() && livingEntity != null) {
+            // 1.20.1 WalkAnimationState.speed/position 与 1.16.5 LivingEntityRenderer 的
+            // animationSpeed/animationPosition 手工展开逐项等价：
+            // speed(p)=lerp(p, speedOld, speed)；position(p)=position - speed*(1-p)
+            // （vanilla-mc-1201 WalkAnimationState / vanilla-mc-1165 LivingEntityRenderer:94）
+            //? if <1.17 {
+            // limbSwingAmount = Mth.lerp(partialTick, livingEntity.animationSpeedOld, livingEntity.animationSpeed);
+            // limbSwing = livingEntity.animationPosition - livingEntity.animationSpeed * (1.0f - partialTick);
+            //? } else {
             limbSwingAmount = livingEntity.walkAnimation.speed(partialTick);
             limbSwing = livingEntity.walkAnimation.position(partialTick);
+            //? }
             if (livingEntity.isBaby()) {
                 limbSwing *= 3.0f;
             }
@@ -261,6 +270,9 @@ public abstract class AnimatableEntity<TEntity extends Entity> {
 
             netHeadYaw = lerpHeadRot - lerpBodyRot;
         }
+        //? if <1.17
+        // modelData.rawHeadPitch = Mth.lerp(partialTick, entity.xRotO, entity.xRot);
+        //? if >=1.17
         modelData.rawHeadPitch = Mth.lerp(partialTick, entity.xRotO, entity.getXRot());
         modelData.headPitch = -modelData.rawHeadPitch;
         modelData.rawNetHeadYaw = netHeadYaw;
@@ -385,7 +397,11 @@ public abstract class AnimatableEntity<TEntity extends Entity> {
     }
 
     public boolean isDebugMode() {
+        //? if <1.17 {
+        // return Minecraft.getInstance().level == this.entity.level && !this.entity.removed;
+        //? } else {
         return Minecraft.getInstance().level == this.entity.level() && !this.entity.isRemoved();
+        //? }
     }
 
     public void setAnimationState(String name, AnimationState state) {

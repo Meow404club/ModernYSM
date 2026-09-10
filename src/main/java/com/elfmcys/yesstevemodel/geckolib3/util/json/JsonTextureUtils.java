@@ -5,10 +5,13 @@ import com.elfmcys.yesstevemodel.client.texture.OuterFileTexture;
 import com.elfmcys.yesstevemodel.util.data.OrderedStringMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+//? if >=1.17 {
 import org.apache.commons.compress.utils.Lists;
+//? }
 import org.apache.commons.lang3.tuple.Pair;
 
 import org.jetbrains.annotations.Nullable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,8 +29,13 @@ public class JsonTextureUtils {
 
         if (!element.isJsonArray()) return null;
 
+        //? if <1.17 {
+        // List<String> keys = new ArrayList<>();
+        // List<OuterFileTexture> values = new ArrayList<>();
+        //? } else {
         List<String> keys = Lists.newArrayList();
         List<OuterFileTexture> values = Lists.newArrayList();
+        //? }
 
         for (JsonElement rawTexture : element.getAsJsonArray()) {
             Pair<String, OuterFileTexture> texture = getTexture(resource, rawTexture);

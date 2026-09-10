@@ -18,7 +18,13 @@ import com.elfmcys.yesstevemodel.util.log.ILogger;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.Component;
+// RandomSource 为 1.17+ 类；1.16.5 用 java.util.Random
+//? if <1.17 {
+// import java.util.Random;
+//? } else {
 import net.minecraft.util.RandomSource;
+//? }
+// ^ RandomSource 为 1.17+ 类；1.16.5 用 java.util.Random（消费面仅 nextFloat/nextInt）
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
@@ -42,6 +48,9 @@ public class AnimationContext<TEntity> implements IContext<TEntity> {
 
     public AudioPlayerManager audioPlayerManager;
 
+    //? if <1.17
+    // public Random random;
+    //? if >=1.17
     public RandomSource random;
 
     public VariableStorage storage;
@@ -103,6 +112,9 @@ public class AnimationContext<TEntity> implements IContext<TEntity> {
     }
 
     @Override
+    //? if <1.17
+    // public Random random() {
+    //? if >=1.17
     public RandomSource random() {
         return this.random;
     }
@@ -254,6 +266,9 @@ public class AnimationContext<TEntity> implements IContext<TEntity> {
         this.foreignStorage = variableStorage;
     }
 
+    //? if <1.17
+    // public void setRandom(Random random) {
+    //? if >=1.17
     public void setRandom(RandomSource random) {
         this.random = random;
     }

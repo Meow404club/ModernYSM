@@ -15,6 +15,10 @@ public final class RenderUtils {
 
     public static void rotateMatrixAroundBone(PoseStack poseStack, IBone bone) {
         if (bone.getRotationZ() != 0.0F || bone.getRotationY() != 0.0F || bone.getRotationX() != 0.0F) {
+            // joml rotateZYX(z,y,x) ≡ 1.16.5 moj Quaternion(x,y,z,false)（同为 Rx·Ry·Rz，列向量约定）
+            //? if <1.17
+            // poseStack.mulPose(new com.mojang.math.Quaternion(bone.getRotationZ(), bone.getRotationY(), bone.getRotationX(), false));
+            //? if >=1.17
             poseStack.mulPose(new Quaternionf().rotateZYX(bone.getRotationZ(), bone.getRotationY(), bone.getRotationX()));
         }
     }

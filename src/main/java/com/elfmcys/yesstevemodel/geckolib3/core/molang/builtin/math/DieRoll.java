@@ -3,7 +3,12 @@ package com.elfmcys.yesstevemodel.geckolib3.core.molang.builtin.math;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.context.IContext;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.funciton.ContextFunction;
 import com.elfmcys.yesstevemodel.molang.runtime.ExecutionContext;
+// RandomSource 为 1.17+ 类；1.16.5 用 java.util.Random
+//? if <1.17 {
+// import java.util.Random;
+//? } else {
 import net.minecraft.util.RandomSource;
+//? }
 
 public class DieRoll extends ContextFunction<Object> {
     @Override
@@ -24,6 +29,9 @@ public class DieRoll extends ContextFunction<Object> {
             range -= min;
         }
         float total = 0;
+        //? if <1.17
+        // Random rnd = context.entity().random();
+        //? if >=1.17
         RandomSource rnd = context.entity().random();
         while (i-- > 0) {
             total += min + rnd.nextFloat() * range;

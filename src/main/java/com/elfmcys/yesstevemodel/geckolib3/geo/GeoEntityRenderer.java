@@ -5,6 +5,7 @@ import com.elfmcys.yesstevemodel.geckolib3.core.event.predicate.AnimationEvent;
 import com.elfmcys.yesstevemodel.geckolib3.core.util.Color;
 import com.elfmcys.yesstevemodel.geckolib3.geo.animated.AnimatedGeoModel;
 import com.elfmcys.yesstevemodel.geckolib3.util.EModelRenderCycle;
+import com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge;
 import com.elfmcys.yesstevemodel.geckolib3.util.IRenderCycle;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -12,12 +13,15 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
+//? if >=1.17 {
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import com.mojang.math.Axis;
+//? }
+// Axis（1.19.3+）1.16.5 走 com.mojang.math.Vector3f.YP/ZP.rotationDegrees（返回 moj Quaternion）
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
-import com.mojang.math.Axis;
 
 public abstract class GeoEntityRenderer<TEntity extends Entity, T extends AnimatableEntity<TEntity>> extends EntityRenderer<TEntity> implements IGeoRenderer<T> {
 
@@ -29,6 +33,15 @@ public abstract class GeoEntityRenderer<TEntity extends Entity, T extends Animat
 
     public MultiBufferSource bufferSource;
 
+    //? if <1.17 {
+    // public GeoEntityRenderer(net.minecraft.client.renderer.entity.EntityRenderDispatcher context) {
+    //     super(context);
+    //     this.worldMatrix = new Matrix4f();
+    //     this.modelMatrix = new Matrix4f();
+    //     this.renderState = EModelRenderCycle.INITIAL;
+    //     this.bufferSource = null;
+    // }
+    //? } else {
     public GeoEntityRenderer(EntityRendererProvider.Context context) {
         super(context);
         this.worldMatrix = new Matrix4f();
@@ -36,6 +49,7 @@ public abstract class GeoEntityRenderer<TEntity extends Entity, T extends Animat
         this.renderState = EModelRenderCycle.INITIAL;
         this.bufferSource = null;
     }
+    //? }
 
     public void renderEntity(T t, float f, float f2, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
         AnimationEvent<?> event = t.processAnimation(f2);
@@ -48,10 +62,13 @@ public abstract class GeoEntityRenderer<TEntity extends Entity, T extends Animat
             if (renderType != null && (z || zShouldEntityAppearGlowing)) {
                 Color color = getRenderColor(t, f2, poseStack, multiBufferSource, null, i);
                 AnimatedGeoModel model = t.getCurrentModel();
-                this.worldMatrix = new Matrix4f(poseStack.last().pose());
+                this.worldMatrix = new Matrix4f(MatrixBridge.pose(poseStack.last()));
                 setCurrentModelRenderCycle(EModelRenderCycle.INITIAL);
                 poseStack.pushPose();
-                poseStack.mulPose(Axis.YP.rotationDegrees(180.0f - f));
+                //? if <1.17
+                // poseStack.mulPose(com.mojang.math.Vector3f.YP.rotationDegrees(180.0f - f));
+                //? if >=1.17
+                // poseStack.mulPose(Axis.YP.rotationDegrees(180.0f - f));
                 renderWithBoneAndRenderType(model, t, f2, renderType, poseStack, multiBufferSource, 0, null, i, packOverlayCoords(entity, 0.0f), color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, color.getAlpha() / 255.0f);
                 poseStack.popPose();
             }
@@ -61,7 +78,7 @@ public abstract class GeoEntityRenderer<TEntity extends Entity, T extends Animat
 
     @Override
     public void renderEarly(T animatable, PoseStack poseStack, float partialTick, MultiBufferSource bufferSource, VertexConsumer buffer, int packedLight, int packedOverlayIn, float red, float green, float blue, float alpha) {
-        this.modelMatrix = new Matrix4f(poseStack.last().pose());
+        this.modelMatrix = new Matrix4f(MatrixBridge.pose(poseStack.last()));
         IGeoRenderer.super.renderEarly(animatable, poseStack, partialTick, bufferSource, buffer, packedLight, packedOverlayIn, red, green, blue, alpha);
     }
 

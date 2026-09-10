@@ -126,6 +126,10 @@ public class AnimatedGeoModel {
     @NotNull
     private List<IBone> lookupBones(@NotNull IntList intList) {
         ReferenceArrayList<IBone> referenceArrayList = new ReferenceArrayList<>(intList.size());
+        // 1.16.5 fastutil 8.3.1 的 IntIterable.forEach(IntConsumer/Consumer) 重载对 lambda 有歧义
+        //? if <1.17
+        // intList.forEach((java.util.function.IntConsumer) i -> referenceArrayList.add(this.boneIdsMap.get(i)));
+        //? if >=1.17
         intList.forEach(i -> referenceArrayList.add(this.boneIdsMap.get(i)));
         return ReferenceLists.unmodifiable(referenceArrayList);
     }

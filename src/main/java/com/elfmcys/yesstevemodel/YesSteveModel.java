@@ -4,13 +4,14 @@ import com.elfmcys.yesstevemodel.config.GeneralConfig;
 import com.elfmcys.yesstevemodel.config.ModSoundEvents;
 import com.elfmcys.yesstevemodel.config.ServerConfig;
 import com.elfmcys.yesstevemodel.event.YsmEventBootstrap;
+import com.elfmcys.yesstevemodel.platform.YsmPlatform;
+import com.elfmcys.yesstevemodel.platform.forge.YesSteveModelForge;
 import com.elfmcys.yesstevemodel.util.obfuscate.Keep;
-import dev.architectury.platform.Platform;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.config.ModConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -48,9 +49,9 @@ public class YesSteveModel {
     }
 
     private static void initConfig() {
-        File oldConfig = Platform.getConfigFolder().resolve("yes_steve_model-common.toml").toFile();
+        File oldConfig = YsmPlatform.getConfigFolder().resolve("yes_steve_model-common.toml").toFile();
         if (oldConfig.isFile()) {
-            File file2 = Platform.getConfigFolder().resolve("yes_steve_model-client.toml").toFile();
+            File file2 = YsmPlatform.getConfigFolder().resolve("yes_steve_model-client.toml").toFile();
             if (!file2.isFile()) {
                 oldConfig.renameTo(file2);
             } else {
@@ -60,7 +61,9 @@ public class YesSteveModel {
         ConfigRegistration.register(MOD_ID, ModConfig.Type.CLIENT, GeneralConfig.buildSpec());
         ConfigRegistration.register(MOD_ID, ModConfig.Type.SERVER, ServerConfig.buildSpec());
         if (!PlatformAPI.isServer()) {
-            ModSoundEvents.REGISTER.register();
+            // registry-config 卡交接：Forge DeferredRegister 显式总线形态；
+            // 总线来自主类静态钩子（原 architectury 无参 register 依赖其全局表）
+            ModSoundEvents.REGISTER.register(YesSteveModelForge.getModEventBus());
         }
     }
 
@@ -73,7 +76,9 @@ public class YesSteveModel {
         return NativeLibLoader.isOnAndroid();
     }
 
-    @Environment(EnvType.CLIENT)
+    // 原 fabric @Environment(EnvType.CLIENT) → Forge @OnlyIn 等价替换：
+    // 专用服剥离本方法（调用方均在 client 包，见 ClientPlayerJoinNotification/PlayerModelToggleKey）
+    @OnlyIn(Dist.CLIENT)
     public static void sendUnavailableMessage() {
         LocalPlayer localPlayer = Minecraft.getInstance().player;
         if (localPlayer != null) {

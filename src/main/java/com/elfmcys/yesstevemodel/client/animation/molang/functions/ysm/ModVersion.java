@@ -2,7 +2,7 @@ package com.elfmcys.yesstevemodel.client.animation.molang.functions.ysm;
 
 import com.elfmcys.yesstevemodel.molang.runtime.ExecutionContext;
 import com.elfmcys.yesstevemodel.molang.runtime.Function;
-import dev.architectury.platform.Platform;
+import com.elfmcys.yesstevemodel.platform.YsmPlatform;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,10 +14,10 @@ public class ModVersion implements Function {
         if (modid == null) {
             return null;
         }
-        if (!Platform.isModLoaded(modid)) {
+        if (!YsmPlatform.isModLoaded(modid)) {
             return null;
         }
-        return Platform.getMod(modid).getVersion();
+        return YsmPlatform.getMod(modid).getVersion();
     }
 
     @Override

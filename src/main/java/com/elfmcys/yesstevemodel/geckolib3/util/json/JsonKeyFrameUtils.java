@@ -38,6 +38,10 @@ public class JsonKeyFrameUtils {
         }
 
         JsonObject obj = element.getAsJsonObject();
+        // gson 2.8.0（1.16.5）无 JsonObject.keySet()（2.8.1+），用 entrySet() 取键
+        //? if < 1.17
+        // for (String time : collectKeySet(obj)) {
+        //? if >= 1.17
         for (String time : obj.keySet()) {
             RawBoneKeyFrame keyframe = new RawBoneKeyFrame();
             keyframe.startTick = convertSecondsToTicks(Float.parseFloat(time));
@@ -221,4 +225,14 @@ public class JsonKeyFrameUtils {
             }
         }
     }
+
+    //? if < 1.17 {
+    // private static java.util.List<String> collectKeySet(JsonObject obj) {
+        // java.util.List<String> keys = new java.util.ArrayList<>();
+        // for (java.util.Map.Entry<String, com.google.gson.JsonElement> entry : obj.entrySet()) {
+            // keys.add(entry.getKey());
+        // }
+        // return keys;
+    // }
+    //? }
 }

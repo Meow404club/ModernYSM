@@ -75,13 +75,22 @@ public class QueryBinding extends ContextBinding {
         entityVar("is_in_water", ctx -> ctx.entity().isInWater());
         entityVar("is_in_water_or_rain", ctx -> ctx.entity().isInWaterRainOrBubble());
         entityVar("is_on_fire", ctx -> ctx.entity().isOnFire());
+        //? if < 1.17
+        // entityVar("is_on_ground", ctx -> ctx.entity().isOnGround());
+//? if >= 1.17
         entityVar("is_on_ground", ctx -> ctx.entity().onGround());
         entityVar("is_riding", ctx -> ctx.entity().isPassenger());
+        //? if < 1.17
+        // entityVar("is_sneaking", ctx -> ctx.entity().isOnGround() && ctx.entity().getPose() == Pose.CROUCHING);
+//? if >= 1.17
         entityVar("is_sneaking", ctx -> ctx.entity().onGround() && ctx.entity().getPose() == Pose.CROUCHING);
         entityVar("is_spectator", ctx -> ctx.entity().isSpectator());
         entityVar("is_sprinting", ctx -> ctx.entity().isSprinting());
         entityVar("is_swimming", ctx -> ctx.entity().isSwimming());
 
+        //? if < 1.17
+        // livingEntityVar("body_x_rotation", ctx -> Mth.lerp(ctx.animationEvent().getFrameTime(), ctx.entity().xRotO, ctx.entity().xRot));
+//? if >= 1.17
         livingEntityVar("body_x_rotation", ctx -> Mth.lerp(ctx.animationEvent().getFrameTime(), ctx.entity().xRotO, ctx.entity().getXRot()));
         livingEntityVar("body_y_rotation", ctx -> Mth.wrapDegrees(Mth.lerp(ctx.animationEvent().getPartialTick(), ctx.entity().yBodyRotO, ctx.entity().yBodyRot)));
         livingEntityVar("health", QueryBinding::getHealth);
@@ -98,6 +107,9 @@ public class QueryBinding extends ContextBinding {
 
         playerEntityVar("cape_flap_amount", QueryBinding::getCapeFlapAmount);
         playerEntityVar("player_level", QueryBinding::getPlayerLevel);
+        //? if < 1.17
+        // playerEntityVar("is_jumping", ctx -> !isFlying(ctx) && !ctx.entity().isPassenger() && !ctx.entity().isOnGround() && !ctx.entity().isInWater());
+        //? if >= 1.17
         playerEntityVar("is_jumping", ctx -> !isFlying(ctx) && !ctx.entity().isPassenger() && !ctx.entity().onGround() && !ctx.entity().isInWater());
 
         clientPlayerEntityVar("has_cape", ctx -> hasCape(ctx.entity()));
@@ -119,6 +131,9 @@ public class QueryBinding extends ContextBinding {
                 return playerCapability.getPositionTracker().isFlying();
             }
         }
+        //? if < 1.17
+        // return context.entity().abilities.flying;
+        //? if >= 1.17
         return context.entity().getAbilities().flying;
     }
 
@@ -162,6 +177,9 @@ public class QueryBinding extends ContextBinding {
     private static int getEquipmentCount(LivingEntity entity) {
         int i = 0;
         for (EquipmentSlot equipmentSlot : EquipmentSlot.values()) {
+            //? if < 1.17
+            // if (equipmentSlot.getType() == EquipmentSlot.Type.ARMOR && !CosmeticArmorHelper.getArmorItem(entity, equipmentSlot).isEmpty()) {
+            //? if >= 1.17
             if (equipmentSlot.isArmor() && !CosmeticArmorHelper.getArmorItem(entity, equipmentSlot).isEmpty()) {
                 i++;
             }
@@ -181,6 +199,9 @@ public class QueryBinding extends ContextBinding {
         if (context.entity() instanceof LocalPlayer) {
             return PlayerEntityFrameState.getHeadYawDelta();
         }
+        //? if < 1.17
+        // return 20.0f * (context.entity().yRot - context.entity().yRotO);
+        //? if >= 1.17
         return 20.0f * (context.entity().getYRot() - context.entity().yRotO);
     }
 

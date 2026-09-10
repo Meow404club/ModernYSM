@@ -17,7 +17,13 @@ import com.elfmcys.yesstevemodel.client.animation.StopAnimationPredicate;
 import com.elfmcys.yesstevemodel.client.model.ModelResourceBundle;
 import com.elfmcys.yesstevemodel.geckolib3.core.controller.CompositeAnimationController;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
+// 1.16.5 自带 commons-lang3 3.9 缺 3.12 的 TriFunction，走同名 shim（geckolib3/core/util）
+//? if < 1.17 {
+// import com.elfmcys.yesstevemodel.geckolib3.core.util.TriFunction;
+//? } else {
 import org.apache.commons.lang3.function.TriFunction;
+//? }
+// ^ 1.16.5 自带 commons-lang3 3.9 缺 3.12 的 TriFunction，走同名 shim
 
 import java.util.function.BiFunction;
 import java.util.function.Consumer;

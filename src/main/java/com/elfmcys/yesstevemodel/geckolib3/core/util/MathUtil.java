@@ -6,8 +6,14 @@ import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 public class MathUtil {
+    //? if < 1.17 {
+    // private static final float DEGREES_TO_RADIANS = (float) (Math.PI / 180.0);
+    // private static final float RADIANS_TO_DEGREES = 180.0F / (float) Math.PI;
+    //? } else {
     private static final float DEGREES_TO_RADIANS = Mth.DEG_TO_RAD;
     private static final float RADIANS_TO_DEGREES = Mth.RAD_TO_DEG;
+    //? }
+    // ^ 1.16.5 无 Mth.DEG_TO_RAD/RAD_TO_DEG；1.16.5 分支表达式与 1.20.1 Mth 常量定义逐字节相同
 
     public static final float PI_FROM_DEG = 3.1415927f;
 

@@ -46,6 +46,9 @@ public class MolangUtils {
             return null;
         }
         Entity entity = context.entity().entity();
+        //? if < 1.17
+        // return entity.level.getBlockState(new BlockPos((int) Math.round((entity.getX() + deltaX) - 0.5d), (int) Math.round((entity.getY() + deltaY) - 0.5d), (int) Math.round((entity.getZ() + deltaZ) - 0.5d)));
+        //? if >= 1.17
         return entity.level().getBlockState(new BlockPos((int) Math.round((entity.getX() + deltaX) - 0.5d), (int) Math.round((entity.getY() + deltaY) - 0.5d), (int) Math.round((entity.getZ() + deltaZ) - 0.5d)));
     }
 

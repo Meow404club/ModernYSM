@@ -23,10 +23,18 @@ import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMaps;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
+// RandomSource/Xoroshiro/RandomSupport 为 1.17/1.18+ 类；1.16.5 用 java.util.Random
+// （new Random() 无参构造自带唯一种子，语义对应 RandomSupport.generateUniqueSeed()）
+//? if < 1.17 {
+// import java.util.Random;
+//? } else {
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.levelgen.RandomSupport;
 import net.minecraft.world.level.levelgen.XoroshiroRandomSource;
+//? }
+// ^ RandomSource/Xoroshiro/RandomSupport 均为 1.17/1.18+ 类；1.16.5 用 java.util.Random
+//   （new Random() 无参构造自带唯一种子，语义对应 RandomSupport.generateUniqueSeed()）
+import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 
@@ -55,6 +63,9 @@ public class AnimationProcessor<TEntity extends Entity> {
 
     private final AudioPlayerManager audioPlayerManager = new AudioPlayerManager();
 
+    //? if < 1.17
+    // private final Random random = new Random();
+    //? if >= 1.17
     private final RandomSource random = new XoroshiroRandomSource(RandomSupport.generateUniqueSeed());
 
     private final ConcurrentLinkedQueue<PendingExpression> pendingExpressions = new ConcurrentLinkedQueue<>();

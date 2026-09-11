@@ -42,18 +42,30 @@ public final class MatrixBridge {
     // private static final java.lang.reflect.Field[] MOJ_M3_FIELDS = cacheMojFields();
     //
     // private static java.lang.reflect.Field[] cacheMojFields() {
-    //     String[] names = {"m00", "m01", "m02", "m10", "m11", "m12", "m20", "m21", "m22"};
+    //     // 1.16.5 生产运行时成员=SRG 名（m2-smoke-gate 生产实测：mojmap 名 m00 必
+    //     // NoSuchFieldException）。两套名字按声明序对位（两侧 jar javap 实证：4 静态
+    //     // 常量在前，9 实例 float 依 m00..m22 / field_226097_a_..field_226105_i_ 逐位
+    //     // 对应，joined.tsrg 交叉核验）。运行时探测：dev mojmap 命中即用，生产落 SRG。
+    //     String[][] candidates = {
+    //         {"m00", "m01", "m02", "m10", "m11", "m12", "m20", "m21", "m22"},
+    //         {"field_226097_a_", "field_226098_b_", "field_226099_c_", "field_226100_d_", "field_226101_e_", "field_226102_f_", "field_226103_g_", "field_226104_h_", "field_226105_i_"}
+    //     };
     //     java.lang.reflect.Field[] fields = new java.lang.reflect.Field[9];
-    //     try {
-    //         for (int i = 0; i < 9; i++) {
-    //             java.lang.reflect.Field f = com.mojang.math.Matrix3f.class.getDeclaredField(names[i]);
-    //             f.setAccessible(true);
-    //             fields[i] = f;
+    //     for (String[] names : candidates) {
+    //         try {
+    //             for (int i = 0; i < 9; i++) {
+    //                 java.lang.reflect.Field f = com.mojang.math.Matrix3f.class.getDeclaredField(names[i]);
+    //                 f.setAccessible(true);
+    //                 fields[i] = f;
+    //             }
+    //             return fields;
+    //         } catch (NoSuchFieldException e) {
+    //             // 尝试下一套命名
+    //         } catch (ReflectiveOperationException e) {
+    //             throw new ExceptionInInitializerError(e);
     //         }
-    //     } catch (ReflectiveOperationException e) {
-    //         throw new ExceptionInInitializerError(e);
     //     }
-    //     return fields;
+    //     throw new ExceptionInInitializerError(new NoSuchFieldException("Matrix3f matrix fields not found (mojmap/srg)"));
     // }
     //
     // public static Matrix4f pose(PoseStack.Pose pose) {

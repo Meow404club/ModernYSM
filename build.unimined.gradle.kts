@@ -373,4 +373,22 @@ tasks.named<ProcessResources>("processResources") {
     filesMatching("META-INF/mods.toml") {
         expand(props)
     }
+    // builtin 模型文件清单：1.16.5 生产形态拿不到物理 mod jar（getResource 对包内目录返回
+    // modjar:// 协议、code source/IModFileInfo 均无物理路径，见 ServerModelManager
+    // extractBuiltinModels <1.17 注），运行时按本清单逐文件 getResourceAsStream 提取。
+    // 1.20.1 线不受影响（findResource 目录树语义不变），故清单只在本线产物落一份。
+    doLast {
+        val builtinSrc = rootProject.file("src/main/resources/assets/yes_steve_model/builtin")
+        if (builtinSrc.isDirectory) {
+            val relPaths = builtinSrc.walkTopDown()
+                .filter { it.isFile }
+                .map { builtinSrc.toPath().relativize(it.toPath()).toString().replace('\\', '/') }
+                .sorted()
+                .toList()
+            val out = outputs.files.singleFile
+                .resolve("assets/yes_steve_model/builtin/index.txt")
+            out.parentFile.mkdirs()
+            out.writeText(relPaths.joinToString("\n") + "\n")
+        }
+    }
 }

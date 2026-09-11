@@ -154,4 +154,17 @@ tasks.named<ProcessResources>("processResources") {
     filesMatching("META-INF/mods.toml") {
         expand(props)
     }
+    // mixins.json 注入 refmap 键：1.20.1 生产运行时是 mojmap 类名 + SRG 方法/字段名的混合口径
+    //（m2-smoke-gate 生产实测引爆 refmap 卡挂账的"惰性炸弹"：LivingEntityAccessor @Invoker
+    // 找不到 setLivingEntityFlag——生产真实方法名是 SRG m_ 系列）。MDG 编译期已产
+    // yes_steve_model.refmap.json（mojmap→m_/f_ 映射齐全，jar 内实存），但 mixins.json 无
+    // refmap 键则生产全数按字面 mojmap 名查目标=失配。注入后 dev 不受影响（dev 运行时全
+    // mojmap，无 refmap 文件时 Mixin 报 warning 后直跑字面名，语义不变；照 1.16.5 线同款先例）。
+    filesMatching("yes_steve_model.mixins.json") {
+        filter { line: String ->
+            if (line.contains("\"required\": true"))
+                line.replace("\"required\": true", "\"required\": true,\n  \"refmap\": \"yes_steve_model.refmap.json\"")
+            else line
+        }
+    }
 }

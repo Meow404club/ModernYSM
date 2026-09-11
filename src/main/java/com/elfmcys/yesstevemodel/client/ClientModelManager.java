@@ -146,6 +146,22 @@ public class ClientModelManager {
         GeoModel.initSIMD();
 
         try {
+            // 生产形态（1.16.5 实测）类路径 URL 是 modjar:// 协议，Paths.get/zipfs 都拿不到
+            // 物理目录（同 extractBuiltinModels 的雷）。ServerModelManager 在 common setup 已把
+            // builtin 全量解压到 config/yes_steve_model/built，优先直读该目录（dev/prod、
+            // 双版本统一）；built 缺失时回退原类路径解析。
+            Path builtDefault = ServerModelManager.BUILT.resolve("default");
+            if (Files.isDirectory(builtDefault)) {
+                try (YSMFolderDeserializer deserializer = new YSMFolderDeserializer(builtDefault)) {
+                    RawYsmModel rawModel = deserializer.deserialize();
+                    ClientModelInfo parsedBundle = YSMClientMapper.buildParsedBundle(rawModel, "default");
+                    onModelDataReceived(parsedBundle, "default", true, false);
+                    YesSteveModel.LOGGER.info("[YSM] Successfully pushed Default Model to render queue (built dir).");
+                } catch (Exception e) {
+                    YesSteveModel.LOGGER.error("[YSM] Failed to dispatch Default Model (built dir)", e);
+                }
+                return;
+            }
             String resourcePath = "/assets/yes_steve_model/builtin/default";
             URL resourceUrl = YesSteveModel.class.getResource(resourcePath);
             if (resourceUrl == null) {

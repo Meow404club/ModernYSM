@@ -325,27 +325,67 @@ public final class ServerModelManager {
     }
 
     private static void extractBuiltinModels() {
-        try {
-            // forgespi 3.x（1.16.5 userdev 实证）IModFileInfo 无 getFile()：<1.17 走类加载器锚点
-            //（dev=build/resources、jar=自身包内），语义与 findResource 等价
-            //? if <1.17 {
-            /*Path assetsBuiltinResolved = null;
-            try {
-                java.net.URL url = ServerModelManager.class.getClassLoader().getResource("assets/" + YesSteveModel.MOD_ID + "/builtin");
-                if (url != null && "file".equals(url.getProtocol())) {
-                    assetsBuiltinResolved = java.nio.file.Paths.get(url.toURI());
+        //? if <1.17 {
+        /*// 1.16.5 生产不能走目录解析：modlauncher getResource 对包内目录返回 modjar://<modid>/<path>
+        //（forgespi 自定义协议，Paths.get 报 FileSystemNotFoundException: Provider "modjar" not
+        //installed），而 code source、ModContainer、IModFileInfo（forgespi 3.x 无 getFile()）均
+        //拿不到物理 jar；单文件 getResourceAsStream 经 ModJarURLHandler 实证可用。故构建期
+        //（1.16.5 processResources doLast）落 builtin 文件清单 index.txt，运行时按清单逐文件
+        //提取；清单缺失/条目缺失只告警降级，不致崩。
+        List<String> builtinIndex = new ArrayList<>();
+        try (java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(
+                ServerModelManager.class.getClassLoader().getResourceAsStream("assets/" + YesSteveModel.MOD_ID + "/builtin/index.txt"), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (!line.trim().isEmpty()) {
+                    builtinIndex.add(line.trim());
                 }
-            } catch (Exception e) {
-                assetsBuiltinResolved = null;
             }
-            // Java8 lambda 捕获要求 effectively-final：解析期允许多次赋值，捕获面收口到单赋值 final 变量
-            final Path assetsBuiltin = assetsBuiltinResolved;
-             *///?} else {
+        } catch (IOException e) {
+            YesSteveModel.LOGGER.warn("Failed to read builtin index", e);
+        }
+        if (builtinIndex.isEmpty()) {
+            YesSteveModel.LOGGER.warn("Builtin index empty or missing (assets/{}/builtin/index.txt), builtin extraction skipped", YesSteveModel.MOD_ID);
+            return;
+        }
+        Set<String> sourcePaths = new HashSet<>();
+        for (String rel : builtinIndex) {
+            sourcePaths.add(rel);
+            try (java.io.InputStream in = ServerModelManager.class.getClassLoader().getResourceAsStream("assets/" + YesSteveModel.MOD_ID + "/builtin/" + rel)) {
+                if (in == null) {
+                    YesSteveModel.LOGGER.warn("Missing builtin resource: assets/{}/builtin/{}", YesSteveModel.MOD_ID, rel);
+                    continue;
+                }
+                Path dest = BUILT.resolve(rel);
+                Files.createDirectories(dest.getParent());
+                Files.copy(in, dest, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                YesSteveModel.LOGGER.warn("Failed to extract builtin: " + rel, e);
+            }
+        }
+        try (Stream<Path> walker = Files.walk(BUILT)) {
+            walker.sorted(Comparator.reverseOrder()).forEach(dest -> {
+                if (dest.equals(BUILT) || dest.equals(BUILT.resolve("notice.txt"))) return;
+                String relative = BUILT.relativize(dest).toString().replace('\\', '/');
+                if (!sourcePaths.contains(relative)) {
+                    try {
+                        Files.deleteIfExists(dest);
+                    } catch (IOException e) {
+                        YesSteveModel.LOGGER.warn("Failed to remove stale builtin: " + dest.getFileName(), e);
+                    }
+                }
+            });
+        } catch (IOException e) {
+            YesSteveModel.LOGGER.warn("Failed to remove stale builtins", e);
+        }
+         *///?} else {
+        try {
+            // forgespi 3.x（1.16.5 userdev 实证）IModFileInfo 无 getFile()：>=1.17 由
+            // IModFile.findResource 提供包内目录路径，Files.walk 提取逻辑保持原样
             Path assetsBuiltin = Optional.ofNullable(ModList.get().getModFileById(YesSteveModel.MOD_ID))
                     .map(IModFileInfo::getFile)
                     .map(file -> file.findResource("assets", YesSteveModel.MOD_ID, "builtin"))
                     .orElse(null);
-            //?}
 
             if (assetsBuiltin == null || !Files.isDirectory(assetsBuiltin)) return;
 
@@ -393,6 +433,7 @@ public final class ServerModelManager {
         } catch (Exception e) {
             YesSteveModel.LOGGER.error("Failed to extract builtin models", e);
         }
+        //?}
     }
 
     private static void processBlacklist(Path blacklistFile) {

@@ -117,14 +117,17 @@ dependencies {
     // API 与共享源口径一致）；字节码 major 46（Java 1.2），Java 8 运行时可直接载入。
     //（与 work/m2-render-pipeline-condition a2183c9 同行同内容，合并自动收敛）
     implementation("org.joml:joml:1.10.5")
-    // ImageStream（rip.ysm.imagestream 纯 Java 库）：编译期可见，保编译基线干净；
-    // 生产 jar 内嵌（照 1.20.1 的 ImageStream 先例）属后续卡
-    implementation("com.github.TartaricAlkaline:ImageStream:-SNAPSHOT")
+    // ImageStream：不再走 JitPack 依赖（产物 major 61，Java 8 运行时载入即崩），改为
+    // src/imagestream 源码 vendor 由本线 Java 8 工具链编译（见 sourceSets 注释）
     // MixinExtras：保留（查证记录，m2-gate-compat）——本 mod 自有 mixin
     // EntityRenderDispatcherMixin 用 @WrapWithCondition（mixinextras v2 注解），且它
     // 注册在 1.16.5 有效的 yes_steve_model.mixins.json（platform/forge 第三方
     // accessor 配置才是被闸对象）；运行时注入方式（内嵌/伴生）未定，本卡只保编译
-    compileOnly("io.github.llamalad7:mixinextras-common:${property("deps.mixinextras")}")
+    // MixinExtras：生产 jar 内嵌（embedMixinExtras，m2 决策=JIJ）；1.16.5 MixinTweaker.onLoad
+    // 在配置加载早期调 MixinExtrasBootstrap.init()（<1.17 条件化）→ dev 运行时也必须可见，
+    // 故 implementation 而非 compileOnly（compileOnly 不进 dev classpath，runServer/runClient
+    // 即 NCDFE，本轮实测）；与 joml/imageStream 同款先例：implementation+生产内嵌并存。
+    implementation("io.github.llamalad7:mixinextras-common:${property("deps.mixinextras")}")
     annotationProcessor("io.github.llamalad7:mixinextras-common:${property("deps.mixinextras")}")
     // jsr305（javax.annotation.*）：1.16.5 mojmap jar 缺 mcp 注解同源的 nullness 注解——
     // forge 侧类签名引用 ParametersAreNonnullByDefault 等，javac attribution 必需
@@ -149,6 +152,11 @@ dependencies {
 sourceSets.main {
     java {
         srcDir("src/shim/rip/ysm/compat")
+        // ImageStream 源码 vendor（上游 TartaricAlkaline/ImageStream master，Java17 编译）：
+        // JitPack 产物 major 61，Java 8 dev 运行时一触发模型加载即 UnsupportedClassVersionError
+        // （1.16.5 runServer 实测）——改为本线 Java 8 工具链直接编译（自动 major 52），
+        // 语法下移仅 8 文件（箭头 switch→经典 switch、pattern instanceof→cast，语义逐行等价）。
+        srcDir("src/imagestream")
         // mcp 注解 stub srcDir（根=mcp 包目录）：unimined 1.16.5 mojmap jar 全系缺
         // mcp/MethodsReturnNonnullByDefault.class，而 forge 侧 CapabilityProvider/
         // CapabilityDispatcher/LazyOptional 及 11 个 package-info 的签名引用它
@@ -172,6 +180,10 @@ sourceSets.main {
     // 天然不命中上方 "rip/ysm/compat/**" 排除模式——否则排除会把版本独有 shim 一并杀掉
     //（shim 与被排除源同包同名 FQCN，靠 sourceSets 级 exclude 与生成树互斥）。
     // shim 内容 = 门面签名镜像 + mod-absent 返回值，运行时语义与 1.20.1 守卫链缺席分支一致。
+    // ImageStream 的 javax.imageio SPI 注册文件（2 条）随源码一并 vendor，随主 jar 打包。
+    resources {
+        srcDir("src/imagestream-resources")
+    }
 }
 tasks {
     processResources {
@@ -188,8 +200,9 @@ tasks {
     //      MixinExtrasBootstrap.init()（<1.17 条件化）。
     //   2) embedJoml         — geckolib3 渲染/动画栈 49 文件 import org.joml（MC 1.19.3 才内置），
     //      运行缺类即 NCDFE。1.10.5 = MC 1.20.1 自带版本，字节码 major 46，Java 8 可载。
-    //   3) embedImageStream  — avif/webp 解码（rip.ysm.imagestream 独占包名，照 1.20.1
-    //      imageStreamEmbed 先例）；1.16.5 侧此前仅 implementation（编译可见），生产 jar 缺内嵌。
+    //   3) ImageStream        — avif/webp 解码：不再内嵌（JitPack 产物 major 61，Java 8 运行时
+    //      载入即 UnsupportedClassVersionError，runServer 实测），改为 src/imagestream 源码
+    //      vendor 由本线 Java 8 工具链编译成主 jar 类（major 52），随 classes 直接入包。
     //   4) embedUnsafe8      — unsafe8 源集产物（zstd/UnsafeUtil）并包，见源集头注。
     // 合并算法（mixin 卡 tmp/m2-refmap-poc 实证：manifest-first/类可载入）：
     // 目标 jar 条目流式原样保留（MANIFEST 保持首位，Forge 用 JarInputStream 探测），
@@ -278,14 +291,9 @@ tasks {
         embedMixinExtras,
         listOf(jarFromCompileClasspath("joml-")),
     )
-    val embedImageStream = registerEmbed(
-        "embedImageStream",
-        embedJoml,
-        listOf(jarFromCompileClasspath("ImageStream")),
-    )
     val embedUnsafe8 = registerEmbed(
         "embedUnsafe8",
-        embedImageStream,
+        embedJoml,
         extraClassDirs = sourceSets.getByName("unsafe8").output.classesDirs,
     )
 
@@ -308,6 +316,18 @@ tasks.named<ProcessResources>("processResources") {
     }
     filesMatching("pack.mcmeta") {
         filter { line: String -> line.replace("\"pack_format\": 15", "\"pack_format\": 6") }
+    }
+    // mixins.json 注入 refmap 键：生产（SRG）运行时 mixin 注解的 mojmap 名→SRG 名必须经
+    // refmap 桥接（tacz/bettercombat 生产 jar 同款键实证）；本线 refmap 文件名由 unimined
+    // remapJar 生成（yes_steve_model.mixins-refmap.json，jar 内实存）。共享源无此键=生产
+    // 注入全数 0/1 失败（1.16.5 dev runServer 实测炸点之一）。dev 下该文件不在类路径，
+    // Mixin 报 warning 后直跑 mojmap 名（dev 运行时全 mojmap，javap 实证），语义不变。
+    filesMatching("yes_steve_model.mixins.json") {
+        filter { line: String ->
+            if (line.contains("\"required\": true"))
+                line.replace("\"required\": true", "\"required\": true,\n  \"refmap\": \"yes_steve_model.mixins-refmap.json\"")
+            else line
+        }
     }
     // mods.toml 版本口径：共享源为 1.20.1 事实（loaderVersion/forge=47 系、minecraft 1.20.1），
     // 1.16.5=forge 36.x（forge 1.16.5 MDK 模板值：loaderVersion "[36,)" / forge "[36,)" /

@@ -32,6 +32,10 @@ public final class CommonEvent {
             YesSteveModel.LOGGER.error(YesSteveModel.getErrorMessage());
             return;
         }
+        // 1.16.5 capability 注册须发生在 FMLCommonSetupEvent：构造期 register 即
+        // CapabilityManager.callbacks==null NPE（CapabilityManager.java:65，dev runServer 实测；
+        // 详见 CapabilityEvent#registerCapabilities 注释）
+        CapabilityEvent.registerCapabilities();
         NetworkHandler.init();
         TouhouMaidCompat.init();
         nativeInit();

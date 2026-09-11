@@ -231,7 +231,10 @@ public abstract class GeoEntity<T extends Entity> extends AnimatableEntity<T> {
         //? if <1.17
         // RenderSystem.assertThread(RenderSystem::isOnRenderThread);
         //? if >=1.17
-        // RenderSystem.assertOnRenderThread();
+        // //? if <1.17
+        /*RenderSystem.assertThread(RenderSystem::isOnRenderThread);*/
+        //? if >=1.17
+        RenderSystem.assertOnRenderThread();
         if (isFirstPerson && this.modelFuture != null) {
             return awaitAsyncResult();
         }

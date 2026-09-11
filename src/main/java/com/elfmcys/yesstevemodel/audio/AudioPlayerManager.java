@@ -25,7 +25,13 @@ public class AudioPlayerManager {
         if (soundName.contains(":")) {
             ResourceLocation resourceLocationTryParse = ResourceLocation.tryParse(soundName);
             if (resourceLocationTryParse != null) {
-                soundInstance = new YSMTickableSoundInstance(SoundEvent.createVariableRangeEvent(resourceLocationTryParse), entity.getEntity());
+                soundInstance = new YSMTickableSoundInstance(
+                    //? if <1.17 {
+                    /*new SoundEvent(resourceLocationTryParse)*/
+                    //?} else {
+                    SoundEvent.createVariableRangeEvent(resourceLocationTryParse)
+                    //?}
+                    , entity.getEntity());
             } else {
                 soundInstance = null;
             }

@@ -50,4 +50,22 @@ public final class YsmText {
         player.sendSystemMessage(msg);
         //?}
     }
+
+    /** 1.20.1 CommandSourceStack.isPlayer()（1.16.5 无）↔ getEntity() instanceof ServerPlayer（两版同语义）。 */
+    public static boolean isPlayer(CommandSourceStack source) {
+        //? if <1.17 {
+        /*return source.getEntity() instanceof net.minecraft.server.level.ServerPlayer;
+         *///?} else {
+        return source.isPlayer();
+        //?}
+    }
+
+    /** 1.20.1 CommandSourceStack.sendSystemMessage(Component)（1.16.5 无）↔ sendSuccess(msg,false)（仅回源，不广播）。 */
+    public static void sendSourceMessage(CommandSourceStack source, Component msg) {
+        //? if <1.17 {
+        /*source.sendSuccess(msg, false);
+         *///?} else {
+        source.sendSystemMessage(msg);
+        //?}
+    }
 }

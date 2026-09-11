@@ -1,11 +1,11 @@
 package com.elfmcys.yesstevemodel.client.animation.molang.functions.ysm;
 
 import rip.ysm.compat.cosmeticarmorreworked.CosmeticArmorHelper;
+import com.elfmcys.yesstevemodel.util.YsmTag;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.context.IContext;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.funciton.entity.LivingEntityFunction;
 import com.elfmcys.yesstevemodel.geckolib3.util.MolangUtils;
 import com.elfmcys.yesstevemodel.molang.runtime.ExecutionContext;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
@@ -26,7 +26,7 @@ public class DumpEquippedItem extends LivingEntityFunction {
             return null;
         }
         ItemStack stack = CosmeticArmorHelper.getArmorItem(context.entity().entity(), slot);
-        if (stack.isEmpty() || (key = BuiltInRegistries.ITEM.getKey(stack.getItem())) == null) {
+        if (stack.isEmpty() || (key = YsmTag.itemKey(stack.getItem())) == null) {
             return null;
         }
         context.entity().logWarningComponent(Component.literal("Display ").append(ComponentUtils.copyOnClickText(stack.getItem().getName(stack).getString(99))));
@@ -38,7 +38,7 @@ public class DumpEquippedItem extends LivingEntityFunction {
             if (tag instanceof CompoundTag) {
                 CompoundTag compoundTag = (CompoundTag) tag;
                 ResourceLocation resourceLocationTryParse = ResourceLocation.tryParse(compoundTag.getString("id"));
-                if (resourceLocationTryParse != null && (enchantment = BuiltInRegistries.ENCHANTMENT.get(resourceLocationTryParse)) != null) {
+                if (resourceLocationTryParse != null && (enchantment = YsmTag.enchantment(resourceLocationTryParse)) != null) {
                     context.entity().logWarningComponent(Component.literal("Enchantment: display ").append(ComponentUtils.copyOnClickText(enchantment.getFullname(compoundTag.getInt("lvl")).getString(99))).append(Component.literal("  name ").append(ComponentUtils.copyOnClickText(resourceLocationTryParse.toString()))));
                 }
             }

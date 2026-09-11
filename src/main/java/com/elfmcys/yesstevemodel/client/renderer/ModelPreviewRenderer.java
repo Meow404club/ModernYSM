@@ -77,7 +77,10 @@ public final class ModelPreviewRenderer {
         //? if <1.17
         // RenderSystem.assertThread(RenderSystem::isOnRenderThread);
         //? if >=1.17
-        // RenderSystem.assertOnRenderThread();
+        // //? if <1.17
+        /*RenderSystem.assertThread(RenderSystem::isOnRenderThread);*/
+        //? if >=1.17
+        RenderSystem.assertOnRenderThread();
         return isFirstPersonMode && !FirstPersonCompat.isFirstPersonActive();
     }
 

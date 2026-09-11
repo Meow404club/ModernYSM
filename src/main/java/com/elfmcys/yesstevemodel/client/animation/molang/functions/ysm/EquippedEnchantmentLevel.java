@@ -1,11 +1,11 @@
 package com.elfmcys.yesstevemodel.client.animation.molang.functions.ysm;
 
 import rip.ysm.compat.cosmeticarmorreworked.CosmeticArmorHelper;
+import com.elfmcys.yesstevemodel.util.YsmTag;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.context.IContext;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.funciton.entity.LivingEntityFunction;
 import com.elfmcys.yesstevemodel.geckolib3.util.MolangUtils;
 import com.elfmcys.yesstevemodel.molang.runtime.ExecutionContext;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -28,7 +28,7 @@ public class EquippedEnchantmentLevel extends LivingEntityFunction {
         int enchantmentLevel = 0;
         for (int i = 1; i < arguments.size(); i++) {
             ResourceLocation id = arguments.getResourceLocation(context, 1);
-            if (id != null && (enchantment = BuiltInRegistries.ENCHANTMENT.get(id)) != null) {
+            if (id != null && (enchantment = YsmTag.enchantment(id)) != null) {
                 enchantmentLevel += EnchantmentHelper.getItemEnchantmentLevel(enchantment, stack);
             }
         }

@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.network.sync;
 
 import com.elfmcys.yesstevemodel.client.event.ShieldBlockCooldownEvent;
+import com.elfmcys.yesstevemodel.util.YsmEntity;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.util.StringPool;
 import com.elfmcys.yesstevemodel.network.NetworkHandler;
 import com.elfmcys.yesstevemodel.network.message.S2CSyncPlayerStatePacket;
@@ -82,8 +83,8 @@ public class PlayerStateSynchronizer {
                 message.setExperienceLevel(this.experienceLevel);
             }
         }
-        if (this.isFlying != serverPlayer.getAbilities().flying) {
-            this.isFlying = serverPlayer.getAbilities().flying;
+        if (this.isFlying != YsmEntity.abilities(serverPlayer).flying) {
+            this.isFlying = YsmEntity.abilities(serverPlayer).flying;
             if (sendNow) {
                 message.setFlying(this.isFlying);
             }
@@ -167,7 +168,7 @@ public class PlayerStateSynchronizer {
         }
         S2CSyncPlayerStatePacket message = new S2CSyncPlayerStatePacket(serverPlayer.getId());
         message.markFullSync();
-        message.setFlying(serverPlayer.getAbilities().flying);
+        message.setFlying(YsmEntity.abilities(serverPlayer).flying);
         message.setExperienceLevel(serverPlayer.experienceLevel);
         message.setFoodLevel(serverPlayer.getFoodData().getFoodLevel());
         Collection<MobEffectInstance> activeEffects = serverPlayer.getActiveEffects();

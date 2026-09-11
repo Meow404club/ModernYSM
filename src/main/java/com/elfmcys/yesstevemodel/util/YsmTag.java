@@ -120,6 +120,32 @@ public final class YsmTag {
         //?}
     }
 
+    public static ResourceLocation blockKey(net.minecraft.world.level.block.Block block) {
+        //? if <1.17 {
+        /*return net.minecraft.core.Registry.BLOCK.getKey(block);
+         *///?} else {
+        return net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(block);
+        //?}
+    }
+
+    /** 附魔注册表直查（1.16.5 Registry.ENCHANTMENT ↔ 1.20.1 BuiltInRegistries.ENCHANTMENT）。 */
+    public static net.minecraft.world.item.enchantment.Enchantment enchantment(ResourceLocation rl) {
+        //? if <1.17 {
+        /*return net.minecraft.core.Registry.ENCHANTMENT.get(rl);
+         *///?} else {
+        return net.minecraft.core.registries.BuiltInRegistries.ENCHANTMENT.get(rl);
+        //?}
+    }
+
+    /** 物品注册表直查。 */
+    public static Item item(ResourceLocation rl) {
+        //? if <1.17 {
+        /*return net.minecraft.core.Registry.ITEM.get(rl);
+         *///?} else {
+        return net.minecraft.core.registries.BuiltInRegistries.ITEM.get(rl);
+        //?}
+    }
+
     public static ResourceLocation entityTypeKey(EntityType<?> type) {
         //? if <1.17 {
         /*return net.minecraft.core.Registry.ENTITY_TYPE.getKey(type);

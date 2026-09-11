@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.capability;
 
 import net.minecraftforge.api.distmarker.Dist;
+import com.elfmcys.yesstevemodel.util.YsmEntity;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import com.elfmcys.yesstevemodel.client.animation.molang.struct.RoamingStruct;
 import com.elfmcys.yesstevemodel.client.animation.molang.struct.RoamingSyncBatch;
@@ -165,7 +166,7 @@ public final class PlayerCapability extends CustomPlayerEntity {
     }
 
     private void applyMolangDelta(int i, Int2FloatMap int2FloatMap) {
-        if (i == this.currentModelHashId && this.entity.getVehicle() != null && this.entity.getVehicle().getFirstPassenger() == this.entity) {
+        if (i == this.currentModelHashId && this.entity.getVehicle() != null && YsmEntity.firstPassenger(this.entity.getVehicle()) == this.entity) {
             VehicleCapability.get(this.entity.getVehicle()).ifPresent(cap -> {
                 cap.updateFloatMap(int2FloatMap);
             });

@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.network.message;
 
 import net.minecraft.network.FriendlyByteBuf;
+import com.elfmcys.yesstevemodel.util.YsmEntity;
 import net.minecraft.network.protocol.game.ClientboundAnimatePacket;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
@@ -44,8 +45,8 @@ public class C2SSwingArmPacket {
                 sender.swingTime = -1;
                 sender.swinging = true;
                 sender.swingingArm = interactionHand;
-                if (sender.level() instanceof ServerLevel) {
-                    ((ServerChunkCache) sender.level().getChunkSource()).broadcast(sender, new ClientboundAnimatePacket(sender, interactionHand == InteractionHand.MAIN_HAND ? 0 : 3));
+                if (YsmEntity.level(sender) instanceof ServerLevel) {
+                    ((ServerChunkCache) YsmEntity.level(sender).getChunkSource()).broadcast(sender, new ClientboundAnimatePacket(sender, interactionHand == InteractionHand.MAIN_HAND ? 0 : 3));
                 }
             }
         }

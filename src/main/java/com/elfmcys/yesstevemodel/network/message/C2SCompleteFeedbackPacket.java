@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.network.message;
 
 import com.elfmcys.yesstevemodel.capability.ModelInfoCapability;
+import com.elfmcys.yesstevemodel.util.YsmEntity;
 import com.elfmcys.yesstevemodel.capability.VehicleModelCapability;
 import rip.ysm.compat.touhoulittlemaid.TouhouMaidCompat;
 import net.minecraft.network.FriendlyByteBuf;
@@ -52,6 +53,9 @@ public final class C2SCompleteFeedbackPacket {
     public static void handle(C2SCompleteFeedbackPacket message, PacketContext ctx) {
         if (ctx.isServerSide() && ctx.getSender() != null) {
             ServerPlayer sender = ctx.getSender();
+            //? if <1.17
+            /*ctx.enqueueWork(() -> handleOnServer(message, sender.getLevel()));*/
+            //? if >=1.17
             ctx.enqueueWork(() -> handleOnServer(message, sender.serverLevel()));
         }
     }
@@ -64,7 +68,7 @@ public final class C2SCompleteFeedbackPacket {
             ServerPlayer serverPlayer = (ServerPlayer) entity;
             ModelInfoCapability.get(serverPlayer).ifPresent(cap -> {
                 cap.applyFeedback(serverPlayer, message.feedbackData);
-                if (serverPlayer.getVehicle() != null && serverPlayer.getVehicle().getFirstPassenger() == serverPlayer) {
+                if (serverPlayer.getVehicle() != null && YsmEntity.firstPassenger(serverPlayer.getVehicle()) == serverPlayer) {
                     VehicleModelCapability.get(serverPlayer.getVehicle()).ifPresent(vehicleCap -> {
                         cap.getMolangVars().ifPresent(map -> vehicleCap.setModel(cap.getModelId(), map));
                     });

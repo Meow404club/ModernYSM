@@ -2,7 +2,6 @@ package rip.ysm.legacy;
 
 import com.elfmcys.yesstevemodel.util.DigestUtil;
 import com.google.common.collect.Maps;
-import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.bytes.ByteArrays;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.io.FileUtils;
@@ -88,13 +87,13 @@ public final class YesModelUtils {
         ByteArrayInputStream tmp = new ByteArrayInputStream(modelFilesData);
         while (tmp.available() > 0) {
             try {
-                Pair<String, byte[]> ysmFileData;
+                NameData ysmFileData;
                 if (version == VERSION) {
                     ysmFileData = ysmToFile(tmp);
                 } else {
                     ysmFileData = ysmToFileNew(tmp);
                 }
-                outputs.put(ysmFileData.left(), ysmFileData.right());
+                outputs.put(ysmFileData.name, ysmFileData.data);
             } catch (GeneralSecurityException | DataFormatException | IOException e) {
                 e.printStackTrace();
             }
@@ -103,7 +102,7 @@ public final class YesModelUtils {
     }
 
     @NotNull
-    private static Pair<String, byte[]> ysmToFile(ByteArrayInputStream tmp) throws IOException, GeneralSecurityException, DataFormatException {
+    private static NameData ysmToFile(ByteArrayInputStream tmp) throws IOException, GeneralSecurityException, DataFormatException {
         String name = readString(tmp);
         int size = readInt(tmp);
 
@@ -120,11 +119,11 @@ public final class YesModelUtils {
         ByteArrayOutputStream decryptData = AESUtil.decrypt(key, iv, fileData);
         byte[] rawData = DeflateUtil.decompressBytes(decryptData.toByteArray());
 
-        return Pair.of(name, rawData);
+        return new NameData(name, rawData);
     }
 
     @NotNull
-    private static Pair<String, byte[]> ysmToFileNew(ByteArrayInputStream tmp) throws IOException, GeneralSecurityException, DataFormatException {
+    private static NameData ysmToFileNew(ByteArrayInputStream tmp) throws IOException, GeneralSecurityException, DataFormatException {
         String fileName = readBase64String(tmp);
         int fileSize = readInt(tmp);
         int cipherSecretKeySize = readInt(tmp);
@@ -144,7 +143,7 @@ public final class YesModelUtils {
         ByteArrayOutputStream decryptData = AESUtil.decrypt(key, iv, fileData);
         byte[] rawData = DeflateUtil.decompressBytes(decryptData.toByteArray());
 
-        return Pair.of(fileName, rawData);
+        return new NameData(fileName, rawData);
     }
 
     private static byte[] getKeyFromMd5(byte[] fileData) {
@@ -194,5 +193,17 @@ public final class YesModelUtils {
             fileName = fileName.substring(0, lastIndex);
         }
         return fileName;
+    }
+
+    // fastutil Pair 接口 8.3.0 才有（1.16.5 打包 8.2.1 实证）：该类型仅本文件内部使用、不外泄，
+    // 以同构私有 holder 双版本共用（行为等价，外部 API 不变：input() 仍返回 Map）
+    private static final class NameData {
+        final String name;
+        final byte[] data;
+
+        NameData(String name, byte[] data) {
+            this.name = name;
+            this.data = data;
+        }
     }
 }

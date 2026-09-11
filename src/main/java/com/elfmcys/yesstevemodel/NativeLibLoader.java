@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel;
 
 import com.sun.jna.NativeLibrary;
+import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.platform.YsmPlatform;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.StringUtil;
@@ -218,16 +219,16 @@ public final class NativeLibLoader {
 
     private static void setUnsupportedPlatformError(@Nullable String detail) {
         String info = detail != null ? detail : SystemUtils.OS_NAME + " " + SystemUtils.OS_ARCH;
-        lastError = new ErrorState(Component.translatable("error.yes_steve_model.unsupported_platform", info), "error.yes_steve_model.unsupported_platform_ext", new Object[]{info}, "[YSM] Unsupported platform: " + info);
+        lastError = new ErrorState(YsmText.translatable("error.yes_steve_model.unsupported_platform", info), "error.yes_steve_model.unsupported_platform_ext", new Object[]{info}, "[YSM] Unsupported platform: " + info);
     }
 
     private static void setUnsatisfiedRuntimeError(@NotNull String msg) {
-        lastError = new ErrorState(Component.translatable("error.yes_steve_model.unsatisfied_runtime_env", msg), "error.yes_steve_model.unsatisfied_runtime_env_ext", new Object[]{msg}, "[YSM] Runtime error: " + msg);
+        lastError = new ErrorState(YsmText.translatable("error.yes_steve_model.unsatisfied_runtime_env", msg), "error.yes_steve_model.unsatisfied_runtime_env_ext", new Object[]{msg}, "[YSM] Runtime error: " + msg);
     }
 
     private static void setUnsatisfiedBuildError() {
         String info = SystemUtils.OS_NAME + " " + SystemUtils.OS_ARCH;
-        lastError = new ErrorState(Component.translatable("error.yes_steve_model.unsatisfied_build", info), "error.yes_steve_model.unsatisfied_build_ext", new Object[]{info}, "[YSM] No build for platform: " + info);
+        lastError = new ErrorState(YsmText.translatable("error.yes_steve_model.unsatisfied_build", info), "error.yes_steve_model.unsatisfied_build_ext", new Object[]{info}, "[YSM] No build for platform: " + info);
     }
 
     private static void setUnsupportedLauncherError() {
@@ -242,11 +243,11 @@ public final class NativeLibLoader {
             lastError = (ver < 190000) ? createLauncherError("Zalith 1", "1.4.1.1") : createLauncherError("Zalith 2", "2.0.0_beta-20251118a");
             return;
         }
-        lastError = new ErrorState(Component.translatable("error.yes_steve_model.unsupported_launcher"), null, null, "[YSM] Unsupported Launcher");
+        lastError = new ErrorState(YsmText.translatable("error.yes_steve_model.unsupported_launcher"), null, null, "[YSM] Unsupported Launcher");
     }
 
     private static ErrorState createLauncherError(String name, String minVer) {
-        return new ErrorState(Component.translatable("error.yes_steve_model.old_launcher", name, minVer), "error.yes_steve_model.old_launcher_ext", new Object[]{name, minVer}, "[YSM] Old launcher version: " + name);
+        return new ErrorState(YsmText.translatable("error.yes_steve_model.old_launcher", name, minVer), "error.yes_steve_model.old_launcher_ext", new Object[]{name, minVer}, "[YSM] Old launcher version: " + name);
     }
 
     public static boolean isAvailable() {

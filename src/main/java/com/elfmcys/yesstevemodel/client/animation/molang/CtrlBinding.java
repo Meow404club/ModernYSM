@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.client.animation.molang;
 
 import com.elfmcys.yesstevemodel.capability.PlayerCapability;
+import com.elfmcys.yesstevemodel.util.YsmEntity;
 import com.elfmcys.yesstevemodel.client.animation.Priority;
 import rip.ysm.compat.immersivemelodies.ImmersiveMelodiesCompat;
 import rip.ysm.compat.ironsspellbooks.SpellbooksCompat;
@@ -52,13 +53,13 @@ public class CtrlBinding extends ContextBinding {
         registerLivingEntityState("ladder_down", Priority.HIGHEST, entity -> entity.onClimbable() && getVerticalVelocity(entity) < 0.0f);
         registerState("fly", Priority.HIGH, CtrlBinding::isFlying);
         registerLivingEntityState("elytra_fly", Priority.HIGH, entity -> entity.getPose() == Pose.FALL_FLYING && entity.isFallFlying());
-        registerLivingEntityState("swim_stand", Priority.NORMAL, entity -> entity.isInWater() && !entity.onGround());
+        registerLivingEntityState("swim_stand", Priority.NORMAL, entity -> entity.isInWater() && !YsmEntity.onGround(entity));
         registerLivingEntityState("attacked", Priority.NORMAL, entity -> entity.hurtTime > 0);
-        registerLivingEntityState("jump", Priority.NORMAL, entity -> !entity.onGround() && !entity.isInWater());
-        registerLivingEntityState("sneak", Priority.NORMAL, entity -> entity.onGround() && entity.getPose() == Pose.CROUCHING && isWalking(entity));
-        registerLivingEntityState("sneaking", Priority.NORMAL, entity -> entity.onGround() && entity.getPose() == Pose.CROUCHING);
-        registerLivingEntityState("run", Priority.LOWEST, entity -> entity.onGround() && entity.isSprinting());
-        registerLivingEntityState("walk", Priority.LOWEST, entity -> entity.onGround() && isWalking(entity));
+        registerLivingEntityState("jump", Priority.NORMAL, entity -> !YsmEntity.onGround(entity) && !entity.isInWater());
+        registerLivingEntityState("sneak", Priority.NORMAL, entity -> YsmEntity.onGround(entity) && entity.getPose() == Pose.CROUCHING && isWalking(entity));
+        registerLivingEntityState("sneaking", Priority.NORMAL, entity -> YsmEntity.onGround(entity) && entity.getPose() == Pose.CROUCHING);
+        registerLivingEntityState("run", Priority.LOWEST, entity -> YsmEntity.onGround(entity) && entity.isSprinting());
+        registerLivingEntityState("walk", Priority.LOWEST, entity -> YsmEntity.onGround(entity) && isWalking(entity));
         registerLivingEntityState("idle", Priority.LOWEST, entity -> true);
 
         var("playing_extra_animation", CtrlBinding::isPlayingExtraAnimation);
@@ -147,7 +148,8 @@ public class CtrlBinding extends ContextBinding {
     }
 
     private static boolean isWalking(LivingEntity livingEntity) {
-        return Math.abs(livingEntity.walkAnimation.speed(Minecraft.getInstance().getFrameTime())) > 0.05f;
+        // 1.20.1 walkAnimation.speed(pt) ↔ 1.16.5 animationSpeed 插值（LivingEntity 公有字段，javap 实证）
+        return Math.abs(YsmEntity.limbSwingAmount(livingEntity, Minecraft.getInstance().getFrameTime())) > 0.05f;
     }
 
     private static float getVerticalVelocity(LivingEntity livingEntity) {
@@ -164,7 +166,7 @@ public class CtrlBinding extends ContextBinding {
         }
         Entity entity = context.entity();
         if (entity instanceof Player) {
-            return ((Player) entity).getAbilities().flying;
+            return YsmEntity.abilities((Player) entity).flying;
         }
         return false;
     }

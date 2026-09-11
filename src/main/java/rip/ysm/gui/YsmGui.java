@@ -237,7 +237,7 @@ public final class YsmGui {
     public void fillGradient(int minX, int minY, int maxX, int maxY, int colorFrom, int colorTo) {
         // 1.16.5 GuiComponent.fillGradient(PoseStack,...) 是 protected 实例方法（GuiComponent.java:43 区段），
         // 经包内子类桥直调 vanilla 原路径，不自绘 BufferBuilder 降风险
-        GradientFiller.INSTANCE.fillGradient(this.pose, minX, minY, maxX, maxY, colorFrom, colorTo);
+        GradientFiller.gradient(this.pose, minX, minY, maxX, maxY, colorFrom, colorTo);
     }
 
     public void blit(ResourceLocation atlas, int x, int y, float uOffset, float vOffset, int width, int height, int textureWidth, int textureHeight) {
@@ -287,8 +287,13 @@ public final class YsmGui {
     }
 
     // 1.16.5 GuiComponent.fillGradient(PoseStack,...) 为 protected 实例方法 → 包内子类桥
+    // （JLS 6.6.2：protected 实例成员经限定名访问要求限定方为访问所在类的子类，故桥方法内置）
     private static final class GradientFiller extends net.minecraft.client.gui.GuiComponent {
         private static final GradientFiller INSTANCE = new GradientFiller();
+
+        static void gradient(PoseStack pose, int minX, int minY, int maxX, int maxY, int colorFrom, int colorTo) {
+            INSTANCE.fillGradient(pose, minX, minY, maxX, maxY, colorFrom, colorTo);
+        }
     }
      *///?}
 }

@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.command.subcommands.client;
 
 import com.elfmcys.yesstevemodel.capability.PlayerCapability;
+import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.client.animation.molang.MolangWatchRegistry;
 import com.elfmcys.yesstevemodel.client.renderer.AnimationDebugOverlay;
 import com.elfmcys.yesstevemodel.command.RootClientCommand;
@@ -64,7 +65,7 @@ public class WatchCommand {
             });
             return Command.SINGLE_SUCCESS;
         } catch (ParseException e) {
-            context.getSource().sendFailure(Component.translatable("message.yes_steve_model.model.debug_animation.parser_error", e.getMessage()));
+            context.getSource().sendFailure(YsmText.translatable("message.yes_steve_model.model.debug_animation.parser_error", e.getMessage()));
             return Command.SINGLE_SUCCESS;
         }
     }

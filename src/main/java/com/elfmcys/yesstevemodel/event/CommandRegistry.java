@@ -18,7 +18,6 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.synchronization.SuggestionProviders;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import rip.ysm.api.PlatformAPI;
@@ -77,13 +76,18 @@ public final class CommandRegistry {
         return Suggestions.empty();
     });
 
+    // RegisterClientCommandsEvent 为 1.16.5 forge 不存在的事件（jar 检索 0 命中）：<1.17 将
+    // OpenYSMClientCommand 并入 RegisterCommandsEvent 的客户端分支（集成服务器调度器）。
+    // 功能差：远程服务器对局时 1.20.1 客户端侧 /openysm 仍可用，1.16.5 不可用（无客户端调度器）→ 记债务清单
     public static void register() {
-        MinecraftForge.EVENT_BUS.addListener((RegisterClientCommandsEvent event) -> {
+        //? if >=1.17 {
+        MinecraftForge.EVENT_BUS.addListener((net.minecraftforge.client.event.RegisterClientCommandsEvent event) -> {
             if (!YesSteveModel.isAvailable()) {
                 return;
             }
             OpenYSMClientCommand.registerClientCommands(event.getDispatcher());
         });
+        //?}
         MinecraftForge.EVENT_BUS.addListener((RegisterCommandsEvent event) -> {
             CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
             if (!YesSteveModel.isAvailable()) {
@@ -93,6 +97,9 @@ public final class CommandRegistry {
             RootCommand.registerCommands(dispatcher);
             if (!PlatformAPI.isServer()) {
                 RootClientCommand.registerClientCommands(dispatcher);
+                //? if <1.17 {
+                /*OpenYSMClientCommand.registerClientCommands(dispatcher);
+                 *///?}
             }
         });
     }

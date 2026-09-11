@@ -1,13 +1,13 @@
 package com.elfmcys.yesstevemodel.client.animation.condition;
 
 import com.elfmcys.yesstevemodel.util.EquipmentUtil;
+import com.elfmcys.yesstevemodel.util.YsmTag;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
@@ -38,7 +38,7 @@ public class ConditionHold {
 
     private final ObjectOpenHashSet<ResourceLocation> idTest = new ObjectOpenHashSet<>();
 
-    private final ReferenceArrayList<TagKey<Item>> tagTest = new ReferenceArrayList<>();
+    private final ReferenceArrayList<YsmTag.ItemTag> tagTest = new ReferenceArrayList<>();
 
     private final ReferenceOpenHashSet<UseAnim> extraTes = new ReferenceOpenHashSet<>();
 
@@ -67,7 +67,7 @@ public class ConditionHold {
             this.idTest.add(new ResourceLocation(strSubstring));
         }
         if (name.startsWith(this.tagPre) && ResourceLocation.isValidResourceLocation(strSubstring)) {
-            this.tagTest.add(TagKey.create(Registries.ITEM, new ResourceLocation(strSubstring)));
+            this.tagTest.add(YsmTag.itemTag(new ResourceLocation(strSubstring)));
         }
         if (!name.startsWith(this.extraPre) || strSubstring.equals(UseAnim.NONE.name().toLowerCase(Locale.US))) {
             return;
@@ -97,7 +97,7 @@ public class ConditionHold {
         if (this.idTest.isEmpty()) {
             return EMPTY;
         }
-        ResourceLocation key = BuiltInRegistries.ITEM.getKey(livingEntity.getItemInHand(interactionHand).getItem());
+        ResourceLocation key = YsmTag.itemKey(livingEntity.getItemInHand(interactionHand).getItem());
         if (key != null && this.idTest.contains(key)) {
             return this.idPre + key;
         }
@@ -109,9 +109,9 @@ public class ConditionHold {
             return EMPTY;
         }
         ItemStack itemInHand = livingEntity.getItemInHand(interactionHand);
-        Stream<TagKey<Item>> stream = this.tagTest.stream();
+        Stream<YsmTag.ItemTag> stream = this.tagTest.stream();
         Objects.requireNonNull(itemInHand);
-        return stream.filter(itemInHand::is).findFirst().map(tagKey -> this.tagPre + tagKey.location()).orElse("");
+        return stream.filter(tag -> tag.matches(itemInHand)).findFirst().map(tag -> this.tagPre + tag.location()).orElse("");
     }
 
     private String doExtraTest(LivingEntity entity, InteractionHand hand) {

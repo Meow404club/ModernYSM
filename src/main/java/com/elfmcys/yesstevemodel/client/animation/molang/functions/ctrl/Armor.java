@@ -1,13 +1,11 @@
 package com.elfmcys.yesstevemodel.client.animation.molang.functions.ctrl;
 
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.context.IContext;
+import com.elfmcys.yesstevemodel.util.YsmTag;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.funciton.entity.LivingEntityFunction;
 import com.elfmcys.yesstevemodel.geckolib3.util.MolangUtils;
 import com.elfmcys.yesstevemodel.molang.runtime.ExecutionContext;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
@@ -43,15 +41,15 @@ public class Armor extends LivingEntityFunction {
         }
         String strSubstring = id.substring(1);
         if (id.startsWith(PREFIX_ITEM_ID)) {
-            ResourceLocation key = BuiltInRegistries.ITEM.getKey(itemBySlot.getItem());
+            ResourceLocation key = YsmTag.itemKey(itemBySlot.getItem());
             if (key == null) {
                 return 0;
             }
             return strSubstring.equals(key.toString()) ? 1 : 0;
         }
         if (id.startsWith(PREFIX_ITEM_TAG)) {
-            TagKey<Item> tag = TagKey.create(Registries.ITEM, new ResourceLocation(strSubstring));
-            return itemBySlot.is(tag) ? 1 : 0;
+            YsmTag.ItemTag tag = YsmTag.itemTag(new ResourceLocation(strSubstring));
+            return tag.matches(itemBySlot) ? 1 : 0;
         }
         return 0;
     }

@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.command;
 
 import com.elfmcys.yesstevemodel.YesSteveModel;
+import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.command.subcommands.*;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -27,11 +28,11 @@ public class RootCommand {
     public static void registerFallbackCommands(CommandDispatcher<CommandSourceStack> dispatcher) {
         LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal(ROOT_NAME);
         root.then(Commands.argument("any", StringArgumentType.greedyString()).executes(commandContext -> {
-            if (commandContext.getSource().isPlayer()) {
-                commandContext.getSource().sendSystemMessage(YesSteveModel.getUnavailableComponent());
+            if (YsmText.isPlayer(commandContext.getSource())) {
+                YsmText.sendSourceMessage(commandContext.getSource(), YesSteveModel.getUnavailableComponent());
                 return 1;
             }
-            commandContext.getSource().sendSystemMessage(Component.literal(YesSteveModel.getErrorMessage()));
+            YsmText.sendSourceMessage(commandContext.getSource(), YsmText.literal(YesSteveModel.getErrorMessage()));
             return 1;
         }));
         dispatcher.register(root);

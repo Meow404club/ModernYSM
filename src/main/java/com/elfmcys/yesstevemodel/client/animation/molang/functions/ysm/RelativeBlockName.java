@@ -1,10 +1,10 @@
 package com.elfmcys.yesstevemodel.client.animation.molang.functions.ysm;
 
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.context.IContext;
+import com.elfmcys.yesstevemodel.util.YsmTag;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.funciton.entity.EntityFunction;
 import com.elfmcys.yesstevemodel.geckolib3.util.MolangUtils;
 import com.elfmcys.yesstevemodel.molang.runtime.ExecutionContext;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -14,7 +14,7 @@ public class RelativeBlockName extends EntityFunction {
     public Object eval(ExecutionContext<IContext<Entity>> context, ArgumentCollection arguments) {
         ResourceLocation key;
         BlockState blockState = MolangUtils.getRelativeBlockState(context, arguments);
-        if (blockState == null || (key = BuiltInRegistries.BLOCK.getKey(blockState.getBlock())) == null) {
+        if (blockState == null || (key = YsmTag.blockKey(blockState.getBlock())) == null) {
             return null;
         }
         return key.toString();

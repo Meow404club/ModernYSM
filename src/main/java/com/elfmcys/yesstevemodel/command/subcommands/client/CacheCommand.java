@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.command.subcommands.client;
 
 import com.elfmcys.yesstevemodel.client.ClientModelManager;
+import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.util.YSMMessageFormatter;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -24,14 +25,14 @@ public class CacheCommand {
             return 0;
         }
 
-        player.displayClientMessage(YSMMessageFormatter.withPrefix(Component.literal("开始解析并导出客户端缓存模型...")), false);
+        player.displayClientMessage(YSMMessageFormatter.withPrefix(YsmText.literal("开始解析并导出客户端缓存模型...")), false);
 
         ClientModelManager.exportAllCachedModels(null, exportResult -> {
             if (exportResult.getMessage() != null) {
                 player.displayClientMessage(YSMMessageFormatter.withPrefix(exportResult.getMessage()), false);
             }
             if (exportResult.isSuccess()) {
-                player.displayClientMessage(Component.translatable("commands.yes_steve_model.export.success", exportResult.getFilePath()), false);
+                player.displayClientMessage(YsmText.translatable("commands.yes_steve_model.export.success", exportResult.getFilePath()), false);
             }
         });
 

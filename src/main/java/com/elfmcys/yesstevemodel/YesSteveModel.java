@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel;
 
 import com.elfmcys.yesstevemodel.config.GeneralConfig;
+import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.config.ModSoundEvents;
 import com.elfmcys.yesstevemodel.config.ServerConfig;
 import com.elfmcys.yesstevemodel.event.YsmEventBootstrap;
@@ -82,7 +83,7 @@ public class YesSteveModel {
     public static void sendUnavailableMessage() {
         LocalPlayer localPlayer = Minecraft.getInstance().player;
         if (localPlayer != null) {
-            localPlayer.sendSystemMessage(getUnavailableComponent());
+            YsmText.sendSystemMessage(localPlayer, getUnavailableComponent());
         }
     }
 

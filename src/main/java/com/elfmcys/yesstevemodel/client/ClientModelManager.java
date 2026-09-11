@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.client;
 
 import net.minecraftforge.api.distmarker.Dist;
+import com.elfmcys.yesstevemodel.util.YsmText;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import com.elfmcys.yesstevemodel.NativeLibLoader;
 import com.elfmcys.yesstevemodel.YesSteveModel;
@@ -768,6 +769,9 @@ public class ClientModelManager {
     }
 
     public static SyncStatus getSyncStatus() {
+        //? if <1.17
+        /*RenderSystem.assertThread(RenderSystem::isOnGameThread);*/
+        //? if >=1.17
         RenderSystem.assertOnGameThread();
         return syncState;
     }
@@ -1110,7 +1114,7 @@ public class ClientModelManager {
             if (obj instanceof Component) {
                 Component component = (Component) obj;
                 if (Minecraft.getInstance().player != null) {
-                    Minecraft.getInstance().player.sendSystemMessage(component);
+                    YsmText.sendSystemMessage(Minecraft.getInstance().player, component);
                 }
                 YesSteveModel.LOGGER.error(component.getString(256));
             }
@@ -1563,7 +1567,7 @@ public class ClientModelManager {
             try {
                 if (clientKey == null) {
                     if (callback != null) {
-                        callback.accept(new ExportResult(false, Component.literal("未连接到服务器或尚未完成握手同步，无法获取客户端解密密钥。"), "", "", 0));
+                        callback.accept(new ExportResult(false, YsmText.literal("未连接到服务器或尚未完成握手同步，无法获取客户端解密密钥。"), "", "", 0));
                     }
                     return;
                 }
@@ -1573,7 +1577,7 @@ public class ClientModelManager {
 
                 if (!cacheDir.exists() || !cacheDir.isDirectory()) {
                     if (callback != null) {
-                        callback.accept(new ExportResult(false, Component.literal("尚未生成任何缓存或缓存文件夹不存在: " + folder), "", "", 0));
+                        callback.accept(new ExportResult(false, YsmText.literal("尚未生成任何缓存或缓存文件夹不存在: " + folder), "", "", 0));
                     }
                     return;
                 }
@@ -1581,7 +1585,7 @@ public class ClientModelManager {
                 File[] files = cacheDir.listFiles();
                 if (files == null || files.length == 0) {
                     if (callback != null) {
-                        callback.accept(new ExportResult(false, Component.literal("缓存文件夹中没有任何模型可供导出。"), "", "", 0));
+                        callback.accept(new ExportResult(false, YsmText.literal("缓存文件夹中没有任何模型可供导出。"), "", "", 0));
                     }
                     return;
                 }
@@ -1652,13 +1656,13 @@ public class ClientModelManager {
                     if (successCount > 0) {
                         callback.accept(new ExportResult(true, null, displayPath, "", 0));
                     } else {
-                        callback.accept(new ExportResult(false, Component.literal("导出完成，但没有成功导出任何模型。可能是缓存已损坏。"), "", "", 0));
+                        callback.accept(new ExportResult(false, YsmText.literal("导出完成，但没有成功导出任何模型。可能是缓存已损坏。"), "", "", 0));
                     }
                 }
             } catch (Exception e) {
                 YesSteveModel.LOGGER.error("[YSM] Error during batch export", e);
                 if (callback != null) {
-                    callback.accept(new ExportResult(false, Component.literal("批量导出过程发生严重错误: " + e.getMessage()), "", "", 0));
+                    callback.accept(new ExportResult(false, YsmText.literal("批量导出过程发生严重错误: " + e.getMessage()), "", "", 0));
                 }
             }
         });

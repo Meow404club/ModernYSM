@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.command.subcommands;
 
 import com.elfmcys.yesstevemodel.model.ServerModelManager;
+import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.event.CommandRegistry;
 import com.elfmcys.yesstevemodel.capability.AuthModelsCapability;
 import com.elfmcys.yesstevemodel.capability.ModelInfoCapability;
@@ -77,7 +78,7 @@ public class ModelCommand {
         String textureName = StringArgumentType.getString(context, TEXTURE_ID_NAME);
         ServerModelData info = ServerModelManager.getServerModelInfo().get(modelName);
         if (info == null) {
-            context.getSource().sendSuccess(() -> Component.translatable("commands.yes_steve_model.export.not_exist", modelName), true);
+            YsmText.sendSuccess(context.getSource(), YsmText.translatable("commands.yes_steve_model.export.not_exist", modelName), true);
             return Command.SINGLE_SUCCESS;
         }
         if (Objects.equals(textureName, "-")) {
@@ -94,7 +95,7 @@ public class ModelCommand {
             targets.forEach(player -> ModelInfoCapability.get(player).ifPresent(cap -> {
                 cap.setModelAndTexture(modelName, finalTextureName);
                 cap.setMandatory(true);
-                context.getSource().sendSuccess(() -> Component.translatable("message.yes_steve_model.model.set.success", modelName, player.getScoreboardName()), true);
+                YsmText.sendSuccess(context.getSource(), YsmText.translatable("message.yes_steve_model.model.set.success", modelName, player.getScoreboardName()), true);
             }));
             return Command.SINGLE_SUCCESS;
         }
@@ -103,24 +104,24 @@ public class ModelCommand {
                 if (!ServerModelManager.getAuthModels().contains(modelName) || authCap.containsModel(modelName)) {
                     cap.setModelAndTexture(modelName, finalTextureName);
                     cap.setMandatory(true);
-                    context.getSource().sendSuccess(() -> Component.translatable("message.yes_steve_model.model.set.success", modelName, player.getScoreboardName()), true);
+                    YsmText.sendSuccess(context.getSource(), YsmText.translatable("message.yes_steve_model.model.set.success", modelName, player.getScoreboardName()), true);
                     return;
                 }
-                context.getSource().sendSuccess(() -> Component.translatable("message.yes_steve_model.model.set.need_auth", modelName, player.getScoreboardName()), true);
+                YsmText.sendSuccess(context.getSource(), YsmText.translatable("message.yes_steve_model.model.set.need_auth", modelName, player.getScoreboardName()), true);
             });
         }));
         return Command.SINGLE_SUCCESS;
     }
 
     private static int reloadAllPack(CommandContext<CommandSourceStack> context) {
-        context.getSource().sendSuccess(() -> Component.translatable("message.yes_steve_model.model.reload.start"), true);
+        YsmText.sendSuccess(context.getSource(), YsmText.translatable("message.yes_steve_model.model.reload.start"), true);
         StopWatch watch = StopWatch.createStarted();
         if (!ServerModelManager.loadModels(result -> {
             if (result.getErrorMessage() != null) {
                 YSMMessageFormatter.sendServerMessage(context.getSource(), YSMMessageFormatter.withPrefix(result.getErrorMessage()), true);
             }
             if (result.isSuccess()) {
-                YSMMessageFormatter.sendServerMessage(context.getSource(), Component.translatable("message.yes_steve_model.model.reload.complete", Double.valueOf(watch.getTime(TimeUnit.MICROSECONDS) / 1000.0d)), true);
+                YSMMessageFormatter.sendServerMessage(context.getSource(), YsmText.translatable("message.yes_steve_model.model.reload.complete", Double.valueOf(watch.getTime(TimeUnit.MICROSECONDS) / 1000.0d)), true);
                 watch.reset();
                 watch.start();
             }
@@ -135,11 +136,11 @@ public class ModelCommand {
                     YSMMessageFormatter.sendServerMessage(context.getSource(), YSMMessageFormatter.withPrefix(component), true);
                 }
                 if (PlatformAPI.isServer()) {
-                    YSMMessageFormatter.sendServerMessage(context.getSource(), Component.translatable("message.yes_steve_model.model.sync.complete", Double.valueOf(watch.getTime(TimeUnit.MICROSECONDS) / 1000.0d)), true);
+                    YSMMessageFormatter.sendServerMessage(context.getSource(), YsmText.translatable("message.yes_steve_model.model.sync.complete", Double.valueOf(watch.getTime(TimeUnit.MICROSECONDS) / 1000.0d)), true);
                 }
             }
         })) {
-            context.getSource().sendFailure(Component.translatable("message.yes_steve_model.model.reload.in_progress"));
+            context.getSource().sendFailure(YsmText.translatable("message.yes_steve_model.model.reload.in_progress"));
             return Command.SINGLE_SUCCESS;
         }
         return Command.SINGLE_SUCCESS;
@@ -157,7 +158,7 @@ public class ModelCommand {
         String str2 = str;
         targets.forEach(player -> ModelInfoCapability.get(player).ifPresent(cap -> {
             cap.setDisabled(bool);
-            context.getSource().sendSuccess(() -> Component.translatable(str2, player.getScoreboardName()), true);
+            YsmText.sendSuccess(context.getSource(), YsmText.translatable(str2, player.getScoreboardName()), true);
         }));
         return Command.SINGLE_SUCCESS;
     }

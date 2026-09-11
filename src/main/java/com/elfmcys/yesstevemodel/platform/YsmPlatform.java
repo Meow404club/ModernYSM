@@ -5,7 +5,6 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.server.ServerLifecycleHooks;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -56,7 +55,10 @@ public final class YsmPlatform {
 
     /** 原 GameInstance.getServer：客户端单机=集成服实例，专用服=服务端实例，未启动为 null。 */
     public static MinecraftServer getServer() {
-        return ServerLifecycleHooks.getCurrentServer();
+        //? if <1.17
+        /*return net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
+        //? if >=1.17
+        return net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
     }
 
     /**

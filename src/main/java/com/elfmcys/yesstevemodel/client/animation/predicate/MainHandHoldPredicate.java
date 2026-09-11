@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.client.animation.predicate;
 
 import com.elfmcys.yesstevemodel.client.animation.IAnimationPredicate;
+import com.elfmcys.yesstevemodel.util.YsmEntity;
 import rip.ysm.compat.gun.swarfare.SWarfareCompat;
 import com.elfmcys.yesstevemodel.client.entity.LivingAnimatable;
 import com.elfmcys.yesstevemodel.client.animation.condition.ConditionHold;
@@ -40,6 +41,9 @@ public class MainHandHoldPredicate implements IAnimationPredicate<LivingAnimatab
         if (gunPlayState != null) {
             return gunPlayState;
         }
+        //? if <1.17
+        /*if (mainHandItem.getItem() == Items.CROSSBOW && CrossbowItem.isCharged(mainHandItem)) {*/
+        //? if >=1.17
         if (mainHandItem.is(Items.CROSSBOW) && CrossbowItem.isCharged(mainHandItem)) {
             return IAnimationPredicate.playAnimationWithValid(event, "hold_mainhand:charged_crossbow", ILoopType.EDefaultLoopTypes.LOOP, i);
         }
@@ -66,7 +70,7 @@ public class MainHandHoldPredicate implements IAnimationPredicate<LivingAnimatab
     private boolean isSameItem(ItemStack itemStack, LivingEntityFrameState<?> frameState, InteractionHand hand) {
         ItemStack preItem = frameState.getHandItemsForAnimation(hand);
         if (preItem.isDamaged()) {
-            return ItemStack.isSameItem(itemStack, preItem);
+            return YsmEntity.sameItem(itemStack, preItem);
         }
         return ItemStack.matches(itemStack, preItem);
     }

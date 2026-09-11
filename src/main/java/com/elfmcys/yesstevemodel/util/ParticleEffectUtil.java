@@ -14,9 +14,14 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.commands.arguments.ParticleArgument;
 import net.minecraft.core.particles.ParticleOptions;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
+
+// RandomSource 为 1.17+ 类；1.16.5 IContext.random() 走 java.util.Random（见 IContext 同款条件）
+//? if <1.17 {
+/*import java.util.Random;
+ *///?} else {
+import net.minecraft.util.RandomSource;
+//?}
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
@@ -75,9 +80,17 @@ public class ParticleEffectUtil {
         return true;
     }
 
+    //? if <1.17
+    /*private static void spawnParticles(Entity entity, String particleId, Vector3d offset, Vector3d delta, double speed, int count, int lifetime, boolean isAbsolute, Random random) throws ExecutionException, CommandSyntaxException {*/
+    //? if >=1.17
     private static void spawnParticles(Entity entity, String particleId, Vector3d offset, Vector3d delta, double speed, int count, int lifetime, boolean isAbsolute, RandomSource random) throws ExecutionException, CommandSyntaxException {
         ParticleOptions particleOptions = particleCache.get(particleId, () -> {
-            return ParticleArgument.readParticle(new StringReader(particleId), BuiltInRegistries.PARTICLE_TYPE.asLookup());
+            // 1.20.1 readParticle(reader, HolderLookup) ↔ 1.16.5 readParticle(reader)（javap 实证单参）
+            //? if <1.17 {
+            /*return ParticleArgument.readParticle(new StringReader(particleId));
+             *///?} else {
+            return ParticleArgument.readParticle(new StringReader(particleId), net.minecraft.core.registries.BuiltInRegistries.PARTICLE_TYPE.asLookup());
+            //?}
         });
 
         if (particleOptions == null) {
@@ -92,7 +105,7 @@ public class ParticleEffectUtil {
                 if (entity instanceof Player) {
                     spawnPos = spawnPos.yRot((-((Player) entity).yBodyRot) * 0.017453292f);
                 } else {
-                    spawnPos = spawnPos.yRot((-entity.getYRot()) * 0.017453292f);
+                    spawnPos = spawnPos.yRot((-YsmEntity.getYRot(entity)) * 0.017453292f);
                 }
             }
 
@@ -117,6 +130,9 @@ public class ParticleEffectUtil {
         }
     }
 
+    //? if <1.17
+    /*private static void emitParticle(Entity entity, Vector3d offset, Vector3d delta, double speed, int lifetime, ParticleEngine particleEngine, ParticleOptions particleOptions, boolean isAbsolute, Random random) {*/
+    //? if >=1.17
     private static void emitParticle(Entity entity, Vector3d offset, Vector3d delta, double speed, int lifetime, ParticleEngine particleEngine, ParticleOptions particleOptions, boolean isAbsolute, RandomSource random) {
         double spreadX = random.nextGaussian() * delta.x();
         double spreadY = random.nextGaussian() * delta.y();
@@ -128,7 +144,7 @@ public class ParticleEffectUtil {
         Vec3 spawnPos = new Vec3(offset.x() + spreadX, offset.y() + spreadY, offset.z() + spreadZ);
 
         if (!isAbsolute) {
-            spawnPos = spawnPos.yRot((-entity.getYRot()) * 0.017453292f);
+            spawnPos = spawnPos.yRot((-YsmEntity.getYRot(entity)) * 0.017453292f);
         }
 
         double x = entity.getX() + spawnPos.x();

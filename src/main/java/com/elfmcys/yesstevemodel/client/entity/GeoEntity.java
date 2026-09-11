@@ -122,7 +122,10 @@ public abstract class GeoEntity<T extends Entity> extends AnimatableEntity<T> {
             }
         } else {
             ModelAssembly modelAssembly = ClientModelManager.getLocalModelContext();
-            if (this.renderShape == null || !this.renderShape.isDefault || modelAssembly != this.renderShape.context) {
+            // 本地默认模型上下文可能尚未就绪（builtin 模型异步解析中，getLocalModelContext 可返回
+            // null，1.16.5 dev runClient 进世界同步 setModelId 实测 NPE 于 TexturedModelWrapper
+            // 对 null modelAssembly 解引用）——null 时跳过本次构建，待模型就绪后的刷新路径再建。
+            if (modelAssembly != null && (this.renderShape == null || !this.renderShape.isDefault || modelAssembly != this.renderShape.context)) {
                 this.renderShape = buildRenderShape(modelAssembly, true);
             }
         }
@@ -211,14 +214,14 @@ public abstract class GeoEntity<T extends Entity> extends AnimatableEntity<T> {
     }
 
     public void submitAsyncUpdate(float partialTick) {
-        UnsafeUtil.getUnsafe().storeFence();
+        UnsafeUtil.storeFence();
         this.modelFuture = YSMThreadPool.submitCallable(() -> {
             try {
                 AnimationEvent<?> event = super.processAnimationImpl(partialTick, true);
-                UnsafeUtil.getUnsafe().storeFence();
+                UnsafeUtil.storeFence();
                 return event;
             } catch (Throwable th) {
-                UnsafeUtil.getUnsafe().storeFence();
+                UnsafeUtil.storeFence();
                 throw th;
             }
         });
@@ -231,7 +234,10 @@ public abstract class GeoEntity<T extends Entity> extends AnimatableEntity<T> {
         //? if <1.17
         // RenderSystem.assertThread(RenderSystem::isOnRenderThread);
         //? if >=1.17
-        // RenderSystem.assertOnRenderThread();
+        // //? if <1.17
+        /*RenderSystem.assertThread(RenderSystem::isOnRenderThread);*/
+        //? if >=1.17
+        RenderSystem.assertOnRenderThread();
         if (isFirstPerson && this.modelFuture != null) {
             return awaitAsyncResult();
         }
@@ -244,7 +250,7 @@ public abstract class GeoEntity<T extends Entity> extends AnimatableEntity<T> {
             AnimationEvent<?> event = null;
             try {
                 event = this.modelFuture.get();
-                UnsafeUtil.getUnsafe().loadFence();
+                UnsafeUtil.loadFence();
             } catch (InterruptedException e) {
             } catch (Throwable th) {
                 th.printStackTrace();

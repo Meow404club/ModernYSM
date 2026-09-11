@@ -23,6 +23,9 @@ final class ClientOnlyHostBridge {
             return false;
         }
         Minecraft minecraft = Minecraft.getInstance();
+        //? if <1.17
+        /*if (minecraft.getUser() != null && uuid.equals(minecraft.getUser().getGameProfile().getId())) {*/
+        //? if >=1.17
         if (minecraft.getUser() != null && uuid.equals(minecraft.getUser().getProfileId())) {
             return true;
         }

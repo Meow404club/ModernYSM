@@ -93,7 +93,7 @@ public class YSMFolderDeserializer implements AutoCloseable {
         byte[] ysmJsonBytes = readResource("ysm.json");
         if (ysmJsonBytes != null) {  // https://ysm.cfpa.team/wiki/struct/#%E6%96%87%E4%BB%B6%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84
             String jsonStr = new String(ysmJsonBytes, StandardCharsets.UTF_8);
-            JsonObject ysmJson = JsonParser.parseString(jsonStr).getAsJsonObject();
+            JsonObject ysmJson = new com.google.gson.JsonParser().parse(jsonStr).getAsJsonObject();
             parseYsmJson(ysmJson);
         } else parseLegacyFormat();
 
@@ -503,9 +503,9 @@ public class YSMFolderDeserializer implements AutoCloseable {
 
     private RawYsmModel.RawGeometry parseGeometry(byte[] data, int modelType) {
         String json = new String(data, StandardCharsets.UTF_8);
-        JsonObject root = JsonParser.parseString(json).getAsJsonObject();
+        JsonObject root = new com.google.gson.JsonParser().parse(json).getAsJsonObject();
         JsonArray geometries = root.has("minecraft:geometry") ? root.getAsJsonArray("minecraft:geometry") : null;
-        if (geometries == null || geometries.isEmpty()) return new RawYsmModel.RawGeometry();
+        if (geometries == null || geometries.size() == 0) return new RawYsmModel.RawGeometry();
 
         JsonObject geoObj = geometries.get(0).getAsJsonObject();
         RawYsmModel.RawGeometry geo = new RawYsmModel.RawGeometry();
@@ -709,7 +709,7 @@ public class YSMFolderDeserializer implements AutoCloseable {
 
     private RawYsmModel.RawAnimationFile parseAnimations(byte[] data) {
         String json = new String(data, StandardCharsets.UTF_8);
-        JsonObject root = JsonParser.parseString(json).getAsJsonObject();
+        JsonObject root = new com.google.gson.JsonParser().parse(json).getAsJsonObject();
         RawYsmModel.RawAnimationFile raf = new RawYsmModel.RawAnimationFile();
 
         if (root.has("animations")) {
@@ -854,7 +854,7 @@ public class YSMFolderDeserializer implements AutoCloseable {
 
     private void parseAnimationControllers(byte[] data, Map<String, RawYsmModel.RawAnimationController> targetMap) {
         String json = new String(data, StandardCharsets.UTF_8);
-        JsonObject root = JsonParser.parseString(json).getAsJsonObject();
+        JsonObject root = new com.google.gson.JsonParser().parse(json).getAsJsonObject();
 
         if (!root.has("animation_controllers")) return;
         JsonObject acs = root.getAsJsonObject("animation_controllers");
@@ -966,7 +966,7 @@ public class YSMFolderDeserializer implements AutoCloseable {
             try {
                 String hash = sha256Hex(data);
                 String langJsonStr = new String(data, StandardCharsets.UTF_8);
-                JsonObject langJson = JsonParser.parseString(langJsonStr).getAsJsonObject();
+                JsonObject langJson = new com.google.gson.JsonParser().parse(langJsonStr).getAsJsonObject();
                 Map<String, String> langMap = new LinkedHashMap<>();
                 for (Map.Entry<String, JsonElement> langEntry : langJson.entrySet()) {
                     if (langEntry.getValue().isJsonPrimitive()) {
@@ -1246,7 +1246,7 @@ public class YSMFolderDeserializer implements AutoCloseable {
         byte[] infoData = readResource("info.json");
         if (infoData != null) {
             try {
-                JsonObject infoObj = JsonParser.parseString(new String(infoData, StandardCharsets.UTF_8)).getAsJsonObject();
+                JsonObject infoObj = new com.google.gson.JsonParser().parse(new String(infoData, StandardCharsets.UTF_8)).getAsJsonObject();
                 parseLegacyMetadata(infoObj, true);
             } catch (Exception e) {
                 System.err.println("Failed to parse info.json");

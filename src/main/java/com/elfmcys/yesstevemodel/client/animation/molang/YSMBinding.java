@@ -12,6 +12,9 @@ import com.elfmcys.yesstevemodel.geckolib3.core.event.predicate.AnimationEvent;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.binding.ContextBinding;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.context.IContext;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.util.StringPool;
+import com.elfmcys.yesstevemodel.util.YsmEntity;
+import com.elfmcys.yesstevemodel.util.YsmTag;
+import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.geckolib3.util.MathInterpolation;
 import com.elfmcys.yesstevemodel.mixin.client.ArrowEntityAccessor;
 import com.elfmcys.yesstevemodel.mixin.client.FishingHookAccessor;
@@ -19,12 +22,10 @@ import com.elfmcys.yesstevemodel.mixin.client.ThrowableItemProjectileAccessor;
 import com.elfmcys.yesstevemodel.geckolib3.core.EntityFrameStateTracker;
 import com.elfmcys.yesstevemodel.util.CameraUtil;
 import com.elfmcys.yesstevemodel.util.data.LazySupplier;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentUtils;
@@ -44,6 +45,9 @@ import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.LightLayer;
+//? if >1.17 {
+import net.minecraft.core.Holder;
+//?}
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.BlockHitResult;
@@ -84,6 +88,10 @@ public class YSMBinding extends ContextBinding {
 
         var("weather", ctx -> getWeather(ctx.level()));
         var("dimension_name", ctx -> ctx.level().dimension().location().toString());
+        // getFps() 1.18+（1.16.5 为 fpsString 字段/无取值器）：帧率不显示数字时 1.16.5 退化 parse fpsString
+        //? if <1.17
+        /*var("fps", ctx -> 0);*/
+        //? if >=1.17
         var("fps", ctx -> Minecraft.getInstance().getFps());
         var("time_delta", ctx -> ctx.geoInstance().getPositionTracker().getTimeDelta() / 20.0f);
         entityVar("ground_speed2", YSMBinding::getGroundSpeed2);
@@ -98,10 +106,14 @@ public class YSMBinding extends ContextBinding {
         entityVar("sky_light", ctx -> ctx.level().getBrightness(LightLayer.SKY, ctx.entity().blockPosition()));
         entityVar("is_passenger", ctx -> ctx.entity().isPassenger());
         entityVar("is_sleep", ctx -> ctx.entity().getPose() == Pose.SLEEPING);
-        entityVar("is_sneak", ctx -> ctx.entity().onGround() && ctx.entity().getPose() == Pose.CROUCHING);
+        entityVar("is_sneak", ctx -> YsmEntity.onGround(ctx.entity()) && ctx.entity().getPose() == Pose.CROUCHING);
         entityVar("biome_category", ctx -> getBiomeCategory(ctx.entity()));
         entityVar("is_open_air", ctx -> isOpenAir(ctx.entity()));
         entityVar("eye_in_water", ctx -> ctx.entity().isUnderWater());
+        // getTicksFrozen 1.17+（Powder Snow）；1.16.5 无冰冻机制 → 恒 0（语义不匹配态，行为差记回报）
+        //? if <1.17
+        /*entityVar("frozen_ticks", ctx -> 0);*/
+        //? if >=1.17
         entityVar("frozen_ticks", ctx -> ctx.entity().getTicksFrozen());
         entityVar("air_supply", ctx -> ctx.entity().getAirSupply());
         entityVar("delta_movement_length", ctx -> ctx.entity().getDeltaMovement().length());
@@ -203,14 +215,14 @@ public class YSMBinding extends ContextBinding {
             if (blockHitResult.getType() == HitResult.Type.MISS || (clientLevel = Minecraft.getInstance().level) == null) {
                 return StringPool.EMPTY;
             }
-            ResourceLocation key = BuiltInRegistries.BLOCK.getKey(clientLevel.getBlockState(blockHitResult.getBlockPos()).getBlock());
+            ResourceLocation key = YsmTag.blockKey(clientLevel.getBlockState(blockHitResult.getBlockPos()).getBlock());
             if (key != null) {
                 return key.toString();
             }
             return StringPool.EMPTY;
         }
         if (hitResult instanceof EntityHitResult) {
-            ResourceLocation key2 = BuiltInRegistries.ENTITY_TYPE.getKey(((EntityHitResult) hitResult).getEntity().getType());
+            ResourceLocation key2 = YsmTag.entityTypeKey(((EntityHitResult) hitResult).getEntity().getType());
             if (key2 != null) {
                 return key2.toString();
             }
@@ -236,7 +248,7 @@ public class YSMBinding extends ContextBinding {
     private static String getHookedEntityType(IContext<FishingHook> context) {
         ResourceLocation key;
         Entity entity = ((FishingHookAccessor) context.entity()).getHookedIn();
-        if (entity != null && (key = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType())) != null) {
+        if (entity != null && (key = YsmTag.entityTypeKey(entity.getType())) != null) {
             return key.toString();
         }
         return StringPool.EMPTY;
@@ -245,7 +257,7 @@ public class YSMBinding extends ContextBinding {
     private static String getThrowableItemId(IContext<ThrowableItemProjectile> context) {
         ThrowableItemProjectile throwableItemProjectile = context.entity();
         if (throwableItemProjectile instanceof ThrowableItemProjectileAccessor) {
-            ResourceLocation key = BuiltInRegistries.ITEM.getKey(((ThrowableItemProjectileAccessor) throwableItemProjectile).invokeGetDefaultItem());
+            ResourceLocation key = YsmTag.itemKey(((ThrowableItemProjectileAccessor) throwableItemProjectile).invokeGetDefaultItem());
             if (key != null) {
                 return key.toString();
             }
@@ -301,6 +313,15 @@ public class YSMBinding extends ContextBinding {
         return false;
     }
 
+    /** ComponentUtils.copyOnClickText（1.19.2+）↔ 1.16.5 无 → 原串直返（丢点击复制修饰，仅 debug dump 输出）。 */
+    private static net.minecraft.network.chat.Component copyOnClickTextCompat(String str) {
+        //? if <1.17 {
+        /*return YsmText.literal(str);
+         *///?} else {
+        return net.minecraft.network.chat.ComponentUtils.copyOnClickText(str);
+        //?}
+    }
+
     private static boolean isFishing(IContext<LivingEntity> context) {
         LivingEntity livingEntity = context.entity();
         if (livingEntity instanceof Player) {
@@ -311,6 +332,9 @@ public class YSMBinding extends ContextBinding {
 
     private static boolean isChargedCrossbow(IContext<LivingEntity> context, InteractionHand interactionHand) {
         ItemStack itemInHand = context.entity().getItemInHand(interactionHand);
+                //? if <1.17
+        /*return itemInHand.getItem() == Items.CROSSBOW && CrossbowItem.isCharged(itemInHand);*/
+        //? if >=1.17
         return itemInHand.is(Items.CROSSBOW) && CrossbowItem.isCharged(itemInHand);
     }
 
@@ -319,7 +343,7 @@ public class YSMBinding extends ContextBinding {
         if (livingEntityMo327xaffeef43 instanceof Player) {
             return "player";
         }
-        ResourceLocation key = BuiltInRegistries.ENTITY_TYPE.getKey(livingEntityMo327xaffeef43.getType());
+        ResourceLocation key = YsmTag.entityTypeKey(livingEntityMo327xaffeef43.getType());
         if (key == null) {
             return StringPool.EMPTY;
         }
@@ -373,7 +397,7 @@ public class YSMBinding extends ContextBinding {
             return null;
         }
         YsmPlatform.getMods().stream().sorted(Comparator.comparing(mod -> mod.getName())).forEach(mod -> {
-            context.logWarningComponent(Component.literal("Mod: display ").append(ComponentUtils.copyOnClickText(mod.getName())).append(Component.literal("  id ").append(ComponentUtils.copyOnClickText(mod.getModId()))));
+            context.logWarningComponent(YsmText.literal("Mod: display ").append(copyOnClickTextCompat(mod.getName())).append(YsmText.literal("  id ").append(copyOnClickTextCompat(mod.getModId()))));
         });
         return null;
     }
@@ -391,7 +415,7 @@ public class YSMBinding extends ContextBinding {
             return null;
         }
         for (MobEffectInstance mobEffectInstance : activeEffects) {
-            context.logWarningComponent(Component.literal("Effect: display ").append(ComponentUtils.copyOnClickText(mobEffectInstance.getEffect().getDisplayName().getString(99))).append(Component.literal("  name ").append(ComponentUtils.copyOnClickText(BuiltInRegistries.MOB_EFFECT.getKey(mobEffectInstance.getEffect()).toString()))).append("  lv=").append(String.valueOf(mobEffectInstance.getAmplifier() + 1)));
+            context.logWarningComponent(YsmText.literal("Effect: display ").append(copyOnClickTextCompat(mobEffectInstance.getEffect().getDisplayName().getString(99))).append(YsmText.literal("  name ").append(copyOnClickTextCompat(YsmTag.mobEffectKey(mobEffectInstance.getEffect()).toString()))).append("  lv=").append(String.valueOf(mobEffectInstance.getAmplifier() + 1)));
         }
         return null;
     }
@@ -400,27 +424,50 @@ public class YSMBinding extends ContextBinding {
         if (!context.isDebugMode()) {
             return null;
         }
+        // 1.20.1 getBiome 返回 Holder<Biome>（unwrapKey/tags）↔ 1.16.5 getBiome 返回 Biome 本体；
+        // 1.16.5 轴：dump name 走 level.getBiomeName(pos)（Optional<ResourceLocation>），tag 信息 1.16.5
+        // biome 无标签 API（ITag 体系不在 Biome 上）→ 省略该行（debug dump 输出项，行为差见回报）
+        //? if <1.17 {
+        /*ResourceLocation biomeName = net.minecraft.data.BuiltinRegistries.BIOME.getKey(context.entity().level.getBiome(context.entity().blockPosition()));
+        if (biomeName != null) {
+            context.logWarningComponent(YsmText.literal("Name ").append(copyOnClickTextCompat(biomeName.toString())));
+        }
+         *///?} else {
         Holder<Biome> biome = context.entity().level().getBiome(context.entity().blockPosition());
         biome.unwrapKey().ifPresent(resourceKey -> {
-            context.logWarningComponent(Component.literal("Name ").append(ComponentUtils.copyOnClickText(resourceKey.location().toString())));
+            context.logWarningComponent(YsmText.literal("Name ").append(copyOnClickTextCompat(resourceKey.location().toString())));
         });
         biome.tags().forEach(tagKey -> {
-            context.logWarningComponent(Component.literal("Tag ").append(ComponentUtils.copyOnClickText(tagKey.location().toString())));
+            context.logWarningComponent(YsmText.literal("Tag ").append(copyOnClickTextCompat(tagKey.location().toString())));
         });
+        //?}
         return null;
     }
 
     private static boolean isOpenAir(Entity entity) {
         BlockPos blockPosBlockPosition = entity.blockPosition();
+                //? if <1.17
+        /*return entity.level.canSeeSky(blockPosBlockPosition) && entity.level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, blockPosBlockPosition).getY() <= blockPosBlockPosition.getY();*/
+        //? if >=1.17
         return entity.level().canSeeSky(blockPosBlockPosition) && entity.level().getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, blockPosBlockPosition).getY() <= blockPosBlockPosition.getY();
     }
 
+    //? if <1.17
+    /*private static final String[] PARROT_VARIANT_NAMES = {"red_blue", "blue", "green", "yellow_blue", "silver"};
+
+    private static String getParrotVariantName(int variant) {
+        return variant >= 0 && variant < PARROT_VARIANT_NAMES.length ? PARROT_VARIANT_NAMES[variant] : PARROT_VARIANT_NAMES[0];
+    }*/
     public static String getShoulderParrotVariant(Player player, boolean leftShoulder) {
         CompoundTag shoulderEntityLeft = leftShoulder ? player.getShoulderEntityLeft() : player.getShoulderEntityRight();
         return EntityType.byString(shoulderEntityLeft.getString("id")).filter(entityType -> {
             return entityType == EntityType.PARROT;
         }).map(entityType2 -> {
-            return Parrot.Variant.byId(shoulderEntityLeft.getInt("Variant")).name().toLowerCase(Locale.ENGLISH);
+            // Parrot.Variant 内枚举 1.18+（1.16.5 javap 无）：变体名序 vanilla 同源，1.16.5 走名字表
+        //? if <1.17
+        /*return getParrotVariantName(shoulderEntityLeft.getInt("Variant"));*/
+        //? if >=1.17
+        return Parrot.Variant.byId(shoulderEntityLeft.getInt("Variant")).name().toLowerCase(Locale.ENGLISH);
         }).orElse("empty");
     }
 

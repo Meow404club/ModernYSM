@@ -3,11 +3,7 @@ package com.elfmcys.yesstevemodel.util;
 import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.util.StringPool;
 import com.google.common.collect.Sets;
-import it.unimi.dsi.fastutil.Pair;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 
 import java.util.HashSet;
@@ -20,13 +16,25 @@ public final class FileTypeUtil {
         return Integer.parseUnsignedInt(str.substring(0, 8), 16);
     }
 
-    public static Pair<String, String> splitFileNameAndParentDir(String filePath) {
+    // fastutil Pair 接口 8.3.0 才有（1.16.5 打包 8.2.1 实证无 it.unimi.dsi.fastutil.Pair）：
+    // 1.20.1 轴保持 fastutil Pair 原样；1.16.5 轴换 YsmPair.StrPair（同名 left()/right() 消费面）
+    //? if <1.17 {
+    /*public static YsmPair.StrPair splitFileNameAndParentDir(String filePath) {
         int lastSlashIndex = filePath.lastIndexOf('/');
         if (lastSlashIndex == -1) {
-            return Pair.of(filePath, StringPool.EMPTY);
+            return YsmPair.of(filePath, StringPool.EMPTY);
         }
-        return Pair.of(filePath.substring(lastSlashIndex + 1), filePath.substring(0, lastSlashIndex + 1));
+        return YsmPair.of(filePath.substring(lastSlashIndex + 1), filePath.substring(0, lastSlashIndex + 1));
     }
+     *///?} else {
+    public static it.unimi.dsi.fastutil.Pair<String, String> splitFileNameAndParentDir(String filePath) {
+        int lastSlashIndex = filePath.lastIndexOf('/');
+        if (lastSlashIndex == -1) {
+            return it.unimi.dsi.fastutil.Pair.of(filePath, StringPool.EMPTY);
+        }
+        return it.unimi.dsi.fastutil.Pair.of(filePath.substring(lastSlashIndex + 1), filePath.substring(0, lastSlashIndex + 1));
+    }
+    //?}
 
     public static String getNameWithoutArchiveExtension(String filePath) {
         String fileName;
@@ -73,10 +81,21 @@ public final class FileTypeUtil {
             if (str.startsWith("#")) {
                 ResourceLocation resourceLocation = ResourceLocation.tryParse(str.substring(1));
                 if (resourceLocation != null) {
-                    TagKey<EntityType<?>> tagKey = TagKey.create(Registries.ENTITY_TYPE, resourceLocation);
-                    BuiltInRegistries.ENTITY_TYPE.getTag(tagKey).ifPresent(holderSet ->
+                    // 1.20.1 BuiltInRegistries.ENTITY_TYPE.getTag(TagKey)（Holder 链）↔
+                    // 1.16.5 EntityTypeTags.getAllTags().getTagOrEmpty(rl)（Tag 直查，getValues 为实体类型清单）
+                    //? if <1.17 {
+                    /*for (EntityType<?> type : net.minecraft.tags.EntityTypeTags.getAllTags().getTagOrEmpty(resourceLocation).getValues()) {
+                        ResourceLocation key = net.minecraft.core.Registry.ENTITY_TYPE.getKey(type);
+                        if (key != null) {
+                            hashSet.add(key);
+                        }
+                    }
+                     *///?} else {
+                    net.minecraft.tags.TagKey<EntityType<?>> tagKey = net.minecraft.tags.TagKey.create(net.minecraft.core.registries.Registries.ENTITY_TYPE, resourceLocation);
+                    net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getTag(tagKey).ifPresent(holderSet ->
                         holderSet.forEach(holder -> holder.unwrapKey().ifPresent(rk -> hashSet.add(rk.location())))
                     );
+                    //?}
                 }
             } else {
                 ResourceLocation resourceLocation = ResourceLocation.tryParse(str);

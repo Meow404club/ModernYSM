@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.client.animation;
 
 import com.elfmcys.yesstevemodel.capability.PlayerCapability;
+import com.elfmcys.yesstevemodel.util.YsmEntity;
 import com.elfmcys.yesstevemodel.client.entity.CustomPlayerEntity;
 import com.elfmcys.yesstevemodel.geckolib3.core.AnimatableEntity;
 import com.elfmcys.yesstevemodel.geckolib3.core.builder.ILoopType;
@@ -31,16 +32,16 @@ public class AnimationRegister {
                     return cap.getPositionTracker().isFlying();
                 }
             }
-            return player.getAbilities().flying;
+            return YsmEntity.abilities(player).flying;
         });
         register("elytra_fly", Priority.HIGH, (player, event) -> player.getPose() == Pose.FALL_FLYING && player.isFallFlying());
-        register("swim_stand", Priority.NORMAL, (player, event) -> player.isInWater() && !player.onGround());
+        register("swim_stand", Priority.NORMAL, (player, event) -> player.isInWater() && !YsmEntity.onGround(player));
         register("attacked", ILoopType.EDefaultLoopTypes.PLAY_ONCE, 2, (player, event) -> player.hurtTime > 0);
-        register("jump", Priority.NORMAL, (player, event) -> !player.onGround() && !player.isInWater());
-        register("sneak", Priority.NORMAL, (player, event) -> player.onGround() && player.getPose() == Pose.CROUCHING && Math.abs(event.getLimbSwingAmount()) > MIN_SPEED);
-        register("sneaking", Priority.NORMAL, (player, event) -> player.onGround() && player.getPose() == Pose.CROUCHING);
-        register("run", Priority.LOW, (player, event) -> player.onGround() && player.isSprinting());
-        register("walk", Priority.LOW, (player, event) -> player.onGround() && event.getLimbSwingAmount() > MIN_SPEED);
+        register("jump", Priority.NORMAL, (player, event) -> !YsmEntity.onGround(player) && !player.isInWater());
+        register("sneak", Priority.NORMAL, (player, event) -> YsmEntity.onGround(player) && player.getPose() == Pose.CROUCHING && Math.abs(event.getLimbSwingAmount()) > MIN_SPEED);
+        register("sneaking", Priority.NORMAL, (player, event) -> YsmEntity.onGround(player) && player.getPose() == Pose.CROUCHING);
+        register("run", Priority.LOW, (player, event) -> YsmEntity.onGround(player) && player.isSprinting());
+        register("walk", Priority.LOW, (player, event) -> YsmEntity.onGround(player) && event.getLimbSwingAmount() > MIN_SPEED);
         register("idle", Priority.LOWEST, (player, event) -> true);
     }
 

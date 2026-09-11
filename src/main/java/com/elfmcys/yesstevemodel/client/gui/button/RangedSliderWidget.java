@@ -1,9 +1,16 @@
 package com.elfmcys.yesstevemodel.client.gui.button;
 
+import com.elfmcys.yesstevemodel.util.YsmText;
+//? if >1.17 {
 import net.minecraft.client.InputType;
+//?}
 import net.minecraft.client.Minecraft;
+import com.mojang.blaze3d.vertex.PoseStack;
+//? if >1.17 {
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractSliderButton;
+//?}
+import rip.ysm.gui.YsmGui;
+import rip.ysm.gui.YsmSliderButton;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
@@ -11,7 +18,7 @@ import org.lwjgl.glfw.GLFW;
 
 import java.text.DecimalFormat;
 
-public class RangedSliderWidget extends AbstractSliderButton {
+public class RangedSliderWidget extends YsmSliderButton {
     protected static final ResourceLocation SLIDER_LOCATION = new ResourceLocation("minecraft", "textures/gui/slider.png");
 
     protected Component prefix;
@@ -26,7 +33,7 @@ public class RangedSliderWidget extends AbstractSliderButton {
     private final DecimalFormat format;
 
     public RangedSliderWidget(int x, int y, int width, int height, Component prefix, Component suffix, double minValue, double maxValue, double currentValue, double stepSize, int precision, boolean drawString) {
-        super(x, y, width, height, Component.empty(), 0D);
+        super(x, y, width, height, YsmText.literal(""), 0D);
         this.prefix = prefix;
         this.suffix = suffix;
         this.minValue = minValue;
@@ -86,10 +93,15 @@ public class RangedSliderWidget extends AbstractSliderButton {
         if (!focused) {
             this.canChangeValue = false;
         } else {
+            // InputType/getLastInputType 1.17+：<1.17 无键盘导航输入类型判定 → 恒可改值
+            //? if <1.17 {
+            /*this.canChangeValue = true;*/
+            //?} else {
             InputType inputType = Minecraft.getInstance().getLastInputType();
             if (inputType == InputType.MOUSE || inputType == InputType.KEYBOARD_TAB) {
                 this.canChangeValue = true;
             }
+            //?}
         }
     }
 
@@ -123,13 +135,16 @@ public class RangedSliderWidget extends AbstractSliderButton {
         value = (stepSize * Math.round(value / stepSize));
         if (this.minValue > this.maxValue) value = Mth.clamp(value, this.maxValue, this.minValue);
         else value = Mth.clamp(value, this.minValue, this.maxValue);
+        //? if <1.17
+        /*return (value - this.minValue) / (this.maxValue - this.minValue);*/
+        //? if >=1.17
         return Mth.map(value, this.minValue, this.maxValue, 0D, 1D);
     }
 
     @Override
     protected void updateMessage() {
-        if (this.drawString) this.setMessage(Component.literal("").append(prefix).append(this.getValueString()).append(suffix));
-        else this.setMessage(Component.empty());
+        if (this.drawString) this.setMessage(YsmText.literal("").append(prefix).append(this.getValueString()).append(suffix));
+        else this.setMessage(YsmText.literal(""));
     }
 
     @Override
@@ -145,8 +160,20 @@ public class RangedSliderWidget extends AbstractSliderButton {
         return i * 20;
     }
 
+    //? if >1.17 {
     @Override
-    public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+    //?} else {
+    /*@Override
+    public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
+    }
+     *///?}
+
+    @Override
+    public void renderWidget(YsmGui guiGraphics, int mouseX, int mouseY, float partialTick) {
         final Minecraft mc = Minecraft.getInstance();
 
         blitWithBorder(guiGraphics, SLIDER_LOCATION, this.getX(), this.getY(), 0, getTextureY(), this.width, this.height, 200, 20, 2, 3, 2, 2);
@@ -155,11 +182,14 @@ public class RangedSliderWidget extends AbstractSliderButton {
         blitWithBorder(guiGraphics, SLIDER_LOCATION, handleX, this.getY(), 0, getHandleTextureY(), 8, this.height, 200, 20, 2, 3, 2, 2);
 
         int color = this.active ? 16777215 : 10526880;
-        renderScrollingString(guiGraphics, mc.font, 2, color | Mth.ceil(this.alpha * 255.0F) << 24);
+        //? if <1.17
+        /*guiGraphics.drawString(mc.font, this.getMessage(), this.getX() + 2, this.getY() + (this.height - 8) / 2, color | Mth.ceil(this.alpha * 255.0F) << 24, false);*/
+        //? if >=1.17
+        renderScrollingString(guiGraphics.graphics(), mc.font, 2, color | Mth.ceil(this.alpha * 255.0F) << 24);
     }
 
     //https://github.com/MinecraftForge/MinecraftForge/blob/26.1.2/src/main/java/net/minecraftforge/client/extensions/IForgeGuiGraphicsExtractor.java#L71
-    protected void blitWithBorder(GuiGraphics guiGraphics, ResourceLocation texture, int x, int y, int u, int v, int width, int height, int textureWidth, int textureHeight, int topBorder, int bottomBorder, int leftBorder, int rightBorder) {
+    protected void blitWithBorder(YsmGui guiGraphics, ResourceLocation texture, int x, int y, int u, int v, int width, int height, int textureWidth, int textureHeight, int topBorder, int bottomBorder, int leftBorder, int rightBorder) {
         int fillerWidth = textureWidth - leftBorder - rightBorder;
         int fillerHeight = textureHeight - topBorder - bottomBorder;
         int canvasWidth = width - leftBorder - rightBorder;

@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.client.gui;
 
 import com.elfmcys.yesstevemodel.config.ExtraPlayerRenderConfig;
+import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.config.GeneralConfig;
 import com.elfmcys.yesstevemodel.config.LoadingStateConfig;
 import net.minecraft.network.chat.Component;
@@ -15,7 +16,7 @@ import rip.ysm.gui.components.SliderOptionRow;
 public class ExtraPlayerConfigScreen extends OptionScreen {
 
     public ExtraPlayerConfigScreen(@Nullable PlayerModelScreen modelScreen) {
-        super(Component.literal("OpenYSM"), modelScreen);
+        super(YsmText.literal("OpenYSM"), modelScreen);
     }
 
     @Override

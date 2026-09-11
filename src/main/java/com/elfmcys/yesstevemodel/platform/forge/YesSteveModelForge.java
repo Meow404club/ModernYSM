@@ -9,7 +9,9 @@ import com.elfmcys.yesstevemodel.capability.ProjectileModelCapability;
 import com.elfmcys.yesstevemodel.capability.StarModelsCapability;
 import com.elfmcys.yesstevemodel.capability.VehicleCapability;
 import com.elfmcys.yesstevemodel.capability.VehicleModelCapability;
+//? if >=1.17 {
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
+//?}
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -29,7 +31,10 @@ public final class YesSteveModelForge {
     public YesSteveModelForge() {
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus = bus;
+        //? if >=1.17 {
+        // RegisterCapabilitiesEvent 1.19+ 才有；<1.17 能力注册走 @CapabilityInject/CapabilityEvent.register（thinlayer 卡路径）
         bus.addListener(YesSteveModelForge::onRegisterCapabilities);
+        //?}
         YesSteveModel.init();
     }
 
@@ -38,6 +43,9 @@ public final class YesSteveModelForge {
         return modEventBus;
     }
 
+    // <1.17 无 RegisterCapabilitiesEvent（1.19+ 引入）：能力注册改走 @CapabilityInject +
+    // CapabilityEvent.register 构造期注册（m2-forge-thinlayer-condition 卡路径），此处整方法不进编译
+    //? if >=1.17 {
     private static void onRegisterCapabilities(RegisterCapabilitiesEvent event) {
         if (!YesSteveModel.isAvailable()) {
             return;
@@ -53,4 +61,5 @@ public final class YesSteveModelForge {
             event.register(VehicleCapability.class);
         }
     }
+    //?}
 }

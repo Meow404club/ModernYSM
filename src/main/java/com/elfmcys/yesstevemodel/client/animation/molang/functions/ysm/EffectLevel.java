@@ -1,11 +1,11 @@
 package com.elfmcys.yesstevemodel.client.animation.molang.functions.ysm;
 
 import com.elfmcys.yesstevemodel.capability.PlayerCapability;
+import com.elfmcys.yesstevemodel.util.YsmTag;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.context.IContext;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.funciton.ContextFunction;
 import com.elfmcys.yesstevemodel.mixin.client.ArrowEntityAccessor;
 import com.elfmcys.yesstevemodel.molang.runtime.ExecutionContext;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -26,7 +26,7 @@ public class EffectLevel extends ContextFunction<Entity> {
         for (int i = 0; i < arguments.size(); i++) {
             ResourceLocation effectId = arguments.getResourceLocation(context, i);
             if (effectId != null) {
-                MobEffect mobEffect = BuiltInRegistries.MOB_EFFECT.get(effectId);
+                MobEffect mobEffect = YsmTag.mobEffect(effectId);
                 if (mobEffect != null) {
                     if (context.entity().geoInstance() instanceof PlayerCapability
                             && ((PlayerCapability) context.entity().geoInstance()).isLocalPlayerModel()) {

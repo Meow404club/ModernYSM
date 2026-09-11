@@ -17,6 +17,7 @@ import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import rip.ysm.gui.YsmGui;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.util.FormattedCharSequence;
@@ -55,10 +56,10 @@ public class TouhouMaidModelScreen extends PlayerModelScreen {
     }
 
     @Override
-    public void renderModelPreview(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void renderModelPreview(YsmGui guiGraphics, int mouseX, int mouseY, float partialTick) {
         double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
         RenderSystem.enableScissor((int) ((this.guiLeft + 5) * guiScale), (int) (Minecraft.getInstance().getWindow().getHeight() - ((this.guiTop + 200) * guiScale)), (int) (125.0d * guiScale), (int) (171.0d * guiScale));
-        InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, this.guiLeft + 67, this.guiTop + 190, 70, (this.guiLeft + 67) - mouseX, ((this.guiTop + 180) - 95) - mouseY, this.maid);
+        InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics.graphics(), this.guiLeft + 67, this.guiTop + 190, 70, (this.guiLeft + 67) - mouseX, ((this.guiTop + 180) - 95) - mouseY, this.maid);
         RenderSystem.disableScissor();
         this.maid.getCapability(MaidCapabilityProvider.MAID_CAP).ifPresent(cap -> {
             List<FormattedCharSequence> listSplit = this.font.split(FormattedText.of(ClientModelManager.getModelContext(cap.getModelId()).map(it -> {

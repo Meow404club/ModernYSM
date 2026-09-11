@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.command.subcommands;
 
 import com.elfmcys.yesstevemodel.model.ServerModelManager;
+import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.event.CommandRegistry;
 import com.elfmcys.yesstevemodel.util.YSMMessageFormatter;
 import com.mojang.brigadier.Command;
@@ -46,7 +47,7 @@ public class ExportCommand {
                 YSMMessageFormatter.sendServerMessage(sourceStack, YSMMessageFormatter.withPrefix(exportResult.getMessage()), false);
             }
             if (exportResult.isSuccess()) {
-                YSMMessageFormatter.sendServerMessage(sourceStack, Component.translatable("commands.yes_steve_model.export.success", exportResult.getFilePath()), false);
+                YSMMessageFormatter.sendServerMessage(sourceStack, YsmText.translatable("commands.yes_steve_model.export.success", exportResult.getFilePath()), false);
             }
         });
     }

@@ -99,7 +99,10 @@ public final class MatrixBridge {
     // }
     //
     // private static Matrix4f fromGl(int glMode) {
-    //     java.nio.FloatBuffer buf = java.nio.FloatBuffer.allocate(16);
+    //     // 必须 DIRECT 缓冲：glGetFloatv 是原生写入，堆缓冲（FloatBuffer.allocate）地址=0，
+    //     // Mesa/libgallium 直接对 0 地址写 → SIGSEGV（1.16.5 dev runClient hs_err 实证，
+    //     // si_addr=0x0，Problematic frame=libgallium）。
+    //     java.nio.FloatBuffer buf = java.nio.ByteBuffer.allocateDirect(64).order(java.nio.ByteOrder.nativeOrder()).asFloatBuffer();
     //     com.mojang.blaze3d.platform.GlStateManager._getMatrix(glMode, buf);
     //     buf.rewind();
     //     Matrix4f out = new Matrix4f();

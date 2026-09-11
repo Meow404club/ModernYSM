@@ -1,12 +1,12 @@
 package com.elfmcys.yesstevemodel.client.animation.molang.functions.ysm.curios;
 
 import rip.ysm.compat.curios.CuriosCompat;
+import com.elfmcys.yesstevemodel.util.YsmTag;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.context.IContext;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.funciton.entity.LivingEntityFunction;
 import com.elfmcys.yesstevemodel.molang.runtime.ExecutionContext;
 import com.elfmcys.yesstevemodel.util.ThreadLocalItemTagSets;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
@@ -26,7 +26,7 @@ public class HasAnyCurios extends LivingEntityFunction {
             if (name == null) {
                 return null;
             }
-            Item item = BuiltInRegistries.ITEM.get(name);
+            Item item = YsmTag.item(name);
             if (item != null) {
                 referenceOpenHashSet.add(item);
             }

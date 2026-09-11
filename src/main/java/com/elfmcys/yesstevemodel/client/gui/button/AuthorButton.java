@@ -8,8 +8,13 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import com.mojang.blaze3d.vertex.PoseStack;
+//? if >1.17 {
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
+//?}
+import com.elfmcys.yesstevemodel.util.YsmText;
+import rip.ysm.gui.YsmButton;
+import rip.ysm.gui.YsmGui;
 import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -20,7 +25,7 @@ import net.minecraft.util.FormattedCharSequence;
 
 import java.util.List;
 
-public class AuthorButton extends Button {
+public class AuthorButton extends YsmButton {
 
     private final AuthorInfo authorInfo;
 
@@ -37,8 +42,8 @@ public class AuthorButton extends Button {
     private final Screen parentScreen;
 
     public AuthorButton(int x, int y, AuthorInfo authorInfo, ModelAssembly modelAssembly, ResourceLocation resourceLocation, int authorIndex, Screen screen) {
-        super(x, y, 70, 130, Component.empty(), button -> {
-        }, DEFAULT_NARRATION);
+        super(x, y, 70, 130, YsmText.literal(""), button -> {
+        });
         this.selectedContactIndex = -1;
         this.authorInfo = authorInfo;
         this.modelAssembly = modelAssembly;
@@ -55,14 +60,27 @@ public class AuthorButton extends Button {
         return new AuthorButton(x, y, null, null, null, -1, screen);
     }
 
-    public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    //? if >1.17 {
+    @Override
+    public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+    //?} else {
+    /*@Override
+    public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
+    }
+     *///?}
+
+    @Override
+    public void renderWidget(YsmGui guiGraphics, int mouseX, int mouseY, float partialTick) {
         Font font = Minecraft.getInstance().font;
         if (this.authorInfo == null || this.modelAssembly == null || this.resourceLocation == null) {
             guiGraphics.fillGradient(getX(), getY(), getX() + this.width, getY() + this.height, -1891417534, -1891417534);
-            guiGraphics.drawCenteredString(font, Component.literal("......"), getX() + (this.width / 2), getY() + (this.height / 2), ChatFormatting.GRAY.getColor().intValue());
+            guiGraphics.drawCenteredString(font, YsmText.literal("......"), getX() + (this.width / 2), getY() + (this.height / 2), ChatFormatting.GRAY.getColor().intValue());
             return;
         }
-        if (isHoveredOrFocused()) {
+        if (hoveredOrFocused()) {
             guiGraphics.fillGradient(getX(), getY(), getX() + this.width, getY() + this.height, -1892652116, -1892652116);
         } else {
             guiGraphics.fillGradient(getX(), getY(), getX() + this.width, getY() + this.height, -1891417534, -1891417534);
@@ -71,12 +89,15 @@ public class AuthorButton extends Button {
         String str = ModelMetadataPresenter.getLocalizedModelString(this.modelAssembly, String.format("metadata.authors.%d.name", this.authorIndex), this.authorInfo.getName());
         String str2 = ModelMetadataPresenter.getLocalizedModelString(this.modelAssembly, String.format("metadata.authors.%d.role", this.authorIndex), this.authorInfo.getRole());
         String str3 = ModelMetadataPresenter.getLocalizedModelString(this.modelAssembly, String.format("metadata.authors.%d.comment", this.authorIndex), this.authorInfo.getComment());
-        renderScrollingString(guiGraphics, font, Component.literal(str), getX() + 2, getY() + 72, (getX() + this.width) - 2, getY() + 82, ChatFormatting.GOLD.getColor().intValue());
+        //? if <1.17
+        /*guiGraphics.drawString(font, YsmText.literal(str), getX() + 2, getY() + 72, ChatFormatting.GOLD.getColor().intValue(), false);*/
+        //? if >=1.17
+        renderScrollingString(guiGraphics.graphics(), font, YsmText.literal(str), getX() + 2, getY() + 72, (getX() + this.width) - 2, getY() + 82, ChatFormatting.GOLD.getColor().intValue());
         guiGraphics.drawCenteredString(font, str2, getX() + 35, getY() + 82, ChatFormatting.GREEN.getColor().intValue());
-        drawWrappedText(guiGraphics, Component.literal(str3), getX() + 3, getY() + 95, 64, -1);
+        drawWrappedText(guiGraphics, YsmText.literal(str3), getX() + 3, getY() + 95, 64, -1);
     }
 
-    public void drawWrappedText(GuiGraphics guiGraphics, FormattedText formattedText, int x, int y, int wrapWidth, int color) {
+    public void drawWrappedText(YsmGui guiGraphics, FormattedText formattedText, int x, int y, int wrapWidth, int color) {
         Font font = Minecraft.getInstance().font;
         for (FormattedCharSequence formattedCharSequence : font.split(formattedText, wrapWidth)) {
             guiGraphics.drawString(font, formattedCharSequence, x, y, color, false);
@@ -87,9 +108,9 @@ public class AuthorButton extends Button {
         }
     }
 
-    public void refreshContactComponents(GuiGraphics guiGraphics, Screen screen, int mouseX, int mouseY) {
+    public void refreshContactComponents(YsmGui guiGraphics, Screen screen, int mouseX, int mouseY) {
         if (this.isHovered && !this.componentList.isEmpty()) {
-            guiGraphics.renderComponentTooltip(Minecraft.getInstance().font, this.componentList, mouseX, mouseY);
+            guiGraphics.renderScreenComponentTooltip(screen, Minecraft.getInstance().font, this.componentList, mouseX, mouseY);
         } else if (this.selectedContactIndex != -1) {
             this.selectedContactIndex = -1;
             renderTooltip(false);
@@ -122,14 +143,14 @@ public class AuthorButton extends Button {
         }
         this.componentList.clear();
         for (int i = 0; i < this.authorInfo.getContact().size(); i++) {
-            MutableComponent componentLiteral = Component.literal(this.authorInfo.getContact().getKeyAt(i) + ": " + this.authorInfo.getContact().getValueAt(i));
+            MutableComponent componentLiteral = YsmText.literal(this.authorInfo.getContact().getKeyAt(i) + ": " + this.authorInfo.getContact().getValueAt(i));
             if (i == this.selectedContactIndex) {
-                componentLiteral.append(Component.literal(copied ? " ✓" : " ◀").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD));
+                componentLiteral.append(YsmText.literal(copied ? " ✓" : " ◀").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD));
             }
             this.componentList.add(componentLiteral);
         }
         if (!this.componentList.isEmpty()) {
-            this.componentList.add(Component.translatable("gui.yes_steve_model.model.info.contact.click_hint").withStyle(ChatFormatting.DARK_GRAY));
+            this.componentList.add(YsmText.translatable("gui.yes_steve_model.model.info.contact.click_hint").withStyle(ChatFormatting.DARK_GRAY));
         }
     }
 

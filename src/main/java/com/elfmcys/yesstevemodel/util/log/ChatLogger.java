@@ -1,5 +1,6 @@
 package com.elfmcys.yesstevemodel.util.log;
 
+import com.elfmcys.yesstevemodel.util.YsmText;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
@@ -12,7 +13,7 @@ public class ChatLogger implements ILogger {
 
     @Override
     public void logFormatted(String str, Object... objArr) {
-        logComponent(Component.literal(String.format(str, objArr)));
+        logComponent(YsmText.literal(String.format(str, objArr)));
     }
 
     @Override
@@ -21,7 +22,7 @@ public class ChatLogger implements ILogger {
             return;
         }
         Minecraft.getInstance().execute(() -> {
-            Minecraft.getInstance().player.sendSystemMessage(Component.translatable("message.yes_steve_model.model.debug_animation.output").append(component));
+            YsmText.sendSystemMessage(Minecraft.getInstance().player, YsmText.translatable("message.yes_steve_model.model.debug_animation.output").append(component));
         });
     }
 }

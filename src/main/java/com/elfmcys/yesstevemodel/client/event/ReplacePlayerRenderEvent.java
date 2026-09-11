@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.client.event;
 
 import com.elfmcys.yesstevemodel.YesSteveModel;
+import com.elfmcys.yesstevemodel.util.YsmEntity;
 import com.elfmcys.yesstevemodel.capability.PlayerCapability;
 import com.elfmcys.yesstevemodel.client.renderer.RendererManager;
 import com.elfmcys.yesstevemodel.config.GeneralConfig;
@@ -39,7 +40,7 @@ public class ReplacePlayerRenderEvent {
                         || GeneralConfig.DISABLE_EXTERNAL_FP_ANIM.get().booleanValue()
                         || !PlayerAnimatorCompat.isPlayerAnimated(localPlayer)) {
                     cancelled[0] = true;
-                    RendererManager.getPlayerRenderer().render(entity, entity.getYRot(), partialTick, poseStack, bufferSource, packedLight);
+                    RendererManager.getPlayerRenderer().render(entity, YsmEntity.getYRot(entity), partialTick, poseStack, bufferSource, packedLight);
                 }
             }
         });

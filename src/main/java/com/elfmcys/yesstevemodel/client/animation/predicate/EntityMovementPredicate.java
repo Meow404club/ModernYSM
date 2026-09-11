@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.client.animation.predicate;
 
 import com.elfmcys.yesstevemodel.client.animation.IAnimationPredicate;
+import com.elfmcys.yesstevemodel.util.YsmEntity;
 import com.elfmcys.yesstevemodel.client.entity.GeckoVehicleEntity;
 import com.elfmcys.yesstevemodel.geckolib3.core.event.predicate.AnimationEvent;
 import com.elfmcys.yesstevemodel.geckolib3.core.enums.PlayState;
@@ -20,7 +21,7 @@ public class EntityMovementPredicate implements IAnimationPredicate<GeckoVehicle
         if (entity.isInWater()) {
             return IAnimationPredicate.predicate(event, "water");
         }
-        if (entity.onGround()) {
+        if (YsmEntity.onGround(entity)) {
             return IAnimationPredicate.predicate(event, "ground");
         }
         return IAnimationPredicate.predicate(event, "fly");

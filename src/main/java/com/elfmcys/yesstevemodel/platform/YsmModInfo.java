@@ -46,12 +46,26 @@ public final class YsmModInfo {
 
     /** 原 Mod.findResource：相对 mod 根的资源路径（"assets", "ysm", "builtin" 形态）。 */
     public Optional<Path> findResource(String... path) {
+        // forgespi 3.x（1.16.5）IModFileInfo 无 getFile()：<1.17 经类加载器锚点解析（同 ServerModelManager 口径）
+        //? if <1.17 {
+        /*try {
+            java.net.URL url = YsmModInfo.class.getClassLoader().getResource(String.join("/", path));
+            if (url == null || !"file".equals(url.getProtocol())) {
+                return Optional.empty();
+            }
+            Path resolved = java.nio.file.Paths.get(url.toURI());
+            return Files.exists(resolved) ? Optional.of(resolved) : Optional.empty();
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+         *///?} else {
         IModFileInfo fileInfo = ModList.get().getModFileById(info.getModId());
         if (fileInfo == null || fileInfo.getFile() == null) {
             return Optional.empty();
         }
         Path resolved = fileInfo.getFile().findResource(path);
         return Files.exists(resolved) ? Optional.of(resolved) : Optional.empty();
+        //?}
     }
 
     @Override

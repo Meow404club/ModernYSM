@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class SlashBladeStateHelper {
     public static boolean isSlashBlade(ItemStack itemStack) {
-        return (itemStack.getItem() instanceof ItemSlashBlade) || itemStack.is(ItemTagsConstants.SLASHBLADE);
+        return (itemStack.getItem() instanceof ItemSlashBlade) || ItemTagsConstants.SLASHBLADE.matches(itemStack);
     }
 
     public static String getSlashBladeAnimation(AnimationEvent<? extends AnimatableEntity<? extends LivingEntity>> event) {

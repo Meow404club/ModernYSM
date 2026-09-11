@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.client.gui.button;
 
 import com.elfmcys.yesstevemodel.YesSteveModel;
+import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.capability.PlayerCapability;
 import com.elfmcys.yesstevemodel.capability.StarModelsCapability;
 import com.elfmcys.yesstevemodel.client.ClientModelManager;
@@ -28,8 +29,12 @@ import it.unimi.dsi.fastutil.objects.Object2ReferenceMaps;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import com.mojang.blaze3d.vertex.PoseStack;
+//? if >1.17 {
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
+//?}
+import rip.ysm.gui.YsmButton;
+import rip.ysm.gui.YsmGui;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
@@ -44,7 +49,7 @@ import rip.ysm.gpu.Pie;
 import java.util.List;
 import java.util.Objects;
 
-public class ModelButton extends Button {
+public class ModelButton extends YsmButton {
 
     private static final ResourceLocation ICON_TEXTURE = new ResourceLocation(YesSteveModel.MOD_ID, "texture/icon.png");
 
@@ -93,7 +98,7 @@ public class ModelButton extends Button {
 
     public ModelButton(int x, int y, boolean isAuthLocked, PlayerPreviewEntity playerPreviewEntity, ModelAssembly textureRegistry, String targetModelId) {
         super(x, y, 52, 90, createDisplayName(playerPreviewEntity, textureRegistry), button -> {
-        }, DEFAULT_NARRATION);
+        });
         this.targetModelId = targetModelId;
         this.backgroundTexture = null;
         this.foregroundTexture = null;
@@ -105,7 +110,7 @@ public class ModelButton extends Button {
         this.renderContext = textureRegistry;
         this.modelIdHolder = playerPreviewEntity;
         this.disablePreviewRotation = textureRegistry.getModelData().getModelProperties().isDisablePreviewRotation();
-        this.displayName = Component.literal(FileTypeUtil.getNameWithoutArchiveExtension(playerPreviewEntity.getModelId()));
+        this.displayName = YsmText.literal(FileTypeUtil.getNameWithoutArchiveExtension(playerPreviewEntity.getModelId()));
         this.backgroundTexture = textureRegistry.getTextureRegistry().getGuiBackground() == null ? null : UploadManager.getOrCreateLocatableWithSize(textureRegistry.getTextureRegistry().getGuiBackground(), true, 200);
         this.foregroundTexture = textureRegistry.getTextureRegistry().getGuiForeground() == null ? null : UploadManager.getOrCreateLocatableWithSize(textureRegistry.getTextureRegistry().getGuiForeground(), true, 200);
         PlayerModelBundle animationBundle = ClientModelManager.isModelPending(this.targetModelId) ? null : textureRegistry.getAnimationBundle();
@@ -132,9 +137,9 @@ public class ModelButton extends Button {
     private static MutableComponent createDisplayName(PlayerPreviewEntity previewEntity, ModelAssembly modelAssembly) {
         Metadata metadata2 = modelAssembly.getModelData().getExtraInfo();
         if (metadata2 == null || StringUtils.isBlank(metadata2.getName())) {
-            return Component.literal(FileTypeUtil.getNameWithoutArchiveExtension(previewEntity.getModelId()));
+            return YsmText.literal(FileTypeUtil.getNameWithoutArchiveExtension(previewEntity.getModelId()));
         }
-        return Component.literal(ModelMetadataPresenter.getLocalizedModelString(modelAssembly, "metadata.name", metadata2.getName()));
+        return YsmText.literal(ModelMetadataPresenter.getLocalizedModelString(modelAssembly, "metadata.name", metadata2.getName()));
     }
 
     public Component getMessage() {
@@ -167,7 +172,20 @@ public class ModelButton extends Button {
         }
     }
 
-    public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    //? if >1.17 {
+    @Override
+    public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+    //?} else {
+    /*@Override
+    public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
+    }
+     *///?}
+
+    @Override
+    public void renderWidget(YsmGui guiGraphics, int mouseX, int mouseY, float partialTick) {
         AnimationTracker c0117x8455a741Mo1262xaffeef43 = this.modelIdHolder.getAnimationStateMachine();
         if (isHovered()) {
             this.lastHoverTime = Util.getMillis();
@@ -205,7 +223,7 @@ public class ModelButton extends Button {
         if (this.foregroundTexture != null) {
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
-            guiGraphics.blit(this.foregroundTexture.getResourceLocation().get(), x, y, 3500, 0.0f, 0.0f, this.width, this.height, this.width, this.height);
+            guiGraphics.blit(this.foregroundTexture.getResourceLocation().get(), x, y, 3500, 0, 0, this.width, this.height, this.width, this.height);
             RenderSystem.disableBlend();
         }
         List listSplit = font.split(getMessage(), 45);
@@ -215,7 +233,7 @@ public class ModelButton extends Button {
         } else {
             guiGraphics.drawCenteredString(font, getMessage(), x + (this.width / 2), (y + this.height) - 15, 15986656);
         }
-        if (!this.isStarred && isHoveredOrFocused()) {
+        if (!this.isStarred && hoveredOrFocused()) {
             guiGraphics.fillGradient(x, y + 1, x + 1, (y + this.height) - 1, 3500, -790560, -790560);
             guiGraphics.fillGradient(x, y, x + this.width, y + 1, 3500, -790560, -790560);
             guiGraphics.fillGradient((x + this.width) - 1, y + 1, x + this.width, (y + this.height) - 1, 3500, -790560, -790560);
@@ -227,13 +245,13 @@ public class ModelButton extends Button {
         if (minecraft.player != null) {
             StarModelsCapability.get(minecraft.player).ifPresent(cap -> {
                 if (cap.containsModel(this.modelIdHolder.getModelId())) {
-                    guiGraphics.blit(ICON_TEXTURE, (x + this.width) - 14, y, starZ, 16.0f, 0.0f, 16, 16, 256, 256);
+                    guiGraphics.blit(ICON_TEXTURE, (x + this.width) - 14, y, starZ, 0, 0, 16, 16, 256, 256);
                 }
             });
         }
     }
 
-    public static void drawLoading(GuiGraphics guiGraphics, float centerX, float centerY, float radius) {
+    public static void drawLoading(YsmGui guiGraphics, float centerX, float centerY, float radius) {
         float thickness = Math.max(1.5f, radius * 0.28f);
         float inner = radius - thickness;
         float time = (System.nanoTime() % 10_000_000_000L) / 1.0E9f;
@@ -248,11 +266,14 @@ public class ModelButton extends Button {
         Pie.draw(guiGraphics.pose(), centerX, centerY, inner, radius, start, start + sweep, 0xFFF3D08A);
     }
 
-    public void renderTooltip(GuiGraphics guiGraphics, Screen screen, int mouseX, int mouseY) {
+    public void renderTooltip(YsmGui guiGraphics, Screen screen, int mouseX, int mouseY) {
         if (isHovered()) {
             guiGraphics.pose().pushPose();
             guiGraphics.pose().translate(0.0f, 0.0f, 4000.0f);
-            String selected = Minecraft.getInstance().getLanguageManager().getSelected();
+            //? if <1.17
+        /*String selected = Minecraft.getInstance().getLanguageManager().getSelected().getCode();*/
+        //? if >=1.17
+        String selected = Minecraft.getInstance().getLanguageManager().getSelected();
             if (!Objects.equals(this.cachedLanguage, selected)) {
                 this.cachedLanguage = selected;
                 this.detailedTooltipLines = null;
@@ -262,12 +283,12 @@ public class ModelButton extends Button {
                 if (this.detailedTooltipLines == null) {
                     this.detailedTooltipLines = ModelMetadataPresenter.buildModelTooltip(this.renderContext, selected, this.modelIdHolder.getModelId(), true);
                 }
-                guiGraphics.renderComponentTooltip(Minecraft.getInstance().font, this.detailedTooltipLines, mouseX, mouseY);
+                guiGraphics.renderScreenComponentTooltip(screen, Minecraft.getInstance().font, this.detailedTooltipLines, mouseX, mouseY);
             } else {
                 if (this.tooltipLines == null) {
                     this.tooltipLines = ModelMetadataPresenter.buildModelTooltip(this.renderContext, selected, this.modelIdHolder.getModelId(), false);
                 }
-                guiGraphics.renderComponentTooltip(Minecraft.getInstance().font, this.tooltipLines, mouseX, mouseY);
+                guiGraphics.renderScreenComponentTooltip(screen, Minecraft.getInstance().font, this.tooltipLines, mouseX, mouseY);
             }
             guiGraphics.pose().popPose();
         }

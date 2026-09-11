@@ -7,7 +7,13 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.IForgeRegistry;
+
+// RegistryObject 1.17 起在 net.minecraftforge.registries（1.16.5 在 net.minecraftforge.fml，javap 实证）
+//? if <1.17 {
+/*import net.minecraftforge.fml.RegistryObject;
+ *///?} else {
 import net.minecraftforge.registries.RegistryObject;
+//?}
 
 import java.util.function.Supplier;
 
@@ -24,8 +30,14 @@ public class ModSoundEvents {
 
     public static final SoundEventsRegister REGISTER = new SoundEventsRegister(ForgeRegistries.SOUND_EVENTS, YesSteveModel.MOD_ID);
 
+    // createFixedRangeEvent(rl,16f) 为 1.19+ API；1.16.5 SoundEvent(RL) 构造器即固定 16 格衰减（等价语义）
     public static final RegistryObject<SoundEvent> CUSTOM_SOUND = REGISTER.register("custom",
-            () -> SoundEvent.createFixedRangeEvent(new ResourceLocation(YesSteveModel.MOD_ID, "custom"), 16.0f));
+            //? if <1.17 {
+            /*() -> new SoundEvent(new ResourceLocation(YesSteveModel.MOD_ID, "custom"))*/
+            //?} else {
+            () -> SoundEvent.createFixedRangeEvent(new ResourceLocation(YesSteveModel.MOD_ID, "custom"), 16.0f)
+            //?}
+    );
 
     public static final class SoundEventsRegister {
 

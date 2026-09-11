@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.client.gui;
 
 import com.elfmcys.yesstevemodel.YesSteveModel;
+import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.capability.PlayerCapability;
 import com.elfmcys.yesstevemodel.client.event.AnimationLockEvent;
 import com.elfmcys.yesstevemodel.client.gui.button.AnimationSlider;
@@ -33,13 +34,19 @@ import com.mojang.blaze3d.vertex.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import com.mojang.blaze3d.vertex.PoseStack;
+//? if >1.17 {
 import net.minecraft.client.gui.GuiGraphics;
+//?}
+import rip.ysm.gui.YsmGui;
 //? if >1.17 {
 import net.minecraft.client.gui.components.Renderable;
 //?} else {
 /*import net.minecraft.client.gui.components.Widget;
  *///?}
+//? if >1.17 {
 import net.minecraft.client.gui.components.Tooltip;
+//?}
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
@@ -59,7 +66,11 @@ import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+//? if <1.17 {
+/*import com.mojang.math.Matrix4f;
+ *///?} else {
 import org.joml.Matrix4f;
+//?}
 import rip.ysm.api.client.KeyMappingFactory;
 
 import java.util.*;
@@ -116,7 +127,7 @@ public class AnimationRouletteScreen extends Screen {
     private final ModelAssembly renderContext;
 
     public AnimationRouletteScreen(Map<String, ExtraAnimationButtons> map, Map<String, OrderedStringMap<String, String>> map2, ModelAssembly modelAssembly, AnimatableEntity<?> animatableEntity) {
-        super(Component.literal("Animation Roulette GUI"));
+        super(YsmText.literal("Animation Roulette GUI"));
         this.hoveredIndex = -1;
         this.hoveredConfigIndex = -1;
         this.currentConfigGroup = null;
@@ -139,7 +150,7 @@ public class AnimationRouletteScreen extends Screen {
     }
 
     public AnimationRouletteScreen(String str, ModelAssembly modelAssembly, AnimatableEntity<?> animatableEntity) {
-        super(Component.literal("Animation Roulette GUI"));
+        super(YsmText.literal("Animation Roulette GUI"));
         this.hoveredIndex = -1;
         this.hoveredConfigIndex = -1;
         this.currentConfigGroup = null;
@@ -169,6 +180,11 @@ public class AnimationRouletteScreen extends Screen {
     }
 
     public void init() {
+        // clearWidgets() 为 1.17+（1.16.5 Screen 无）：vanilla init(mc,w,h) 已清空 buttons/children
+        // 再回调 init()，1.16.5 直跑共享方法体即可（与 DisclaimerScreen/PlayerModelScreen 展开
+        // 后的实际语义一致）。注意不可用「//? if <1.17 + /*this.init(...);return;*/」行条件写法：
+        // 行条件解包会把两行整块复活，return 悬在方法中段 → 1.16.5 展开报不可达语句（本轮实测）。
+        //? if >=1.17
         clearWidgets();
         this.centerX = (this.width / 2) - 70;
         this.centerY = (this.height / 2) - 8;
@@ -179,34 +195,34 @@ public class AnimationRouletteScreen extends Screen {
             this.hoveredIndex = 0;
         }
         if (this.animatableModel.getEntity() instanceof Player) {
-            addRenderableWidget(new FlatColorButton(this.centerX - 20, this.centerY - 10, 40, 20, Component.empty(), button -> {
+            ysmAddWidget(new FlatColorButton(this.centerX - 20, this.centerY - 10, 40, 20, YsmText.literal(""), button -> {
                 AnimationLockEvent.toggleLock();
             }) {
                 @NotNull
                 public Component getMessage() {
                     if (AnimationLockEvent.isLocked()) {
-                        return Component.translatable("gui.yes_steve_model.roulette.lock_on");
+                        return YsmText.translatable("gui.yes_steve_model.roulette.lock_on");
                     }
-                    return Component.translatable("gui.yes_steve_model.roulette.lock_off");
+                    return YsmText.translatable("gui.yes_steve_model.roulette.lock_off");
                 }
             });
         } else {
-            addRenderableWidget(new FlatColorButton(this.centerX - 20, this.centerY - 10, 40, 20, Component.translatable("gui.yes_steve_model.roulette.stop"), button2 -> {
+            ysmAddWidget(new FlatColorButton(this.centerX - 20, this.centerY - 10, 40, 20, YsmText.translatable("gui.yes_steve_model.roulette.stop"), button2 -> {
                 NetworkHandler.sendToServer(C2SPlayAnimationPacket.createWithIndex(this.animatableModel.getEntity().getId()));
                 onClose();
             }));
         }
-        addRenderableWidget(new FlatColorButton(this.centerX + 125, this.centerY - 102, 30, 30, Component.literal("<"), button3 -> {
+        ysmAddWidget(new FlatColorButton(this.centerX + 125, this.centerY - 102, 30, 30, YsmText.literal("<"), button3 -> {
             previousPage();
         }));
-        addRenderableWidget(new FlatColorButton(this.centerX + 240, this.centerY - 102, 30, 30, Component.literal(">"), button4 -> {
+        ysmAddWidget(new FlatColorButton(this.centerX + 240, this.centerY - 102, 30, 30, YsmText.literal(">"), button4 -> {
             nextPage();
         }));
-        addRenderableWidget(new FlatColorButton(this.centerX + 125, this.centerY - 70, 145, 22, Component.translatable("gui.yes_steve_model.model.return"), button5 -> {
+        ysmAddWidget(new FlatColorButton(this.centerX + 125, this.centerY - 70, 145, 22, YsmText.translatable("gui.yes_steve_model.model.return"), button5 -> {
             navigateBack();
         }));
         if (this.currentConfigGroup != null) {
-            this.scrollUpButton = new FlatColorButton(this.centerX + 242, this.centerY - 46, 28, 60, Component.literal("↑"), button6 -> {
+            this.scrollUpButton = new FlatColorButton(this.centerX + 242, this.centerY - 46, 28, 60, YsmText.literal("↑"), button6 -> {
                 scrollConfigUp(50);
                 if (this.configScrollOffset == 0 && this.scrollUpButton != null) {
                     this.scrollUpButton.active = false;
@@ -215,7 +231,7 @@ public class AnimationRouletteScreen extends Screen {
                     this.scrollDownButton.active = true;
                 }
             });
-            this.scrollDownButton = new FlatColorButton(this.centerX + 242, this.centerY + 50, 28, 60, Component.literal("↓"), button7 -> {
+            this.scrollDownButton = new FlatColorButton(this.centerX + 242, this.centerY + 50, 28, 60, YsmText.literal("↓"), button7 -> {
                 scrollConfigDown(50);
                 if (this.configScrollOffset == this.maxConfigScroll && this.scrollDownButton != null) {
                     this.scrollDownButton.active = false;
@@ -224,8 +240,8 @@ public class AnimationRouletteScreen extends Screen {
                     this.scrollUpButton.active = true;
                 }
             });
-            addRenderableWidget(this.scrollUpButton);
-            addRenderableWidget(this.scrollDownButton);
+            ysmAddWidget(this.scrollUpButton);
+            ysmAddWidget(this.scrollDownButton);
             int[] iArr = {-46};
             int[] iArr2 = {0};
             for (AbstractConfig config : this.currentConfigGroup.getConfigForms()) {
@@ -239,7 +255,7 @@ public class AnimationRouletteScreen extends Screen {
             CheckboxConfig config = (CheckboxConfig) abstractConfig;
             executeExpression(abstractConfig.getValue(), str -> {
                 this.minecraft.execute(() -> {
-                    addRenderableWidget(createCheckbox(config, str, iArr, iArr2));
+                    ysmAddWidget(createCheckbox(config, str, iArr, iArr2));
                     iArr[0] = iArr[0] + 14;
                     iArr2[0] = iArr2[0] + 1;
                     this.maxConfigScroll = Math.max(0, iArr[0] - 110);
@@ -250,7 +266,7 @@ public class AnimationRouletteScreen extends Screen {
             RangeConfig config = (RangeConfig) abstractConfig;
             executeExpression(abstractConfig.getValue(), str2 -> {
                 this.minecraft.execute(() -> {
-                    addRenderableWidget(createSlider(config, str2, iArr, iArr2));
+                    ysmAddWidget(createSlider(config, str2, iArr, iArr2));
                     iArr[0] = iArr[0] + 17;
                     iArr2[0] = iArr2[0] + 1;
                     this.maxConfigScroll = Math.max(0, iArr[0] - 110);
@@ -286,16 +302,23 @@ public class AnimationRouletteScreen extends Screen {
         int iMax2 = Math.max(1, 115 / iMax);
         String str2 = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format(CONFIG_TITLE_FORMAT, this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0])), radioConfig.getTitle());
         String str3 = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format(CONFIG_DESC_FORMAT, this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0])), radioConfig.getDescription());
-        MutableComponent mutableComponentLiteral = Component.literal(str2);
-        Tooltip tooltipCreate = Tooltip.create(Component.literal(str3));
+        MutableComponent mutableComponentLiteral = YsmText.literal(str2);
+        // Tooltip（1.17+）：<1.17 悬浮说明降级不展示（配置项 hover 描述，功能差记回报）
+        //? if >1.17 {
+        Tooltip tooltipCreate = Tooltip.create(YsmText.literal(str3));
+        //?}
         int size = ((((orderedStringMap.size() - 1) / iMax2) + 1) * 14) + 14;
         FlatIconButton iconButton = new FlatIconButton(this.centerX + 125, this.centerY + iArr[0], size, mutableComponentLiteral);
+        //? if >1.17 {
         iconButton.setTooltip(tooltipCreate);
         addRenderableOnly(iconButton);
+        //?} else {
+        /*ysmAddWidget(iconButton);
+         *///?}
         int rowY = iArr[0] + 14;
         int idx = 0;
         while (idx < orderedStringMap.size()) {
-            MutableComponent mutableComponentLiteral2 = Component.literal(ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format(CONFIG_LABEL_FORMAT, this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0]), Integer.valueOf(idx)), orderedStringMap.getKeyAt(idx)));
+            MutableComponent mutableComponentLiteral2 = YsmText.literal(ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format(CONFIG_LABEL_FORMAT, this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0]), Integer.valueOf(idx)), orderedStringMap.getKeyAt(idx)));
             String str4 = orderedStringMap.getValueAt(idx);
             boolean isSelected = iRound == idx;
             int iRound2 = Math.round(110.0f / iMax2);
@@ -307,7 +330,7 @@ public class AnimationRouletteScreen extends Screen {
                 init();
             });
             configCheckBox.setStateTriggered(isSelected);
-            addRenderableWidget(configCheckBox);
+            ysmAddWidget(configCheckBox);
             if (idx % iMax2 == iMax2 - 1) {
                 rowY += 14;
             }
@@ -322,10 +345,14 @@ public class AnimationRouletteScreen extends Screen {
     private AnimationSlider createSlider(RangeConfig rangeConfig, String str, int[] iArr, int[] iArr2) {
         String str2 = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format(CONFIG_TITLE_FORMAT, this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0])), rangeConfig.getTitle());
         String str3 = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format(CONFIG_DESC_FORMAT, this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0])), rangeConfig.getDescription());
-        MutableComponent mutableComponentLiteral = Component.literal(str2);
-        Tooltip tooltipCreate = Tooltip.create(Component.literal(str3));
+        MutableComponent mutableComponentLiteral = YsmText.literal(str2);
+        //? if >1.17 {
+        Tooltip tooltipCreate = Tooltip.create(YsmText.literal(str3));
+        //?}
         AnimationSlider animationSlider = new AnimationSlider(this.centerX + 125, this.centerY + iArr[0], mutableComponentLiteral, parseFloatValue(str), this.animatableModel, rangeConfig.getValue(), rangeConfig.getStep(), rangeConfig.getMin(), rangeConfig.getMax());
+//? if >1.17 {
         animationSlider.setTooltip(tooltipCreate);
+        //?}
         return animationSlider;
     }
 
@@ -333,8 +360,10 @@ public class AnimationRouletteScreen extends Screen {
     private ConfigCheckBox createCheckbox(CheckboxConfig checkboxConfig, String str, int[] iArr, int[] iArr2) throws NumberFormatException {
         String str3 = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format(CONFIG_TITLE_FORMAT, this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0])), checkboxConfig.getTitle());
         String str4 = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format(CONFIG_DESC_FORMAT, this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0])), checkboxConfig.getDescription());
-        MutableComponent mutableComponentLiteral = Component.literal(str3);
-        Tooltip tooltipCreate = Tooltip.create(Component.literal(str4));
+        MutableComponent mutableComponentLiteral = YsmText.literal(str3);
+//? if >1.17 {
+        Tooltip tooltipCreate = Tooltip.create(YsmText.literal(str4));
+        //?}
         float parsedValue = parseFloatValue(str);
         ConfigCheckBox configCheckBox = new ConfigCheckBox(this.centerX + 125, this.centerY + iArr[0], mutableComponentLiteral, bool -> {
             String str2 = checkboxConfig.getValue() + "=" + (bool.booleanValue() ? "1" : "0");
@@ -343,14 +372,28 @@ public class AnimationRouletteScreen extends Screen {
                 NetworkHandler.sendToServer(new C2SRequestExecuteMolangPacket(str2, this.animatableModel.getEntity().getId()));
             }
         }) {
+            //? if >1.17 {
             @Override
-            public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+            public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+                this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
+            }
+            //?} else {
+            /*@Override
+            public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+                this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
+            }
+             *///?}
+
+            @Override
+            public void renderWidget(YsmGui guiGraphics, int mouseX, int mouseY, float partialTick) {
                 guiGraphics.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight(), -280804798);
                 super.renderWidget(guiGraphics, mouseX, mouseY, partialTick);
             }
         };
         configCheckBox.setStateTriggered(parsedValue > 0.0f);
+//? if >1.17 {
         configCheckBox.setTooltip(tooltipCreate);
+        //?}
         return configCheckBox;
     }
 
@@ -368,9 +411,21 @@ public class AnimationRouletteScreen extends Screen {
         return value;
     }
 
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    //? if >1.17 {
+    @Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.render(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+    //?} else {
+    /*@Override
+    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+        this.render(new YsmGui(poseStack), mouseX, mouseY, partialTick);
+    }
+     *///?}
+
+    public void render(YsmGui guiGraphics, int mouseX, int mouseY, float partialTick) {
         int scrolledMouseY;
-        guiGraphics.drawCenteredString(this.font, Component.translatable("gui.yes_steve_model.roulette.path", StringUtils.joinWith(" > ", navigationStack.stream().map((v0) -> {
+        guiGraphics.drawCenteredString(this.font, YsmText.translatable("gui.yes_steve_model.roulette.path", StringUtils.joinWith(" > ", navigationStack.stream().map((v0) -> {
             return v0.getLeft();
         }).toArray())), this.centerX + 195, this.centerY - 100, 16777215);
         renderRadialBackground(guiGraphics.pose(), mouseX, mouseY);
@@ -378,7 +433,10 @@ public class AnimationRouletteScreen extends Screen {
         renderPageInfo(guiGraphics);
         for (/*? if <1.17 {*/ /*Widget *//*?} else {*/ Renderable /*?}*/ renderable : ((ScreenAccessor) this).ysm$getRenderables()) {
             if (!(renderable instanceof ISpecialWidget)) {
-                renderable.render(guiGraphics, mouseX, mouseY, partialTick);
+                //? if <1.17
+                /*renderable.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
+                //? if >=1.17
+                renderable.render(guiGraphics.graphics(), mouseX, mouseY, partialTick);
             }
         }
         guiGraphics.enableScissor(0, this.centerY - 46, this.width, this.centerY + 110);
@@ -391,7 +449,10 @@ public class AnimationRouletteScreen extends Screen {
         guiGraphics.pose().translate(0.0f, -this.configScrollOffset, 0.0f);
         for (/*? if <1.17 {*/ /*Widget *//*?} else {*/ Renderable /*?}*/ renderable2 : ((ScreenAccessor) this).ysm$getRenderables()) {
             if (renderable2 instanceof ISpecialWidget) {
-                renderable2.render(guiGraphics, mouseX, scrolledMouseY, partialTick);
+                //? if <1.17
+                /*renderable2.render(guiGraphics.pose(), mouseX, scrolledMouseY, partialTick);*/
+                //? if >=1.17
+                renderable2.render(guiGraphics.graphics(), mouseX, scrolledMouseY, partialTick);
             }
         }
         guiGraphics.pose().popPose();
@@ -399,11 +460,11 @@ public class AnimationRouletteScreen extends Screen {
         renderHoverTooltip(guiGraphics, mouseX, scrolledMouseY);
     }
 
-    private void renderHoverTooltip(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+    private void renderHoverTooltip(YsmGui guiGraphics, int mouseX, int mouseY) {
         if (-1 < this.hoveredIndex && this.hoveredIndex < this.currentProperties.size()) {
             String str = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format("properties.extra_animation.%s.desc", this.currentProperties.getKeyAt(this.hoveredIndex)), StringPool.EMPTY);
             if (StringUtils.isNotBlank(str)) {
-                guiGraphics.renderTooltip(this.font, this.font.split(Component.literal(str), 240), mouseX, mouseY);
+                guiGraphics.renderTooltip(this.font, this.font.split(YsmText.literal(str), 240), mouseX, mouseY);
             }
         }
     }
@@ -416,7 +477,7 @@ public class AnimationRouletteScreen extends Screen {
         }
     }
 
-    private void renderPageInfo(GuiGraphics guiGraphics) {
+    private void renderPageInfo(YsmGui guiGraphics) {
         guiGraphics.fill(this.centerX + 157, this.centerY - 87, this.centerX + 238, this.centerY - 72, 0, -822083584);
         guiGraphics.drawCenteredString(this.font, String.format("%d/%d", Integer.valueOf(this.currentNavEntry.getRight().intValue() + 1), Integer.valueOf(((this.currentProperties.size() - 1) / 8) + 1)), this.centerX + 197, this.centerY - 83, ChatFormatting.AQUA.getColor().intValue());
     }
@@ -536,7 +597,7 @@ public class AnimationRouletteScreen extends Screen {
             });
         }
         if (localPlayer != null && GeneralConfig.PRINT_ANIMATION_ROULETTE_MSG.get().booleanValue()) {
-            localPlayer.sendSystemMessage(Component.translatable("message.yes_steve_model.model.animation_roulette.play", str));
+            YsmText.sendSystemMessage(localPlayer, YsmText.translatable("message.yes_steve_model.model.animation_roulette.play", str));
         }
         Minecraft.getInstance().setScreen(null);
     }
@@ -545,7 +606,7 @@ public class AnimationRouletteScreen extends Screen {
         if (navigationStack.size() > 5) {
             LocalPlayer localPlayer = Minecraft.getInstance().player;
             if (localPlayer != null) {
-                localPlayer.sendSystemMessage(Component.translatable("gui.yes_steve_model.roulette.too_long"));
+                YsmText.sendSystemMessage(localPlayer, YsmText.translatable("gui.yes_steve_model.roulette.too_long"));
                 return;
             }
             return;
@@ -576,7 +637,7 @@ public class AnimationRouletteScreen extends Screen {
         return false;
     }
 
-    private void renderRadialButtons(GuiGraphics guiGraphics) {
+    private void renderRadialButtons(YsmGui guiGraphics) {
         float angle = 0.3926991f;
         int size = this.currentProperties.size() - (this.currentNavEntry.getRight().intValue() * 8);
         for (int i = 0; i < Math.min(8, size); i++) {
@@ -594,13 +655,13 @@ public class AnimationRouletteScreen extends Screen {
                     int iCos2 = (int) (this.centerX + (35 * Mth.cos(angle)));
                     float fSin2 = this.centerY + (35 * Mth.sin(angle));
                     Objects.requireNonNull(this.font);
-                    guiGraphics.drawCenteredString(this.font, Component.literal("⚙").withStyle(ChatFormatting.BOLD, ChatFormatting.GOLD), iCos2, (int) (fSin2 - (9.0f / 2.0f)), 16777215);
+                    guiGraphics.drawCenteredString(this.font, YsmText.literal("⚙").withStyle(ChatFormatting.BOLD, ChatFormatting.GOLD), iCos2, (int) (fSin2 - (9.0f / 2.0f)), 16777215);
                 }
             }
             if (StringUtils.isNoneBlank(str)) {
-                renderWrappedLabel(guiGraphics, Component.literal(ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format("properties.extra_animation.%s", this.currentProperties.getKeyAt(iIntValue)), str)), iCos, labelY, zStartsWith);
+                renderWrappedLabel(guiGraphics, YsmText.literal(ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format("properties.extra_animation.%s", this.currentProperties.getKeyAt(iIntValue)), str)), iCos, labelY, zStartsWith);
             } else {
-                guiGraphics.drawCenteredString(this.font, Component.literal(ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format("properties.extra_animation.%s", this.currentProperties.getKeyAt(iIntValue)), String.valueOf(iIntValue))), iCos, labelY - 8, 15986656);
+                guiGraphics.drawCenteredString(this.font, YsmText.literal(ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format("properties.extra_animation.%s", this.currentProperties.getKeyAt(iIntValue)), String.valueOf(iIntValue))), iCos, labelY - 8, 15986656);
             }
             if (this.currentNavEntry.getRight().intValue() == 0 && navigationStack.size() == 1) {
                 renderKeyBindings(guiGraphics, iIntValue, iCos, labelY);
@@ -609,11 +670,11 @@ public class AnimationRouletteScreen extends Screen {
         }
     }
 
-    private void renderKeyBindings(GuiGraphics guiGraphics, int slotIndex, int x, int y) {
-        MutableComponent mutableComponentWithStyle = Component.literal("[ ").withStyle(ChatFormatting.YELLOW);
+    private void renderKeyBindings(YsmGui guiGraphics, int slotIndex, int x, int y) {
+        MutableComponent mutableComponentWithStyle = YsmText.literal("[ ").withStyle(ChatFormatting.YELLOW);
         KeyMapping keyMapping = ExtraAnimationKey.KEY_MAPPINGS.get(slotIndex);
         if (keyMapping.isUnbound()) {
-            mutableComponentWithStyle.append(Component.translatable("key.yes_steve_model.extra_animation.none"));
+            mutableComponentWithStyle.append(YsmText.translatable("key.yes_steve_model.extra_animation.none"));
         } else {
             mutableComponentWithStyle.append(keyMapping.getTranslatedKeyMessage());
         }
@@ -621,7 +682,7 @@ public class AnimationRouletteScreen extends Screen {
         guiGraphics.drawCenteredString(this.font, mutableComponentWithStyle, x, y + 4, 15986656);
     }
 
-    private void renderWrappedLabel(GuiGraphics guiGraphics, MutableComponent mutableComponent, int x, int y, boolean isSubmenu) {
+    private void renderWrappedLabel(YsmGui guiGraphics, MutableComponent mutableComponent, int x, int y, boolean isSubmenu) {
         Objects.requireNonNull(this.font);
         if (isSubmenu) {
             mutableComponent = mutableComponent.withStyle(ChatFormatting.RED);
@@ -644,10 +705,15 @@ public class AnimationRouletteScreen extends Screen {
         }
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+// 1.17+ shader 管线绑定 + VertexFormat.Mode.QUADS ↔ 1.16.5 固定管线（POSITION_COLOR 走固定管线，GL_QUADS=7）
         Tesselator tesselator = Tesselator.getInstance();
         BufferBuilder builder = tesselator.getBuilder();
+        //? if <1.17 {
+        /*builder.begin(7, DefaultVertexFormat.POSITION_COLOR);
+         *///?} else {
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
         builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        //?}
         Matrix4f matrix4fPose = poseStack.last().pose();
         float pointerAngle = (float) Mth.atan2(mouseY - this.centerY, mouseX - this.centerX);
         if (pointerAngle < 0.0f) {
@@ -712,4 +778,18 @@ public class AnimationRouletteScreen extends Screen {
         bufferBuilder.vertex(matrix4f, this.centerX + (innerRadius * Mth.cos(endAngle)), this.centerY + (innerRadius * Mth.sin(endAngle)), 0.0f).color(red, green, blue, alpha).endVertex();
         bufferBuilder.vertex(matrix4f, this.centerX + (outerRadius * Mth.cos(endAngle)), this.centerY + (outerRadius * Mth.sin(endAngle)), 0.0f).color(red, green, blue, alpha).endVertex();
     }
+    // addRenderableWidget/addWidget 均为 protected 实例方法（JLS 6.6.2 子类内才可调）→ 桥方法；
+    // 泛型返回保持原 addRenderableWidget 的链式取回语义（如 .setTooltipText 续链）
+    //? if <1.17 {
+    /*private <T extends net.minecraft.client.gui.components.AbstractWidget> T ysmAddWidget(T widget) {
+        this.addWidget(widget);
+        return widget;
+    }
+     *///?} else {
+    private <T extends net.minecraft.client.gui.components.AbstractWidget> T ysmAddWidget(T widget) {
+        this.addRenderableWidget(widget);
+        return widget;
+    }
+    //?}
+
 }

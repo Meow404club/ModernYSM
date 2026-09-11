@@ -3,7 +3,7 @@ package com.elfmcys.yesstevemodel.client.compat.curios.platform.forge;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.binding.ContextBinding;
 import com.elfmcys.yesstevemodel.molang.runtime.Function;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
-import net.minecraft.tags.TagKey;
+import com.elfmcys.yesstevemodel.util.YsmTag;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.fml.loading.LoadingModList;
@@ -29,10 +29,10 @@ public class CuriosCompat {
         return IS_LOADED && CuriosApi.getCuriosInventory(livingEntity).map(handler -> handler).flatMap(handler -> handler.getStacksHandler(str)).map(handler -> CuriosBinding.findInSlot(handler, itemStack -> set.isEmpty() || set.contains(itemStack.getItem())) != null).orElse(false);
     }
 
-    public static boolean hasTaggedItemInSlot(LivingEntity livingEntity, String str, List<TagKey<Item>> list) {
+    public static boolean hasTaggedItemInSlot(LivingEntity livingEntity, String str, List<YsmTag.ItemTag> list) {
         return IS_LOADED && CuriosApi.getCuriosInventory(livingEntity).map(handler -> handler).flatMap(handler -> handler.getStacksHandler(str)).map(handler -> CuriosBinding.findInSlot(handler, itemStack -> {
-            for (TagKey<Item> itemTagKey : list) {
-                if (itemStack.is(itemTagKey)) {
+            for (YsmTag.ItemTag itemTag : list) {
+                if (itemTag.matches(itemStack)) {
                     return true;
                 }
             }
@@ -40,10 +40,10 @@ public class CuriosCompat {
         }) != null).orElse(false);
     }
 
-    public static boolean hasNoTaggedItemInSlot(LivingEntity entity, String str, List<TagKey<Item>> list) {
+    public static boolean hasNoTaggedItemInSlot(LivingEntity entity, String str, List<YsmTag.ItemTag> list) {
         return IS_LOADED && CuriosApi.getCuriosInventory(entity).map(handler -> handler).flatMap(handler -> handler.getStacksHandler(str)).map(handler -> CuriosBinding.findInSlot(handler, itemStack -> {
-            for (TagKey<Item> itemTagKey : list) {
-                if (!itemStack.is(itemTagKey)) {
+            for (YsmTag.ItemTag itemTag : list) {
+                if (!itemTag.matches(itemStack)) {
                     return false;
                 }
             }

@@ -43,6 +43,43 @@ tasks.withType<JavaCompile>().configureEach {
     options.compilerArgs.addAll(listOf("-Xmaxerrs", "10000"))
 }
 
+// ===== unsafe8 源集（m2-compile-green-gate，audit 例外清单唯一条目）=====
+// sun.misc.Unsafe 在 javac --release 8 的 ct.sym 审计器下不可见（ct.sym 只收录 JDK8 文档化
+// API；sun.misc.Unsafe 是非文档 API，1.16.5 真实 JDK8 rt.jar 本就有）。-source/-target 8
+// 直读 JDK 系统镜像则可见。处置：把仓库唯二 Unsafe 编译期触点（rip/ysm/zstd/** 纯 Java
+// zstd 实现 + util/UnsafeUtil）隔离进本源集，用 source/target 8 编译（放弃 ct.sym 审计=
+// audit 例外），其余全部主源集代码保持 --release 8 审计不放松。
+// 注：这些文件经 grep 验证零 stonecutter 条件（//? if），raw 编译与展开树逐字等价。
+sourceSets {
+    create("unsafe8") {
+        java {
+            // 版本子项目 projectDir=versions/1.16.5-forge，共享源必须 rootProject 锚定
+            srcDir(rootProject.file("src/main/java"))
+            include("rip/ysm/zstd/**")
+            include("com/elfmcys/yesstevemodel/util/UnsafeUtil.java")
+        }
+    }
+}
+sourceSets.main {
+    java {
+        exclude("rip/ysm/zstd/**")
+        exclude("com/elfmcys/yesstevemodel/util/UnsafeUtil.java")
+    }
+}
+tasks.named<JavaCompile>("compileUnsafe8Java") {
+    // audit 例外：此处不得用 --release 8（见 unsafe8 源集头注）；字节码目标仍是 major 52
+    options.release = null
+    sourceCompatibility = "8"
+    targetCompatibility = "8"
+}
+// main（GeoEntity 等）引用 util.UnsafeUtil → unsafe8 产物进 main 编译/运行时类路径
+//（sourceSets.output 自带任务依赖，compileJava 自动 dependsOn compileUnsafe8Java；
+//  runtimeClasspath 供 unimined dev runClient 载入 zstd 类）
+sourceSets.main {
+    compileClasspath += sourceSets.getByName("unsafe8").output
+    runtimeClasspath += sourceSets.getByName("unsafe8").output
+}
+
 repositories {
     mavenCentral()
     maven("https://maven.minecraftforge.net/") { name = "MinecraftForge" }
@@ -80,15 +117,22 @@ dependencies {
     // API 与共享源口径一致）；字节码 major 46（Java 1.2），Java 8 运行时可直接载入。
     //（与 work/m2-render-pipeline-condition a2183c9 同行同内容，合并自动收敛）
     implementation("org.joml:joml:1.10.5")
-    // ImageStream（rip.ysm.imagestream 纯 Java 库）：编译期可见，保编译基线干净；
-    // 生产 jar 内嵌（照 1.20.1 的 ImageStream 先例）属后续卡
-    implementation("com.github.TartaricAlkaline:ImageStream:-SNAPSHOT")
+    // ImageStream：不再走 JitPack 依赖（产物 major 61，Java 8 运行时载入即崩），改为
+    // src/imagestream 源码 vendor 由本线 Java 8 工具链编译（见 sourceSets 注释）
     // MixinExtras：保留（查证记录，m2-gate-compat）——本 mod 自有 mixin
     // EntityRenderDispatcherMixin 用 @WrapWithCondition（mixinextras v2 注解），且它
     // 注册在 1.16.5 有效的 yes_steve_model.mixins.json（platform/forge 第三方
     // accessor 配置才是被闸对象）；运行时注入方式（内嵌/伴生）未定，本卡只保编译
-    compileOnly("io.github.llamalad7:mixinextras-common:${property("deps.mixinextras")}")
+    // MixinExtras：生产 jar 内嵌（embedMixinExtras，m2 决策=JIJ）；1.16.5 MixinTweaker.onLoad
+    // 在配置加载早期调 MixinExtrasBootstrap.init()（<1.17 条件化）→ dev 运行时也必须可见，
+    // 故 implementation 而非 compileOnly（compileOnly 不进 dev classpath，runServer/runClient
+    // 即 NCDFE，本轮实测）；与 joml/imageStream 同款先例：implementation+生产内嵌并存。
+    implementation("io.github.llamalad7:mixinextras-common:${property("deps.mixinextras")}")
     annotationProcessor("io.github.llamalad7:mixinextras-common:${property("deps.mixinextras")}")
+    // jsr305（javax.annotation.*）：1.16.5 mojmap jar 缺 mcp 注解同源的 nullness 注解——
+    // forge 侧类签名引用 ParametersAreNonnullByDefault 等，javac attribution 必需
+    //（编译期依赖，compileOnly 不进产物；forge 1.16.5 userdev 同款 3.0.2）
+    compileOnly("com.google.code.findbugs:jsr305:3.0.2")
     // 1.16.5 不声明 libs/ fileTree：第三方 compat 依赖整体闸在本版本构建外
     //（排除规则见下方 stonecutterGenerate 块，门面 shim 见 versions/1.16.5-forge/src/main/java）
 }
@@ -108,6 +152,16 @@ dependencies {
 sourceSets.main {
     java {
         srcDir("src/shim/rip/ysm/compat")
+        // ImageStream 源码 vendor（上游 TartaricAlkaline/ImageStream master，Java17 编译）：
+        // JitPack 产物 major 61，Java 8 dev 运行时一触发模型加载即 UnsupportedClassVersionError
+        // （1.16.5 runServer 实测）——改为本线 Java 8 工具链直接编译（自动 major 52），
+        // 语法下移仅 8 文件（箭头 switch→经典 switch、pattern instanceof→cast，语义逐行等价）。
+        srcDir("src/imagestream")
+        // mcp 注解 stub srcDir（根=mcp 包目录）：unimined 1.16.5 mojmap jar 全系缺
+        // mcp/MethodsReturnNonnullByDefault.class，而 forge 侧 CapabilityProvider/
+        // CapabilityDispatcher/LazyOptional 及 11 个 package-info 的签名引用它
+        //（javap+zip 字节扫描实证）——capability 继承链 attribution 需要可解析。
+        srcDir("src/shim/mcp")
         exclude(
             "rip/ysm/compat/**",
             "com/elfmcys/yesstevemodel/client/compat/**",
@@ -126,6 +180,10 @@ sourceSets.main {
     // 天然不命中上方 "rip/ysm/compat/**" 排除模式——否则排除会把版本独有 shim 一并杀掉
     //（shim 与被排除源同包同名 FQCN，靠 sourceSets 级 exclude 与生成树互斥）。
     // shim 内容 = 门面签名镜像 + mod-absent 返回值，运行时语义与 1.20.1 守卫链缺席分支一致。
+    // ImageStream 的 javax.imageio SPI 注册文件（2 条）随源码一并 vendor，随主 jar 打包。
+    resources {
+        srcDir("src/imagestream-resources")
+    }
 }
 tasks {
     processResources {
@@ -133,74 +191,116 @@ tasks {
         exclude("yes_steve_model_forge.mixins.json")
     }
 
-    // ===== MixinExtras 1.16.5 运行时内嵌（m2-mixin-versioning）=====
-    // 1.16.5 Forge 不自带 MixinExtras（Forge 47.x 起才内置）；无它时 @WrapWithCondition 被
-    // 纯 Mixin 静默忽略（不崩但弹射物/载具自定义渲染钩子失效）。方案：mixinextras-common
-    // 0.3.6 运行时类平铺进 remapJar 产物（字节码 major 52=Java 8，1.16.5 运行时可载入，
-    // 缓存 jar 实测），引导=MixinTweaker.onLoad 的 MixinExtrasBootstrap.init()（<1.17 条件化）。
-    // 合并规则：目标 jar 条目流式原样保留（MANIFEST 保持首位，Forge 用 JarInputStream 探测），
-    // 追加 mixinextras jar 条目时剔除其 META-INF/**（含 javax.annotation.processing.Processor
-    // 服务声明——运行时 jar 不该声明注解处理器）与签名文件，重名跳过（目标优先）。
-    // 合并算法已用 tmp/m2-refmap-poc 产物 + 缓存 jar 独立实证（manifest-first/类可载入）。
-    val embedMixinExtras = register("embedMixinExtras") {
-        group = "build"
-        val remapJarTask = named("remapJar")
-        dependsOn(remapJarTask)
-        val jarFile = remapJarTask.map { it.outputs.files.singleFile }
-        inputs.file(jarFile)
-        outputs.file(jarFile)
-        doLast {
-            val target = jarFile.get()
-            val mixinExtrasJar = configurations.compileClasspath.get().files
-                .filter { it.name.startsWith("mixinextras-common") }
-                .firstOrNull()
-                ?: throw GradleException("mixinextras-common not found on compileClasspath")
-            val tmp = File(target.parentFile, target.name + ".mixinextras-merging")
-            tmp.delete()
-            ZipOutputStream(FileOutputStream(tmp)).use { out ->
-                // 第一遍：目标 jar 原样流式拷贝（保持条目顺序=MANIFEST 首位）
-                ZipInputStream(FileInputStream(target)).use { zin ->
-                    while (true) {
-                        val e = zin.nextEntry ?: break
-                        out.putNextEntry(ZipEntry(e.name).apply {
-                            method = e.method
-                            time = e.time
-                        })
-                        if (!e.isDirectory) zin.copyTo(out)
-                        out.closeEntry()
-                    }
+    // ===== 发布 jar 运行时内嵌（m2-mixin-versioning / m2-compile-green-gate）=====
+    // 1.16.5 产物为 unimined remapJar 出的 SRG plain jar，运行时依赖需按 1.20.1 imageStreamEmbed
+    // 先例（等价旧仓 JIJ include）并入。四个内嵌项：
+    //   1) embedMixinExtras  — 1.16.5 Forge 不自带 MixinExtras（Forge 47.x 起内置）；无它时
+    //      @WrapWithCondition 被纯 Mixin 静默忽略。mixinextras-common 0.3.6 运行时类平铺
+    //      （字节码 major 52=Java 8，缓存 jar 实测可载入），引导=MixinTweaker.onLoad 的
+    //      MixinExtrasBootstrap.init()（<1.17 条件化）。
+    //   2) embedJoml         — geckolib3 渲染/动画栈 49 文件 import org.joml（MC 1.19.3 才内置），
+    //      运行缺类即 NCDFE。1.10.5 = MC 1.20.1 自带版本，字节码 major 46，Java 8 可载。
+    //   3) ImageStream        — avif/webp 解码：不再内嵌（JitPack 产物 major 61，Java 8 运行时
+    //      载入即 UnsupportedClassVersionError，runServer 实测），改为 src/imagestream 源码
+    //      vendor 由本线 Java 8 工具链编译成主 jar 类（major 52），随 classes 直接入包。
+    //   4) embedUnsafe8      — unsafe8 源集产物（zstd/UnsafeUtil）并包，见源集头注。
+    // 合并算法（mixin 卡 tmp/m2-refmap-poc 实证：manifest-first/类可载入）：
+    // 目标 jar 条目流式原样保留（MANIFEST 保持首位，Forge 用 JarInputStream 探测），
+    // 追加条目剔除 META-INF/**/签名文件/module-info，重名跳过（目标优先）。
+    fun mergeInto(target: File, extraJars: List<File>, extraClassDirs: Iterable<File>) {
+        val tmp = File(target.parentFile, target.name + ".embed-merging")
+        tmp.delete()
+        val existing = HashSet<String>()
+        ZipInputStream(FileInputStream(target)).use { zin ->
+            while (true) {
+                val e = zin.nextEntry ?: break
+                existing.add(e.name)
+            }
+        }
+        ZipOutputStream(FileOutputStream(tmp)).use { out ->
+            // 第一遍：目标 jar 原样流式拷贝（保持条目顺序=MANIFEST 首位）
+            ZipInputStream(FileInputStream(target)).use { zin ->
+                while (true) {
+                    val e = zin.nextEntry ?: break
+                    out.putNextEntry(ZipEntry(e.name).apply {
+                        method = e.method
+                        time = e.time
+                    })
+                    if (!e.isDirectory) zin.copyTo(out)
+                    out.closeEntry()
                 }
-                // 第二遍：追加 MixinExtras 运行时条目（META-INF/** 与签名文件剔除，重名跳过）
-                ZipInputStream(FileInputStream(mixinExtrasJar)).use { zin ->
-                    val existing = HashSet<String>()
-                    JarFile(target).use { jf ->
-                        val en = jf.entries()
-                        while (en.hasMoreElements()) existing.add(en.nextElement().name)
-                    }
+            }
+            // 第二遍：追加运行时条目
+            fun putEntry(name: String, content: () -> Unit) {
+                if (name.isEmpty() || name in existing) return
+                if (name.startsWith("META-INF/") || name == "module-info.class" ||
+                    name.endsWith(".SF") || name.endsWith(".DSA") || name.endsWith(".RSA")
+                ) return
+                out.putNextEntry(ZipEntry(name))
+                content()
+                out.closeEntry()
+                existing.add(name)
+            }
+            for (jar in extraJars) {
+                ZipInputStream(FileInputStream(jar)).use { zin ->
                     while (true) {
                         val e = zin.nextEntry ?: break
-                        val name = e.name
-                        if (name.startsWith("META-INF/") || name == "module-info.class" ||
-                            name.endsWith(".SF") || name.endsWith(".DSA") || name.endsWith(".RSA")
-                        ) continue
-                        if (e.isDirectory || name in existing) continue
-                        out.putNextEntry(ZipEntry(name))
-                        zin.copyTo(out)
-                        out.closeEntry()
+                        if (!e.isDirectory) putEntry(e.name) { zin.copyTo(out) }
                     }
                 }
             }
-            val old = File(target.parentFile, target.name + ".mixinextras-old")
-            old.delete()
-            if (!target.renameTo(old)) throw GradleException("cannot swap merged jar in place")
-            if (!tmp.renameTo(target)) throw GradleException("cannot promote merged jar")
-            old.delete()
+            for (dir in extraClassDirs) {
+                dir.walkTopDown().filter { it.isFile }.forEach { f ->
+                    val rel = dir.toPath().relativize(f.toPath()).toString().replace('\\', '/')
+                    putEntry(rel) { f.inputStream().use { it.copyTo(out) } }
+                }
+            }
         }
+        val old = File(target.parentFile, target.name + ".embed-old")
+        old.delete()
+        if (!target.renameTo(old)) throw GradleException("cannot swap embedded jar in place")
+        if (!tmp.renameTo(target)) throw GradleException("cannot promote embedded jar")
+        old.delete()
     }
+
+    fun jarFromCompileClasspath(prefix: String): Provider<File> =
+        provider { configurations.compileClasspath.get().files
+            .filter { it.name.startsWith(prefix) }
+            .firstOrNull()
+            ?: throw GradleException("$prefix not found on compileClasspath") }
+
+    fun registerEmbed(name: String, prev: Provider<Task>, extraJars: List<Provider<File>> = emptyList(), extraClassDirs: Iterable<File> = emptyList()) = register(name) {
+            group = "build"
+            dependsOn(prev)
+            val target = prev.map { it.outputs.files.singleFile }
+            inputs.file(target)
+            inputs.files(extraJars)
+            outputs.file(target)
+            doLast {
+                mergeInto(target.get(), extraJars.map { it.get() }, extraClassDirs)
+            }
+        }
+
+    val embedMixinExtras = registerEmbed(
+        "embedMixinExtras",
+        named("remapJar"),
+        listOf(jarFromCompileClasspath("mixinextras-common")),
+    )
+    val embedJoml = registerEmbed(
+        "embedJoml",
+        embedMixinExtras,
+        listOf(jarFromCompileClasspath("joml-")),
+    )
+    val embedUnsafe8 = registerEmbed(
+        "embedUnsafe8",
+        embedJoml,
+        extraClassDirs = sourceSets.getByName("unsafe8").output.classesDirs,
+    )
 
     register<Copy>("buildAndCollect") {
         group = "build"
-        from(embedMixinExtras) // unimined 产物：已重映射到 SRG 且内嵌 MixinExtras 的发布 jar
+        // unimined 产物：SRG 重映射 + MixinExtras/JOML/ImageStream/unsafe8 四项内嵌后的发布 jar
+        from(embedUnsafe8)
         into(rootProject.layout.buildDirectory.file("libs/${project.property("mod_version")}"))
         dependsOn("build")
     }
@@ -216,6 +316,31 @@ tasks.named<ProcessResources>("processResources") {
     }
     filesMatching("pack.mcmeta") {
         filter { line: String -> line.replace("\"pack_format\": 15", "\"pack_format\": 6") }
+    }
+    // mixins.json 注入 refmap 键：生产（SRG）运行时 mixin 注解的 mojmap 名→SRG 名必须经
+    // refmap 桥接（tacz/bettercombat 生产 jar 同款键实证）；本线 refmap 文件名由 unimined
+    // remapJar 生成（yes_steve_model.mixins-refmap.json，jar 内实存）。共享源无此键=生产
+    // 注入全数 0/1 失败（1.16.5 dev runServer 实测炸点之一）。dev 下该文件不在类路径，
+    // Mixin 报 warning 后直跑 mojmap 名（dev 运行时全 mojmap，javap 实证），语义不变。
+    filesMatching("yes_steve_model.mixins.json") {
+        filter { line: String ->
+            if (line.contains("\"required\": true"))
+                line.replace("\"required\": true", "\"required\": true,\n  \"refmap\": \"yes_steve_model.mixins-refmap.json\"")
+            else line
+        }
+        // RenderSystemAccessor 在 1.16.5 为普通工具类（非 mixin，空接口 mixin 在
+        // Mixin prepare 阶段报 target type mismatch），从 client 注册列表剔除
+        filter { line: String -> line.replace("\"client.RenderSystemAccessor\", ", "") }
+    }
+    // mods.toml 版本口径：共享源为 1.20.1 事实（loaderVersion/forge=47 系、minecraft 1.20.1），
+    // 1.16.5=forge 36.x（forge 1.16.5 MDK 模板值：loaderVersion "[36,)" / forge "[36,)" /
+    // minecraft "[1.16.5,1.17)"）——不替换则 mandatory=true 的三处声明在 36.2.39 上必然拒载
+    filesMatching("META-INF/mods.toml") {
+        filter { line: String ->
+            line.replace("loaderVersion = \"[47,)\"", "loaderVersion = \"[36,)\"")
+                .replace("versionRange = \"[47,)\"", "versionRange = \"[36,)\"")
+                .replace("versionRange = \"[1.20.1,)\"", "versionRange = \"[1.16.5,1.17)\"")
+        }
     }
     val props = mapOf(
         "mod_id" to project.property("archives_name") as String,

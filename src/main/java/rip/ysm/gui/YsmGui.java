@@ -32,6 +32,16 @@ public final class YsmGui {
      * 版本中性文本工厂：1.20.1 Component.literal（1.19.4+，mojmap 无 TextComponent 类）↔
      * 1.16.5 new TextComponent（Component.java 无 literal/translatable 工厂）。
      */
+    /** 版本中性 Button 工厂：1.20.1 Button.builder().bounds().build() ↔ 1.16.5 new Button(x,y,w,h,msg,onPress)
+     *（1.16.5 无 Button.Builder，jar 检索实证；多行 onPress lambda 两版同构）。 */
+    public static net.minecraft.client.gui.components.Button button(int x, int y, int width, int height, net.minecraft.network.chat.Component message, net.minecraft.client.gui.components.Button.OnPress onPress) {
+        //? if <1.17 {
+        /*return new net.minecraft.client.gui.components.Button(x, y, width, height, message, onPress);
+         *///?} else {
+        return net.minecraft.client.gui.components.Button.builder(message, onPress).bounds(x, y, width, height).build();
+        //?}
+    }
+
     public static net.minecraft.network.chat.MutableComponent text(String s) {
         //? if <1.17 {
         /*return new net.minecraft.network.chat.TextComponent(s);
@@ -117,12 +127,73 @@ public final class YsmGui {
         this.graphics.setColor(r, g, b, a);
     }
 
+    /** 垂直渐变填充（GuiGraphics.fillGradient 对位）。 */
+    public void fillGradient(int minX, int minY, int maxX, int maxY, int colorFrom, int colorTo) {
+        this.graphics.fillGradient(minX, minY, maxX, maxY, colorFrom, colorTo);
+    }
+
+    /** GuiGraphics.blit(rl,x,y,u,v,w,h,texW,texH)（float u/v + 显式纹理尺寸）对位。 */
+    public void blit(ResourceLocation atlas, int x, int y, float uOffset, float vOffset, int width, int height, int textureWidth, int textureHeight) {
+        this.graphics.blit(atlas, x, y, width, height, uOffset, vOffset, width, height, textureWidth, textureHeight);
+    }
+
+    /** TextureManager.getTexture(rl, missing) 双参语义：未注册时返回缺失纹理占位（不注册占位条目）。 */
+    public net.minecraft.client.renderer.texture.AbstractTexture getTexture(ResourceLocation location) {
+        return Minecraft.getInstance().getTextureManager().getTexture(location, net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.getTexture());
+    }
+
     public void enableScissor(int minX, int minY, int maxX, int maxY) {
         this.graphics.enableScissor(minX, minY, maxX, maxY);
     }
 
     public void disableScissor() {
         this.graphics.disableScissor();
+    }
+
+    /** 水平/垂直线（GuiGraphics.hLine/vLine 对位）。 */
+    public void hLine(int minX, int maxX, int y, int color) {
+        this.graphics.hLine(minX, maxX, y, color);
+    }
+
+    public void vLine(int x, int minY, int maxY, int color) {
+        this.graphics.vLine(x, minY, maxY, color);
+    }
+
+    /** 按宽折行多行文本（GuiGraphics.drawWordWrap 对位）。 */
+    public void drawWordWrap(Font font, net.minecraft.network.chat.FormattedText text, int x, int y, int width, int color) {
+        this.graphics.drawWordWrap(font, text, x, y, width, color);
+    }
+
+    /** 带 z 序的渐变/纹理绘制（1.20.1 GuiGraphics z 重载；1.16.5 无 z 轴 → 落回 0 层，绘制顺序不变）。 */
+    public void fillGradient(int minX, int minY, int maxX, int maxY, int z, int colorFrom, int colorTo) {
+        this.graphics.fillGradient(minX, minY, maxX, maxY, z, colorFrom, colorTo);
+    }
+
+    public void blit(ResourceLocation atlas, int x, int y, int z, int uOffset, int vOffset, int width, int height, int textureWidth, int textureHeight) {
+        // 1.20.1 带 z 的 blit 只有 int u/v 形（javap 实证）
+        // 1.20.1 的带 z blit 是 GuiGraphics 包私有/异序重载（javap 实证 public 无 z-int 形）→
+        // 落回无 z 形（z 序层叠差 = 该重载本为 tooltip/悬浮层专用，此处调用点均为面板本体绘制，等价）
+        this.graphics.blit(atlas, x, y, uOffset, vOffset, width, height, textureWidth, textureHeight);
+    }
+
+    public void renderTooltip(Font font, java.util.List<net.minecraft.util.FormattedCharSequence> lines, int mouseX, int mouseY) {
+        this.graphics.renderTooltip(font, lines, mouseX, mouseY);
+    }
+
+    public void fill(int minX, int minY, int maxX, int maxY, int z, int color) {
+        this.graphics.fill(minX, minY, maxX, maxY, z, color);
+    }
+
+    public void drawString(Font font, Component text, int x, int y, int color) {
+        this.graphics.drawString(font, text, x, y, color);
+    }
+
+    public void drawString(Font font, String text, int x, int y, int color) {
+        this.graphics.drawString(font, text, x, y, color);
+    }
+
+    public void drawString(Font font, FormattedCharSequence text, int x, int y, int color) {
+        this.graphics.drawString(font, text, x, y, color);
     }
 
     /** Screen.renderBackground(GuiGraphics) 的版本中性入口。 */
@@ -219,6 +290,24 @@ public final class YsmGui {
         com.mojang.blaze3d.systems.RenderSystem.color4f(r, g, b, a);
     }
 
+    public void fillGradient(int minX, int minY, int maxX, int maxY, int colorFrom, int colorTo) {
+        // 1.16.5 GuiComponent.fillGradient(PoseStack,...) 是 protected 实例方法（GuiComponent.java:43 区段），
+        // 经包内子类桥直调 vanilla 原路径，不自绘 BufferBuilder 降风险
+        GradientFiller.gradient(this.pose, minX, minY, maxX, maxY, colorFrom, colorTo);
+    }
+
+    public void blit(ResourceLocation atlas, int x, int y, float uOffset, float vOffset, int width, int height, int textureWidth, int textureHeight) {
+        Minecraft.getInstance().getTextureManager().bind(atlas);
+        // GuiComponent.blit(PoseStack,x,y,destW,destH,u,v,uW,vH,texW,texH)（GuiComponent.java:155）
+        net.minecraft.client.gui.GuiComponent.blit(this.pose, x, y, width, height, uOffset, vOffset, width, height, textureWidth, textureHeight);
+    }
+
+    public net.minecraft.client.renderer.texture.AbstractTexture getTexture(ResourceLocation location) {
+        // 1.16.5 TextureManager.getTexture 只有单参重载：未注册时 computeIfAbsent 落缺失纹理占位
+        //（与 1.20.1 双参版差异=占位条目可能入 byPath，后续 register(location, texture) 会覆盖，语义等价）
+        return Minecraft.getInstance().getTextureManager().getTexture(location);
+    }
+
     public void enableScissor(int minX, int minY, int maxX, int maxY) {
         // 照抄 1.20.1 GuiGraphics.applyScissor 数学（GUI 坐标 → GL 窗口坐标 Y 翻转）
         com.mojang.blaze3d.platform.Window window = Minecraft.getInstance().getWindow();
@@ -236,6 +325,58 @@ public final class YsmGui {
         com.mojang.blaze3d.platform.GlStateManager._disableScissorTest();
     }
 
+    public void hLine(int minX, int maxX, int y, int color) {
+        // 1.16.5 GuiComponent.hLine/vLine 为 protected 实例方法（javap）→ 包内子类桥
+        GradientFiller.hLineBridge(this.pose, minX, maxX, y, color);
+    }
+
+    public void vLine(int x, int minY, int maxY, int color) {
+        GradientFiller.vLineBridge(this.pose, x, minY, maxY, color);
+    }
+
+    public void drawWordWrap(Font font, net.minecraft.network.chat.FormattedText text, int x, int y, int width, int color) {
+        // 按 1.20.1 GuiGraphics.drawWordWrap 实现（Font.split + 逐行 drawShadow，含末行阴影去重）
+        java.util.List<net.minecraft.util.FormattedCharSequence> lines = font.split(text, width);
+        int lineY = y;
+        for (net.minecraft.util.FormattedCharSequence line : lines) {
+            font.drawShadow(this.pose, line, x, lineY, color);
+            lineY += 9;
+        }
+    }
+
+    public void fillGradient(int minX, int minY, int maxX, int maxY, int z, int colorFrom, int colorTo) {
+        GradientFiller.gradient(this.pose, minX, minY, maxX, maxY, colorFrom, colorTo);
+    }
+
+    public void blit(ResourceLocation atlas, int x, int y, int z, int uOffset, int vOffset, int width, int height, int textureWidth, int textureHeight) {
+        // 1.16.5 无 z 轴（同 fillGradient z 降级说明）
+        Minecraft.getInstance().getTextureManager().bind(atlas);
+        net.minecraft.client.gui.GuiComponent.blit(this.pose, x, y, width, height, uOffset, vOffset, width, height, textureWidth, textureHeight);
+    }
+
+    public void renderTooltip(Font font, java.util.List<net.minecraft.util.FormattedCharSequence> lines, int mouseX, int mouseY) {
+        // Screen.renderTooltip(PoseStack, List<FormattedCharSequence>, x, y)（1.16.5 javap 实证 public）
+        Minecraft.getInstance().screen.renderTooltip(this.pose, lines, mouseX, mouseY);
+    }
+
+    public void fill(int minX, int minY, int maxX, int maxY, int z, int color) {
+        // 1.16.5 无 z 轴 → 落 0 层
+        net.minecraft.client.gui.GuiComponent.fill(this.pose, minX, minY, maxX, maxY, color);
+    }
+
+    public void drawString(Font font, Component text, int x, int y, int color) {
+        net.minecraft.client.gui.GuiComponent.drawString(this.pose, font, text, x, y, color);
+    }
+
+    public void drawString(Font font, String text, int x, int y, int color) {
+        net.minecraft.client.gui.GuiComponent.drawString(this.pose, font, text, x, y, color);
+    }
+
+    public void drawString(Font font, FormattedCharSequence text, int x, int y, int color) {
+        // 1.20.1 GuiGraphics 5 参默认带阴影 → 1.16.5 用 drawShadow 等价
+        font.drawShadow(this.pose, text, (float) x, (float) y, color);
+    }
+
     public void renderScreenBackground(net.minecraft.client.gui.screens.Screen screen) {
         screen.renderBackground(this.pose);
     }
@@ -251,6 +392,24 @@ public final class YsmGui {
 
     public static void disableScissorBox() {
         com.mojang.blaze3d.platform.GlStateManager._disableScissorTest();
+    }
+
+    // 1.16.5 GuiComponent.fillGradient(PoseStack,...) 为 protected 实例方法 → 包内子类桥
+    // （JLS 6.6.2：protected 实例成员经限定名访问要求限定方为访问所在类的子类，故桥方法内置）
+    private static final class GradientFiller extends net.minecraft.client.gui.GuiComponent {
+        private static final GradientFiller INSTANCE = new GradientFiller();
+
+        static void gradient(PoseStack pose, int minX, int minY, int maxX, int maxY, int colorFrom, int colorTo) {
+            INSTANCE.fillGradient(pose, minX, minY, maxX, maxY, colorFrom, colorTo);
+        }
+
+        static void hLineBridge(PoseStack pose, int minX, int maxX, int y, int color) {
+            INSTANCE.hLine(pose, minX, maxX, y, color);
+        }
+
+        static void vLineBridge(PoseStack pose, int x, int minY, int maxY, int color) {
+            INSTANCE.vLine(pose, x, minY, maxY, color);
+        }
     }
      *///?}
 }

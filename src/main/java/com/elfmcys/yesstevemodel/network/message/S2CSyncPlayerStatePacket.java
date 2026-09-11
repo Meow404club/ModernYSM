@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.network.message;
 
 import net.minecraftforge.api.distmarker.Dist;
+import com.elfmcys.yesstevemodel.util.YsmTag;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import com.elfmcys.yesstevemodel.capability.PlayerCapability;
 import com.elfmcys.yesstevemodel.event.EntityJoinCallbackEvent;
@@ -10,7 +11,6 @@ import it.unimi.dsi.fastutil.ints.Int2FloatMap;
 import it.unimi.dsi.fastutil.ints.Int2FloatMaps;
 import it.unimi.dsi.fastutil.ints.Int2FloatOpenHashMap;
 import it.unimi.dsi.fastutil.objects.*;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.Entity;
@@ -181,7 +181,9 @@ public class S2CSyncPlayerStatePacket {
         if ((flags & 4) != 0) {
             buffer.writeVarInt(message.effectAmplifiers.size());
             Object2ByteMaps.fastForEach(message.effectAmplifiers, entry -> {
-                buffer.writeId(BuiltInRegistries.MOB_EFFECT, entry.getKey());
+                                // writeId/readById(Registry) 1.19.4+ buffer API，1.16.5 无 → 数值注册表 id
+                //（Registry.getId/byId，javap 实证；同版本线 1.16.5 客户端/服务端自洽）
+                buffer.writeVarInt(YsmTag.mobEffectNetworkId(entry.getKey()));
                 buffer.writeByte(entry.getByteValue());
             });
         }
@@ -235,12 +237,13 @@ public class S2CSyncPlayerStatePacket {
             if (effectCount == 0) {
                 message.effectAmplifiers = Object2ByteMaps.emptyMap();
             } else if (effectCount == 1) {
-                message.effectAmplifiers = Object2ByteMaps.singleton(buffer.readById(BuiltInRegistries.MOB_EFFECT), buffer.readByte());
+                                MobEffect singletonEffect = YsmTag.mobEffectByNetworkId(buffer.readVarInt());
+                message.effectAmplifiers = Object2ByteMaps.singleton(singletonEffect, buffer.readByte());
             } else {
                 MobEffect[] effects = new MobEffect[effectCount];
                 byte[] amplifiers = new byte[effectCount];
                 for (int i = 0; i < effectCount; i++) {
-                    effects[i] = buffer.readById(BuiltInRegistries.MOB_EFFECT);
+                    effects[i] = YsmTag.mobEffectByNetworkId(buffer.readVarInt());
                     amplifiers[i] = buffer.readByte();
                 }
                 message.effectAmplifiers = new Object2ByteArrayMap<>(effects, amplifiers);

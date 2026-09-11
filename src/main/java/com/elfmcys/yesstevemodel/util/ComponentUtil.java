@@ -10,9 +10,9 @@ public final class ComponentUtil {
         MutableComponent mutableComponentLiteral;
         String selectedTexture = modelAssembly.getTextureRegistry().getSelectedTexture();
         if (StringUtils.isBlank(selectedTexture)) {
-            mutableComponentLiteral = Component.literal(str);
+            mutableComponentLiteral = YsmText.literal(str);
         } else {
-            mutableComponentLiteral = Component.literal(selectedTexture);
+            mutableComponentLiteral = YsmText.literal(selectedTexture);
         }
         return mutableComponentLiteral;
     }

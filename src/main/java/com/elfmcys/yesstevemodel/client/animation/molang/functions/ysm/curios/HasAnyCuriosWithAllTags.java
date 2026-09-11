@@ -1,14 +1,13 @@
 package com.elfmcys.yesstevemodel.client.animation.molang.functions.ysm.curios;
 
 import rip.ysm.compat.curios.CuriosCompat;
+import com.elfmcys.yesstevemodel.util.YsmTag;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.context.IContext;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.funciton.entity.LivingEntityFunction;
 import com.elfmcys.yesstevemodel.molang.runtime.ExecutionContext;
 import com.elfmcys.yesstevemodel.util.ThreadLocalItemTagSets;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import org.apache.commons.lang3.StringUtils;
@@ -20,14 +19,14 @@ public class HasAnyCuriosWithAllTags extends LivingEntityFunction {
         if (StringUtils.isEmpty(type)) {
             return null;
         }
-        ReferenceArrayList<TagKey<Item>> referenceArrayList = ThreadLocalItemTagSets.TAG_KEY_LIST.get();
+        ReferenceArrayList<YsmTag.ItemTag> referenceArrayList = ThreadLocalItemTagSets.TAG_KEY_LIST.get();
         referenceArrayList.size(arguments.size() - 1);
         for (int i = 1; i < arguments.size(); i++) {
             ResourceLocation tag = arguments.getResourceLocation(context, i);
             if (tag == null) {
                 return null;
             }
-            referenceArrayList.set(i - 1, TagKey.create(Registries.ITEM, tag));
+            referenceArrayList.set(i - 1, YsmTag.itemTag(tag));
         }
         return CuriosCompat.hasNoTaggedItemInSlot(context.entity().entity(), type, referenceArrayList);
     }

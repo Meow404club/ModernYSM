@@ -31,9 +31,9 @@ public class SecondOrder implements IPhysics {
         float coefficient = Mth.clamp(this.coefficient, 0, 1);
         float response = this.response;
 
-        float k1 = coefficient / Mth.PI / frequency;
-        float k2 = 1 / (2 * Mth.PI * frequency) / (2 * Mth.PI * frequency);
-        float k3 = response * coefficient / 2 / Mth.PI / frequency;
+        float k1 = coefficient / (float) Math.PI / frequency;
+        float k2 = 1 / (2 * (float) Math.PI * frequency) / (2 * (float) Math.PI * frequency);
+        float k3 = response * coefficient / 2 / (float) Math.PI / frequency;
 
         float inputFunctionDot = (input - this.inputFunction) / timeStep;
         this.inputFunction = input;

@@ -6,8 +6,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraftforge.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.Nullable;
+//? if <1.17 {
+/*import net.minecraftforge.fml.server.ServerLifecycleHooks;
+ *///?} else {
+import net.minecraftforge.server.ServerLifecycleHooks;
+//?}
 import rip.ysm.api.PlatformAPI;
 
 public class YSMMessageFormatter {
@@ -15,7 +19,7 @@ public class YSMMessageFormatter {
     private static final String PREFIX = "§6§l【§aYSM§6§l】§r";
 
     public static Component withPrefix(Component component) {
-        return Component.literal(PREFIX).append(component);
+        return YsmText.literal(PREFIX).append(component);
     }
 
     public static boolean isCurrentClientPlayer(Entity entity) {
@@ -37,7 +41,13 @@ public class YSMMessageFormatter {
     }
 
     public static void sendServerMessage(@Nullable CommandSourceStack commandSourceStack, Component component, boolean broadcastToOps) {
-        MinecraftServer currentServer = ServerLifecycleHooks.getCurrentServer();
+        // ServerLifecycleHooks 1.17 起在 net.minecraftforge.server（1.16.5 在 net.minecraftforge.fml.server，
+        // javap 实证）；import 条件化置于文件头
+        //? if <1.17 {
+        /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();
+         *///?} else {
+        MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
+        //?}
         if (currentServer == null) {
             return;
         }
@@ -50,7 +60,7 @@ public class YSMMessageFormatter {
             if (sourceStack == null) {
                 sourceStack = currentServer.createCommandSourceStack();
             }
-            sourceStack.sendSuccess(() -> component, broadcastToOps);
+            YsmText.sendSuccess(sourceStack, component, broadcastToOps);
         });
     }
 }

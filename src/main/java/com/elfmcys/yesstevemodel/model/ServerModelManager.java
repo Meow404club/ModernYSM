@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.model;
 
 import com.elfmcys.yesstevemodel.YesSteveModel;
+import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.capability.AuthModelsCapability;
 import com.elfmcys.yesstevemodel.capability.ModelInfoCapability;
 import com.elfmcys.yesstevemodel.client.ExportResult;
@@ -30,10 +31,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import io.netty.buffer.Unpooled;
-import it.unimi.dsi.fastutil.floats.FloatReferencePair;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import net.minecraft.network.Connection;
+//? if >=1.17 {
+import it.unimi.dsi.fastutil.floats.FloatReferencePair;
 import net.minecraft.network.PacketSendListener;
+//?}
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.server.MinecraftServer;
@@ -41,7 +44,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.forgespi.language.IModFileInfo;
-import net.minecraftforge.server.ServerLifecycleHooks;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -290,7 +292,7 @@ public final class ServerModelManager {
         if (Files.exists(serverIndex)) {
             try {
                 String jsonStr = new String(Files.readAllBytes(serverIndex), StandardCharsets.UTF_8);
-                JsonObject jsonElement = JsonParser.parseString(jsonStr).getAsJsonObject();
+                JsonObject jsonElement = new com.google.gson.JsonParser().parse(jsonStr).getAsJsonObject();
 
                 if (jsonElement.get("server_key") != null && jsonElement.get("server_key").getAsJsonPrimitive().isString()) {
                     serverKeyBytes = Base64.getDecoder().decode(jsonElement.get("server_key").getAsString());
@@ -324,10 +326,26 @@ public final class ServerModelManager {
 
     private static void extractBuiltinModels() {
         try {
+            // forgespi 3.x（1.16.5 userdev 实证）IModFileInfo 无 getFile()：<1.17 走类加载器锚点
+            //（dev=build/resources、jar=自身包内），语义与 findResource 等价
+            //? if <1.17 {
+            /*Path assetsBuiltinResolved = null;
+            try {
+                java.net.URL url = ServerModelManager.class.getClassLoader().getResource("assets/" + YesSteveModel.MOD_ID + "/builtin");
+                if (url != null && "file".equals(url.getProtocol())) {
+                    assetsBuiltinResolved = java.nio.file.Paths.get(url.toURI());
+                }
+            } catch (Exception e) {
+                assetsBuiltinResolved = null;
+            }
+            // Java8 lambda 捕获要求 effectively-final：解析期允许多次赋值，捕获面收口到单赋值 final 变量
+            final Path assetsBuiltin = assetsBuiltinResolved;
+             *///?} else {
             Path assetsBuiltin = Optional.ofNullable(ModList.get().getModFileById(YesSteveModel.MOD_ID))
                     .map(IModFileInfo::getFile)
                     .map(file -> file.findResource("assets", YesSteveModel.MOD_ID, "builtin"))
                     .orElse(null);
+            //?}
 
             if (assetsBuiltin == null || !Files.isDirectory(assetsBuiltin)) return;
 
@@ -1035,7 +1053,7 @@ public final class ServerModelManager {
                         packData.folderPath = prefix + rel + (rel.endsWith("/") ? "" : "/");
 
                         String jsonStr = new String(Files.readAllBytes(packJson), StandardCharsets.UTF_8);
-                        JsonObject json = JsonParser.parseString(jsonStr).getAsJsonObject();
+                        JsonObject json = new com.google.gson.JsonParser().parse(jsonStr).getAsJsonObject();
                         if (json.has("name")) packData.name = json.get("name").getAsString();
                         if (json.has("description")) packData.description = json.get("description").getAsString();
 
@@ -1145,7 +1163,10 @@ public final class ServerModelManager {
         initRateLimit();
         YSMThreadPool.submitSync(() -> {
             try {
-                MinecraftServer currentServer = ServerLifecycleHooks.getCurrentServer();
+                //? if <1.17
+                /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
+                //? if >=1.17
+                MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
                 if (currentServer == null) return;
 
                 for (UUID uuid : uuids) {
@@ -1366,7 +1387,7 @@ public final class ServerModelManager {
 
                 if (!Files.exists(cacheFile)) {
                     if (callback != null) {
-                        callback.accept(new ExportResult(false, Component.literal("Cache file missing for: " + modelID), "", "", 0));
+                        callback.accept(new ExportResult(false, YsmText.literal("Cache file missing for: " + modelID), "", "", 0));
                     }
                     return;
                 }
@@ -1408,7 +1429,7 @@ public final class ServerModelManager {
                 }
             } catch (Exception e) {
                 if (callback != null) {
-                    callback.accept(new ExportResult(false, Component.literal("Export failed: " + e.getMessage()), "", "", 0));
+                    callback.accept(new ExportResult(false, YsmText.literal("Export failed: " + e.getMessage()), "", "", 0));
                 }
             }
         });
@@ -1459,17 +1480,29 @@ public final class ServerModelManager {
     }
 
     public static void requestPlayerAuth(ServerPlayer serverPlayer, @Nullable Consumer<UUIDComponentData> consumer) {
-        MinecraftServer currentServer = ServerLifecycleHooks.getCurrentServer();
+        //? if <1.17
+                /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
+                //? if >=1.17
+                MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
         currentServer.execute(() -> {
             List<ServerPlayer> players = currentServer.getPlayerList().getPlayers();
+            // FloatReferencePair/Pair 接口 fastutil 8.3.0 才有（1.16.5=8.2.1，jar 实证）：
+            // <1.17 直接按距离稳定排序玩家列表（Comparator.comparingDouble，结果与 pair 排序一致）
+            //? if <1.17 {
+            /*List<ServerPlayer> sorted = new ArrayList<>(players);
+            sorted.removeIf(p2 -> p2.level.dimensionType() != serverPlayer.level.dimensionType());
+            sorted.sort(java.util.Comparator.comparingDouble(p2 -> p2.distanceTo(serverPlayer)));
+            nativeSyncModels(new UUID[]{serverPlayer.getUUID()}, new String[]{serverPlayer.getGameProfile().getName()}, collectPlayerModelIds(sorted), consumer);
+             *///?} else {
             ArrayList<FloatReferencePair<ServerPlayer>> arrayList = new ArrayList<>();
             for (ServerPlayer serverPlayer2 : players) {
                 if (serverPlayer2.level().dimensionType() == serverPlayer.level().dimensionType()) {
-                    arrayList.add(FloatReferencePair.of(serverPlayer2.distanceTo(serverPlayer), serverPlayer2));
+                    arrayList.add(it.unimi.dsi.fastutil.floats.FloatReferencePair.of(serverPlayer2.distanceTo(serverPlayer), serverPlayer2));
                 }
             }
             arrayList.sort((a, b) -> Float.compare(a.firstFloat(), b.firstFloat()));
             nativeSyncModels(new UUID[]{serverPlayer.getUUID()}, new String[]{serverPlayer.getGameProfile().getName()}, collectPlayerModelIds(arrayList.stream().map(it.unimi.dsi.fastutil.Pair::second).collect(Collectors.toCollection(ArrayList::new))), consumer);
+            //?}
         });
     }
 
@@ -1478,7 +1511,10 @@ public final class ServerModelManager {
             if (consumer != null) {
                 consumer.accept(modelLoadResult);
             }
-            MinecraftServer currentServer = ServerLifecycleHooks.getCurrentServer();
+            //? if <1.17
+                /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
+                //? if >=1.17
+                MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
             if (currentServer == null) {
                 return;
             }
@@ -1499,7 +1535,10 @@ public final class ServerModelManager {
 
     private static void onModelLoadComplete(ModelLoadResult modelLoadResult, @Nullable Object obj) {
         Consumer<ModelLoadResult> consumer = (Consumer<ModelLoadResult>) obj;
-        MinecraftServer currentServer = ServerLifecycleHooks.getCurrentServer();
+        //? if <1.17
+                /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
+                //? if >=1.17
+                MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
         if (modelLoadResult.isSuccess()) {
             IntOpenHashSet hashes = new IntOpenHashSet(modelLoadResult.getModelDefinitions().size());
             for (ServerModelData data : modelLoadResult.getModelDefinitions().values()) {
@@ -1536,15 +1575,27 @@ public final class ServerModelManager {
 
     private static Connection getPlayerConnection(UUID uuid) {
         ServerPlayer player;
-        MinecraftServer currentServer = ServerLifecycleHooks.getCurrentServer();
+//? if <1.17
+        /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
+        //? if >=1.17
+        MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
         if (currentServer == null || (player = currentServer.getPlayerList().getPlayer(uuid)) == null) {
             return null;
         }
         ServerGamePacketListenerImpl serverGamePacketListenerImpl = player.connection;
+        // isAcceptingMessages/ServerCommonPacketListenerImpl 为 1.20 API（1.16.5 无）：
+        // <1.17 对位 Connection.isConnected + connection 字段直取
+        //? if <1.17 {
+        /*if (!serverGamePacketListenerImpl.connection.isConnected() || !serverGamePacketListenerImpl.getClass().equals(ServerGamePacketListenerImpl.class)) {
+            return null;
+        }
+        return serverGamePacketListenerImpl.connection;
+         *///?} else {
         if (!serverGamePacketListenerImpl.isAcceptingMessages() || !serverGamePacketListenerImpl.getClass().equals(ServerGamePacketListenerImpl.class)) {
             return null;
         }
         return ((ServerCommonPacketListenerImplAccessor) serverGamePacketListenerImpl).ysm$getConnection();
+        //?}
     }
 
     private static boolean sendModelData(UUID uuid, ByteBuffer byteBuffer, PendingTransfer pendingTransfer) {
@@ -1592,6 +1643,11 @@ public final class ServerModelManager {
                 }
             } else {
                 try {
+                    // PacketSendListener 1.19.4+：<1.17 用 GenericFutureListener（发送即视为成功，
+                    // 失败探测由后续 deadline 轮询 isConnected 兜底，语义等价）
+                    //? if <1.17 {
+                    /*connection.send((Packet<?>) obj, future -> atomicInteger.set(1));
+                     *///?} else {
                     connection.send((Packet<?>) obj, new PacketSendListener() {
                         public void onSuccess() {
                             atomicInteger.set(1);
@@ -1604,6 +1660,7 @@ public final class ServerModelManager {
                             return null;
                         }
                     });
+                    //?}
                     long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30);
                     while (atomicInteger.get() == 0
                             && connection.isConnected()

@@ -2,7 +2,7 @@ package rip.ysm.compat.curios.platform.forge;
 
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.binding.ContextBinding;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
-import net.minecraft.tags.TagKey;
+import com.elfmcys.yesstevemodel.util.YsmTag;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 
@@ -22,11 +22,11 @@ public final class CuriosCompatImpl {
         return CuriosCompat.hasItemInSlot(livingEntity, str, set);
     }
 
-    public static boolean hasTaggedItemInSlot(LivingEntity livingEntity, String str, List<TagKey<Item>> list) {
+    public static boolean hasTaggedItemInSlot(LivingEntity livingEntity, String str, List<YsmTag.ItemTag> list) {
         return CuriosCompat.hasTaggedItemInSlot(livingEntity, str, list);
     }
 
-    public static boolean hasNoTaggedItemInSlot(LivingEntity entity, String str, List<TagKey<Item>> list) {
+    public static boolean hasNoTaggedItemInSlot(LivingEntity entity, String str, List<YsmTag.ItemTag> list) {
         return CuriosCompat.hasNoTaggedItemInSlot(entity, str, list);
     }
 

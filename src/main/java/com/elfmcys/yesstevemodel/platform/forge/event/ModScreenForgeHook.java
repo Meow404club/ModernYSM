@@ -21,8 +21,14 @@ public final class ModScreenForgeHook {
             return;
         }
         InterModComms.getMessages(YesSteveModel.MOD_ID).findFirst().ifPresent(message -> {
+            // IMCMessage 取值器 1.19+ method()/messageSupplier() ↔ 1.16.5 getMethod()/getMessageSupplier()（javap 实证）
+            //? if <1.17 {
+            /*if (ModScreenEvent.IMC_METHOD.equals(message.getMethod())) {
+                Object screenObj = message.getMessageSupplier().get();
+                 *///?} else {
             if (ModScreenEvent.IMC_METHOD.equals(message.method())) {
                 Object screenObj = message.messageSupplier().get();
+                //?}
                 if (screenObj instanceof Screen) {
                     Screen screen = (Screen) screenObj;
                     ModScreenEvent.setReceivedScreen(screen);

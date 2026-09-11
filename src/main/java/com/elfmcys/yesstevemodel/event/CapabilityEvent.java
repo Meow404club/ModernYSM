@@ -234,9 +234,14 @@ public final class CapabilityEvent {
      * Provider 带 @OnlyIn(Dist.CLIENT)）仅在客户端注册，防专用服务端 @OnlyIn 剥离后类缺失崩载——
      * 与 ForgeCapabilityHooks 的 dist 守卫同款，方法引用惰性解析保证 server 侧不触达。
      * 1.20.1 侧为 no-op（token 机制在 Provider 字段初始化时自取，无需注册）。
-     * 由 YsmEventBootstrap.register() 于 mod 构造期调用；CapabilityManager#register 注释声明并行 mod loading 安全。
+     * 1.20.1 侧为 no-op（token 机制在 Provider 字段初始化时自取，无需注册）。
+     * 【时机铁律（1.16.5 dev runServer 实测 NPE + forge 1.16.x 源码双证）】不得在 mod 构造期调用：
+     * 1.16.x CapabilityManager.callbacks 无字段初始化器，仅由 injectCapabilities（scan 阶段、
+     * 先于 FMLCommonSetupEvent）赋值，构造期 register() 即 CapabilityManager.java:65 NPE。
+     * 正确时机 = FMLCommonSetupEvent（forge 1.16 官方文档规定），由 CommonEvent.onCommonSetup 调用。
+     * CapabilityManager#register 注释声明并行 mod loading 安全。
      */
-    public static void register() {
+    public static void registerCapabilities() {
         //? if <1.17 {
         /*AuthModelsCapabilityProvider.registerCapability();
         ModelInfoCapabilityProvider.registerCapability();

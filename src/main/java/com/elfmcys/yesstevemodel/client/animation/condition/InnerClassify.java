@@ -24,40 +24,40 @@ public class InnerClassify {
         if (SlashBladeCompat.isSlashBladeItem(itemStack)) {
             return "slashblade";
         }
-        if ((item instanceof SwordItem) || itemStack.is(ItemTagsConstants.SWORDS)) {
+        if ((item instanceof SwordItem) || ItemTagsConstants.SWORDS.matches(itemStack)) {
             return "sword";
         }
         if (TouhouLittleMaidCompat.isMaidItem(item)) {
             return "gohei";
         }
-        if ((item instanceof AxeItem) || itemStack.is(ItemTagsConstants.AXES)) {
+        if ((item instanceof AxeItem) || ItemTagsConstants.AXES.matches(itemStack)) {
             return "axe";
         }
-        if ((item instanceof PickaxeItem) || itemStack.is(ItemTagsConstants.PICKAXES)) {
+        if ((item instanceof PickaxeItem) || ItemTagsConstants.PICKAXES.matches(itemStack)) {
             return "pickaxe";
         }
-        if ((item instanceof ShovelItem) || itemStack.is(ItemTagsConstants.SHOVELS)) {
+        if ((item instanceof ShovelItem) || ItemTagsConstants.SHOVELS.matches(itemStack)) {
             return "shovel";
         }
-        if ((item instanceof HoeItem) || itemStack.is(ItemTagsConstants.HOES)) {
+        if ((item instanceof HoeItem) || ItemTagsConstants.HOES.matches(itemStack)) {
             return "hoe";
         }
-        if ((item instanceof ShieldItem) || itemStack.is(ItemTagsConstants.SHIELDS)) {
+        if ((item instanceof ShieldItem) || ItemTagsConstants.SHIELDS.matches(itemStack)) {
             return "shield";
         }
-        if ((item instanceof CrossbowItem) || itemStack.is(ItemTagsConstants.CROSSBOWS)) {
+        if ((item instanceof CrossbowItem) || ItemTagsConstants.CROSSBOWS.matches(itemStack)) {
             return "crossbow";
         }
-        if ((item instanceof BowItem) || itemStack.is(ItemTagsConstants.BOWS)) {
+        if ((item instanceof BowItem) || ItemTagsConstants.BOWS.matches(itemStack)) {
             return "bow";
         }
-        if ((item instanceof FishingRodItem) || itemStack.is(ItemTagsConstants.FISHING_RODS)) {
+        if ((item instanceof FishingRodItem) || ItemTagsConstants.FISHING_RODS.matches(itemStack)) {
             return "fishing_rod";
         }
-        if ((item instanceof TridentItem) || itemStack.is(ItemTagsConstants.TRIDENTS)) {
+        if ((item instanceof TridentItem) || ItemTagsConstants.TRIDENTS.matches(itemStack)) {
             return "spear";
         }
-        if ((item instanceof ThrowablePotionItem) || itemStack.is(ItemTagsConstants.THROWABLE_POTION)) {
+        if ((item instanceof ThrowablePotionItem) || ItemTagsConstants.THROWABLE_POTION.matches(itemStack)) {
             return "throwable_potion";
         }
         return "";

@@ -15,13 +15,13 @@ import java.util.UUID;
 public class YSMNativeHelper {
     public static Object createTranslatableComponent(String str, @Nullable Object[] objArr) {
         if (objArr == null || objArr.length == 0) {
-            return Component.translatable(str);
+            return YsmText.translatable(str);
         }
-        return Component.translatable(str, objArr);
+        return YsmText.translatable(str, objArr);
     }
 
     public static Object createLiteralComponent(@Nullable String str) {
-        return Component.literal(str == null ? StringPool.EMPTY : str);
+        return YsmText.literal(str == null ? StringPool.EMPTY : str);
     }
 
     public static Object appendComponents(Object obj, Object obj2) {
@@ -39,7 +39,12 @@ public class YSMNativeHelper {
 
     @OnlyIn(Dist.CLIENT)
     public static UUID getClientPlayerUUID() {
+        // getProfileId() 为 1.20.1 forge User 扩展（1.16.5 无）：退化取 GameProfile UUID
+        //? if <1.17 {
+        /*return Minecraft.getInstance().getUser().getGameProfile().getId();
+         *///?} else {
         return Minecraft.getInstance().getUser().getProfileId();
+        //?}
     }
 
     public static int getAvailableCpuCores() {

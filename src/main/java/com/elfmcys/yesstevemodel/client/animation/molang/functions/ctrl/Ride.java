@@ -1,12 +1,11 @@
 package com.elfmcys.yesstevemodel.client.animation.molang.functions.ctrl;
 
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.context.IContext;
+import com.elfmcys.yesstevemodel.util.YsmEntity;
+import com.elfmcys.yesstevemodel.util.YsmTag;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.funciton.entity.LivingEntityFunction;
 import com.elfmcys.yesstevemodel.molang.runtime.ExecutionContext;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -42,7 +41,7 @@ public class Ride extends LivingEntityFunction {
         if (VEHICLE_KEY.equals(type)) {
             firstPassenger = entity.getVehicle();
         } else if (PASSENGER_KEY.equals(type)) {
-            firstPassenger = entity.getFirstPassenger();
+            firstPassenger = YsmEntity.firstPassenger(entity);
         } else {
             return 0;
         }
@@ -52,14 +51,14 @@ public class Ride extends LivingEntityFunction {
         String strSubstring = id.substring(1);
         EntityType<?> entityType = firstPassenger.getType();
         if (id.startsWith(PREFIX_ITEM_ID)) {
-            ResourceLocation key = BuiltInRegistries.ENTITY_TYPE.getKey(entityType);
+            ResourceLocation key = YsmTag.entityTypeKey(entityType);
             if (key == null) {
                 return 0;
             }
             return strSubstring.equals(key.toString()) ? 1 : 0;
         }
         if (id.startsWith(PREFIX_ITEM_TAG)) {
-            return entityType.is(TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation(strSubstring))) ? 1 : 0;
+            return YsmTag.entityTypeTag(new ResourceLocation(strSubstring)).matches(entityType) ? 1 : 0;
         }
         return 0;
     }

@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.client.gui.button;
 
 import com.elfmcys.yesstevemodel.YesSteveModel;
+import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.client.gui.ISpecialWidget;
 import com.elfmcys.yesstevemodel.config.ServerConfig;
 import com.elfmcys.yesstevemodel.geckolib3.core.AnimatableEntity;
@@ -9,7 +10,11 @@ import com.elfmcys.yesstevemodel.molang.parser.ParseException;
 import com.elfmcys.yesstevemodel.network.NetworkHandler;
 import com.elfmcys.yesstevemodel.network.message.C2SRequestExecuteMolangPacket;
 import net.minecraft.client.Minecraft;
+import com.mojang.blaze3d.vertex.PoseStack;
+//? if >1.17 {
 import net.minecraft.client.gui.GuiGraphics;
+//?}
+import rip.ysm.gui.YsmGui;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
@@ -27,7 +32,7 @@ public class AnimationSlider extends RangedSliderWidget implements ISpecialWidge
     private final String controllerName;
 
     public AnimationSlider(int x, int y, Component component, double currentValue, AnimatableEntity<?> animatableEntity, String controllerName, double stepSize, double minValue, double maxValue) {
-        super(x, y, 115, 15, component, Component.empty(), minValue, maxValue, currentValue, stepSize, 0, true);
+        super(x, y, 115, 15, component, YsmText.literal(""), minValue, maxValue, currentValue, stepSize, 0, true);
         this.model = animatableEntity;
         this.controllerName = controllerName;
     }
@@ -50,8 +55,20 @@ public class AnimationSlider extends RangedSliderWidget implements ISpecialWidge
         return DECIMAL_FORMAT.format(getValue());
     }
 
+    //? if >1.17 {
     @Override
-    public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+    //?} else {
+    /*@Override
+    public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
+    }
+     *///?}
+
+    @Override
+    public void renderWidget(YsmGui guiGraphics, int mouseX, int mouseY, float partialTick) {
         Minecraft minecraft = Minecraft.getInstance();
         blitWithBorder(guiGraphics, ROULETTE_TEXTURE, getX(), getY(), 0, getTextureY() + 24, this.width, this.height, 200, 15, 2, 3, 2, 2);
         int handleX = getX() + (int) (this.value * (this.width - 8));

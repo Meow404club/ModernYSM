@@ -1,11 +1,10 @@
 package com.elfmcys.yesstevemodel.client.animation.condition;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import com.elfmcys.yesstevemodel.util.YsmEntity;
+import com.elfmcys.yesstevemodel.util.YsmTag;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -16,7 +15,7 @@ public class ConditionPassenger {
 
     private final ObjectOpenHashSet<ResourceLocation> idTest = new ObjectOpenHashSet<>();
 
-    private final ReferenceArrayList<TagKey<EntityType<?>>> tagTest = new ReferenceArrayList<>();
+    private final ReferenceArrayList<YsmTag.EntityTypeTag> tagTest = new ReferenceArrayList<>();
 
     private final String idPre;
     private final String tagPre;
@@ -38,11 +37,11 @@ public class ConditionPassenger {
         if (!name.startsWith(this.tagPre) || !ResourceLocation.isValidResourceLocation(strSubstring)) {
             return;
         }
-        this.tagTest.add(TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation(strSubstring)));
+        this.tagTest.add(YsmTag.entityTypeTag(new ResourceLocation(strSubstring)));
     }
 
     public String doTest(LivingEntity entity) {
-        Entity firstPassenger = entity.getFirstPassenger();
+        Entity firstPassenger = YsmEntity.firstPassenger(entity);
         if (firstPassenger == null || !firstPassenger.isAlive()) {
             return EMPTY;
         }
@@ -55,7 +54,7 @@ public class ConditionPassenger {
 
     private String doIdTest(Entity entity) {
         ResourceLocation key;
-        if (!this.idTest.isEmpty() && (key = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType())) != null && this.idTest.contains(key)) {
+        if (!this.idTest.isEmpty() && (key = YsmTag.entityTypeKey(entity.getType())) != null && this.idTest.contains(key)) {
             return this.idPre + key;
         }
         return EMPTY;
@@ -65,6 +64,6 @@ public class ConditionPassenger {
         if (this.tagTest.isEmpty()) {
             return EMPTY;
         }
-        return this.tagTest.stream().filter(tagKey -> entity.getType().is(tagKey)).findFirst().map(tagKey2 -> this.tagPre + tagKey2.location()).orElse(EMPTY);
+        return this.tagTest.stream().filter(tag -> tag.matches(entity.getType())).findFirst().map(tag -> this.tagPre + tag.location()).orElse(EMPTY);
     }
 }

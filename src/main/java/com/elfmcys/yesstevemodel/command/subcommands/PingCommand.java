@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.command.subcommands;
 
 import com.elfmcys.yesstevemodel.YesSteveModel;
+import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.network.NetworkHandler;
 import com.elfmcys.yesstevemodel.network.message.S2CVersionCheckPacket;
 import com.mojang.brigadier.Command;
@@ -23,7 +24,7 @@ public class PingCommand {
 
     private static int executePing(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         ServerPlayer playerOrException = context.getSource().getPlayerOrException();
-        playerOrException.sendSystemMessage(Component.translatable("message.yes_steve_model.client.ping_result", ModList.get().getModContainerById(YesSteveModel.MOD_ID).map(container -> container.getModInfo().getVersion().toString()).orElse("unknown")));
+        YsmText.sendSystemMessage(playerOrException, YsmText.translatable("message.yes_steve_model.client.ping_result", ModList.get().getModContainerById(YesSteveModel.MOD_ID).map(container -> container.getModInfo().getVersion().toString()).orElse("unknown")));
         if (!NetworkHandler.isPlayerConnected(playerOrException)) {
             NetworkHandler.sendToClientPlayer(new S2CVersionCheckPacket(), playerOrException);
             return Command.SINGLE_SUCCESS;

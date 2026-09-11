@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.network.message;
 
 import com.elfmcys.yesstevemodel.network.NetworkHandler;
+import com.elfmcys.yesstevemodel.util.YsmEntity;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -34,7 +35,7 @@ public class C2SRequestExecuteMolangPacket {
 
     public static void handleOnServer(C2SRequestExecuteMolangPacket message, ServerPlayer sender) {
         Entity entity;
-        if (sender == null || !sender.isAlive() || (entity = sender.level().getEntity(message.entityId)) == null) {
+        if (sender == null || !sender.isAlive() || (entity = YsmEntity.level(sender).getEntity(message.entityId)) == null) {
             return;
         }
         NetworkHandler.sendToTrackingEntity(new S2CExecuteMolangPacket(message.entityId, message.animationName), entity);

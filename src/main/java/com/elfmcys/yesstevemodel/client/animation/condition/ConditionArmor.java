@@ -1,13 +1,11 @@
 package com.elfmcys.yesstevemodel.client.animation.condition;
 
 import com.elfmcys.yesstevemodel.util.EquipmentUtil;
+import com.elfmcys.yesstevemodel.util.YsmTag;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
@@ -30,7 +28,7 @@ public class ConditionArmor {
 
     private final Reference2ReferenceOpenHashMap<EquipmentSlot, ObjectOpenHashSet<ResourceLocation>> idTest = new Reference2ReferenceOpenHashMap<>();
 
-    private final Reference2ReferenceOpenHashMap<EquipmentSlot, ReferenceArrayList<TagKey<Item>>> tagTest = new Reference2ReferenceOpenHashMap<>();
+    private final Reference2ReferenceOpenHashMap<EquipmentSlot, ReferenceArrayList<YsmTag.ItemTag>> tagTest = new Reference2ReferenceOpenHashMap<>();
 
     public void addTest(String str) {
         EquipmentSlot slot;
@@ -55,7 +53,7 @@ public class ConditionArmor {
         if (!ResourceLocation.isValidResourceLocation(strGroup2)) {
             return;
         }
-        this.tagTest.computeIfAbsent(slot, obj2 -> new ReferenceArrayList<>()).add(TagKey.create(Registries.ITEM, new ResourceLocation(strGroup2)));
+        this.tagTest.computeIfAbsent(slot, obj2 -> new ReferenceArrayList<>()).add(YsmTag.itemTag(new ResourceLocation(strGroup2)));
     }
 
     public String doTest(LivingEntity entity, EquipmentSlot slot) {
@@ -74,7 +72,7 @@ public class ConditionArmor {
             return EMPTY;
         }
         Set<ResourceLocation> set = this.idTest.get(equipmentSlot);
-        ResourceLocation key = BuiltInRegistries.ITEM.getKey(CosmeticArmorHelper.getArmorItem(livingEntity, equipmentSlot).getItem());
+        ResourceLocation key = YsmTag.itemKey(CosmeticArmorHelper.getArmorItem(livingEntity, equipmentSlot).getItem());
         if (key != null && set.contains(key)) {
             return equipmentSlot.getName() + "$" + key;
         }
@@ -85,11 +83,11 @@ public class ConditionArmor {
         if (this.tagTest.isEmpty() || !this.tagTest.containsKey(equipmentSlot) || this.tagTest.get(equipmentSlot).isEmpty()) {
             return EMPTY;
         }
-        List<TagKey<Item>> list = this.tagTest.get(equipmentSlot);
+        List<YsmTag.ItemTag> list = this.tagTest.get(equipmentSlot);
         ItemStack stack = CosmeticArmorHelper.getArmorItem(livingEntity, equipmentSlot);
-        Stream<TagKey<Item>> stream = list.stream();
+        Stream<YsmTag.ItemTag> stream = list.stream();
         Objects.requireNonNull(stack);
-        return stream.filter(stack::is).findFirst().map(tagKey -> equipmentSlot.getName() + "#" + tagKey.location()).orElse("");
+        return stream.filter(tag -> tag.matches(stack)).findFirst().map(tag -> equipmentSlot.getName() + "#" + tag.location()).orElse("");
     }
 
     public boolean hasFilter(EquipmentSlot equipmentSlot) {

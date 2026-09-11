@@ -7,8 +7,13 @@ import com.elfmcys.yesstevemodel.util.FileTypeUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import com.mojang.blaze3d.vertex.PoseStack;
+//? if >1.17 {
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
+//?}
+import com.elfmcys.yesstevemodel.util.YsmText;
+import rip.ysm.gui.YsmButton;
+import rip.ysm.gui.YsmGui;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
@@ -20,23 +25,36 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.Collections;
 import java.util.List;
 
-public class PackIconButton extends Button {
+public class PackIconButton extends YsmButton {
 
     private static final ResourceLocation default_pack_icon = new ResourceLocation(YesSteveModel.MOD_ID, "texture/default_pack_icon.png");
 
     private final ModelPackData packData;
 
     public PackIconButton(int x, int y, int width, int height, ModelPackData packData, OnPress onPress) {
-        super(x, y, width, height, Component.literal(ModelMetadataPresenter.getLocalizedString(packData, "name", packData.getName())), onPress, DEFAULT_NARRATION);
+        super(x, y, width, height, YsmText.literal(ModelMetadataPresenter.getLocalizedString(packData, "name", packData.getName())), onPress);
         this.packData = packData;
     }
 
-    public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    //? if >1.17 {
+    @Override
+    public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+    //?} else {
+    /*@Override
+    public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
+    }
+     *///?}
+
+    @Override
+    public void renderWidget(YsmGui guiGraphics, int mouseX, int mouseY, float partialTick) {
         Minecraft minecraft = Minecraft.getInstance();
         Font font = minecraft.font;
         guiGraphics.fillGradient(getX(), getY(), getX() + this.width, getY() + this.height, -6598176, -6598176);
         ResourceLocation location = FileTypeUtil.getPackIconLocation(this.packData.getPath());
-        AbstractTexture texture = minecraft.getTextureManager().getTexture(location, MissingTextureAtlasSprite.getTexture());
+        AbstractTexture texture = guiGraphics.getTexture(location);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         if (texture == MissingTextureAtlasSprite.getTexture()) {
@@ -52,7 +70,7 @@ public class PackIconButton extends Button {
         } else {
             drawCenteredString(guiGraphics, font, getMessage(), getX() + (this.width / 2), (getY() + this.height) - 15, 5592405);
         }
-        if (isHoveredOrFocused()) {
+        if (hoveredOrFocused()) {
             guiGraphics.fillGradient(getX(), getY() + 1, getX() + 1, (getY() + this.height) - 1, -1982745, -1982745);
             guiGraphics.fillGradient(getX(), getY(), getX() + this.width, getY() + 1, -1982745, -1982745);
             guiGraphics.fillGradient((getX() + this.width) - 1, getY() + 1, getX() + this.width, (getY() + this.height) - 1, -1982745, -1982745);
@@ -60,25 +78,25 @@ public class PackIconButton extends Button {
         }
     }
 
-    public void renderDescription(GuiGraphics guiGraphics, Screen screen, int mouseX, int mouseY) {
+    public void renderDescription(YsmGui guiGraphics, Screen screen, int mouseX, int mouseY) {
         String str = ModelMetadataPresenter.getLocalizedString(this.packData, "description", this.packData.getDescription());
         if (StringUtils.isBlank(str)) {
             return;
         }
-        List<Component> listSingletonList = Collections.singletonList(Component.literal(str));
+        List<Component> listSingletonList = Collections.singletonList(YsmText.literal(str));
         if (isHovered()) {
             guiGraphics.pose().pushPose();
             guiGraphics.pose().translate(0.0f, 0.0f, 4000.0f);
-            guiGraphics.renderComponentTooltip(Minecraft.getInstance().font, listSingletonList, mouseX, mouseY);
+            guiGraphics.renderScreenComponentTooltip(screen, Minecraft.getInstance().font, listSingletonList, mouseX, mouseY);
             guiGraphics.pose().popPose();
         }
     }
 
-    private static void drawCenteredString(GuiGraphics guiGraphics, Font font, Component component, int centerX, int y, int color) {
+    private static void drawCenteredString(YsmGui guiGraphics, Font font, Component component, int centerX, int y, int color) {
         guiGraphics.drawString(font, component, centerX - (font.width(component) / 2), y, color, false);
     }
 
-    private static void drawCenteredString(GuiGraphics guiGraphics, Font font, FormattedCharSequence formattedCharSequence, int centerX, int y, int color) {
+    private static void drawCenteredString(YsmGui guiGraphics, Font font, FormattedCharSequence formattedCharSequence, int centerX, int y, int color) {
         guiGraphics.drawString(font, formattedCharSequence, centerX - (font.width(formattedCharSequence) / 2), y, color, false);
     }
 }

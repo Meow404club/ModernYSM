@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.client.animation.predicate;
 
 import com.elfmcys.yesstevemodel.client.animation.IAnimationPredicate;
+import com.elfmcys.yesstevemodel.util.YsmEntity;
 import com.elfmcys.yesstevemodel.client.entity.LivingAnimatable;
 import com.elfmcys.yesstevemodel.client.animation.condition.ConditionHold;
 import com.elfmcys.yesstevemodel.geckolib3.core.builder.ILoopType;
@@ -28,6 +29,9 @@ public class OffHandHoldPredicate implements IAnimationPredicate<LivingAnimatabl
         }
         int i = event.getAnimatable().getModelAssembly().getModelData().getFormatVersion();
         ItemStack itemInHand = entity.getItemInHand(InteractionHand.OFF_HAND);
+                //? if <1.17
+        /*if (itemInHand.getItem() == Items.CROSSBOW && CrossbowItem.isCharged(itemInHand)) {*/
+        //? if >=1.17
         if (itemInHand.is(Items.CROSSBOW) && CrossbowItem.isCharged(itemInHand)) {
             return IAnimationPredicate.playAnimationWithValid(event, "hold_offhand:charged_crossbow", ILoopType.EDefaultLoopTypes.LOOP, i);
         }
@@ -49,7 +53,7 @@ public class OffHandHoldPredicate implements IAnimationPredicate<LivingAnimatabl
     private boolean isSameItem(ItemStack stack, LivingEntityFrameState<?> frameState, InteractionHand hand) {
         ItemStack preItem = frameState.getHandItemsForAnimation(hand);
         if (preItem.isDamaged()) {
-            return ItemStack.isSameItem(stack, preItem);
+            return YsmEntity.sameItem(stack, preItem);
         }
         return ItemStack.matches(stack, preItem);
     }

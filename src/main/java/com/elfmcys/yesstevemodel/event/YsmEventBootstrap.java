@@ -16,8 +16,9 @@ public final class YsmEventBootstrap {
         PlayerLogoutEvent.register();
         CommonEvent.register();
         CommandRegistry.register();
-        // 1.16.5 capability 旧机制注册枢纽（1.20.1 内部 no-op），须在进世界 attach 前完成
-        CapabilityEvent.register();
+        // 1.16.5 capability 注册已随 CommonEvent.onCommonSetup（FMLCommonSetupEvent）延后——
+        // 构造期 CapabilityManager.INSTANCE.register 在 1.16.x 必 NPE（callbacks 仅由
+        // injectCapabilities 赋值，见 CapabilityEvent#registerCapabilities 注释）
         if (!PlatformAPI.isServer()) {
             EntityJoinCallbackEvent.register();
             ClientSetupEvent.register();

@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.command.subcommands;
 
 import com.elfmcys.yesstevemodel.model.ServerModelManager;
+import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.event.CommandRegistry;
 import com.elfmcys.yesstevemodel.capability.AuthModelsCapability;
 import com.elfmcys.yesstevemodel.capability.ModelInfoCapability;
@@ -53,14 +54,14 @@ public class AuthCommand {
         Collection<ServerPlayer> targets = EntityArgument.getPlayers(context, TARGETS_NAME);
         String string = StringArgumentType.getString(context, MODEL_ID_NAME);
         if (!ServerModelManager.getServerModelInfo().containsKey(string)) {
-            context.getSource().sendSuccess(() -> Component.translatable("commands.yes_steve_model.export.not_exist", string), true);
+            YsmText.sendSuccess(context.getSource(), YsmText.translatable("commands.yes_steve_model.export.not_exist", string), true);
             return Command.SINGLE_SUCCESS;
         }
         targets.forEach(player -> {
             AuthModelsCapability.get(player).ifPresent(ownModelCap -> {
                 ownModelCap.addModel(string);
                 NetworkHandler.sendToClientPlayer(new S2CSyncAuthModelsPacket(ownModelCap.getAuthModels()), player);
-                context.getSource().sendSuccess(() -> Component.translatable("commands.yes_steve_model.auth_model.add.info", string, player.getScoreboardName()), true);
+                YsmText.sendSuccess(context.getSource(), YsmText.translatable("commands.yes_steve_model.auth_model.add.info", string, player.getScoreboardName()), true);
             });
         });
         return Command.SINGLE_SUCCESS;
@@ -72,7 +73,7 @@ public class AuthCommand {
             Objects.requireNonNull(ownModelCap);
             setKeySet.forEach(ownModelCap::addModel);
             NetworkHandler.sendToClientPlayer(new S2CSyncAuthModelsPacket(ownModelCap.getAuthModels()), player);
-            context.getSource().sendSuccess(() -> Component.translatable("commands.yes_steve_model.auth_model.all.info", player.getScoreboardName()), true);
+            YsmText.sendSuccess(context.getSource(), YsmText.translatable("commands.yes_steve_model.auth_model.all.info", player.getScoreboardName()), true);
         }));
         return Command.SINGLE_SUCCESS;
     }
@@ -88,7 +89,7 @@ public class AuthCommand {
                 }
             });
             NetworkHandler.sendToClientPlayer(new S2CSyncAuthModelsPacket(ownModelsCap.getAuthModels()), player);
-            context.getSource().sendSuccess(() -> Component.translatable("commands.yes_steve_model.auth_model.remove.info", modelName, player.getScoreboardName()), true);
+            YsmText.sendSuccess(context.getSource(), YsmText.translatable("commands.yes_steve_model.auth_model.remove.info", modelName, player.getScoreboardName()), true);
         }));
         return Command.SINGLE_SUCCESS;
     }
@@ -102,7 +103,7 @@ public class AuthCommand {
                 }
             });
             NetworkHandler.sendToClientPlayer(new S2CSyncAuthModelsPacket(ownModelCap.getAuthModels()), player);
-            context.getSource().sendSuccess(() -> Component.translatable("commands.yes_steve_model.auth_model.clear.info", player.getScoreboardName()), true);
+            YsmText.sendSuccess(context.getSource(), YsmText.translatable("commands.yes_steve_model.auth_model.clear.info", player.getScoreboardName()), true);
         }));
         return Command.SINGLE_SUCCESS;
     }

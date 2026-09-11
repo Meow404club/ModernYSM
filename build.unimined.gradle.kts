@@ -111,6 +111,28 @@ unimined.minecraft {
     }
 }
 
+// ===== MixinExtras 注解 refmap 开关（m2-prod-refmap-1165）=====
+// 根因：unimined 1.4.1 的 refmap 不是编译期 Mixin AP 产物（build/classes 无 refmap 文件
+// 实证），而是 remapJar 阶段 MixinRemapExtension.RefmapBuilderClassVisitor（tinyremapper
+// mixin 扩展）分析 mixin 类注解字符串自产；默认只注册 base Mixin 注解的 visitor，
+// MixinExtras 注解（@WrapWithCondition v2/@WrapOperation/@ModifyExpressionValue 等 9 种，
+// MixinExtra.refmapBuilder 注册表 javap 实证含 Lcom/llamalad7/mixinextras/injector/v2/
+// WrapWithCondition;）需要 enableMixinExtra() 显式追加——modifyRefmapBuilder 是
+// 旧 visitor →新 visitor 的组合（追加语义，base mixin 覆盖不丢）；全 unimined 只有
+// NeoForged/Fabric transformer 按「loader 是否自带 MixinExtras」自动开，ForgeLike 不开。
+// 缺口实锤：生产 1.16.5 崩溃 tmp/crash-2026-09-11_11.16.02-client.txt——
+// client.EntityRenderDispatcherMixin @WrapWithCondition(method="render") 在 SRG 运行时
+// 无 refmap 条目可查（类名经字节码重映射侥幸正确，方法名字符串原样）→
+// InvalidInjectionException APPLY 即崩。dev 全 mojmap 名故测不出。
+// 先例：GTNH/Celeritas forge1710 build.gradle tasks.named("remapJar"){ mixinRemap{...} }。
+tasks.named<xyz.wagyourtail.unimined.api.minecraft.task.RemapJarTask>("remapJar") {
+    // 注：DSL 是 receiver 风格 lambda（MixinRemapOptions.() -> Unit），enableMixinExtra()
+    // 直接以隐式接收者调用
+    mixinRemap {
+        enableMixinExtra()
+    }
+}
+
 dependencies {
     // JOML：共享源 geckolib3 渲染/动画栈 49 文件 import org.joml（MC 1.19.3 才内置，
     // 1.16.5 类路径缺失→"程序包org.joml不存在"）。选 1.10.5（=MC 1.20.1 自带版本，

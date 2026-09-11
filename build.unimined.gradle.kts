@@ -328,6 +328,9 @@ tasks.named<ProcessResources>("processResources") {
                 line.replace("\"required\": true", "\"required\": true,\n  \"refmap\": \"yes_steve_model.mixins-refmap.json\"")
             else line
         }
+        // RenderSystemAccessor 在 1.16.5 为普通工具类（非 mixin，空接口 mixin 在
+        // Mixin prepare 阶段报 target type mismatch），从 client 注册列表剔除
+        filter { line: String -> line.replace("\"client.RenderSystemAccessor\", ", "") }
     }
     // mods.toml 版本口径：共享源为 1.20.1 事实（loaderVersion/forge=47 系、minecraft 1.20.1），
     // 1.16.5=forge 36.x（forge 1.16.5 MDK 模板值：loaderVersion "[36,)" / forge "[36,)" /

@@ -33,7 +33,8 @@
 | m2-render-pipeline-condition | merged | ea9bfb3 | 打回一次（方向争议）：coder 成立，真 BUG 仅 normal() 反射路径 |
 | m2-compile-green-gate | merged | 2f860aa | 双版本绿+四内嵌（JOML111/ImageStream391/mixinextras108/unsafe8）+双冒烟；四处语义修复 1.20.1 零回退逐项实证；ImageStream vendor 240 文件与上游一致 |
 | m2-native-poc-1165 | in_review | work/m2-native-poc-1165 | 53bb77c：**GO**——@Unique 桩字段方案，SIMD vs 兼容 1236 顶点 0 失配；审查中（③/5） |
-| m2-prod-refmap-1165 | in_progress | work/m2-prod-refmap-1165 | **阻断**：1.16.5 非 dev 启动崩溃（crash log tmp/crash-2026-09-11_11.16.02）——@WrapWithCondition 方法名未重映射，refmap 系统性缺口，18 条全审计 |
+| m2-prod-refmap-1165 | merged | 4634082 | 根因=unimined refmap 非 AP 产物+MixinExtras 需 enableMixinExtra()（ForgeLike 不自开）；生产 A/B（A 复现崩溃/B 330s 到主菜单）；1.20.1 惰性炸弹诊断归生产卡 |
+| m2-native-poc-1165 | merged | 68f50bb | **GO**：@Unique 桩字段方案，三路径 1236 顶点 0 失配；机制链亲证（g_modeFieldID 唯二不读） |
 | m2-native-poc-1165 | queued | - | GO/NO-GO；联验输入：GeoModel.initSIMD 传 VertexFormat.Mode.class 1.16.5 编不过（native 期望 int-mode，安全降级门槛已证） |
 | m2-ingame-smoke-gate | queued | - | 双版本进世界终验（含模型不变形视觉核验） |
 | feature-debts-1165 | ledger | - | 6 项功能差（blur/iris/tooltip/extraplayer/biome-molang/compat-matrix），M2 收官后排期发卡 |

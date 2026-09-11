@@ -5,8 +5,8 @@
 ## 阶段
 - phase: 架构重构（Stonecutter 迁移）——M2 收官冲刺
 - done: [M0 骨架 e9f0b61 + 源码合并 d086af3, native 子模块 7db591f, M1 八卡全过 0f81660（Architectury 清零+进世界验收）, M2 七卡合入 3483e9d/acd46c8/c5606ae/8f23248/5b6d3ac/fa83f37/ea9bfb3]
-- current: **M2 9/10 合入**（dev=2f860aa，1.16.5 首个完整发布 jar 产出：SRG/major52/四内嵌全过）；native-poc 开跑（GO/NO-GO）
-- next: native-poc 结论 → ingame-smoke-gate（双版本进世界+模型不变形终验）→ **M2 收官：记忆整理（蒸馏/kg_stats/锚点）→ 用户压缩上下文 → M3 全谱平铺**
+- current: M2 收官双卡并行（native-poc + prod-refmap 阻断修复）
+- next: 双卡合入 → ingame-smoke-gate（**须加生产 jar 启动验证**——dev runClient 测不出 refmap 类盲区）→ **M2 收官：记忆整理→压缩上下文→M3 全谱平铺**
 
 ## ADR 摘要（decisions.adr-stonecutter-2026-09-10 + adr-m2-1165-stonecutter-entry）
 - stonecutter 0.7 + Gradle 9.2.1 单仓；路由：forge ≥1.17 → legacyforge(MDG 2.0.141)，<1.17 → unimined 1.4.1（Celeritas 生产先例）；NeoForge 1.20.5+ → moddev（M4）；1.20.1 一 jar 双跑 NeoForge 47.1
@@ -33,6 +33,7 @@
 | m2-render-pipeline-condition | merged | ea9bfb3 | 打回一次（方向争议）：coder 成立，真 BUG 仅 normal() 反射路径 |
 | m2-compile-green-gate | merged | 2f860aa | 双版本绿+四内嵌（JOML111/ImageStream391/mixinextras108/unsafe8）+双冒烟；四处语义修复 1.20.1 零回退逐项实证；ImageStream vendor 240 文件与上游一致 |
 | m2-native-poc-1165 | in_progress | work/m2-native-poc-1165 | GO/NO-GO：initSIMD 调用点条件化+SIMD vs 兼容路径一致性+结论回写 |
+| m2-prod-refmap-1165 | in_progress | work/m2-prod-refmap-1165 | **阻断**：1.16.5 非 dev 启动崩溃（crash log tmp/crash-2026-09-11_11.16.02）——@WrapWithCondition 方法名未重映射，refmap 系统性缺口，18 条全审计 |
 | m2-native-poc-1165 | queued | - | GO/NO-GO；联验输入：GeoModel.initSIMD 传 VertexFormat.Mode.class 1.16.5 编不过（native 期望 int-mode，安全降级门槛已证） |
 | m2-ingame-smoke-gate | queued | - | 双版本进世界终验（含模型不变形视觉核验） |
 | feature-debts-1165 | ledger | - | 6 项功能差（blur/iris/tooltip/extraplayer/biome-molang/compat-matrix），M2 收官后排期发卡 |
@@ -56,6 +57,7 @@
 
 ## 生产发布前必查（挂账）
 - 1.20.1 生产 jar mixins.json 缺 refmap 键（M1 起既有；需先验证 MDG refmap 与 dev 类路径互作再注入）
+- **门禁盲区教训（2026-09-11）**：dev runClient 测不出生产 refmap 缺口——ingame-smoke-gate 必须含生产 jar 启动验证
 - JOML 1.10.5 运行期内嵌 1.16.5 产物（compile-green 卡已收口，复核）
 - 冒烟 harness（SmokeAutoJoin/init-script）未入库，后续冒烟卡自带
 

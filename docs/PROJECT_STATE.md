@@ -5,8 +5,8 @@
 ## 阶段
 - phase: 架构重构（Stonecutter 迁移）——M2 收官冲刺
 - done: [M0 骨架 e9f0b61 + 源码合并 d086af3, native 子模块 7db591f, M1 八卡全过 0f81660（Architectury 清零+进世界验收）, M2 七卡合入 3483e9d/acd46c8/c5606ae/8f23248/5b6d3ac/fa83f37/ea9bfb3]
-- current: M2 收官三卡——native-poc ③、prod-refmap ② in_review（同会话），compile-green ① 已合入
-- next: 双卡合入 → ingame-smoke-gate（**须加生产 jar 启动验证**）→ **M2 收官：记忆整理→压缩上下文→M3 全谱平铺**
+- current: M2 十卡全部合入，收官门禁 ingame-smoke-gate in_review（④/5，三层 PASS+6 文件修补 1f7e1a2）
+- next: 门禁合入+tag v2.6.6.6-m2 裁决 → **M2 收官：记忆整理（蒸馏/kg_stats/锚点）→ 用户压缩上下文 → M3 全谱平铺**
 
 ## ADR 摘要（decisions.adr-stonecutter-2026-09-10 + adr-m2-1165-stonecutter-entry）
 - stonecutter 0.7 + Gradle 9.2.1 单仓；路由：forge ≥1.17 → legacyforge(MDG 2.0.141)，<1.17 → unimined 1.4.1（Celeritas 生产先例）；NeoForge 1.20.5+ → moddev（M4）；1.20.1 一 jar 双跑 NeoForge 47.1

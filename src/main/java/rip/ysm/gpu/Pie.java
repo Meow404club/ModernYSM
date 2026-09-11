@@ -48,12 +48,17 @@ public final class Pie {
         mvpScratch.mul(pose.last().pose());
         mvpScratch.get(mvpFloats);
         //?} else {
-        /*GL11.glGetFloatv(GL11.GL_PROJECTION_MATRIX, projBuf);
+        /*// glGetFloatv/store 会推进 buffer position：不清零则第二次调用 remaining=0
+        // → LWJGL Checks.checkBuffer 抛 IAE（一帧画多个扇形必现）
+        projBuf.clear();
+        GL11.glGetFloatv(GL11.GL_PROJECTION_MATRIX, projBuf);
         projBuf.rewind();
         projBuf.get(projArr);
+        modelViewBuf.clear();
         GL11.glGetFloatv(GL11.GL_MODELVIEW_MATRIX, modelViewBuf);
         modelViewBuf.rewind();
         modelViewBuf.get(modelViewArr);
+        poseBuf.clear();
         pose.last().pose().store(poseBuf);
         poseBuf.rewind();
         poseBuf.get(poseArr);

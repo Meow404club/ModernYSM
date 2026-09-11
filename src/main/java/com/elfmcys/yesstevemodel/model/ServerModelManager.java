@@ -329,15 +329,17 @@ public final class ServerModelManager {
             // forgespi 3.x（1.16.5 userdev 实证）IModFileInfo 无 getFile()：<1.17 走类加载器锚点
             //（dev=build/resources、jar=自身包内），语义与 findResource 等价
             //? if <1.17 {
-            /*Path assetsBuiltin = null;
+            /*Path assetsBuiltinResolved = null;
             try {
                 java.net.URL url = ServerModelManager.class.getClassLoader().getResource("assets/" + YesSteveModel.MOD_ID + "/builtin");
                 if (url != null && "file".equals(url.getProtocol())) {
-                    assetsBuiltin = java.nio.file.Paths.get(url.toURI());
+                    assetsBuiltinResolved = java.nio.file.Paths.get(url.toURI());
                 }
             } catch (Exception e) {
-                assetsBuiltin = null;
+                assetsBuiltinResolved = null;
             }
+            // Java8 lambda 捕获要求 effectively-final：解析期允许多次赋值，捕获面收口到单赋值 final 变量
+            final Path assetsBuiltin = assetsBuiltinResolved;
              *///?} else {
             Path assetsBuiltin = Optional.ofNullable(ModList.get().getModFileById(YesSteveModel.MOD_ID))
                     .map(IModFileInfo::getFile)

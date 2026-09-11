@@ -316,7 +316,7 @@ public class YSMBinding extends ContextBinding {
     /** ComponentUtils.copyOnClickText（1.19.2+）↔ 1.16.5 无 → 原串直返（丢点击复制修饰，仅 debug dump 输出）。 */
     private static net.minecraft.network.chat.Component copyOnClickTextCompat(String str) {
         //? if <1.17 {
-        /*return net.minecraft.network.chat.Component.literal(str);
+        /*return YsmText.literal(str);
          *///?} else {
         return net.minecraft.network.chat.ComponentUtils.copyOnClickText(str);
         //?}

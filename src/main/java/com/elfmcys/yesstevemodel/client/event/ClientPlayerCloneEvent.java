@@ -15,7 +15,7 @@ public final class ClientPlayerCloneEvent {
     public static void register() {
         // architectury ClientPlayerEvent.CLIENT_PLAYER_RESPAWN 在 forge 端 = ClientPlayerNetworkEvent.Clone（不可取消）
         //? if <1.17 {
-        /*MinecraftForge.EVENT_BUS.addListener(ClientPlayerCloneEvent::onClientPlayerRespawn);
+        /*MinecraftForge.EVENT_BUS.addListener(ClientPlayerCloneEvent::onClientPlayerRespawnEvent);
          *///?} else {
         MinecraftForge.EVENT_BUS.addListener(ClientPlayerCloneEvent::onClientPlayerClone);
         //?}

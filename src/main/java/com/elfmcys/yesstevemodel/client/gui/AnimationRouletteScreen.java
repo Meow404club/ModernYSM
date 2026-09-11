@@ -180,10 +180,10 @@ public class AnimationRouletteScreen extends Screen {
     }
 
     public void init() {
-        // clearWidgets() 为 1.17+（1.16.5 Screen 无）：init(Minecraft,w,h) 本身清空 children 后回调 init()
-        //? if <1.17
-        /*this.init(Minecraft.getInstance(), this.width, this.height);
-        return;*/
+        // clearWidgets() 为 1.17+（1.16.5 Screen 无）：vanilla init(mc,w,h) 已清空 buttons/children
+        // 再回调 init()，1.16.5 直跑共享方法体即可（与 DisclaimerScreen/PlayerModelScreen 展开
+        // 后的实际语义一致）。注意不可用「//? if <1.17 + /*this.init(...);return;*/」行条件写法：
+        // 行条件解包会把两行整块复活，return 悬在方法中段 → 1.16.5 展开报不可达语句（本轮实测）。
         //? if >=1.17
         clearWidgets();
         this.centerX = (this.width / 2) - 70;
@@ -597,7 +597,7 @@ public class AnimationRouletteScreen extends Screen {
             });
         }
         if (localPlayer != null && GeneralConfig.PRINT_ANIMATION_ROULETTE_MSG.get().booleanValue()) {
-            localPlayer.sendSystemMessage(YsmText.translatable("message.yes_steve_model.model.animation_roulette.play", str));
+            YsmText.sendSystemMessage(localPlayer, YsmText.translatable("message.yes_steve_model.model.animation_roulette.play", str));
         }
         Minecraft.getInstance().setScreen(null);
     }
@@ -606,7 +606,7 @@ public class AnimationRouletteScreen extends Screen {
         if (navigationStack.size() > 5) {
             LocalPlayer localPlayer = Minecraft.getInstance().player;
             if (localPlayer != null) {
-                localPlayer.sendSystemMessage(YsmText.translatable("gui.yes_steve_model.roulette.too_long"));
+                YsmText.sendSystemMessage(localPlayer, YsmText.translatable("gui.yes_steve_model.roulette.too_long"));
                 return;
             }
             return;

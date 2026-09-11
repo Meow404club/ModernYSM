@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.client.gui.button;
 
 import com.elfmcys.yesstevemodel.YesSteveModel;
+import com.elfmcys.yesstevemodel.util.YsmText;
 import com.mojang.blaze3d.vertex.PoseStack;
 //? if >1.17 {
 import net.minecraft.client.gui.GuiGraphics;
@@ -19,7 +20,7 @@ public class IconButton extends FlatColorButton {
     private final int iconV;
 
     public IconButton(int x, int y, int width, int height, int iconU, int iconV, OnPress onPress) {
-        super(x, y, width, height, Component.empty(), onPress);
+        super(x, y, width, height, YsmText.literal(""), onPress);
         this.iconU = iconU;
         this.iconV = iconV;
     }

@@ -126,6 +126,10 @@ dependencies {
     // accessor 配置才是被闸对象）；运行时注入方式（内嵌/伴生）未定，本卡只保编译
     compileOnly("io.github.llamalad7:mixinextras-common:${property("deps.mixinextras")}")
     annotationProcessor("io.github.llamalad7:mixinextras-common:${property("deps.mixinextras")}")
+    // jsr305（javax.annotation.*）：1.16.5 mojmap jar 缺 mcp 注解同源的 nullness 注解——
+    // forge 侧类签名引用 ParametersAreNonnullByDefault 等，javac attribution 必需
+    //（编译期依赖，compileOnly 不进产物；forge 1.16.5 userdev 同款 3.0.2）
+    compileOnly("com.google.code.findbugs:jsr305:3.0.2")
     // 1.16.5 不声明 libs/ fileTree：第三方 compat 依赖整体闸在本版本构建外
     //（排除规则见下方 stonecutterGenerate 块，门面 shim 见 versions/1.16.5-forge/src/main/java）
 }
@@ -145,6 +149,11 @@ dependencies {
 sourceSets.main {
     java {
         srcDir("src/shim/rip/ysm/compat")
+        // mcp 注解 stub srcDir（根=mcp 包目录）：unimined 1.16.5 mojmap jar 全系缺
+        // mcp/MethodsReturnNonnullByDefault.class，而 forge 侧 CapabilityProvider/
+        // CapabilityDispatcher/LazyOptional 及 11 个 package-info 的签名引用它
+        //（javap+zip 字节扫描实证）——capability 继承链 attribution 需要可解析。
+        srcDir("src/shim/mcp")
         exclude(
             "rip/ysm/compat/**",
             "com/elfmcys/yesstevemodel/client/compat/**",

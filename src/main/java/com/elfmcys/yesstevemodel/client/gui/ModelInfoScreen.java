@@ -78,6 +78,10 @@ public class ModelInfoScreen extends Screen {
     }
 
     public void init() {
+//? if <1.17 {
+        /*this.init(Minecraft.getInstance(), this.width, this.height);
+        return;*/
+        //? if >=1.17
         clearWidgets();
         this.guiLeft = (this.width - 420) / 2;
         this.guiTop = (this.height - 235) / 2;

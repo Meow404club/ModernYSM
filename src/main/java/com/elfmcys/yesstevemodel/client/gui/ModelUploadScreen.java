@@ -41,6 +41,10 @@ public class ModelUploadScreen extends Screen implements ModelUploadSession.List
 
     @Override
     public void init() {
+//? if <1.17 {
+        /*this.init(Minecraft.getInstance(), this.width, this.height);
+        return;*/
+        //? if >=1.17
         clearWidgets();
         ModelUploadSession.addListener(this);
         ysmAddWidget(new FlatColorButton(this.width - 70, 10, 60, 18, YsmText.literal("Back"), button -> Minecraft.getInstance().setScreen(this.parentScreen)));

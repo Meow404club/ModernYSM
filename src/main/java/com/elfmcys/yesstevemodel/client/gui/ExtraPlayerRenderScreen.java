@@ -115,6 +115,7 @@ public class ExtraPlayerRenderScreen extends Screen {
         }
         guiGraphics.pose().popPose();
         if (Minecraft.getInstance().player != null && !ExtraPlayerRenderConfig.DISABLE_PLAYER_RENDER.get().booleanValue()) {
+            //? if >=1.17
             ModelPreviewRenderer.renderPlayerOverlay(guiGraphics.graphics(), Minecraft.getInstance().player, this.mouseStartX, this.mouseStartY, this.rotationX, this.rotationY, -500, this.minecraft.getFrameTime());
         }
         //? if <1.17

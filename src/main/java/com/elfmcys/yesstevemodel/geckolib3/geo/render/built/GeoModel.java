@@ -202,10 +202,13 @@ public class GeoModel {
                     nextElementByteName,
                     ensureCapacityName,
                     modeName,
-                    // 1.16.5 BufferBuilder.mode 为 int（无 VertexFormat.Mode 枚举）；
-                    // nInitSIMD 兜底链（catch + USE_COMPATIBILITY_RENDERER）按 ADR 不变，native 侧自行降级
+                    // nInitSIMD 用该 Class 的 getName() 拼模式字段描述符做 GetFieldID
+                    //（dllmain.cpp:319-341）。1.16.5 真字段 mode 是 int（描述符 "I"），
+                    // "L…;" 形态永不命中——传 Object.class 对位 BufferBuilderMixin 的
+                    // @Unique Object 桩字段（ysmSimdModeStub），让门槛通过；g_modeFieldID
+                    // 缓存后从不被读取（dllmain.cpp 全文实证），语义零偏移，native 零改动。
                     //? if <1.17 {
-                    // int.class
+                    // Object.class
                     //? } else {
                     VertexFormat.Mode.class
                     //? }

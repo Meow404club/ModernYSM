@@ -1,6 +1,9 @@
 package com.elfmcys.yesstevemodel.mixin.client;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import org.joml.Vector3f;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
 
 // 1.16.5 RenderSystem 无 shaderLightDirections 字段（shader 灯光系 1.17+ 引入，ShaderInstance 时代）；
 // 1.16.5 侧退化为普通静态方法返回 null（消费方 GpuRenderPath.refreshLights 有 null 兜底），
@@ -12,9 +15,9 @@ import org.joml.Vector3f;
 //（无 @Mixin 注解），同时 1.16.5 processResources 将本类从 mixins.json client 列表剔除。
 // 消费方 GpuRenderPath 在 <1.17 有恒 false 闸门，该方法不会被调用。
 //? if >=1.17 {
-@com.spongepowered.asm.mixin.Mixin(com.mojang.blaze3d.systems.RenderSystem.class)
+@Mixin(RenderSystem.class)
 public interface RenderSystemAccessor {
-    @com.spongepowered.asm.mixin.gen.Accessor("shaderLightDirections")
+    @Accessor("shaderLightDirections")
     static Vector3f[] ysm$getShaderLightDirections() {
         return null;
     }

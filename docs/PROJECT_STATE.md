@@ -42,6 +42,11 @@
 | native-openysm-cpp | closed | - | 自带实现完整；上游仅档案存查 |
 | harvest-curator-1/2 | merged | - | stonecutter-template+stonecutter-src-07+celeritas-mva 入 RAG |
 
+## M2.5 GUI 全量排查修复（tasks.m2.5-gui-full-fix，已落账待启动）
+- 症状1：1.16.5 按 Z 动画轮盘崩端——Pie.draw:51 glGetFloatv 缓冲 remaining=0（1.16.5 Pie 保留路径缺缓冲分配，需 16 float direct buffer）
+- 症状2：Alt+Y 大多数按钮空白未渲染（含 EULA 屏）——YsmWidget/YsmGui 双轴桥接 1.16.5 按钮贴图/blit 路径待排查
+- 范围：9 屏+12 按钮+门面全走查，双版本回归，生产 jar 复验（refmap-audit harness）；崩溃日志 tmp/crash-2026-09-11_19.24.38-client.txt
+
 ## M3 平铺原则（用户指示 2026-09-11，tasks.m3-flat-tiling）
 - 铺到 1.16.5+ forge/neoforge 支持的全部版本（地图玩家友好：地图绑定 MC 版本）；
 - 枚举以 Forge/NeoForge maven 官方清单为准；Forge 终点 1.20.4，NeoForge 1.20.1（一 jar 双跑）+1.20.2 起全谱；

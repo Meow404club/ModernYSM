@@ -5,8 +5,8 @@
 ## 阶段
 - phase: 架构重构（Stonecutter 迁移）——M2 收官冲刺
 - done: [M0 骨架 e9f0b61 + 源码合并 d086af3, native 子模块 7db591f, M1 八卡全过 0f81660（Architectury 清零+进世界验收）, M2 七卡合入 3483e9d/acd46c8/c5606ae/8f23248/5b6d3ac/fa83f37/ea9bfb3]
-- current: M2 收官双卡并行（native-poc + prod-refmap 阻断修复）
-- next: 双卡合入 → ingame-smoke-gate（**须加生产 jar 启动验证**——dev runClient 测不出 refmap 类盲区）→ **M2 收官：记忆整理→压缩上下文→M3 全谱平铺**
+- current: M2 收官三卡——native-poc ③、prod-refmap ② in_review（同会话），compile-green ① 已合入
+- next: 双卡合入 → ingame-smoke-gate（**须加生产 jar 启动验证**）→ **M2 收官：记忆整理→压缩上下文→M3 全谱平铺**
 
 ## ADR 摘要（decisions.adr-stonecutter-2026-09-10 + adr-m2-1165-stonecutter-entry）
 - stonecutter 0.7 + Gradle 9.2.1 单仓；路由：forge ≥1.17 → legacyforge(MDG 2.0.141)，<1.17 → unimined 1.4.1（Celeritas 生产先例）；NeoForge 1.20.5+ → moddev（M4）；1.20.1 一 jar 双跑 NeoForge 47.1
@@ -32,7 +32,7 @@
 | m2-gui-hud-port | merged | fa83f37 | YsmGui 双轴门面；GPU 三降级；映射 3/3 双源命中 |
 | m2-render-pipeline-condition | merged | ea9bfb3 | 打回一次（方向争议）：coder 成立，真 BUG 仅 normal() 反射路径 |
 | m2-compile-green-gate | merged | 2f860aa | 双版本绿+四内嵌（JOML111/ImageStream391/mixinextras108/unsafe8）+双冒烟；四处语义修复 1.20.1 零回退逐项实证；ImageStream vendor 240 文件与上游一致 |
-| m2-native-poc-1165 | in_progress | work/m2-native-poc-1165 | GO/NO-GO：initSIMD 调用点条件化+SIMD vs 兼容路径一致性+结论回写 |
+| m2-native-poc-1165 | in_review | work/m2-native-poc-1165 | 53bb77c：**GO**——@Unique 桩字段方案，SIMD vs 兼容 1236 顶点 0 失配；审查中（③/5） |
 | m2-prod-refmap-1165 | in_progress | work/m2-prod-refmap-1165 | **阻断**：1.16.5 非 dev 启动崩溃（crash log tmp/crash-2026-09-11_11.16.02）——@WrapWithCondition 方法名未重映射，refmap 系统性缺口，18 条全审计 |
 | m2-native-poc-1165 | queued | - | GO/NO-GO；联验输入：GeoModel.initSIMD 传 VertexFormat.Mode.class 1.16.5 编不过（native 期望 int-mode，安全降级门槛已证） |
 | m2-ingame-smoke-gate | queued | - | 双版本进世界终验（含模型不变形视觉核验） |

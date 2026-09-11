@@ -309,6 +309,16 @@ tasks.named<ProcessResources>("processResources") {
     filesMatching("pack.mcmeta") {
         filter { line: String -> line.replace("\"pack_format\": 15", "\"pack_format\": 6") }
     }
+    // mods.toml 版本口径：共享源为 1.20.1 事实（loaderVersion/forge=47 系、minecraft 1.20.1），
+    // 1.16.5=forge 36.x（forge 1.16.5 MDK 模板值：loaderVersion "[36,)" / forge "[36,)" /
+    // minecraft "[1.16.5,1.17)"）——不替换则 mandatory=true 的三处声明在 36.2.39 上必然拒载
+    filesMatching("META-INF/mods.toml") {
+        filter { line: String ->
+            line.replace("loaderVersion = \"[47,)\"", "loaderVersion = \"[36,)\"")
+                .replace("versionRange = \"[47,)\"", "versionRange = \"[36,)\"")
+                .replace("versionRange = \"[1.20.1,)\"", "versionRange = \"[1.16.5,1.17)\"")
+        }
+    }
     val props = mapOf(
         "mod_id" to project.property("archives_name") as String,
         "mod_name" to project.property("mod_name") as String,

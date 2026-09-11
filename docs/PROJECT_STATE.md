@@ -56,6 +56,13 @@
 | debt-biome-molang | biome molang 查询 | 恒 false | 中：category/name 近似，需模型侧确认 | debt-biome-molang-1165 |
 | debt-compat-matrix | 第三方 compat 全矩阵 | shim 缺席 | 大：M3 后立项 | debt-compat-matrix-1165 |
 
+## M2 收官记录（2026-09-11）
+- 合入链：…→compile-green 2f860aa→native-poc 68f50bb（GO）→prod-refmap 4634082→smoke-gate bf5be3a；11/11 approve（2 次打回均修复过审）
+- 收官门禁三层 PASS：1.16.5 dev+生产 / 1.20.1 dev+生产 / 模型不变形视觉终验（12 截图证据 tmp/m2-smoke-gate/）
+- 生产四雷修复：builtin modjar:// 提取（index.txt 621 条）/loadDefaultModel SOE/1.20.1 refmap 键激活/InventoryScreenMixin remap 纠正
+- tag 裁决：不打 v2.6.6.6-m2——embed 时间戳不可复现，归生产发布卡修可复现构建后打
+- 新坑入册：processResources 对构建脚本改动不失效，发版前全清 build 目录
+
 ## 生产发布前必查（挂账）
 - 1.20.1 生产 jar mixins.json 缺 refmap 键（M1 起既有；需先验证 MDG refmap 与 dev 类路径互作再注入）
 - **门禁盲区教训（2026-09-11）**：dev runClient 测不出生产 refmap 缺口——ingame-smoke-gate 必须含生产 jar 启动验证

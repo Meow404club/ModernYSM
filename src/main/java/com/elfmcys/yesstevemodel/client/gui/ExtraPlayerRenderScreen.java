@@ -1,9 +1,14 @@
 package com.elfmcys.yesstevemodel.client.gui;
 
 import com.elfmcys.yesstevemodel.client.renderer.ModelPreviewRenderer;
+import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.config.ExtraPlayerRenderConfig;
 import net.minecraft.client.Minecraft;
+import com.mojang.blaze3d.vertex.PoseStack;
+//? if >1.17 {
 import net.minecraft.client.gui.GuiGraphics;
+//?}
+import rip.ysm.gui.YsmGui;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.client.gui.screens.Screen;
@@ -33,7 +38,7 @@ public class ExtraPlayerRenderScreen extends Screen {
     private int offsetY;
 
     public ExtraPlayerRenderScreen() {
-        super(Component.literal("YSM Extra Player Render Config GUI"));
+        super(YsmText.literal("YSM Extra Player Render Config GUI"));
         this.isDragging = false;
         this.isRightDragging = false;
         this.offsetX = 5;
@@ -49,17 +54,21 @@ public class ExtraPlayerRenderScreen extends Screen {
     }
 
     public void init() {
+//? if <1.17 {
+        /*this.init(Minecraft.getInstance(), this.width, this.height);
+        return;*/
+        //? if >=1.17
         clearWidgets();
         int i = -30;
         if (PauseScreenButtonBuilder.isAndroid()) {
-            addRenderableWidget(Button.builder(Component.translatable("controls.reset"), button -> {
+            ysmAddWidget(YsmGui.button((this.width / 2) - 50, this.height - 35, 100, 30, YsmText.translatable("controls.reset"), button -> {
                 resetTransform();
-            }).bounds((this.width / 2) - 50, this.height - 35, 100, 30).build());
+            }));
             i = -60;
         }
-        MutableComponent mutableComponentTranslatable = Component.translatable("gui.yes_steve_model.hide_or_show");
+        MutableComponent mutableComponentTranslatable = YsmText.translatable("gui.yes_steve_model.hide_or_show");
         int iWidth = this.font.width(mutableComponentTranslatable) + 24;
-        addRenderableWidget(new Checkbox((this.width - iWidth) / 2, this.height + i, iWidth, 20, mutableComponentTranslatable, ExtraPlayerRenderConfig.DISABLE_PLAYER_RENDER.get().booleanValue(), true) {
+        ysmAddWidget(new Checkbox((this.width - iWidth) / 2, this.height + i, iWidth, 20, mutableComponentTranslatable, ExtraPlayerRenderConfig.DISABLE_PLAYER_RENDER.get().booleanValue(), true) {
             public void onPress() {
                 super.onPress();
                 ExtraPlayerRenderConfig.DISABLE_PLAYER_RENDER.set(Boolean.valueOf(selected()));
@@ -67,7 +76,19 @@ public class ExtraPlayerRenderScreen extends Screen {
         });
     }
 
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    //? if >1.17 {
+    @Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.render(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+    //?} else {
+    /*@Override
+    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+        this.render(new YsmGui(poseStack), mouseX, mouseY, partialTick);
+    }
+     *///?}
+
+    public void render(YsmGui guiGraphics, int mouseX, int mouseY, float partialTick) {
         int boxLeft = this.mouseStartX;
         int boxTop = this.mouseStartY;
         int boxRight = (int) (boxLeft + (this.rotationX));
@@ -88,15 +109,18 @@ public class ExtraPlayerRenderScreen extends Screen {
         guiGraphics.fillGradient(boxLeft - this.offsetX, boxTop - this.offsetX, boxLeft + this.offsetX, boxTop + this.offsetX, -16711777, -16711777);
         guiGraphics.fillGradient(boxRight - this.offsetX, boxBottom - this.offsetX, boxRight + this.offsetX, boxBottom + this.offsetX, -16777057, -16777057);
         int tipY = 15;
-        for (FormattedCharSequence formattedCharSequence : this.font.split(Component.translatable("gui.yes_steve_model.extra_player_render.tips"), 500)) {
+        for (FormattedCharSequence formattedCharSequence : this.font.split(YsmText.translatable("gui.yes_steve_model.extra_player_render.tips"), 500)) {
             guiGraphics.drawString(this.font, formattedCharSequence, (this.width - 15) - this.font.width(formattedCharSequence), tipY, 16777215);
             tipY += 10;
         }
         guiGraphics.pose().popPose();
         if (Minecraft.getInstance().player != null && !ExtraPlayerRenderConfig.DISABLE_PLAYER_RENDER.get().booleanValue()) {
-            ModelPreviewRenderer.renderPlayerOverlay(guiGraphics, Minecraft.getInstance().player, this.mouseStartX, this.mouseStartY, this.rotationX, this.rotationY, -500, this.minecraft.getFrameTime());
+            ModelPreviewRenderer.renderPlayerOverlay(guiGraphics.graphics(), Minecraft.getInstance().player, this.mouseStartX, this.mouseStartY, this.rotationX, this.rotationY, -500, this.minecraft.getFrameTime());
         }
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        //? if <1.17
+        /*super.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
+        //? if >=1.17
+        super.render(guiGraphics.graphics(), mouseX, mouseY, partialTick);
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -159,4 +183,18 @@ public class ExtraPlayerRenderScreen extends Screen {
         ExtraPlayerRenderConfig.PLAYER_YAW_OFFSET.set(Double.valueOf(this.rotationY));
         super.onClose();
     }
+    // addRenderableWidget/addWidget 均为 protected 实例方法（JLS 6.6.2 子类内才可调）→ 桥方法；
+    // 泛型返回保持原 addRenderableWidget 的链式取回语义（如 .setTooltipText 续链）
+    //? if <1.17 {
+    /*private <T extends net.minecraft.client.gui.components.AbstractWidget> T ysmAddWidget(T widget) {
+        this.addWidget(widget);
+        return widget;
+    }
+     *///?} else {
+    private <T extends net.minecraft.client.gui.components.AbstractWidget> T ysmAddWidget(T widget) {
+        this.addRenderableWidget(widget);
+        return widget;
+    }
+    //?}
+
 }

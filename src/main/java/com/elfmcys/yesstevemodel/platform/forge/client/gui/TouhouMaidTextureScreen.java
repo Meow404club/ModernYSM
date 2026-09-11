@@ -12,6 +12,7 @@ import com.elfmcys.yesstevemodel.client.renderer.RendererManager;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
+import rip.ysm.gui.YsmGui;
 
 public class TouhouMaidTextureScreen extends PlayerTextureScreen {
 
@@ -28,7 +29,7 @@ public class TouhouMaidTextureScreen extends PlayerTextureScreen {
     }
 
     @Override
-    public void renderTexturePreview(GuiGraphics guiGraphics, int scissorX, int scissorY, int scissorWidth, int scissorHeight, float partialTick) {
+    public void renderTexturePreview(YsmGui guiGraphics, int scissorX, int scissorY, int scissorWidth, int scissorHeight, float partialTick) {
         RenderSystem.enableScissor(scissorX, scissorY, scissorWidth, scissorHeight);
         this.maid.getCapability(MaidCapabilityProvider.MAID_CAP).ifPresent(cap -> {
             this.modelHolder.initModelWithTexture(cap.getModelId(), cap.getCurrentTextureName());

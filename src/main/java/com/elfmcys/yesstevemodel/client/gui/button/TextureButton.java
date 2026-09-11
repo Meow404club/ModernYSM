@@ -13,8 +13,13 @@ import com.elfmcys.yesstevemodel.network.message.C2SRequestSwitchModelPacket;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import com.mojang.blaze3d.vertex.PoseStack;
+//? if >1.17 {
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
+//?}
+import com.elfmcys.yesstevemodel.util.YsmText;
+import rip.ysm.gui.YsmButton;
+import rip.ysm.gui.YsmGui;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -22,15 +27,15 @@ import net.minecraft.util.FormattedCharSequence;
 
 import java.util.List;
 
-public class TextureButton extends Button {
+public class TextureButton extends YsmButton {
 
     public final PlayerPreviewEntity previewEntity;
 
     public final ModelAssembly modelAssembly;
 
     public TextureButton(int x, int y, PlayerPreviewEntity previewEntity, ModelAssembly modelAssembly) {
-        super(x, y, 54, 102, Component.empty(), button -> {
-        }, DEFAULT_NARRATION);
+        super(x, y, 54, 102, YsmText.literal(""), button -> {
+        });
         this.previewEntity = previewEntity;
         this.modelAssembly = modelAssembly;
     }
@@ -50,13 +55,26 @@ public class TextureButton extends Button {
         }
     }
 
-    public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    //? if >1.17 {
+    @Override
+    public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+    //?} else {
+    /*@Override
+    public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
+    }
+     *///?}
+
+    @Override
+    public void renderWidget(YsmGui guiGraphics, int mouseX, int mouseY, float partialTick) {
         Minecraft minecraft = Minecraft.getInstance();
         Font font = minecraft.font;
         guiGraphics.fillGradient(getX(), getY(), getX() + this.width, getY() + this.height, -12369342, -12369342);
         renderPlayerPreview(guiGraphics, minecraft.getFrameTime());
         String str = this.previewEntity.getCurrentTextureName();
-        MutableComponent mutableComponentLiteral = Component.literal(ModelMetadataPresenter.getLocalizedModelString(this.modelAssembly, String.format("files.player.texture.%s", str), str));
+        MutableComponent mutableComponentLiteral = YsmText.literal(ModelMetadataPresenter.getLocalizedModelString(this.modelAssembly, String.format("files.player.texture.%s", str), str));
         List listSplit = font.split(mutableComponentLiteral, 50);
         if (listSplit.size() > 1) {
             guiGraphics.drawCenteredString(font, (FormattedCharSequence) listSplit.get(0), getX() + (this.width / 2), (getY() + this.height) - 19, 15986656);
@@ -64,7 +82,7 @@ public class TextureButton extends Button {
         } else {
             guiGraphics.drawCenteredString(font, mutableComponentLiteral, getX() + (this.width / 2), (getY() + this.height) - 15, 15986656);
         }
-        if (isHoveredOrFocused()) {
+        if (hoveredOrFocused()) {
             guiGraphics.fillGradient(getX(), getY() + 1, getX() + 1, (getY() + this.height) - 1, -790560, -790560);
             guiGraphics.fillGradient(getX(), getY(), getX() + this.width, getY() + 1, -790560, -790560);
             guiGraphics.fillGradient((getX() + this.width) - 1, getY() + 1, getX() + this.width, (getY() + this.height) - 1, -790560, -790560);
@@ -72,7 +90,7 @@ public class TextureButton extends Button {
         }
     }
 
-    public void renderPlayerPreview(GuiGraphics guiGraphics, float partialTick) {
+    public void renderPlayerPreview(YsmGui guiGraphics, float partialTick) {
         double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
         RenderSystem.enableScissor((int) (getX() * guiScale), (int) (Minecraft.getInstance().getWindow().getHeight() - (((getY() + this.height) - 20) * guiScale)), (int) (this.width * guiScale), (int) ((this.height - 20) * guiScale));
         ModelPreviewRenderer.renderLivingEntityPreview(getX() + (this.width / 2.0f), getY() + (this.height / 2.0f) + 24.0f, 35.0f, partialTick, this.previewEntity, RendererManager.getPlayerRenderer(), false, true);

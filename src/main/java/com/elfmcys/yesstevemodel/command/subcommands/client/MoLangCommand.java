@@ -114,7 +114,7 @@ public class MoLangCommand {
                 geoEntity = PlayerCapability.get(Minecraft.getInstance().player).orElse(null);
             }
             if (geoEntity != null) {
-                geoEntity.executeExpression(value, true, false, str -> Minecraft.getInstance().player.sendSystemMessage(YsmText.translatable("message.yes_steve_model.model.debug_animation.result", str)));
+                geoEntity.executeExpression(value, true, false, str -> YsmText.sendSystemMessage(Minecraft.getInstance().player, YsmText.translatable("message.yes_steve_model.model.debug_animation.result", str)));
             }
             return Command.SINGLE_SUCCESS;
         } catch (ParseException e) {

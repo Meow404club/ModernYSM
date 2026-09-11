@@ -2,6 +2,7 @@ package com.elfmcys.yesstevemodel.client.animation.molang.functions.ysm;
 
 import rip.ysm.compat.cosmeticarmorreworked.CosmeticArmorHelper;
 import com.elfmcys.yesstevemodel.util.YsmTag;
+import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.context.IContext;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.funciton.entity.LivingEntityFunction;
 import com.elfmcys.yesstevemodel.geckolib3.util.MolangUtils;
@@ -29,21 +30,44 @@ public class DumpEquippedItem extends LivingEntityFunction {
         if (stack.isEmpty() || (key = YsmTag.itemKey(stack.getItem())) == null) {
             return null;
         }
-        context.entity().logWarningComponent(Component.literal("Display ").append(ComponentUtils.copyOnClickText(stack.getItem().getName(stack).getString(99))));
-        context.entity().logWarningComponent(Component.literal("Name ").append(ComponentUtils.copyOnClickText(key.toString())));
+        context.entity().logWarningComponent(YsmText.literal("Display ").append(copyOnClickTextCompat(stack.getItem().getName(stack).getString(99))));
+        context.entity().logWarningComponent(YsmText.literal("Name ").append(copyOnClickTextCompat(key.toString())));
+        // getTags()（1.17+）↔ 1.16.5 TagCollection.getMatchingTags(item)；getEnchantmentTags()（1.17+）↔ 1.16.5 NBT 清单
+        //? if <1.17 {
+        /*net.minecraft.tags.ItemTags.getAllTags().getMatchingTags(stack.getItem()).forEach(tagRl ->
+            context.entity().logWarningComponent(YsmText.literal("Tag ").append(copyOnClickTextCompat(tagRl.toString()))));
+        net.minecraft.nbt.ListTag enchantmentList = stack.getTag() != null ? stack.getTag().getList("Enchantments", 10) : new net.minecraft.nbt.ListTag();
+        for (int tagIndex = 0; tagIndex < enchantmentList.size(); tagIndex++) {
+            CompoundTag compoundTag = enchantmentList.getCompound(tagIndex);
+            ResourceLocation resourceLocationTryParse = ResourceLocation.tryParse(compoundTag.getString("id"));
+            if (resourceLocationTryParse != null && (enchantment = YsmTag.enchantment(resourceLocationTryParse)) != null) {
+                context.entity().logWarningComponent(YsmText.literal("Enchantment: display ").append(copyOnClickTextCompat(enchantment.getFullname(compoundTag.getInt("lvl")).getString(99))).append(YsmText.literal("  name ").append(copyOnClickTextCompat(resourceLocationTryParse.toString()))));
+            }
+        }
+         *///?} else {
         stack.getTags().forEach(tagKey -> {
-            context.entity().logWarningComponent(Component.literal("Tag ").append(ComponentUtils.copyOnClickText(tagKey.location().toString())));
+            context.entity().logWarningComponent(YsmText.literal("Tag ").append(copyOnClickTextCompat(tagKey.location().toString())));
         });
         for (Tag tag : stack.getEnchantmentTags()) {
             if (tag instanceof CompoundTag) {
                 CompoundTag compoundTag = (CompoundTag) tag;
                 ResourceLocation resourceLocationTryParse = ResourceLocation.tryParse(compoundTag.getString("id"));
                 if (resourceLocationTryParse != null && (enchantment = YsmTag.enchantment(resourceLocationTryParse)) != null) {
-                    context.entity().logWarningComponent(Component.literal("Enchantment: display ").append(ComponentUtils.copyOnClickText(enchantment.getFullname(compoundTag.getInt("lvl")).getString(99))).append(Component.literal("  name ").append(ComponentUtils.copyOnClickText(resourceLocationTryParse.toString()))));
+                    context.entity().logWarningComponent(YsmText.literal("Enchantment: display ").append(copyOnClickTextCompat(enchantment.getFullname(compoundTag.getInt("lvl")).getString(99))).append(YsmText.literal("  name ").append(copyOnClickTextCompat(resourceLocationTryParse.toString()))));
                 }
             }
         }
+        //?}
         return null;
+    }
+
+    /** ComponentUtils.copyOnClickText（1.19.2+）↔ 1.16.5 无 → 原串直返。 */
+    private static net.minecraft.network.chat.Component copyOnClickTextCompat(String str) {
+        //? if <1.17 {
+        /*return net.minecraft.network.chat.Component.literal(str);
+         *///?} else {
+        return net.minecraft.network.chat.ComponentUtils.copyOnClickText(str);
+        //?}
     }
 
     @Override

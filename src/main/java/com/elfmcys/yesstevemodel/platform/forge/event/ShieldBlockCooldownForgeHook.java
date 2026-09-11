@@ -5,6 +5,7 @@ import com.elfmcys.yesstevemodel.client.event.ShieldBlockCooldownEvent;
 //? if >=1.17 {
 import net.minecraftforge.event.entity.living.ShieldBlockEvent;
 //?}
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -20,7 +21,7 @@ public final class ShieldBlockCooldownForgeHook {
     //? if <1.17 {
     /*@SubscribeEvent
     public static void onLivingTick(LivingEvent.LivingUpdateEvent event) {
-        ShieldBlockCooldownEvent.onLivingTick(event.getEntity());
+        ShieldBlockCooldownEvent.onLivingTick((LivingEntity) event.getEntity());
     }
      *///?} else {
     @SubscribeEvent

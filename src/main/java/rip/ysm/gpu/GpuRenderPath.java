@@ -42,6 +42,13 @@ public final class GpuRenderPath {
             ResourceLocation textureLocation
     ) {
         if (!GpuCapability.isAvailable()) return false;
+        //? if <1.17 {
+        /*// 1.16.5 恒 false 闸门（照 gui-hud 卡 IrisRenderPath 同款降级）：本方法依赖
+        // RenderSystem.getProjectionMatrix/getModelViewMatrix/getShaderTexture/getShaderFog*、
+        // BufferUploader.invalidate 等 1.17+ shader 管线 API（1.16.5 jar javap 实证缺席），
+        // GL43 compute 路径整体降级走 CPU 渲染。功能差已记 tasks.feature-debts-1165。
+        return false;
+         *///?} else {
         if (!BoneSkinShader.ensureCompiled()) return false;
         if (model.bakedBones == null || model.bakedBones.isEmpty()) return false;
 
@@ -146,6 +153,7 @@ public final class GpuRenderPath {
         mc.gameRenderer.lightTexture().turnOffLightLayer();
 
         return true;
+        //?}
     }
 
     private static void refreshLights() {

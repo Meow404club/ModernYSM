@@ -18,6 +18,15 @@ public class UnsafeUtil {
         }
     }
 
+    /** storeFence/loadFence 门面：主源集（--release 8，ct.sym 盲区）不得解析 Unsafe 类型。 */
+    public static void storeFence() {
+        UNSAFE.storeFence();
+    }
+
+    public static void loadFence() {
+        UNSAFE.loadFence();
+    }
+
     public static Unsafe getUnsafe() {
         return UNSAFE;
     }

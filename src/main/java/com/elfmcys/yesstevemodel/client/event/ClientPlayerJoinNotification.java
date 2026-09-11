@@ -100,7 +100,7 @@ public final class ClientPlayerJoinNotification {
                     }
                     LocalPlayer localPlayer = Minecraft.getInstance().player;
                     //? if <1.17
-                    /*if (localPlayer != null && localPlayer.connection.isConnected() && !NetworkHandler.isConnectionValid(localPlayer.connection.getConnection())) {*/
+                    /*if (localPlayer != null && localPlayer.connection.getConnection().isConnected() && !NetworkHandler.isConnectionValid(localPlayer.connection.getConnection())) {*/
                     //? if >=1.17
                     if (localPlayer != null && localPlayer.connection.isAcceptingMessages() && !NetworkHandler.isConnectionValid(localPlayer.connection.getConnection())) {
                         YsmText.sendSystemMessage(localPlayer, YsmText.translatable("message.yes_steve_model.client.server_not_found"));
@@ -119,6 +119,9 @@ public final class ClientPlayerJoinNotification {
             return;
         }
         LocalPlayer player = client.player;
+//? if <1.17
+        /*if (player == null || !player.connection.getConnection().isConnected()) {*/
+        //? if >=1.17
         if (player == null || !player.connection.isAcceptingMessages()) {
             return;
         }

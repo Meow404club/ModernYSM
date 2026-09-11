@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.client.animation.predicate;
 
 import com.elfmcys.yesstevemodel.client.animation.IAnimationPredicate;
+import com.elfmcys.yesstevemodel.util.YsmEntity;
 import com.elfmcys.yesstevemodel.client.entity.LivingAnimatable;
 import com.elfmcys.yesstevemodel.geckolib3.core.builder.ILoopType;
 import com.elfmcys.yesstevemodel.geckolib3.core.event.predicate.AnimationEvent;
@@ -19,7 +20,7 @@ public class OffhandAttackAnimationPredicate implements IAnimationPredicate<Livi
         if (livingEntity == null || (event.getAnimatable() instanceof IPreviewAnimatable)) {
             return PlayState.STOP;
         }
-        Entity firstPassenger = livingEntity.getFirstPassenger();
+        Entity firstPassenger = YsmEntity.firstPassenger(livingEntity);
         if (firstPassenger == null || !firstPassenger.isAlive()) {
             return PlayState.STOP;
         }

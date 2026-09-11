@@ -1246,7 +1246,7 @@ public class YSMFolderDeserializer implements AutoCloseable {
         byte[] infoData = readResource("info.json");
         if (infoData != null) {
             try {
-                JsonObject infoObj = JsonParser.parseString(new String(infoData, StandardCharsets.UTF_8)).getAsJsonObject();
+                JsonObject infoObj = new com.google.gson.JsonParser().parse(new String(infoData, StandardCharsets.UTF_8)).getAsJsonObject();
                 parseLegacyMetadata(infoObj, true);
             } catch (Exception e) {
                 System.err.println("Failed to parse info.json");

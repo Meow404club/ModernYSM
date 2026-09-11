@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.client.gui;
 
 import com.elfmcys.yesstevemodel.capability.PlayerCapability;
+import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.client.entity.PlayerPreviewEntity;
 import com.elfmcys.yesstevemodel.client.gui.button.FlatColorButton;
 import com.elfmcys.yesstevemodel.client.gui.button.IconButton;
@@ -16,7 +17,11 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import com.mojang.blaze3d.vertex.PoseStack;
+//? if >1.17 {
 import net.minecraft.client.gui.GuiGraphics;
+//?}
+import rip.ysm.gui.YsmGui;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.resources.language.I18n;
@@ -93,7 +98,7 @@ public class PlayerTextureScreen extends Screen {
     }
 
     public PlayerTextureScreen(PlayerModelScreen modelScreen, String str, ModelAssembly modelAssembly) {
-        super(Component.literal("Player Texture GUI"));
+        super(YsmText.literal("Player Texture GUI"));
         this.currentAnimation = StringPool.EMPTY;
         this.offsetX = 0.0f;
         this.offsetY = -60.0f;
@@ -127,6 +132,10 @@ public class PlayerTextureScreen extends Screen {
         int texIndex;
         int animIndex;
         MutableComponent mutableComponentLiteral;
+//? if <1.17 {
+        /*this.init(Minecraft.getInstance(), this.width, this.height);
+        return;*/
+        //? if >=1.17
         clearWidgets();
         this.guiLeft = (this.width - 420) / 2;
         this.guiTop = (this.height - 235) / 2;
@@ -138,41 +147,41 @@ public class PlayerTextureScreen extends Screen {
         if (this.animationCurrentPage > this.animationMaxPage) {
             this.animationCurrentPage = 0;
         }
-        addRenderableWidget(new FlatColorButton(this.guiLeft + 5, this.guiTop, 80, 18, Component.translatable("gui.yes_steve_model.model.return"), button -> {
+        ysmAddWidget(new FlatColorButton(this.guiLeft + 5, this.guiTop, 80, 18, YsmText.translatable("gui.yes_steve_model.model.return"), button -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
         }));
-        addRenderableWidget(new IconButton(this.guiLeft + 281, this.guiTop + 2, 16, 16, 64, 16, button2 -> {
+        ysmAddWidget(new IconButton(this.guiLeft + 281, this.guiTop + 2, 16, 16, 64, 16, button2 -> {
             this.currentAnimation = "idle";
         }).setTooltipText("gui.yes_steve_model.model.stop"));
-        addRenderableWidget(new IconButton(this.guiLeft + 263, this.guiTop + 2, 16, 16, 48, 16, button3 -> {
+        ysmAddWidget(new IconButton(this.guiLeft + 263, this.guiTop + 2, 16, 16, 48, 16, button3 -> {
             this.offsetX = 0.0f;
             this.offsetY = -60.0f;
             this.zoom = 80.0f;
             this.yaw = 165.0f;
             this.pitch = -5.0f;
         }).setTooltipText("gui.yes_steve_model.model.reset"));
-        addRenderableWidget(new IconButton(this.guiLeft + 245, this.guiTop + 2, 16, 16, 64, 0, button4 -> {
+        ysmAddWidget(new IconButton(this.guiLeft + 245, this.guiTop + 2, 16, 16, 64, 0, button4 -> {
             this.showGround = !this.showGround;
         }).setTooltipText("gui.yes_steve_model.model.ground"));
-        addRenderableWidget(new FlatColorButton(this.guiLeft + 321, this.guiTop + 213, 18, 18, Component.literal("<"), button5 -> {
+        ysmAddWidget(new FlatColorButton(this.guiLeft + 321, this.guiTop + 213, 18, 18, YsmText.literal("<"), button5 -> {
             if (this.textureCurrentPage > 0) {
                 this.textureCurrentPage--;
                 init();
             }
         }));
-        addRenderableWidget(new FlatColorButton(this.guiLeft + 383, this.guiTop + 213, 18, 18, Component.literal(">"), button6 -> {
+        ysmAddWidget(new FlatColorButton(this.guiLeft + 383, this.guiTop + 213, 18, 18, YsmText.literal(">"), button6 -> {
             if (this.textureCurrentPage < this.textureMaxPage) {
                 this.textureCurrentPage++;
                 init();
             }
         }));
-        addRenderableWidget(new FlatColorButton(this.guiLeft + 11, this.guiTop + 214, 16, 16, Component.literal("<"), button7 -> {
+        ysmAddWidget(new FlatColorButton(this.guiLeft + 11, this.guiTop + 214, 16, 16, YsmText.literal("<"), button7 -> {
             if (this.animationCurrentPage > 0) {
                 this.animationCurrentPage--;
                 init();
             }
         }));
-        addRenderableWidget(new FlatColorButton(this.guiLeft + 63, this.guiTop + 214, 16, 16, Component.literal(">"), button8 -> {
+        ysmAddWidget(new FlatColorButton(this.guiLeft + 63, this.guiTop + 214, 16, 16, YsmText.literal(">"), button8 -> {
             if (this.animationCurrentPage < this.animationMaxPage) {
                 this.animationCurrentPage++;
                 init();
@@ -184,32 +193,44 @@ public class PlayerTextureScreen extends Screen {
             String str2 = String.format("gui.yes_steve_model.texture.button.%s", str.replaceAll("\\:", "."));
             String str3 = String.format("gui.yes_steve_model.texture.button.%s.desc", str.replaceAll("\\:", "."));
             if (I18n.exists(str2)) {
-                mutableComponentLiteral = Component.translatable(str2);
+                mutableComponentLiteral = YsmText.translatable(str2);
             } else {
-                mutableComponentLiteral = Component.literal(str);
+                mutableComponentLiteral = YsmText.literal(str);
             }
             FlatColorButton colorButton = new FlatColorButton(this.guiLeft + 5, animButtonY, 80, 16, mutableComponentLiteral, button9 -> {
                 this.currentAnimation = str;
             });
             if (I18n.exists(str3)) {
-                colorButton.setTooltipLines(Lists.newArrayList(new Component[]{Component.translatable(str3).withStyle(ChatFormatting.GOLD), Component.translatable("gui.yes_steve_model.texture.button.animation_name", str).withStyle(ChatFormatting.GRAY)}));
+                colorButton.setTooltipLines(Lists.newArrayList(new Component[]{YsmText.translatable(str3).withStyle(ChatFormatting.GOLD), YsmText.translatable("gui.yes_steve_model.texture.button.animation_name", str).withStyle(ChatFormatting.GRAY)}));
             }
-            addRenderableWidget(colorButton);
+            ysmAddWidget(colorButton);
         }
         for (int texSlot = 0; texSlot < 4 && (texIndex = texSlot + (this.textureCurrentPage * 4)) < this.textureMap.size(); texSlot++) {
             int texButtonX = this.guiLeft + 306 + (56 * (texSlot % 2));
             int texButtonY = this.guiTop + 5 + (104 * (texSlot / 2));
             PlayerPreviewEntity previewEntity = texturePreviewHolders[texSlot];
             previewEntity.initModelWithTexture(this.modelId, this.textureMap.getKeyAt(texIndex));
-            addRenderableWidget(createTextureButton(texButtonX, texButtonY, previewEntity, texIndex));
+            ysmAddWidget(createTextureButton(texButtonX, texButtonY, previewEntity, texIndex));
         }
     }
 
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    //? if >1.17 {
+    @Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.render(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+    //?} else {
+    /*@Override
+    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+        this.render(new YsmGui(poseStack), mouseX, mouseY, partialTick);
+    }
+     *///?}
+
+    public void render(YsmGui guiGraphics, int mouseX, int mouseY, float partialTick) {
         if (Minecraft.getInstance().player == null) {
             return;
         }
-        renderBackground(guiGraphics);
+        guiGraphics.renderScreenBackground(this);
         guiGraphics.fillGradient(this.guiLeft, this.guiTop + 22, this.guiLeft + 90, this.guiTop + 235, -14540254, -14540254);
         guiGraphics.fillGradient(this.guiLeft + 93, this.guiTop, this.guiLeft + 299, this.guiTop + 235, -14540254, -14540254);
         guiGraphics.fillGradient(this.guiLeft + 302, this.guiTop, this.guiLeft + 420, this.guiTop + 235, -14540254, -14540254);
@@ -230,7 +251,10 @@ public class PlayerTextureScreen extends Screen {
         guiGraphics.drawString(font, str, iWidth, pageY - (9 / 2), 15986656);
         String str2 = String.format("%d/%d", this.animationCurrentPage + 1, this.animationMaxPage + 1);
         guiGraphics.drawString(this.font, str2, this.guiLeft + 5 + ((80 - this.font.width(str2)) / 2), this.guiTop + 218, 15986656);
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        //? if <1.17
+        /*super.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
+        //? if >=1.17
+        super.render(guiGraphics.graphics(), mouseX, mouseY, partialTick);
         ((ScreenAccessor) this).ysm$getRenderables().stream().filter(renderable -> {
             return renderable instanceof FlatColorButton;
         }).forEach(renderable2 -> {
@@ -238,7 +262,7 @@ public class PlayerTextureScreen extends Screen {
         });
     }
 
-    public void renderTexturePreview(GuiGraphics guiGraphics, int scissorX, int scissorY, int scissorWidth, int scissorHeight, float partialTick) {
+    public void renderTexturePreview(YsmGui guiGraphics, int scissorX, int scissorY, int scissorWidth, int scissorHeight, float partialTick) {
         RenderSystem.enableScissor(scissorX, scissorY, scissorWidth, scissorHeight);
         PlayerCapability.get(this.minecraft.player).ifPresent(cap -> {
             this.modelHolder.initModelWithTexture(this.modelId, cap.getCurrentTextureName());
@@ -341,4 +365,18 @@ public class PlayerTextureScreen extends Screen {
     public boolean isPauseScreen() {
         return false;
     }
+    // addRenderableWidget/addWidget 均为 protected 实例方法（JLS 6.6.2 子类内才可调）→ 桥方法；
+    // 泛型返回保持原 addRenderableWidget 的链式取回语义（如 .setTooltipText 续链）
+    //? if <1.17 {
+    /*private <T extends net.minecraft.client.gui.components.AbstractWidget> T ysmAddWidget(T widget) {
+        this.addWidget(widget);
+        return widget;
+    }
+     *///?} else {
+    private <T extends net.minecraft.client.gui.components.AbstractWidget> T ysmAddWidget(T widget) {
+        this.addRenderableWidget(widget);
+        return widget;
+    }
+    //?}
+
 }

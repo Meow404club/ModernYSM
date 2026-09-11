@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.client.gui;
 
 import com.elfmcys.yesstevemodel.client.ClientModelManager;
+import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.client.model.ModelAssembly;
 import com.elfmcys.yesstevemodel.config.GeneralConfig;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.util.StringPool;
@@ -10,7 +11,11 @@ import com.elfmcys.yesstevemodel.resource.models.ModelPackData;
 import com.elfmcys.yesstevemodel.util.FileTypeUtil;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
+import com.mojang.blaze3d.vertex.PoseStack;
+//? if >1.17 {
 import net.minecraft.client.gui.GuiGraphics;
+//?}
+import rip.ysm.gui.YsmGui;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -264,7 +269,12 @@ public class SearchSuggestions {
         Entry entry = entries.get(selected);
         if (entry.packPath != null) {
             searchBox.setValue(StringPool.EMPTY);
-            searchBox.setFocused(false);
+    // 1.20.1 EditBox.setFocused public 可直调；1.16.5 为 protected → 经 Screen.setFocused(null) 解焦
+    //? if <1.17 {
+    /*net.minecraft.client.Minecraft.getInstance().screen.setFocused(null);*/
+    //?} else {
+    searchBox.setFocused(false);
+    //?}
         } else {
             searchBox.setValue(entry.insertion);
             searchBox.moveCursorToEnd();
@@ -275,10 +285,16 @@ public class SearchSuggestions {
     }
 
     private int getLeft() {
+//? if <1.17
+        /*return searchBox.x - 1;*/
+        //? if >=1.17
         return searchBox.getX() - 1;
     }
 
     private int getTop() {
+//? if <1.17
+        /*return searchBox.y + searchBox.getHeight() + 1;*/
+        //? if >=1.17
         return searchBox.getY() + searchBox.getHeight() + 1;
     }
 
@@ -294,7 +310,17 @@ public class SearchSuggestions {
         return cachedWidth;
     }
 
-    public void render(GuiGraphics guiGraphics) {
+    //? if >1.17 {
+    public void render(GuiGraphics graphics) {
+        this.render(new YsmGui(graphics));
+    }
+    //?} else {
+    /*public void render(PoseStack poseStack) {
+        this.render(new YsmGui(poseStack));
+    }
+     *///?}
+
+    public void render(YsmGui guiGraphics) {
         float dt = tickDelta();
         float target = isVisible() ? 1.0f : 0.0f;
         openDisplay += (target - openDisplay) * (1.0f - (float) Math.exp(-dt * 22.0f));
@@ -347,7 +373,7 @@ public class SearchSuggestions {
             int hintWidth = StringUtils.isNotBlank(entry.hint) ? font.width(entry.hint) + 8 : 0;
             renderHighlighted(guiGraphics, entry, textX, textY, isSelected, width - 8 - hintWidth);
             if (hintWidth > 0) {
-                guiGraphics.drawString(font, Component.literal(entry.hint).withStyle(ChatFormatting.ITALIC), left + width - hintWidth + 4, textY, 0xFF5F5F6F, false);
+                guiGraphics.drawString(font, YsmText.literal(entry.hint).withStyle(ChatFormatting.ITALIC), left + width - hintWidth + 4, textY, 0xFF5F5F6F, false);
             }
         }
         guiGraphics.disableScissor();
@@ -362,7 +388,7 @@ public class SearchSuggestions {
         guiGraphics.pose().popPose();
     }
 
-    private void renderHighlighted(GuiGraphics guiGraphics, Entry entry, int x, int y, boolean isSelected, int maxWidth) {
+    private void renderHighlighted(YsmGui guiGraphics, Entry entry, int x, int y, boolean isSelected, int maxWidth) {
         int baseColor = isSelected ? 0xFFFFFF55 : -1;
         String text = entry.text;
         if (font.width(text) > maxWidth) {

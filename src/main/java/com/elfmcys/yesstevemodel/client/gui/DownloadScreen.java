@@ -1,9 +1,14 @@
 package com.elfmcys.yesstevemodel.client.gui;
 
 import com.elfmcys.yesstevemodel.client.gui.button.FlatColorButton;
+import com.elfmcys.yesstevemodel.util.YsmText;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import com.mojang.blaze3d.vertex.PoseStack;
+//? if >1.17 {
 import net.minecraft.client.gui.GuiGraphics;
+//?}
+import rip.ysm.gui.YsmGui;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -17,21 +22,50 @@ public class DownloadScreen extends Screen {
     private int guiTop;
 
     public DownloadScreen(PlayerModelScreen modelScreen) {
-        super(Component.literal("YSM Config GUI"));
+        super(YsmText.literal("YSM Config GUI"));
         this.parentScreen = modelScreen;
     }
 
     public void init() {
         this.guiLeft = (this.width - 420) / 2;
         this.guiTop = (this.height - 235) / 2;
-        addRenderableWidget(new FlatColorButton(this.guiLeft + 5, this.guiTop, 80, 18, Component.translatable("gui.yes_steve_model.model.return"), button -> {
+        ysmAddWidget(new FlatColorButton(this.guiLeft + 5, this.guiTop, 80, 18, YsmText.translatable("gui.yes_steve_model.model.return"), button -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
         }));
     }
 
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(guiGraphics);
-        guiGraphics.drawCenteredString(this.font, "Coming Soooooooooooooooooooooooooon™", this.width / 2, (this.height / 2) - 5, ChatFormatting.DARK_RED.getColor().intValue());
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+    //? if >1.17 {
+    @Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.render(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
+    //?} else {
+    /*@Override
+    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+        this.render(new YsmGui(poseStack), mouseX, mouseY, partialTick);
+    }
+     *///?}
+
+    public void render(YsmGui guiGraphics, int mouseX, int mouseY, float partialTick) {
+        guiGraphics.renderScreenBackground(this);
+        guiGraphics.drawCenteredString(this.font, "Coming Soooooooooooooooooooooooooon™", this.width / 2, (this.height / 2) - 5, ChatFormatting.DARK_RED.getColor().intValue());
+        //? if <1.17
+        /*super.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
+        //? if >=1.17
+        super.render(guiGraphics.graphics(), mouseX, mouseY, partialTick);
+    }
+    // addRenderableWidget/addWidget 均为 protected 实例方法（JLS 6.6.2 子类内才可调）→ 桥方法；
+    // 泛型返回保持原 addRenderableWidget 的链式取回语义（如 .setTooltipText 续链）
+    //? if <1.17 {
+    /*private <T extends net.minecraft.client.gui.components.AbstractWidget> T ysmAddWidget(T widget) {
+        this.addWidget(widget);
+        return widget;
+    }
+     *///?} else {
+    private <T extends net.minecraft.client.gui.components.AbstractWidget> T ysmAddWidget(T widget) {
+        this.addRenderableWidget(widget);
+        return widget;
+    }
+    //?}
+
 }

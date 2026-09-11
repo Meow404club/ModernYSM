@@ -23,7 +23,7 @@ public final class ClientPlayerCloneEvent {
 
     // 1.16.5 无 Clone 事件（jar 检索）：对位 RespawnEvent（getOldPlayer/getNewPlayer 同构）
     //? if <1.17 {
-    /*private static void onClientPlayerRespawn(ClientPlayerNetworkEvent.RespawnEvent event) {
+    /*private static void onClientPlayerRespawnEvent(ClientPlayerNetworkEvent.RespawnEvent event) {
         onClientPlayerRespawn(event.getOldPlayer(), event.getNewPlayer());
     }
      *///?} else {

@@ -6,8 +6,10 @@ import com.elfmcys.yesstevemodel.util.ResourceCleanupHelper;
 import com.google.common.collect.Queues;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
+//? if >=1.17 {
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.objects.ReferenceIntMutablePair;
+//?}
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
@@ -63,7 +65,11 @@ public class UploadManager {
         ReferenceIntMutablePair<ResourceLocation> removed = expiredTextures.remove(texture);
         TextureLocatable locatable;
         if (removed != null) {
+//? if <1.17 {
+            /*locatable = new TextureLocatable(removed.first, sizeHint);*/
+            //?} else {
             locatable = new TextureLocatable(removed.first(), sizeHint);
+            //?}
         } else {
             locatable = new TextureLocatable(sizeHint);
         }
@@ -133,7 +139,11 @@ public class UploadManager {
             //? if >=1.17
             Pair<TextureLocatable, AbstractTexture> pairPoll = pendingUploads.poll();
             if (pairPoll != null) {
+//? if <1.17 {
+                /*registerTexture(pairPoll.right, pairPoll.left);*/
+                //?} else {
                 registerTexture(pairPoll.right(), pairPoll.left());
+                //?}
             } else {
                 TextureManager textureManager = Minecraft.getInstance().getTextureManager();
                 do {

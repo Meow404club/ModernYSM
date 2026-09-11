@@ -43,6 +43,43 @@ tasks.withType<JavaCompile>().configureEach {
     options.compilerArgs.addAll(listOf("-Xmaxerrs", "10000"))
 }
 
+// ===== unsafe8 源集（m2-compile-green-gate，audit 例外清单唯一条目）=====
+// sun.misc.Unsafe 在 javac --release 8 的 ct.sym 审计器下不可见（ct.sym 只收录 JDK8 文档化
+// API；sun.misc.Unsafe 是非文档 API，1.16.5 真实 JDK8 rt.jar 本就有）。-source/-target 8
+// 直读 JDK 系统镜像则可见。处置：把仓库唯二 Unsafe 编译期触点（rip/ysm/zstd/** 纯 Java
+// zstd 实现 + util/UnsafeUtil）隔离进本源集，用 source/target 8 编译（放弃 ct.sym 审计=
+// audit 例外），其余全部主源集代码保持 --release 8 审计不放松。
+// 注：这些文件经 grep 验证零 stonecutter 条件（//? if），raw 编译与展开树逐字等价。
+sourceSets {
+    create("unsafe8") {
+        java {
+            // 版本子项目 projectDir=versions/1.16.5-forge，共享源必须 rootProject 锚定
+            srcDir(rootProject.file("src/main/java"))
+            include("rip/ysm/zstd/**")
+            include("com/elfmcys/yesstevemodel/util/UnsafeUtil.java")
+        }
+    }
+}
+sourceSets.main {
+    java {
+        exclude("rip/ysm/zstd/**")
+        exclude("com/elfmcys/yesstevemodel/util/UnsafeUtil.java")
+    }
+}
+tasks.named<JavaCompile>("compileUnsafe8Java") {
+    // audit 例外：此处不得用 --release 8（见 unsafe8 源集头注）；字节码目标仍是 major 52
+    options.release = null
+    sourceCompatibility = "8"
+    targetCompatibility = "8"
+}
+// main（GeoEntity 等）引用 util.UnsafeUtil → unsafe8 产物进 main 编译/运行时类路径
+//（sourceSets.output 自带任务依赖，compileJava 自动 dependsOn compileUnsafe8Java；
+//  runtimeClasspath 供 unimined dev runClient 载入 zstd 类）
+sourceSets.main {
+    compileClasspath += sourceSets.getByName("unsafe8").output
+    runtimeClasspath += sourceSets.getByName("unsafe8").output
+}
+
 repositories {
     mavenCentral()
     maven("https://maven.minecraftforge.net/") { name = "MinecraftForge" }
@@ -133,74 +170,120 @@ tasks {
         exclude("yes_steve_model_forge.mixins.json")
     }
 
-    // ===== MixinExtras 1.16.5 运行时内嵌（m2-mixin-versioning）=====
-    // 1.16.5 Forge 不自带 MixinExtras（Forge 47.x 起才内置）；无它时 @WrapWithCondition 被
-    // 纯 Mixin 静默忽略（不崩但弹射物/载具自定义渲染钩子失效）。方案：mixinextras-common
-    // 0.3.6 运行时类平铺进 remapJar 产物（字节码 major 52=Java 8，1.16.5 运行时可载入，
-    // 缓存 jar 实测），引导=MixinTweaker.onLoad 的 MixinExtrasBootstrap.init()（<1.17 条件化）。
-    // 合并规则：目标 jar 条目流式原样保留（MANIFEST 保持首位，Forge 用 JarInputStream 探测），
-    // 追加 mixinextras jar 条目时剔除其 META-INF/**（含 javax.annotation.processing.Processor
-    // 服务声明——运行时 jar 不该声明注解处理器）与签名文件，重名跳过（目标优先）。
-    // 合并算法已用 tmp/m2-refmap-poc 产物 + 缓存 jar 独立实证（manifest-first/类可载入）。
-    val embedMixinExtras = register("embedMixinExtras") {
-        group = "build"
-        val remapJarTask = named("remapJar")
-        dependsOn(remapJarTask)
-        val jarFile = remapJarTask.map { it.outputs.files.singleFile }
-        inputs.file(jarFile)
-        outputs.file(jarFile)
-        doLast {
-            val target = jarFile.get()
-            val mixinExtrasJar = configurations.compileClasspath.get().files
-                .filter { it.name.startsWith("mixinextras-common") }
-                .firstOrNull()
-                ?: throw GradleException("mixinextras-common not found on compileClasspath")
-            val tmp = File(target.parentFile, target.name + ".mixinextras-merging")
-            tmp.delete()
-            ZipOutputStream(FileOutputStream(tmp)).use { out ->
-                // 第一遍：目标 jar 原样流式拷贝（保持条目顺序=MANIFEST 首位）
-                ZipInputStream(FileInputStream(target)).use { zin ->
-                    while (true) {
-                        val e = zin.nextEntry ?: break
-                        out.putNextEntry(ZipEntry(e.name).apply {
-                            method = e.method
-                            time = e.time
-                        })
-                        if (!e.isDirectory) zin.copyTo(out)
-                        out.closeEntry()
-                    }
+    // ===== 发布 jar 运行时内嵌（m2-mixin-versioning / m2-compile-green-gate）=====
+    // 1.16.5 产物为 unimined remapJar 出的 SRG plain jar，运行时依赖需按 1.20.1 imageStreamEmbed
+    // 先例（等价旧仓 JIJ include）并入。四个内嵌项：
+    //   1) embedMixinExtras  — 1.16.5 Forge 不自带 MixinExtras（Forge 47.x 起内置）；无它时
+    //      @WrapWithCondition 被纯 Mixin 静默忽略。mixinextras-common 0.3.6 运行时类平铺
+    //      （字节码 major 52=Java 8，缓存 jar 实测可载入），引导=MixinTweaker.onLoad 的
+    //      MixinExtrasBootstrap.init()（<1.17 条件化）。
+    //   2) embedJoml         — geckolib3 渲染/动画栈 49 文件 import org.joml（MC 1.19.3 才内置），
+    //      运行缺类即 NCDFE。1.10.5 = MC 1.20.1 自带版本，字节码 major 46，Java 8 可载。
+    //   3) embedImageStream  — avif/webp 解码（rip.ysm.imagestream 独占包名，照 1.20.1
+    //      imageStreamEmbed 先例）；1.16.5 侧此前仅 implementation（编译可见），生产 jar 缺内嵌。
+    //   4) embedUnsafe8      — unsafe8 源集产物（zstd/UnsafeUtil）并包，见源集头注。
+    // 合并算法（mixin 卡 tmp/m2-refmap-poc 实证：manifest-first/类可载入）：
+    // 目标 jar 条目流式原样保留（MANIFEST 保持首位，Forge 用 JarInputStream 探测），
+    // 追加条目剔除 META-INF/**/签名文件/module-info，重名跳过（目标优先）。
+    fun mergeInto(target: File, extraJars: List<File>, extraClassDirs: Iterable<File>) {
+        val tmp = File(target.parentFile, target.name + ".embed-merging")
+        tmp.delete()
+        val existing = HashSet<String>()
+        ZipInputStream(FileInputStream(target)).use { zin ->
+            while (true) {
+                val e = zin.nextEntry ?: break
+                existing.add(e.name)
+            }
+        }
+        ZipOutputStream(FileOutputStream(tmp)).use { out ->
+            // 第一遍：目标 jar 原样流式拷贝（保持条目顺序=MANIFEST 首位）
+            ZipInputStream(FileInputStream(target)).use { zin ->
+                while (true) {
+                    val e = zin.nextEntry ?: break
+                    out.putNextEntry(ZipEntry(e.name).apply {
+                        method = e.method
+                        time = e.time
+                    })
+                    if (!e.isDirectory) zin.copyTo(out)
+                    out.closeEntry()
                 }
-                // 第二遍：追加 MixinExtras 运行时条目（META-INF/** 与签名文件剔除，重名跳过）
-                ZipInputStream(FileInputStream(mixinExtrasJar)).use { zin ->
-                    val existing = HashSet<String>()
-                    JarFile(target).use { jf ->
-                        val en = jf.entries()
-                        while (en.hasMoreElements()) existing.add(en.nextElement().name)
-                    }
+            }
+            // 第二遍：追加运行时条目
+            fun putEntry(name: String, content: () -> Unit) {
+                if (name.isEmpty() || name in existing) return
+                if (name.startsWith("META-INF/") || name == "module-info.class" ||
+                    name.endsWith(".SF") || name.endsWith(".DSA") || name.endsWith(".RSA")
+                ) return
+                out.putNextEntry(ZipEntry(name))
+                content()
+                out.closeEntry()
+                existing.add(name)
+            }
+            for (jar in extraJars) {
+                ZipInputStream(FileInputStream(jar)).use { zin ->
                     while (true) {
                         val e = zin.nextEntry ?: break
-                        val name = e.name
-                        if (name.startsWith("META-INF/") || name == "module-info.class" ||
-                            name.endsWith(".SF") || name.endsWith(".DSA") || name.endsWith(".RSA")
-                        ) continue
-                        if (e.isDirectory || name in existing) continue
-                        out.putNextEntry(ZipEntry(name))
-                        zin.copyTo(out)
-                        out.closeEntry()
+                        if (!e.isDirectory) putEntry(e.name) { zin.copyTo(out) }
                     }
                 }
             }
-            val old = File(target.parentFile, target.name + ".mixinextras-old")
-            old.delete()
-            if (!target.renameTo(old)) throw GradleException("cannot swap merged jar in place")
-            if (!tmp.renameTo(target)) throw GradleException("cannot promote merged jar")
-            old.delete()
+            for (dir in extraClassDirs) {
+                dir.walkTopDown().filter { it.isFile }.forEach { f ->
+                    val rel = dir.toPath().relativize(f.toPath()).toString().replace('\\', '/')
+                    putEntry(rel) { f.inputStream().use { it.copyTo(out) } }
+                }
+            }
         }
+        val old = File(target.parentFile, target.name + ".embed-old")
+        old.delete()
+        if (!target.renameTo(old)) throw GradleException("cannot swap embedded jar in place")
+        if (!tmp.renameTo(target)) throw GradleException("cannot promote embedded jar")
+        old.delete()
     }
+
+    fun jarFromCompileClasspath(prefix: String): Provider<File> =
+        provider { configurations.compileClasspath.get().files
+            .filter { it.name.startsWith(prefix) }
+            .firstOrNull()
+            ?: throw GradleException("$prefix not found on compileClasspath") }
+
+    fun registerEmbed(name: String, prev: Provider<Task>, extraJars: List<Provider<File>> = emptyList(), extraClassDirs: Iterable<File> = emptyList()) = register(name) {
+            group = "build"
+            dependsOn(prev)
+            val target = prev.map { it.outputs.files.singleFile }
+            inputs.file(target)
+            inputs.files(extraJars)
+            outputs.file(target)
+            doLast {
+                mergeInto(target.get(), extraJars.map { it.get() }, extraClassDirs)
+            }
+        }
+
+    val embedMixinExtras = registerEmbed(
+        "embedMixinExtras",
+        named("remapJar"),
+        listOf(jarFromCompileClasspath("mixinextras-common")),
+    )
+    val embedJoml = registerEmbed(
+        "embedJoml",
+        embedMixinExtras,
+        listOf(jarFromCompileClasspath("joml-")),
+    )
+    val embedImageStream = registerEmbed(
+        "embedImageStream",
+        embedJoml,
+        listOf(jarFromCompileClasspath("ImageStream")),
+    )
+    val embedUnsafe8 = registerEmbed(
+        "embedUnsafe8",
+        embedImageStream,
+        extraClassDirs = sourceSets.getByName("unsafe8").output.classesDirs,
+    )
 
     register<Copy>("buildAndCollect") {
         group = "build"
-        from(embedMixinExtras) // unimined 产物：已重映射到 SRG 且内嵌 MixinExtras 的发布 jar
+        // unimined 产物：SRG 重映射 + MixinExtras/JOML/ImageStream/unsafe8 四项内嵌后的发布 jar
+        from(embedUnsafe8)
         into(rootProject.layout.buildDirectory.file("libs/${project.property("mod_version")}"))
         dependsOn("build")
     }

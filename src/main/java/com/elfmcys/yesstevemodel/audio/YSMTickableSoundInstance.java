@@ -17,7 +17,7 @@ import net.minecraft.world.entity.Entity;
 // 1.16.5 无 AbstractTickableSoundInstance（javap：TickableSoundInstance 为 interface）：
 // <1.17 轴 extends SimpleSoundInstance implements TickableSoundInstance（补 isStopped 状态位）
 //? if <1.17 {
-/*public class YSMTickableSoundInstance extends net.minecraft.client.resources.sounds.SimpleSoundInstance
+/*public class YSMTickableSoundInstance extends net.minecraft.client.resources.sounds.AbstractSoundInstance
         implements net.minecraft.client.resources.sounds.TickableSoundInstance, IAudioPlayer {
 
     private boolean stopped;
@@ -52,10 +52,15 @@ public class YSMTickableSoundInstance extends AbstractTickableSoundInstance impl
     public void tick() {
         this.volume = (this.targetVolume * GeneralConfig.SOUND_VOLUME.get().floatValue()) / 100.0f;
         if (YsmEntity.isRemoved(this.entity)) {
-            //? if <1.17
-            /*this.stopped = true;*/
+            // 1.16.5 无 SoundInstance.stop()（1.19+）：经 SoundManager 停播并置 stopped
+            //? if <1.17 {
+            /*this.stopped = true;
+            Minecraft.getInstance().getSoundManager().stop(this);
+            return;
+             *///?} else {
             stop();
             return;
+            //?}
         }
         this.x = this.entity.getX();
         this.y = this.entity.getY();
@@ -77,10 +82,17 @@ public class YSMTickableSoundInstance extends AbstractTickableSoundInstance impl
 
     @Override
     public void release() {
+        //? if <1.17 {
+        /*this.stopped = true;
+        Minecraft.getInstance().execute(() -> {
+            Minecraft.getInstance().getSoundManager().stop(this);
+        });
+         *///?} else {
         stop();
         Minecraft.getInstance().execute(() -> {
             Minecraft.getInstance().getSoundManager().stop(this);
         });
+        //?}
     }
 
     public void setLooping(boolean z) {

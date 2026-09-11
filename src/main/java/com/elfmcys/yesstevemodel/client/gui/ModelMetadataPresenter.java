@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.client.gui;
 
 import com.elfmcys.yesstevemodel.client.model.ModelAssembly;
+import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.resource.models.AuthorInfo;
 import com.elfmcys.yesstevemodel.resource.models.Metadata;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.util.StringPool;
@@ -32,6 +33,9 @@ public class ModelMetadataPresenter {
         if (defaultValue == null) {
             defaultValue = StringPool.EMPTY;
         }
+        //? if <1.17
+        /*String selectedLocale = Minecraft.getInstance().getLanguageManager().getSelected().getCode();*/
+        //? if >=1.17
         String selectedLocale = Minecraft.getInstance().getLanguageManager().getSelected();
         Map<String, Map<String, String>> translations = modelPackData.getTranslations();
 
@@ -48,7 +52,11 @@ public class ModelMetadataPresenter {
     }
 
     public static String getLocalizedModelString(ModelAssembly modelAssembly, String key, String defaultValue) {
+        //? if <1.17 {
+        /*return getLocalizedModelStringForLocale(modelAssembly, Minecraft.getInstance().getLanguageManager().getSelected().getCode(), key, defaultValue);
+         *///?} else {
         return getLocalizedModelStringForLocale(modelAssembly, Minecraft.getInstance().getLanguageManager().getSelected(), key, defaultValue);
+        //?}
     }
 
     public static String getLocalizedModelStringForLocale(ModelAssembly modelAssembly, String locale, String key, String defaultValue) {
@@ -73,17 +81,23 @@ public class ModelMetadataPresenter {
         if (extraInfo != null) {
             String localizedName = getLocalizedModelStringForLocale(modelAssembly, locale, "metadata.name", extraInfo.getName());
             if (StringUtils.isNoneBlank(localizedName)) {
-                tooltipLines.add(Component.literal(localizedName).withStyle(ChatFormatting.GOLD));
+                tooltipLines.add(YsmText.literal(localizedName).withStyle(ChatFormatting.GOLD));
             }
 
             String localizedTips = getLocalizedModelStringForLocale(modelAssembly, locale, "metadata.tips", extraInfo.getTips());
             if (StringUtils.isNoneBlank(localizedTips)) {
                 Arrays.stream(localizedTips.replace("\r", StringPool.EMPTY).split("\n")).forEach(tipLine -> {
-                    tooltipLines.add(Component.literal(tipLine).withStyle(ChatFormatting.GRAY));
+                    tooltipLines.add(YsmText.literal(tipLine).withStyle(ChatFormatting.GRAY));
                 });
             }
 
             if (!extraInfo.getAuthors().isEmpty() || StringUtils.isNoneBlank(extraInfo.getLicense().getFirst())) {
+                //? if <1.17
+
+                /*tooltipLines.add(YsmText.literal(" "));*/
+
+                //? if >=1.17
+
                 tooltipLines.add(CommonComponents.space());
             }
 
@@ -92,40 +106,46 @@ public class ModelMetadataPresenter {
                         .map(createAuthorNameMapper(modelAssembly, locale, new int[]{-1}))
                         .toArray(String[]::new), "丨");
 
-                tooltipLines.add(Component.translatable("gui.yes_steve_model.model.authors",
-                        Component.literal(authorsString).withStyle(ChatFormatting.DARK_GRAY)));
+                tooltipLines.add(YsmText.translatable("gui.yes_steve_model.model.authors",
+                        YsmText.literal(authorsString).withStyle(ChatFormatting.DARK_GRAY)));
             }
 
             if (StringUtils.isNoneBlank(extraInfo.getLicense().getFirst())) {
-                tooltipLines.add(Component.translatable("gui.yes_steve_model.model.license",
-                        Component.literal(extraInfo.getLicense().getFirst()).withStyle(ChatFormatting.DARK_GRAY)));
+                tooltipLines.add(YsmText.translatable("gui.yes_steve_model.model.license",
+                        YsmText.literal(extraInfo.getLicense().getFirst()).withStyle(ChatFormatting.DARK_GRAY)));
             }
         }
 
         if (showAdvancedInfo) {
-            tooltipLines.add(Component.translatable("gui.yes_steve_model.model.file", Component.literal(fileName).withStyle(ChatFormatting.DARK_GRAY)));
-            tooltipLines.add(Component.translatable("gui.yes_steve_model.model.hash", Component.literal(modelAssembly.getModelData().getModelHash()).withStyle(ChatFormatting.DARK_GRAY)));
+            tooltipLines.add(YsmText.translatable("gui.yes_steve_model.model.file", YsmText.literal(fileName).withStyle(ChatFormatting.DARK_GRAY)));
+            tooltipLines.add(YsmText.translatable("gui.yes_steve_model.model.hash", YsmText.literal(modelAssembly.getModelData().getModelHash()).withStyle(ChatFormatting.DARK_GRAY)));
 
             if (StringUtils.isNoneBlank(modelAssembly.getModelData().getExtra())) {
-                tooltipLines.add(Component.translatable("gui.yes_steve_model.model.extra", Component.literal(modelAssembly.getModelData().getExtra()).withStyle(ChatFormatting.DARK_GRAY)));
+                tooltipLines.add(YsmText.translatable("gui.yes_steve_model.model.extra", YsmText.literal(modelAssembly.getModelData().getExtra()).withStyle(ChatFormatting.DARK_GRAY)));
             }
 
             if (modelAssembly.getModelData().getTimestamp() != 0) {
                 String formattedDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(modelAssembly.getModelData().getTimestamp() * 1000), ZoneId.systemDefault())
                         .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-                tooltipLines.add(Component.translatable("gui.yes_steve_model.model.timestamp", Component.literal(formattedDate).withStyle(ChatFormatting.DARK_GRAY)));
+                tooltipLines.add(YsmText.translatable("gui.yes_steve_model.model.timestamp", YsmText.literal(formattedDate).withStyle(ChatFormatting.DARK_GRAY)));
             }
 
             if (StringUtils.isNoneBlank(modelAssembly.getModelData().getRand())) {
-                tooltipLines.add(Component.translatable("gui.yes_steve_model.model.rand", Component.literal(modelAssembly.getModelData().getRand()).withStyle(ChatFormatting.DARK_GRAY)));
+                tooltipLines.add(YsmText.translatable("gui.yes_steve_model.model.rand", YsmText.literal(modelAssembly.getModelData().getRand()).withStyle(ChatFormatting.DARK_GRAY)));
             }
         }
 
         MainModelInfo info = modelAssembly.getModelData().getMainModelInfo();
         if (info != null) {
+            //? if <1.17
+
+            /*tooltipLines.add(YsmText.literal(" "));*/
+
+            //? if >=1.17
+
             tooltipLines.add(CommonComponents.space());
-            tooltipLines.add(Component.translatable("gui.yes_steve_model.model.main_model_info", info.getBones(), info.getCubes(), info.getFaces()).withStyle(ChatFormatting.GRAY));
-            tooltipLines.add(Component.translatable("gui.yes_steve_model.model.texture_info", modelAssembly.getAnimationBundle().getTextures().size()).withStyle(ChatFormatting.GRAY));
+            tooltipLines.add(YsmText.translatable("gui.yes_steve_model.model.main_model_info", info.getBones(), info.getCubes(), info.getFaces()).withStyle(ChatFormatting.GRAY));
+            tooltipLines.add(YsmText.translatable("gui.yes_steve_model.model.texture_info", modelAssembly.getAnimationBundle().getTextures().size()).withStyle(ChatFormatting.GRAY));
         }
 
         return tooltipLines;

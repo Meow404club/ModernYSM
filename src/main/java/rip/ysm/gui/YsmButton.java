@@ -26,6 +26,26 @@ public abstract class YsmButton extends Button {
          *///?}
     }
 
+    // 1.16.5 AbstractWidget 无 getX/getY/setX/setY（x/y 为 public 字段），补桥接
+    //? if <1.17 {
+    /*public int getX() {
+        return this.x;
+    }
+
+    public int getY() {
+        return this.y;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
+     *///?}
+
     //? if >1.17 {
     @Override
     public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
@@ -40,6 +60,15 @@ public abstract class YsmButton extends Button {
 
     /** 版本中性自绘主体（子类唯一入口）。 */
     protected abstract void renderWidget(YsmGui g, int mouseX, int mouseY, float partialTick);
+
+    /** vanilla Button 原始绘制（纹理底/边框）：子类需要叠绘时经此调用。 */
+    protected void renderVanilla(YsmGui g, int mouseX, int mouseY, float partialTick) {
+        //? if <1.17 {
+        /*super.renderButton(g.pose(), mouseX, mouseY, partialTick);
+         *///?} else {
+        super.renderWidget(g.graphics(), mouseX, mouseY, partialTick);
+        //?}
+    }
 
     protected boolean hoveredOrFocused() {
         //? if >1.17 {

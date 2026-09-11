@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.client.animation.molang.functions.ysm;
 
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.context.IContext;
+import com.elfmcys.yesstevemodel.util.YsmEntity;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.variable.IValueEvaluator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -14,7 +15,7 @@ public class LadderFacing implements IValueEvaluator<Integer, IContext<LivingEnt
     public Integer eval(IContext<LivingEntity> ctx) {
         Optional<BlockPos> lastClimbablePos = ctx.entity().getLastClimbablePos();
         if (lastClimbablePos.isPresent()) {
-            Optional<Direction> optionalValue = ctx.entity().level().getBlockState(lastClimbablePos.get()).getOptionalValue(HorizontalDirectionalBlock.FACING);
+            Optional<Direction> optionalValue = YsmEntity.level(ctx.entity()).getBlockState(lastClimbablePos.get()).getOptionalValue(HorizontalDirectionalBlock.FACING);
             if (optionalValue.isPresent()) {
                 return optionalValue.get().get2DDataValue();
             }

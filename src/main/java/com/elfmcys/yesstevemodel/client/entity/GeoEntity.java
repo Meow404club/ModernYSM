@@ -211,14 +211,14 @@ public abstract class GeoEntity<T extends Entity> extends AnimatableEntity<T> {
     }
 
     public void submitAsyncUpdate(float partialTick) {
-        UnsafeUtil.getUnsafe().storeFence();
+        UnsafeUtil.storeFence();
         this.modelFuture = YSMThreadPool.submitCallable(() -> {
             try {
                 AnimationEvent<?> event = super.processAnimationImpl(partialTick, true);
-                UnsafeUtil.getUnsafe().storeFence();
+                UnsafeUtil.storeFence();
                 return event;
             } catch (Throwable th) {
-                UnsafeUtil.getUnsafe().storeFence();
+                UnsafeUtil.storeFence();
                 throw th;
             }
         });
@@ -247,7 +247,7 @@ public abstract class GeoEntity<T extends Entity> extends AnimatableEntity<T> {
             AnimationEvent<?> event = null;
             try {
                 event = this.modelFuture.get();
-                UnsafeUtil.getUnsafe().loadFence();
+                UnsafeUtil.loadFence();
             } catch (InterruptedException e) {
             } catch (Throwable th) {
                 th.printStackTrace();

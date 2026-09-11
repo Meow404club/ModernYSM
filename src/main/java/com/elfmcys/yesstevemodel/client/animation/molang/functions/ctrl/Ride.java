@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.client.animation.molang.functions.ctrl;
 
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.context.IContext;
+import com.elfmcys.yesstevemodel.util.YsmEntity;
 import com.elfmcys.yesstevemodel.util.YsmTag;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.funciton.entity.LivingEntityFunction;
 import com.elfmcys.yesstevemodel.molang.runtime.ExecutionContext;
@@ -40,7 +41,7 @@ public class Ride extends LivingEntityFunction {
         if (VEHICLE_KEY.equals(type)) {
             firstPassenger = entity.getVehicle();
         } else if (PASSENGER_KEY.equals(type)) {
-            firstPassenger = entity.getFirstPassenger();
+            firstPassenger = YsmEntity.firstPassenger(entity);
         } else {
             return 0;
         }

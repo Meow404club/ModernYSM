@@ -19,7 +19,7 @@ public class MolangEventDispatcher {
     public static final String DEFER = "defer";
 
     public static IValue createExpression(List<IValue> list, FloatArrayList floatArrayList) {
-        return createUpdateExpression(list, floatArrayList != null ? floatArrayList : FloatLists.emptyList());
+        return createUpdateExpression(list, floatArrayList != null ? floatArrayList : it.unimi.dsi.fastutil.floats.FloatLists.EMPTY_LIST);
     }
 
     public static IValue createInitExpression(List<IValue> list) {

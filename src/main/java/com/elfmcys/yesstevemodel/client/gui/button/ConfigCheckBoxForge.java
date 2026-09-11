@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.client.gui.button;
 
 import net.minecraft.client.gui.components.Checkbox;
+import com.elfmcys.yesstevemodel.util.YsmText;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.common.ForgeConfigSpec;
 
@@ -9,7 +10,7 @@ public class ConfigCheckBoxForge extends Checkbox {
     private final ForgeConfigSpec.BooleanValue forgeConfigSpec;
 
     public ConfigCheckBoxForge(int x, int y, String str, ForgeConfigSpec.BooleanValue booleanValue) {
-        super(x, y, 400, 20, Component.translatable("gui.yes_steve_model.config." + str), booleanValue.get().booleanValue());
+        super(x, y, 400, 20, YsmText.translatable("gui.yes_steve_model.config." + str), booleanValue.get().booleanValue());
         this.forgeConfigSpec = booleanValue;
     }
 

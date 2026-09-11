@@ -1,10 +1,9 @@
 package com.elfmcys.yesstevemodel.client.animation.condition;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import com.elfmcys.yesstevemodel.util.YsmEntity;
 import com.elfmcys.yesstevemodel.util.YsmTag;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -42,7 +41,7 @@ public class ConditionPassenger {
     }
 
     public String doTest(LivingEntity entity) {
-        Entity firstPassenger = entity.getFirstPassenger();
+        Entity firstPassenger = YsmEntity.firstPassenger(entity);
         if (firstPassenger == null || !firstPassenger.isAlive()) {
             return EMPTY;
         }

@@ -344,11 +344,20 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
     }
 
     public void init() {
-//? if <1.17 {
-        /*this.init(Minecraft.getInstance(), this.width, this.height);
-        return;*/
-        //? if >=1.17
+        // 修复 s1/s3：上游此处「init(mc,w,h)+return」是死注释（//? 块未闭合，m2-compile-green 坑7），
+        // 1.16.5 展开语义=init() 直接重入且从不清理列表；而文件夹导航/翻页/分类切换/搜索改动
+        // 全部原地调 init()（1.20.1 轴有 clearWidgets() 收口，1.16.5 没有）→ 旧 buttons/children
+        // 无限累积：幽灵卡片/翻页预览异常剔除/点击命中旧按钮。对齐 vanilla init(mc,w,h) 清场三连
+        // （vanilla-mc-1165 Screen.java:302-305 buttons.clear+children.clear+setFocused(null)）。
+        // 必须用块形式条件：经生成树验证块形式活跃分支 /* */ 包裹会被解包为真代码
+        // （对照 PlayerModelScreen.render 的双轴写法，1.16.5 生成物 492-503 行实证）。
+        //? if <1.17 {
+        /*this.buttons.clear();
+        this.children.clear();
+        this.setFocused(null);
+         *///?} else {
         clearWidgets();
+        //?}
         refreshModelList();
         if (getCurrentPage() > this.maxPage) {
             resetCurrentPage();

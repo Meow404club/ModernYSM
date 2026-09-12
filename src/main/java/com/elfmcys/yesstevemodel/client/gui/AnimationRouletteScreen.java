@@ -180,12 +180,20 @@ public class AnimationRouletteScreen extends Screen {
     }
 
     public void init() {
-        // clearWidgets() 为 1.17+（1.16.5 Screen 无）：vanilla init(mc,w,h) 已清空 buttons/children
-        // 再回调 init()，1.16.5 直跑共享方法体即可（与 DisclaimerScreen/PlayerModelScreen 展开
-        // 后的实际语义一致）。注意不可用「//? if <1.17 + /*this.init(...);return;*/」行条件写法：
-        // 行条件解包会把两行整块复活，return 悬在方法中段 → 1.16.5 展开报不可达语句（本轮实测）。
-        //? if >=1.17
+        // 修复 s2（经典轮盘 1.16.5 界面堆积）：本屏 init() 会被原地重入——单选/复选回调 init()、
+        // showConfigGroup 调 init()——vanilla 只在 init(mc,w,h) 清场，1.16.5 无 clearWidgets()
+        // → FlatColorButton/ConfigCheckBox/AnimationSlider 每次重入整层累积（现代版无 init 纯逐帧
+        // 绘制故正常，用户实报「现代版正常、经典版不正常」即此根因）。
+        // 对齐 vanilla init(mc,w,h) 清场三连（vanilla-mc-1165 Screen.java:302-305）。
+        // 必须块形式条件+/* */包裹（活跃分支被解包为真代码，PlayerModelScreen.render 同款实证）；
+        // 不可用「行条件+this.init(mc,w,h);return;」写法：m2-compile-green 实测展开后 return 悬中段不可达。
+        //? if <1.17 {
+        /*this.buttons.clear();
+        this.children.clear();
+        this.setFocused(null);
+         *///?} else {
         clearWidgets();
+        //?}
         this.centerX = (this.width / 2) - 70;
         this.centerY = (this.height / 2) - 8;
         if (this.currentProperties.size() < (this.currentNavEntry.getRight().intValue() * 8) + 1) {

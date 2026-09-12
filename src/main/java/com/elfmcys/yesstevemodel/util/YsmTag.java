@@ -35,8 +35,20 @@ public final class YsmTag {
             return new ItemTag(net.minecraft.tags.ItemTags.createOptional(rl));
         }
 
+        // 1.16.5 未绑定守卫：StaticTagHelper$Wrapper.resolve()（SRG TagRegistry$NamedTag.func_232944_c_）
+        // 对 tag == null（可选 tag json 缺失→rebind(null) 永不绑定）抛
+        // IllegalStateException("Tag ... used before it was bound")（vanilla-mc-1165 StaticTagHelper.java:69-75；
+        // Forge IOptionalNamedTag 只有 isDefaulted()，无 isBound）。
+        // 调用链 InnerClassify.getItemType←HandRenderFunction.eval 是渲染线程逐帧热路径，
+        // 未绑定时语义=不含任何物品→false。吞点必须在本层（molang eval 入口），不放行到渲染序列中段。
+        // 注意：本方法整体处于 <1.17 注释包分支内（stonecutter 块条件不嵌套；注释只能用 // 行注释，
+        // 任何块注释的 star-slash 都会提前闭合外层包裹）。
         public boolean matches(ItemStack stack) {
-            return this.tag.contains(stack.getItem());
+            try {
+                return this.tag.contains(stack.getItem());
+            } catch (IllegalStateException e) {
+                return false;
+            }
         }
 
         public ResourceLocation location() {
@@ -76,8 +88,13 @@ public final class YsmTag {
             return new EntityTypeTag(net.minecraft.tags.EntityTypeTags.createOptional(rl));
         }
 
+        // 同 ItemTag.matches：1.16.5 未绑定 tag 防炸（语义=不含）。
         public boolean matches(EntityType<?> type) {
-            return this.tag.contains(type);
+            try {
+                return this.tag.contains(type);
+            } catch (IllegalStateException e) {
+                return false;
+            }
         }
 
         public ResourceLocation location() {

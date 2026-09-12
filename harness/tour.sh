@@ -66,6 +66,9 @@ PORT=25565
 XVFB_PID=""
 FIFO="$RUN_DIR/server-stdin.fifo"
 PIDFILE="$RUN_DIR/tour.pids"
+# 首跑的版本线（如 1.20.1-forge）run 目录尚不存在，必须先建——PIDFILE 截断
+# 与 FIFO 创建都落在这里，晚于本行的 mkdir 已来不及（2026-09-13 首跑实证）
+mkdir -p "$RUN_DIR"
 : > "$PIDFILE"
 
 cleanup() {

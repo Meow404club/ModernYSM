@@ -91,6 +91,16 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
 
     private static final PlayerPreviewEntity[] previewHolders = new PlayerPreviewEntity[10];
 
+    /** 当前页各槽位上的 ModelButton（与 init() 的槽位循环一一对应），供增量刷新定位目标卡片。 */
+    private final ModelButton[] slotButtons = new ModelButton[10];
+
+    /** init() 完成时的页码与列表快照：增量回调据此判定"屏上内容是否仍与数据一致"。 */
+    private int renderedPage;
+
+    private List<String> renderedPackKeys = new ArrayList<>();
+
+    private List<String> renderedModelKeys = new ArrayList<>();
+
     private static final Object2IntMap<String> pageIndexMap = new Object2IntOpenHashMap();
 
     private static String currentPath = StringPool.EMPTY;
@@ -358,6 +368,7 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
          *///?} else {
         clearWidgets();
         //?}
+        Arrays.fill(this.slotButtons, null);
         refreshModelList();
         if (getCurrentPage() > this.maxPage) {
             resetCurrentPage();
@@ -490,10 +501,15 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
                         previewEntity.initModelWithTexture(str2, modelAssembly2.getAnimationBundle().getDefaultTextureName());
                         previewEntity.getAnimationStateMachine().setCurrentAnimation(modelAssembly2.getModelData().getModelProperties().getPreviewAnimation());
                     }
-                    ysmAddWidget(createModelButton(slotX, slotY, isAuthLocked, previewEntity, modelAssembly2, str2));
+                    ModelButton slotButton = createModelButton(slotX, slotY, isAuthLocked, previewEntity, modelAssembly2, str2);
+                    this.slotButtons[i] = slotButton;
+                    ysmAddWidget(slotButton);
                 }
             }
         }
+        this.renderedPage = getCurrentPage();
+        this.renderedPackKeys = new ArrayList<>(this.sortedPackKeys);
+        this.renderedModelKeys = new ArrayList<>(this.sortedModelKeys);
     }
 
     //? if >1.17 {
@@ -922,12 +938,74 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
 
     @Override
     public void onModelsLoaded(Map<String, ModelAssembly> map) {
-        init();
+        refreshLoadedModelSlots();
     }
 
     @Override
     public void onModelsUpdated(Map<String, ModelAssembly> map) {
-        init();
+        refreshLoadedModelSlots();
+    }
+
+    /**
+     * 增量模型加载完成（ClientModelManager.flushPendingModels → onModelsLoaded/onModelsUpdated）：
+     * 只更新受影响的槽位，绝不重入 init()。
+     *
+     * <p>根因（m2.6.1-page-anim-reset）：旧实现两个回调直接 init()，而 init() 的槽位循环对
+     * 全部 10 个 previewHolder 无条件 resetModel()（PlayerModelScreen 槽位循环）→
+     * GeoEntity.clearModel → reset() 清 updateTicks/AnimatableEntity.seekTime →
+     * 服务端同步期间每个模型解析完成都触发一轮 flushPendingModels → 已加载卡片的
+     * 预览动画全部从头重播。该行为 M2.6 清场修复之前就存在（65fe931~1 同码），
+     * 非 M2.6 副作用；1.16.5/1.20.1 共享此代码，同病同修。
+     *
+     * <p>结构变化（文件夹增删/本地重载导致列表键集或页码变化、页码越界）仍回退
+     * init() 整页重建，保持 M2.6 的清场语义不变。
+     */
+    private void refreshLoadedModelSlots() {
+        if (this.minecraft == null || this.minecraft.player == null) {
+            return;
+        }
+        // previewHolder 是跨实例共享的 static 槽位：非当前屏（旧实例注销前仍收回调）
+        // 或尚未完成首次 init 时不得触碰，否则会以本实例的页码/路径状态污染活跃屏
+        if (this.minecraft.screen != this || this.searchBox == null) {
+            return;
+        }
+        refreshModelList();
+        if (getCurrentPage() > this.maxPage) {
+            resetCurrentPage();
+            init();
+            return;
+        }
+        if (getCurrentPage() != this.renderedPage
+                || !this.renderedPackKeys.equals(this.sortedPackKeys)
+                || !this.renderedModelKeys.equals(this.sortedModelKeys)) {
+            init();
+            return;
+        }
+        for (int i = 0; i < 10; i++) {
+            int slotIndex = i + (getCurrentPage() * 10);
+            int size = slotIndex - this.sortedPackKeys.size();
+            if (!(0 <= size && size < this.sortedModelKeys.size())) {
+                continue;
+            }
+            String str2 = this.sortedModelKeys.get(size);
+            ModelAssembly modelAssembly2 = this.filteredModels.get(str2);
+            if (modelAssembly2 == null || ClientModelManager.isModelPending(str2)) {
+                continue;
+            }
+            PlayerPreviewEntity previewEntity = previewHolders[i];
+            if (str2.equals(previewEntity.getModelId()) && previewEntity.getModelAssembly() == modelAssembly2) {
+                continue;
+            }
+            // 仅此槽位的数据在卡片创建后变化（pending→已加载，或同 key 热重载换了
+            // assembly 实例）：只初始化这一张卡的渲染上下文，
+            // 其余 holder 的动画时间轴（seekTime）原样保留
+            previewEntity.initModelWithTexture(str2, modelAssembly2.getAnimationBundle().getDefaultTextureName());
+            previewEntity.getAnimationStateMachine().setCurrentAnimation(modelAssembly2.getModelData().getModelProperties().getPreviewAnimation());
+            ModelButton slotButton = this.slotButtons[i];
+            if (slotButton != null) {
+                slotButton.refreshPendingCaches();
+            }
+        }
     }
 
     private Optional<ModelPackData> getPackData(String str) {

@@ -10,6 +10,9 @@ import com.elfmcys.yesstevemodel.config.GeneralConfig;
 import com.elfmcys.yesstevemodel.event.api.SpecialPlayerRenderEvent;
 import com.elfmcys.yesstevemodel.geckolib3.geo.NativeModelRenderer;
 import com.mojang.blaze3d.vertex.PoseStack;
+//? if >=1.19.4 {
+import com.mojang.math.Axis;
+//?}
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.elfmcys.yesstevemodel.event.api.EventResult;
 import net.minecraft.client.Minecraft;

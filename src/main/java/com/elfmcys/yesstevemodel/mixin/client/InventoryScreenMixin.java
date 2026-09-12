@@ -1,6 +1,9 @@
 package com.elfmcys.yesstevemodel.mixin.client;
 
 import com.elfmcys.yesstevemodel.client.renderer.ModelPreviewRenderer;
+//? if >=1.19.4 && <1.20 {
+import com.mojang.blaze3d.vertex.PoseStack;
+//?}
 //? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
@@ -29,7 +32,21 @@ public class InventoryScreenMixin {
     private static void renderEntityInInventoryFollowsAnglePost(GuiGraphics guiGraphics, int x, int y, int scale, float angleXComponent, float angleYComponent, LivingEntity entity, CallbackInfo ci) {
         ModelPreviewRenderer.setPreviewMode(false);
     }
-    //?} else {
+    //?}
+    // 1.19.4：renderEntityInInventory 更名 FollowsMouse 且首参 PoseStack（1194 InventoryScreen.java:112）
+    //? if >=1.19.4 && <1.20 {
+    /*
+    @Inject(at = {@At("HEAD")}, method = {"renderEntityInInventoryFollowsMouse(Lcom/mojang/blaze3d/vertex/PoseStack;IIIFFLnet/minecraft/world/entity/LivingEntity;)V"})
+    private static void renderEntityInInventoryFollowsAnglePre(PoseStack poseStack, int x, int y, int scale, float angleXComponent, float angleYComponent, LivingEntity entity, CallbackInfo ci) {
+        ModelPreviewRenderer.setPreviewMode(true);
+    }
+
+    @Inject(at = {@At("RETURN")}, method = {"renderEntityInInventoryFollowsMouse(Lcom/mojang/blaze3d/vertex/PoseStack;IIIFFLnet/minecraft/world/entity/LivingEntity;)V"})
+    private static void renderEntityInInventoryFollowsAnglePost(PoseStack poseStack, int x, int y, int scale, float angleXComponent, float angleYComponent, LivingEntity entity, CallbackInfo ci) {
+        ModelPreviewRenderer.setPreviewMode(false);
+    }
+     *///?}
+    //? if <1.19.4 {
     /*@Inject(at = {@At("HEAD")}, method = {"renderEntityInInventory(IIIFFLnet/minecraft/world/entity/LivingEntity;)V"})
     private static void renderEntityInInventoryFollowsAnglePre(int x, int y, int scale, float angleXComponent, float angleYComponent, LivingEntity entity, CallbackInfo ci) {
         ModelPreviewRenderer.setPreviewMode(true);
@@ -39,5 +56,5 @@ public class InventoryScreenMixin {
     private static void renderEntityInInventoryFollowsAnglePost(int x, int y, int scale, float angleXComponent, float angleYComponent, LivingEntity entity, CallbackInfo ci) {
         ModelPreviewRenderer.setPreviewMode(false);
     }
-    *///?}
+     *///?}
 }

@@ -31,6 +31,9 @@ public class BiomeHasAnyTag extends EntityFunction {
         // }
         // return false;
         //?} else {
+        //? if >=1.19.4 && <1.20
+        /*Holder<Biome> biome = entity.getLevel().getBiome(entity.blockPosition());*/
+        //? if >=1.20
         Holder<Biome> biome = entity.level().getBiome(entity.blockPosition());
         for (int i = 0; i < arguments.size(); i++) {
             ResourceLocation id = arguments.getResourceLocation(context, i);

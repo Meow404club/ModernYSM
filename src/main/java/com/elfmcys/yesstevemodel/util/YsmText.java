@@ -45,7 +45,7 @@ public final class YsmText {
         //? if >=1.17 && <1.19.4 {
         /*source.sendSuccess(msg, broadcastToOps);
          *///?}
-        //? if >=1.19.4 {
+        //? if >=1.20 {
         source.sendSuccess(() -> msg, broadcastToOps);
         //?}
     }

@@ -148,7 +148,7 @@ public final class PlayerPreviewEntity extends CustomPlayerEntity implements IPr
             return false;
         }
 
-        //? if >=1.17 && <1.19.4 {
+        //? if >=1.17 && <1.20 {
         /*
         private boolean reflectSetLevel(ClientLevel level) {
             for (String fieldName : new String[]{"level", "field_70170_p"}) {

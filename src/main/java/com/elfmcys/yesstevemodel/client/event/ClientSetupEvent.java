@@ -24,7 +24,6 @@ import net.minecraftforge.fml.client.registry.ClientRegistry;*/
 import net.minecraftforge.client.ClientRegistry;
  *///?}
 //? if >=1.19.2 {
-/*import net.minecraft.network.chat.TextComponent;*/
 //?}
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;

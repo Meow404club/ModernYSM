@@ -449,7 +449,17 @@ public class YSMBinding extends ContextBinding {
             context.logWarningComponent(YsmText.literal("Tag ").append(copyOnClickTextCompat(tagKey.location().toString())));
         });
          *///?}
-        //? if >=1.19.4 {
+        //? if >=1.19.4 && <1.20 {
+        /*
+        Holder<Biome> biome = context.entity().getLevel().getBiome(context.entity().blockPosition());
+        biome.unwrapKey().ifPresent(resourceKey -> {
+            context.logWarningComponent(YsmText.literal("Name ").append(copyOnClickTextCompat(resourceKey.location().toString())));
+        });
+        biome.tags().forEach(tagKey -> {
+            context.logWarningComponent(YsmText.literal("Tag ").append(copyOnClickTextCompat(tagKey.location().toString())));
+        });
+         *///?}
+        //? if >=1.20 {
         Holder<Biome> biome = context.entity().level().getBiome(context.entity().blockPosition());
         biome.unwrapKey().ifPresent(resourceKey -> {
             context.logWarningComponent(YsmText.literal("Name ").append(copyOnClickTextCompat(resourceKey.location().toString())));
@@ -467,7 +477,9 @@ public class YSMBinding extends ContextBinding {
         /*return entity.level.canSeeSky(blockPosBlockPosition) && entity.level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, blockPosBlockPosition).getY() <= blockPosBlockPosition.getY();*/
         //? if >=1.17 && <1.19.4
         /*return entity.getLevel().canSeeSky(blockPosBlockPosition) && entity.getLevel().getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, blockPosBlockPosition).getY() <= blockPosBlockPosition.getY();*/
-        //? if >=1.19.4
+        //? if >=1.19.4 && <1.20
+        /*return entity.getLevel().canSeeSky(blockPosBlockPosition) && entity.getLevel().getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, blockPosBlockPosition).getY() <= blockPosBlockPosition.getY();*/
+        //? if >=1.20
         return entity.level().canSeeSky(blockPosBlockPosition) && entity.level().getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, blockPosBlockPosition).getY() <= blockPosBlockPosition.getY();
     }
 

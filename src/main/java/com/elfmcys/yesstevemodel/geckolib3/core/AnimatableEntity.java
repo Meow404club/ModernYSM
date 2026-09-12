@@ -405,7 +405,11 @@ public abstract class AnimatableEntity<TEntity extends Entity> {
         /*
         return Minecraft.getInstance().level == this.entity.getLevel() && !this.entity.isRemoved();
          *///?}
-        //? if >=1.19.4 {
+        //? if >=1.19.4 && <1.20 {
+        /*
+        return Minecraft.getInstance().level == this.entity.getLevel() && !this.entity.isRemoved();
+         *///?}
+        //? if >=1.20 {
         return Minecraft.getInstance().level == this.entity.level() && !this.entity.isRemoved();
         //? }
     }

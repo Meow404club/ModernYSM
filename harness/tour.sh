@@ -74,7 +74,10 @@ mkdir -p "$RUN_DIR"
 cleanup() {
   echo "[tour] cleanup: graceful first"
   echo "quit" > "$CLIENT_DIR/cmd.txt" 2>/dev/null
-  echo "stop" > "$FIFO" 2>/dev/null
+  # FIFO 写端 open() 要等读端：server 已死（失败路径常态）时此 open 无限期阻塞，
+  # 吞掉整个 TERM/KILL 清理阶梯并泄漏本会话进程树（审查 P1 实证）。
+  # timeout 兜底保证永不卡：有读端=照常送达；无读端=最多 3s 后 124 返回继续阶梯。
+  timeout 3 sh -c 'echo stop > "$1"' fifo "$FIFO" 2>/dev/null
   sleep 5
   # 阶梯 2/3：按记录的 PGID 杀整组（setsid 启动，PID 即 PGID；不含共享 daemon）
   if [ -s "$PIDFILE" ]; then

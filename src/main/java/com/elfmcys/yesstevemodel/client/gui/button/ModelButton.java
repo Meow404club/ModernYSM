@@ -25,7 +25,6 @@ import com.elfmcys.yesstevemodel.util.FileTypeUtil;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
-import it.unimi.dsi.fastutil.objects.Object2ReferenceMaps;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -61,17 +60,7 @@ public class ModelButton extends YsmButton {
 
     public final PlayerPreviewEntity modelIdHolder;
 
-    private final String modelId;
-
-    private final String modelName;
-
-    private final String authorName;
-
-    private final double animationDuration;
-
     private final boolean disablePreviewRotation;
-
-    private final Component displayName;
 
     private final String targetModelId;
 
@@ -92,6 +81,20 @@ public class ModelButton extends YsmButton {
 
     private long lastHoverTime;
 
+    // 以下五项在构造期从动画包缓存：目标模型彼时若仍在增量加载（isModelPending=true），
+    // 动画包为 null → 动画名退化为 "empty"/0、显示名退化为 "default"（holder 未 init）；
+    // 模型加载完成后由 refreshPendingCaches() 补齐，故不能 final
+    // （增量刷新不重建卡片，见 PlayerModelScreen.refreshLoadedModelSlots）
+    private String modelId;
+
+    private String modelName;
+
+    private String authorName;
+
+    private double animationDuration;
+
+    private Component displayName;
+
     public ModelButton(int x, int y, boolean isAuthLocked, PlayerPreviewEntity playerPreviewEntity, ModelAssembly textureRegistry) {
         this(x, y, isAuthLocked, playerPreviewEntity, textureRegistry, playerPreviewEntity.getModelId());
     }
@@ -111,10 +114,26 @@ public class ModelButton extends YsmButton {
         this.modelIdHolder = playerPreviewEntity;
         this.disablePreviewRotation = textureRegistry.getModelData().getModelProperties().isDisablePreviewRotation();
         this.displayName = YsmText.literal(FileTypeUtil.getNameWithoutArchiveExtension(playerPreviewEntity.getModelId()));
-        this.backgroundTexture = textureRegistry.getTextureRegistry().getGuiBackground() == null ? null : UploadManager.getOrCreateLocatableWithSize(textureRegistry.getTextureRegistry().getGuiBackground(), true, 200);
-        this.foregroundTexture = textureRegistry.getTextureRegistry().getGuiForeground() == null ? null : UploadManager.getOrCreateLocatableWithSize(textureRegistry.getTextureRegistry().getGuiForeground(), true, 200);
-        PlayerModelBundle animationBundle = ClientModelManager.isModelPending(this.targetModelId) ? null : textureRegistry.getAnimationBundle();
-        Object2ReferenceMap<String, Animation> bundles = animationBundle == null ? Object2ReferenceMaps.emptyMap() : animationBundle.getMainAnimations();
+        refreshPendingCaches();
+    }
+
+    /**
+     * 模型从增量加载态转为已加载后，补齐构造期缺失的缓存（幂等：已加载时重算结果不变）：
+     * <ul>
+     *   <li>hover/hover_fadeout/focus 动画名与 fadeout 时长——pending 期动画包为 null，曾退化为
+     *       "empty"/0（本类构造器旧行为）</li>
+     *   <li>gui 前/后景贴图——pending 期 LazyModelAssembly 委托空 displayAssets，get 为 null</li>
+     *   <li>SHOW_MODEL_ID_FIRST 模式显示名——pending 期 holder 尚未 initModelWithTexture，
+     *       modelId 为 "default"，旧代码在整页重建时借机修正，增量刷新路径在此补齐</li>
+     * </ul>
+     * 只被增量加载路径调用（结构性刷新走 init() 重建整卡，不走这里）。
+     */
+    public void refreshPendingCaches() {
+        PlayerModelBundle animationBundle = ClientModelManager.isModelPending(this.targetModelId) ? null : this.renderContext.getAnimationBundle();
+        if (animationBundle == null) {
+            return;
+        }
+        Object2ReferenceMap<String, Animation> bundles = animationBundle.getMainAnimations();
         if (bundles.containsKey("hover")) {
             this.modelId = "hover";
         } else {
@@ -132,6 +151,15 @@ public class ModelButton extends YsmButton {
         } else {
             this.authorName = "empty";
         }
+        if (this.backgroundTexture == null && this.renderContext.getTextureRegistry().getGuiBackground() != null) {
+            this.backgroundTexture = UploadManager.getOrCreateLocatableWithSize(this.renderContext.getTextureRegistry().getGuiBackground(), true, 200);
+        }
+        if (this.foregroundTexture == null && this.renderContext.getTextureRegistry().getGuiForeground() != null) {
+            this.foregroundTexture = UploadManager.getOrCreateLocatableWithSize(this.renderContext.getTextureRegistry().getGuiForeground(), true, 200);
+        }
+        // 构造期若卡片尚在加载，holder 未 initModelWithTexture、modelId 为 "default"，
+        // 显示名曾据此算成 "default"；此处 holder 已就绪，按真实 id 重算
+        this.displayName = YsmText.literal(FileTypeUtil.getNameWithoutArchiveExtension(this.modelIdHolder.getModelId()));
     }
 
     private static MutableComponent createDisplayName(PlayerPreviewEntity previewEntity, ModelAssembly modelAssembly) {

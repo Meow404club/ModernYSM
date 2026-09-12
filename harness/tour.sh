@@ -138,6 +138,15 @@ echo "weather clear" >&3
 sleep 2
 
 # ---- 3. client（armed 标记 + 文件握手；driver 侧零 GL）----
+# 1.20+ 首启 AccessibilityOnboardingScreen 挡在 TitleScreen 前（driver 等
+# TitleScreen 才 mark title），预写 options 跳过 onboarding（幂等：有则改、无则加）
+OPT="$CLIENT_DIR/options.txt"
+touch "$OPT"
+if grep -q '^onboardAccessibility:' "$OPT" 2>/dev/null; then
+  sed -i 's/^onboardAccessibility:.*/onboardAccessibility:false/' "$OPT"
+else
+  echo 'onboardAccessibility:false' >> "$OPT"
+fi
 rm -f "$CLIENT_DIR/harness.armed" "$CLIENT_DIR/cmd.txt" "$CLIENT_DIR/harness.ready"
 : > "$OUT/client.log"
 setsid sh gradlew $GRADLE_CLIENT --no-daemon --no-configuration-cache > "$OUT/client.log" 2>&1 &

@@ -131,6 +131,22 @@ tasks.named<xyz.wagyourtail.unimined.api.minecraft.task.RemapJarTask>("remapJar"
     mixinRemap {
         enableMixinExtra()
     }
+    // 跨版本测试 harness 只进 dev run classpath，不进生产产物（acceptance：unzip -l
+    // 零 rip/ysm/harness 条目）；driver 生产侧另有 harness.armed 标记守卫，双保险。
+    // 注意：不能排 jar 任务——1.16.5 runClient 走 *-dev.jar（jar 产物），排掉会把
+    // runClient 的 driver 一并杀掉；只排 remapJar（SRG 发布产物）。
+    // RemapJarTask 接口本体无 CopySpec（编译错 receiver mismatch），内容排除须经
+    // JarInterface.asJar 取底层 Jar（AbstractRemapJarTask extends Jar）——unimined
+    // 1.4.1 官方 API（javap 实证接口层次）。
+    asJar {
+        exclude("rip/ysm/harness/**")
+    }
+}
+
+// runServer 控制台 stdin（harness/tour.sh 和平启动注入通道）：JavaExec 默认
+// standardInput 为空流，daemon 下 Gradle 不自动转发，须显式接管 System.in。
+tasks.named<org.gradle.api.tasks.JavaExec>("runServer") {
+    standardInput = System.`in`
 }
 
 dependencies {

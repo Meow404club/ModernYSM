@@ -80,12 +80,15 @@ legacyForge {
     }
 
     runs {
+        // client/server 分目录：默认同 run/ 会双进程互写 logs/latest.log。
+        // 与 1.16.5 线（unimined run/server、run/client）约定统一，
+        // harness/tour.sh 的 gameDir 推导表因此两线一致。
         register("client") {
-            gameDirectory = file("run/")
+            gameDirectory = file("run/client")
             client()
         }
         register("server") {
-            gameDirectory = file("run/")
+            gameDirectory = file("run/server")
             server()
         }
     }
@@ -101,6 +104,12 @@ legacyForge {
 // 创建，故依赖声明必须置于其后（Kotlin DSL 无类型安全访问器，按名引用，cache 安全）
 dependencies {
     "additionalRuntimeClasspath"("com.github.TartaricAlkaline:ImageStream:-SNAPSHOT")
+}
+
+// runServer 控制台 stdin（harness/tour.sh 和平启动注入通道）：JavaExec 默认
+// standardInput 为空流，daemon 下 Gradle 不自动转发，须显式接管 System.in。
+tasks.named<org.gradle.api.tasks.JavaExec>("runServer") {
+    standardInput = System.`in`
 }
 
 tasks {
@@ -120,6 +129,11 @@ tasks {
     }
 
     jar {
+        // 跨版本测试 harness 只进 dev run classpath，不进生产产物（acceptance：unzip -l
+        // 零 rip/ysm/harness 条目）；driver 生产侧另有 harness.armed 标记守卫，双保险。
+        // reobfJar 以 jar 产物为输入（MDG 文档：Reobfuscation automatically configured
+        // for the jar task），exclude 后 reobf 输出天然无 harness。
+        exclude("rip/ysm/harness/**")
         // ImageStream 生产内嵌：类文件 + javax.imageio SPI services 并入主 jar
         //（剥 manifest/签名，见上方 imageStreamEmbed 注释）
         from(imageStreamEmbedJars.map { zipTree(it) }) {

@@ -33,6 +33,7 @@ public final class YsmEventBootstrap {
             ExtraPlayerRenderKey.register();
             ExtraAnimationKey.register();
             InputStateKey.register();
+            rip.ysm.harness.GuiTourDriver.register(); // 测试基建：仅 dev+armed 标记激活，生产零行为
         }
     }
 }

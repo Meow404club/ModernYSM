@@ -49,6 +49,12 @@
 - **构建陷阱入册**：1.16.5 生产形态必须 `buildAndCollect`（裸 remapJar 缺 MixinExtras/JOML/unsafe8 内嵌，MixinTweaker onLoad 即 NCDFE）；harness 重建脚本+README 在 tmp/refmap-audit/
 - 教训：xvfb+llvmpipe 下进程内 glReadPixels 截图 100% 制造 native 堆损坏假崩溃——测试一律外部抓屏
 
+## M2.6 GUI 逻辑修复（tasks.m2.6-gui-1165-logic-fixes，已合入 dev=a710a8c，2026-09-13）
+- tag 炸弹根因：目录复数格式本就正确，缺 crossbows.json 文件（ItemTagsConstants 引用无资源）——补 `{"values":["minecraft:crossbow"]}`（双轴 vanilla 均无 crossbows 标签，直列单物品是唯一正解）+ YsmTag.matches <1.17 未绑定守卫（无公开 isBound，try-catch ISE→false）
+- s1/s3/s2 同根：1.16.5 无 clearWidgets，导航/翻页/轮盘回调原地重入 init() 控件无限累积——两屏 init 头部块形式补 vanilla 清场三连（生成树实证活跃非死注释），1.20.1 轴零改动（javap 11/11 全同）
+- **订正**：1.20.1 标签目录也是复数 tags/items（单数化是 1.21+），mod 标签在 1.20.1 正常绑定——此前"静默失效"判断证伪，无修复卡
+- 待办：其余九屏重入 init 同型坑未查（SPEC 外）；用户实机复测三症状
+
 ## 跨版本通用测试 harness（tasks.cross-version-harness，已合入 dev=ccb6b23，2026-09-13）
 - 交付：harness/tour.sh orchestrator（--no-daemon+setsid+PIDFILE/PGID 阶梯清理、和平启动五命令 stdin 注入、版本参数化 case 表单点）+ 零 GL GuiTourDriver/HarnessScreens（cmd.txt→harness.ready，14 屏）+ YsmEventBootstrap 3 指令守卫挂载（惰性解析实证）+ 双 buildscript 生产 jar 排除
 - 实证：双线 tour exit 0/16 屏/零崩溃零手工；双产物 jar 零 harness 字节；1.20.1 javap 1661/1662 类全同；生产安装器实启 25s 到主菜单全日志零 harness 引用

@@ -1,7 +1,7 @@
 package com.elfmcys.yesstevemodel.mixin.client;
 
 import com.elfmcys.yesstevemodel.client.renderer.ModelPreviewRenderer;
-//? if >=1.17 {
+//? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -19,7 +19,7 @@ public class InventoryScreenMixin {
     // mojmap 不受影响；1.16.5：无 FollowsMouse 变体，等价注入点为静态方法
     // renderEntityInInventory(IIIFF,LivingEntity)（1.16.5 InventoryScreen.java:101，
     // render():98 调用），remap 同样走默认 true 由 AP 写入 SRG refmap。
-    //? if >=1.17 {
+    //? if >=1.20 {
     @Inject(at = {@At("HEAD")}, method = {"renderEntityInInventoryFollowsMouse(Lnet/minecraft/client/gui/GuiGraphics;IIIFFLnet/minecraft/world/entity/LivingEntity;)V"})
     private static void renderEntityInInventoryFollowsAnglePre(GuiGraphics guiGraphics, int x, int y, int scale, float angleXComponent, float angleYComponent, LivingEntity entity, CallbackInfo ci) {
         ModelPreviewRenderer.setPreviewMode(true);

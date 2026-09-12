@@ -14,7 +14,7 @@ import rip.ysm.gui.YsmGui;
 import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
 import net.minecraft.ChatFormatting;
-//? if >1.17 {
+//? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import net.minecraft.client.gui.components.EditBox;
@@ -227,7 +227,7 @@ public class ModernPlayerTextureScreen extends OptionScreen {
     }
 
     // Screen.render 签名双轴（1.16.5 Screen.java:73 ↔ 1.20.1 GuiGraphics 钩子）
-    //? if <1.17 {
+    //? if <1.20 {
     /*@Override
     public void render(PoseStack pose, int mouseX, int mouseY, float partialTick) {
         hoveredIcon = null;
@@ -241,7 +241,8 @@ public class ModernPlayerTextureScreen extends OptionScreen {
         YsmGui g = new YsmGui(pose);
         for (IconButton btn : icons) drawIcon(g, btn);
     }
-     *///?} else {
+     *///?}
+     //? if >=1.20 {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         hoveredIcon = null;
@@ -255,7 +256,7 @@ public class ModernPlayerTextureScreen extends OptionScreen {
         YsmGui g = new YsmGui(graphics);
         for (IconButton btn : icons) drawIcon(g, btn);
     }
-    //?}
+     //?}
 
     private void drawIcon(YsmGui g, IconButton btn) {
         boolean hover = btn == hoveredIcon;

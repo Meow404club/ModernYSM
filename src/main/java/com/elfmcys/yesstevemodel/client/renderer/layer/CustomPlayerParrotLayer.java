@@ -18,7 +18,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Parrot;
 import net.minecraft.world.entity.player.Player;
-//? if >=1.17 {
+//? if >=1.19.4 {
 import com.mojang.math.Axis;
 //? }
 
@@ -63,7 +63,10 @@ public class CustomPlayerParrotLayer extends GeoLayerRenderer<CustomPlayerEntity
             poseStack.translate(0.0d, 1.5d, 0.0d);
             //? if <1.17
             // poseStack.mulPose(com.mojang.math.Vector3f.ZP.rotationDegrees(180.0f));
-            //? if >=1.17
+            // 1.19.3 起 Axis 枚举替换 Vector3f 常量旋转（1194 Axis.java；1192 sources 无此类）
+            //? if >=1.17 && <1.19.4
+            /*poseStack.mulPose(com.mojang.math.Vector3f.ZP.rotationDegrees(180.0f));*/
+            //? if >=1.19.4
             poseStack.mulPose(Axis.ZP.rotationDegrees(180.0f));
             // 1.16.5 无 Parrot.Variant/ParrotRenderer.getVariantTexture：variant 为 int，
             // 贴图查 ParrotRenderer.PARROT_LOCATIONS[variant]（vanilla 1.16.5 同款索引，越界防护取模）

@@ -15,8 +15,12 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 //? if >=1.17 {
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import com.mojang.math.Axis;
 //? }
+// Axis（1.19.3+）1.16.5/中段走 com.mojang.math.Vector3f.YP/ZP.rotationDegrees（返回 moj Quaternion）；
+// 本文件 Axis 触点仅存在于注释（mulPose 旋转由 NativeModelRenderer 管线承接）
+//? if >=1.19.4 {
+import com.mojang.math.Axis;
+//?}
 // Axis（1.19.3+）1.16.5 走 com.mojang.math.Vector3f.YP/ZP.rotationDegrees（返回 moj Quaternion）
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.entity.Entity;

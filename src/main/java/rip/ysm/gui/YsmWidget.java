@@ -1,21 +1,24 @@
 package rip.ysm.gui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-//? if >1.17 {
+//? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
 
 /**
- * 自绘控件基类：统一两版 AbstractWidget 的渲染钩子与坐标存取差异。
+ * 自绘控件基类：统一各版 AbstractWidget 的渲染钩子与坐标存取差异。
  * <ul>
- *   <li>渲染钩子：1.20.1 renderWidget(GuiGraphics,...) ↔ 1.16.5 renderButton(PoseStack,...)
- *       （1.16.5 AbstractWidget.java:60/98），子类只实现版本中性的
- *       {@link #renderWidget(YsmGui, int, int, float)}</li>
- *   <li>坐标存取：1.20.1 有 getX/getY/setX/setY（x/y 私有）；1.16.5 x/y 是 public 字段
- *       （1.16.5 AbstractWidget.java:25-26），无存取器 → 1.16.5 轴补桥接方法</li>
- *   <li>narration（updateWidgetNarration/defaultButtonNarrationText）为 1.17+ API，1.16.5 轴剔除</li>
+ *   <li>渲染钩子：1.20.1 renderWidget(GuiGraphics,...)（1201 AbstractWidget.java:121）↔
+ *       1.19.4 renderWidget(PoseStack,...)（1194:117，public abstract）↔
+ *       1.16.5~1.19.2 renderButton(PoseStack,...)（1165:98/1182:74/1192:73 均 public），
+ *       子类只实现版本中性的 {@link #renderWidget(YsmGui, int, int, float)}</li>
+ *   <li>坐标存取：1.19.4+ 有 getX/getY/setX/setY（1194:315/320/330）；1.16.5~1.19.2 x/y 是
+ *       public 字段（1165:25-26/1182:26-27/1192:25-26）→ &lt;1.19.4 轴补桥接方法</li>
+ *   <li>narration（updateWidgetNarration/defaultButtonNarrationText）为 1.19.3+ API
+ *       （1194:301/303），1.17~1.19.2 走父类 updateNarration→createNarrationMessage
+ *       （1182:232），1.16.5 无 narration 机制 → 仅 >=1.19.4 轴覆写</li>
  * </ul>
  */
 public abstract class YsmWidget extends AbstractWidget {
@@ -23,9 +26,9 @@ public abstract class YsmWidget extends AbstractWidget {
         super(x, y, width, height, message);
     }
 
-    // 1.16.5 AbstractWidget 无 getX/getY/setX/setY（x/y 为 public 字段），补桥接；
-    // 1.20.1 侧父类自带同名方法，桥接注释态（不可加 @Override：1.16.5 父类无此签名）
-    //? if <1.17 {
+    // 1.16.5~1.19.2 AbstractWidget 无 getX/getY/setX/setY（x/y 为 public 字段），补桥接；
+    // 1.19.4+ 侧父类自带同名方法（1194:315-330），桥接注释态（不可加 @Override：父类无此签名）
+    //? if <1.19.4 {
     /*public int getX() {
         return this.x;
     }
@@ -44,12 +47,21 @@ public abstract class YsmWidget extends AbstractWidget {
 
      *///?}
 
-    //? if <1.17 {
+    //? if <1.19.4 {
     /*@Override
     public void renderButton(PoseStack pose, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(pose), mouseX, mouseY, partialTick);
     }
-     *///?} else {
+     *///?}
+    // 1.19.4 专属：renderWidget 名 1.19.4 引入但参数仍 PoseStack（1194 AbstractWidget.java:117）
+    //? if >=1.19.4 && <1.20 {
+    /*
+    @Override
+    public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
+    }
+     *///?}
+    //? if >=1.20 {
     @Override
     protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
@@ -59,7 +71,17 @@ public abstract class YsmWidget extends AbstractWidget {
     /** 版本中性自绘主体（子类唯一入口）。 */
     protected abstract void renderWidget(YsmGui g, int mouseX, int mouseY, float partialTick);
 
-    //? if >1.17 {
+    // 1.17~1.19.2：NarratableEntry extends NarrationSupplier（updateNarration 抽象），
+    // AbstractWidget 不实现 → concrete 子类必炸（1192 编译实测）；中段补实现，
+    // defaultButtonNarrationText 与 1.19.4+ 同名同义（1182 AbstractWidget.java:231）
+    //? if >=1.17 && <1.19.4 {
+    /*
+    @Override
+    public void updateNarration(net.minecraft.client.gui.narration.NarrationElementOutput output) {
+        this.defaultButtonNarrationText(output);
+    }
+     *///?}
+    //? if >=1.19.4 {
     @Override
     protected void updateWidgetNarration(net.minecraft.client.gui.narration.NarrationElementOutput output) {
         this.defaultButtonNarrationText(output);

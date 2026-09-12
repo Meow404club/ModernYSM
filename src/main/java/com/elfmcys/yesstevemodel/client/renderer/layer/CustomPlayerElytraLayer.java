@@ -21,7 +21,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.PlayerModelPart;
 import net.minecraft.world.item.ItemStack;
-//? if >=1.17 {
+//? if >=1.19.4 {
 import com.mojang.math.Axis;
 //? }
 
@@ -61,7 +61,10 @@ public class CustomPlayerElytraLayer extends GeoLayerRenderer<CustomPlayerEntity
             poseStack.translate(0.0d, 1.5d, 0.0d);
             //? if <1.17
             // poseStack.mulPose(com.mojang.math.Vector3f.ZP.rotationDegrees(180.0f));
-            //? if >=1.17
+            // 1.19.3 起 Axis 枚举替换 Vector3f 常量旋转（1194 Axis.java；1192 sources 无此类）
+            //? if >=1.17 && <1.19.4
+            /*poseStack.mulPose(com.mojang.math.Vector3f.ZP.rotationDegrees(180.0f));*/
+            //? if >=1.19.4
             poseStack.mulPose(Axis.ZP.rotationDegrees(180.0f));
             poseStack.scale(2.0f, 2.0f, 2.0f);
             this.elytraModel.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);

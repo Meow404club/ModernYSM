@@ -1,7 +1,7 @@
 package rip.ysm.gui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-//? if >1.17 {
+//? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import net.minecraft.client.gui.components.AbstractSliderButton;
@@ -28,7 +28,7 @@ public abstract class YsmSliderButton extends AbstractSliderButton {
     }
      *///?}
 
-    //? if >1.17 {
+    //? if >=1.20 {
     @Override
     public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);

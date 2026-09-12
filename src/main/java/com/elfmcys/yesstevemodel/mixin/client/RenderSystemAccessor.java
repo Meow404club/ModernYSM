@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 // 空接口 mixin 无 accessor 成员即失去接口 mixin 资格。故 <1.17 降为普通 final 工具类
 //（无 @Mixin 注解），同时 1.16.5 processResources 将本类从 mixins.json client 列表剔除。
 // 消费方 GpuRenderPath 在 <1.17 有恒 false 闸门，该方法不会被调用。
-//? if >=1.17 {
+//? if >=1.19.4 {
 @Mixin(RenderSystem.class)
 public interface RenderSystemAccessor {
     @Accessor("shaderLightDirections")
@@ -22,7 +22,20 @@ public interface RenderSystemAccessor {
         return null;
     }
 }
-//?} else {
+//?}
+// 1.17~1.19.2：vanilla 尚未切 JOML，字段实际类型 com.mojang.math.Vector3f[]
+//（1192 RenderSystem.java:82）——accessor 泛型签名必须与字段一致（AP 校验），消费方降级不读
+//? if >=1.17 && <1.19.4 {
+/*
+@Mixin(RenderSystem.class)
+public interface RenderSystemAccessor {
+    @Accessor("shaderLightDirections")
+    static com.mojang.math.Vector3f[] ysm$getShaderLightDirections() {
+        return null;
+    }
+}
+ *///?}
+//? if <1.17 {
 /*public final class RenderSystemAccessor {
     private RenderSystemAccessor() {
     }

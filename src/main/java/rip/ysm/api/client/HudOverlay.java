@@ -2,7 +2,7 @@ package rip.ysm.api.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.Font;
-//? if >1.17 {
+//? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 
@@ -13,9 +13,11 @@ import net.minecraft.client.gui.GuiGraphics;
  */
 @FunctionalInterface
 public interface HudOverlay {
-    //? if <1.17 {
+    // PoseStack 首参覆盖 1.16.5~1.19.4（GuiGraphics 1.20 起）
+    //? if <1.20 {
     /*void render(PoseStack poseStack, Font font, float partialTick, int screenWidth, int screenHeight);
-     *///?} else {
+     *///?}
+    //? if >=1.20 {
     void render(GuiGraphics guiGraphics, Font font, float partialTick, int screenWidth, int screenHeight);
     //?}
 }

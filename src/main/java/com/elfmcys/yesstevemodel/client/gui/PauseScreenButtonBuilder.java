@@ -6,7 +6,7 @@ import com.elfmcys.yesstevemodel.client.model.ModelAssembly;
 import com.elfmcys.yesstevemodel.config.GeneralConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
-//? if >1.17 {
+//? if >=1.19.4 {
 import net.minecraft.client.gui.components.Tooltip;
 //?}
 import net.minecraft.client.gui.screens.PauseScreen;
@@ -26,7 +26,8 @@ public class PauseScreenButtonBuilder {
     // Button 双轴构造收敛：1.20.1 Button.builder().bounds().build()（1.17+）↔
     // 1.16.5 new Button(x,y,w,h,label,onPress)（1.16.5 Button.java:12）；Tooltip 为 1.17+ API
     private static Button makeButton(int x, int y, int width, int height, Component label, Runnable action) {
-        //? if <1.17 {
+        // Button.builder 1.19.4+（1194 Button.java:17）；1.16.5~1.19.2 public 6 参构造（1182:15）
+        //? if <1.19.4 {
         /*return new Button(x, y, width, height, label, button -> action.run());
          *///?} else {
         return Button.builder(label, button -> action.run()).bounds(x, y, width, height).build();
@@ -58,7 +59,7 @@ public class PauseScreenButtonBuilder {
                     });
                 }
             });
-            //? if >1.17 {
+            //? if >=1.19.4 {
             buttonBuild.setTooltip(Tooltip.create(YsmGui.trans("key.yes_steve_model.player_model.desc")));
             buttonBuild2.setTooltip(Tooltip.create(YsmGui.trans("key.yes_steve_model.open_extra_player_render.desc")));
             buttonBuild3.setTooltip(Tooltip.create(YsmGui.trans("key.yes_steve_model.animation_roulette.desc")));

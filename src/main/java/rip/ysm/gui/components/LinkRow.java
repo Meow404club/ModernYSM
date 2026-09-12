@@ -23,7 +23,7 @@ public final class LinkRow extends OptionRow<Object> {
 
     @Override
     protected void renderWidget(YsmGui g, int mouseX, int mouseY, float partialTick) {
-        boolean hover = isHovered();
+        boolean hover = /*? if <1.17 {*/ /*isHovered()*//*?} else {*/ isHoveredOrFocused() /*?}*/;
         g.fill(getX(), getY(), getX() + width, getY() + height, hover ? 0x90171717 : 0x90000000);
         Font font = Minecraft.getInstance().font;
         String i18nKey = "gui.yes_steve_model.url." + label;

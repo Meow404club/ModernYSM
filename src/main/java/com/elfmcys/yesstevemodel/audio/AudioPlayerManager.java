@@ -26,7 +26,8 @@ public class AudioPlayerManager {
             ResourceLocation resourceLocationTryParse = ResourceLocation.tryParse(soundName);
             if (resourceLocationTryParse != null) {
                 soundInstance = new YSMTickableSoundInstance(
-                    //? if <1.17 {
+                    // createVariableRangeEvent 1.19.3+（1192 SoundEvent 仅 (rl)/(rl,float) 构造器）
+                    //? if <1.19.4 {
                     /*new SoundEvent(resourceLocationTryParse)*/
                     //?} else {
                     SoundEvent.createVariableRangeEvent(resourceLocationTryParse)

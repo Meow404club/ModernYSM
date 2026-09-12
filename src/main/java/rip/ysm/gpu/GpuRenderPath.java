@@ -157,7 +157,16 @@ public final class GpuRenderPath {
     }
 
     private static void refreshLights() {
+        //? if <1.17 {
+        /*Vector3f[] arr = RenderSystemAccessor.ysm$getShaderLightDirections();
+         *///?}
+        // 1.17~1.19.2 accessor 为 mojang Vector3f 签名（JOML 前夜）不可读，恒 null → 兜底默认平行光
+        //? if >=1.17 && <1.19.4 {
+        /*Vector3f[] arr = null;
+         *///?}
+        //? if >=1.19.4 {
         Vector3f[] arr = RenderSystemAccessor.ysm$getShaderLightDirections();
+        //?}
         currentLights[0] = (arr != null && arr.length > 0 && arr[0] != null) ? arr[0] : new Vector3f(0.2f, 1.0f, -0.7f).normalize();
         currentLights[1] = (arr != null && arr.length > 1 && arr[1] != null) ? arr[1] : new Vector3f(-0.2f, 1.0f, 0.7f).normalize();
     }

@@ -38,7 +38,7 @@ public final class AuthorRow extends OptionRow<Object> {
 
     @Override
     protected void renderWidget(YsmGui g, int mouseX, int mouseY, float partialTick) {
-        boolean hover = isHovered();
+        boolean hover = /*? if <1.17 {*/ /*isHovered()*//*?} else {*/ isHoveredOrFocused() /*?}*/;
         g.fill(getX(), getY(), getX() + width, getY() + height, hover ? 0x90171717 : 0x90000000);
         int ax = getX() + 4;
         int ay = getY() + 4;

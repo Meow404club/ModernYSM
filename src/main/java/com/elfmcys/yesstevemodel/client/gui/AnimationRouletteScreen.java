@@ -35,16 +35,16 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.vertex.PoseStack;
-//? if >1.17 {
+//? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import rip.ysm.gui.YsmGui;
-//? if >1.17 {
+//? if >=1.19.4 {
 import net.minecraft.client.gui.components.Renderable;
 //?} else {
 /*import net.minecraft.client.gui.components.Widget;
  *///?}
-//? if >1.17 {
+//? if >=1.19.4 {
 import net.minecraft.client.gui.components.Tooltip;
 //?}
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -312,12 +312,12 @@ public class AnimationRouletteScreen extends Screen {
         String str3 = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format(CONFIG_DESC_FORMAT, this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0])), radioConfig.getDescription());
         MutableComponent mutableComponentLiteral = YsmText.literal(str2);
         // Tooltip（1.17+）：<1.17 悬浮说明降级不展示（配置项 hover 描述，功能差记回报）
-        //? if >1.17 {
+        //? if >=1.19.4 {
         Tooltip tooltipCreate = Tooltip.create(YsmText.literal(str3));
         //?}
         int size = ((((orderedStringMap.size() - 1) / iMax2) + 1) * 14) + 14;
         FlatIconButton iconButton = new FlatIconButton(this.centerX + 125, this.centerY + iArr[0], size, mutableComponentLiteral);
-        //? if >1.17 {
+        //? if >=1.19.4 {
         iconButton.setTooltip(tooltipCreate);
         addRenderableOnly(iconButton);
         //?} else {
@@ -354,11 +354,11 @@ public class AnimationRouletteScreen extends Screen {
         String str2 = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format(CONFIG_TITLE_FORMAT, this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0])), rangeConfig.getTitle());
         String str3 = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format(CONFIG_DESC_FORMAT, this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0])), rangeConfig.getDescription());
         MutableComponent mutableComponentLiteral = YsmText.literal(str2);
-        //? if >1.17 {
+        //? if >=1.19.4 {
         Tooltip tooltipCreate = Tooltip.create(YsmText.literal(str3));
         //?}
         AnimationSlider animationSlider = new AnimationSlider(this.centerX + 125, this.centerY + iArr[0], mutableComponentLiteral, parseFloatValue(str), this.animatableModel, rangeConfig.getValue(), rangeConfig.getStep(), rangeConfig.getMin(), rangeConfig.getMax());
-//? if >1.17 {
+//? if >=1.19.4 {
         animationSlider.setTooltip(tooltipCreate);
         //?}
         return animationSlider;
@@ -369,7 +369,7 @@ public class AnimationRouletteScreen extends Screen {
         String str3 = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format(CONFIG_TITLE_FORMAT, this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0])), checkboxConfig.getTitle());
         String str4 = ModelMetadataPresenter.getLocalizedModelString(this.renderContext, String.format(CONFIG_DESC_FORMAT, this.currentConfigGroup.getId(), Integer.valueOf(iArr2[0])), checkboxConfig.getDescription());
         MutableComponent mutableComponentLiteral = YsmText.literal(str3);
-//? if >1.17 {
+//? if >=1.19.4 {
         Tooltip tooltipCreate = Tooltip.create(YsmText.literal(str4));
         //?}
         float parsedValue = parseFloatValue(str);
@@ -380,7 +380,7 @@ public class AnimationRouletteScreen extends Screen {
                 NetworkHandler.sendToServer(new C2SRequestExecuteMolangPacket(str2, this.animatableModel.getEntity().getId()));
             }
         }) {
-            //? if >1.17 {
+            //? if >=1.20 {
             @Override
             public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
                 this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
@@ -399,7 +399,7 @@ public class AnimationRouletteScreen extends Screen {
             }
         };
         configCheckBox.setStateTriggered(parsedValue > 0.0f);
-//? if >1.17 {
+//? if >=1.19.4 {
         configCheckBox.setTooltip(tooltipCreate);
         //?}
         return configCheckBox;
@@ -419,7 +419,7 @@ public class AnimationRouletteScreen extends Screen {
         return value;
     }
 
-    //? if >1.17 {
+    //? if >=1.20 {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.render(new YsmGui(graphics), mouseX, mouseY, partialTick);
@@ -439,11 +439,11 @@ public class AnimationRouletteScreen extends Screen {
         renderRadialBackground(guiGraphics.pose(), mouseX, mouseY);
         renderRadialButtons(guiGraphics);
         renderPageInfo(guiGraphics);
-        for (/*? if <1.17 {*/ /*Widget *//*?} else {*/ Renderable /*?}*/ renderable : ((ScreenAccessor) this).ysm$getRenderables()) {
+        for (/*? if <1.19.4 {*/ /*Widget *//*?} else {*/ Renderable /*?}*/ renderable : ((ScreenAccessor) this).ysm$getRenderables()) {
             if (!(renderable instanceof ISpecialWidget)) {
-                //? if <1.17
+                //? if <1.20
                 /*renderable.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
-                //? if >=1.17
+                //? if >=1.20
                 renderable.render(guiGraphics.graphics(), mouseX, mouseY, partialTick);
             }
         }
@@ -455,11 +455,11 @@ public class AnimationRouletteScreen extends Screen {
         }
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(0.0f, -this.configScrollOffset, 0.0f);
-        for (/*? if <1.17 {*/ /*Widget *//*?} else {*/ Renderable /*?}*/ renderable2 : ((ScreenAccessor) this).ysm$getRenderables()) {
+        for (/*? if <1.19.4 {*/ /*Widget *//*?} else {*/ Renderable /*?}*/ renderable2 : ((ScreenAccessor) this).ysm$getRenderables()) {
             if (renderable2 instanceof ISpecialWidget) {
-                //? if <1.17
+                //? if <1.20
                 /*renderable2.render(guiGraphics.pose(), mouseX, scrolledMouseY, partialTick);*/
-                //? if >=1.17
+                //? if >=1.20
                 renderable2.render(guiGraphics.graphics(), mouseX, scrolledMouseY, partialTick);
             }
         }

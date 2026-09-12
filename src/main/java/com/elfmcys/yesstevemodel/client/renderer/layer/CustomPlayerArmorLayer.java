@@ -15,11 +15,12 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
-//? if <1.17 {
-// import net.minecraft.client.renderer.block.model.ItemTransforms;
-//? } else {
+//? if <1.19.4 {
+import net.minecraft.client.renderer.block.model.ItemTransforms;
+//?}
+//? if >=1.19.4 {
 import net.minecraft.world.item.ItemDisplayContext;
-//? }
+//?}
 import net.minecraft.world.item.ItemStack;
 
 public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity> {
@@ -66,9 +67,9 @@ public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity>
         RenderUtils.prepMatrixForLocator(poseStack, model.headBones());
         poseStack.scale(0.625f, 0.625f, 0.625f);
         poseStack.translate(0.0f, 0.25f, 0.0f);
-        //? if <1.17
+        //? if <1.19.4
         // this.itemRenderer.renderItem(player, stack, ItemTransforms.TransformType.HEAD, false, poseStack, bufferSource, i);
-        //? if >=1.17
+        //? if >=1.19.4
         this.itemRenderer.renderItem(player, stack, ItemDisplayContext.HEAD, false, poseStack, bufferSource, i);
         poseStack.popPose();
     }

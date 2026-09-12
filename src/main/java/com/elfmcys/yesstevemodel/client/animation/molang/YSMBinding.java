@@ -89,9 +89,10 @@ public class YSMBinding extends ContextBinding {
         var("weather", ctx -> getWeather(ctx.level()));
         var("dimension_name", ctx -> ctx.level().dimension().location().toString());
         // getFps() 1.18+（1.16.5 为 fpsString 字段/无取值器）：帧率不显示数字时 1.16.5 退化 parse fpsString
-        //? if <1.17
+        // getFps 1.19.4+（1192 merged jar 无此方法，仅 fpsString 字段）：中段+1.16.5 降级 0
+        //? if <1.19.4
         /*var("fps", ctx -> 0);*/
-        //? if >=1.17
+        //? if >=1.19.4
         var("fps", ctx -> Minecraft.getInstance().getFps());
         var("time_delta", ctx -> ctx.geoInstance().getPositionTracker().getTimeDelta() / 20.0f);
         entityVar("ground_speed2", YSMBinding::getGroundSpeed2);
@@ -313,14 +314,18 @@ public class YSMBinding extends ContextBinding {
         return false;
     }
 
-    /** ComponentUtils.copyOnClickText（1.19.2+）↔ 1.16.5 无 → 原串直返（丢点击复制修饰，仅 debug dump 输出）。 */
-    private static net.minecraft.network.chat.Component copyOnClickTextCompat(String str) {
-        //? if <1.17 {
-        /*return YsmText.literal(str);
-         *///?} else {
-        return net.minecraft.network.chat.ComponentUtils.copyOnClickText(str);
-        //?}
+    /** ComponentUtils.copyOnClickText 1.19.4+（1192 sources 零命中）：<1.19.4 原串直返
+     *（丢点击复制修饰，仅 debug dump 输出，行为差见回报）。 */
+    //? if <1.19.4 {
+    /*private static net.minecraft.network.chat.Component copyOnClickTextCompat(String str) {
+        return YsmText.literal(str);
     }
+     *///?}
+    //? if >=1.19.4 {
+    private static net.minecraft.network.chat.Component copyOnClickTextCompat(String str) {
+        return net.minecraft.network.chat.ComponentUtils.copyOnClickText(str);
+    }
+    //?}
 
     private static boolean isFishing(IContext<LivingEntity> context) {
         LivingEntity livingEntity = context.entity();
@@ -427,12 +432,24 @@ public class YSMBinding extends ContextBinding {
         // 1.20.1 getBiome 返回 Holder<Biome>（unwrapKey/tags）↔ 1.16.5 getBiome 返回 Biome 本体；
         // 1.16.5 轴：dump name 走 level.getBiomeName(pos)（Optional<ResourceLocation>），tag 信息 1.16.5
         // biome 无标签 API（ITag 体系不在 Biome 上）→ 省略该行（debug dump 输出项，行为差见回报）
-        //? if <1.17 {
+        //? if <1.18 {
         /*ResourceLocation biomeName = net.minecraft.data.BuiltinRegistries.BIOME.getKey(context.entity().level.getBiome(context.entity().blockPosition()));
         if (biomeName != null) {
             context.logWarningComponent(YsmText.literal("Name ").append(copyOnClickTextCompat(biomeName.toString())));
         }
-         *///?} else {
+         *///?}
+        // 1.18~1.19.2：Holder 体系已在（1182 Level.getBiome 返回 Holder），实体访问器为 getLevel()
+        //? if >=1.18 && <1.19.4 {
+        /*
+        Holder<Biome> biome = context.entity().getLevel().getBiome(context.entity().blockPosition());
+        biome.unwrapKey().ifPresent(resourceKey -> {
+            context.logWarningComponent(YsmText.literal("Name ").append(copyOnClickTextCompat(resourceKey.location().toString())));
+        });
+        biome.tags().forEach(tagKey -> {
+            context.logWarningComponent(YsmText.literal("Tag ").append(copyOnClickTextCompat(tagKey.location().toString())));
+        });
+         *///?}
+        //? if >=1.19.4 {
         Holder<Biome> biome = context.entity().level().getBiome(context.entity().blockPosition());
         biome.unwrapKey().ifPresent(resourceKey -> {
             context.logWarningComponent(YsmText.literal("Name ").append(copyOnClickTextCompat(resourceKey.location().toString())));
@@ -448,11 +465,13 @@ public class YSMBinding extends ContextBinding {
         BlockPos blockPosBlockPosition = entity.blockPosition();
                 //? if <1.17
         /*return entity.level.canSeeSky(blockPosBlockPosition) && entity.level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, blockPosBlockPosition).getY() <= blockPosBlockPosition.getY();*/
-        //? if >=1.17
+        //? if >=1.17 && <1.19.4
+        /*return entity.getLevel().canSeeSky(blockPosBlockPosition) && entity.getLevel().getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, blockPosBlockPosition).getY() <= blockPosBlockPosition.getY();*/
+        //? if >=1.19.4
         return entity.level().canSeeSky(blockPosBlockPosition) && entity.level().getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, blockPosBlockPosition).getY() <= blockPosBlockPosition.getY();
     }
 
-    //? if <1.17
+    //? if <1.19.4
     /*private static final String[] PARROT_VARIANT_NAMES = {"red_blue", "blue", "green", "yellow_blue", "silver"};
 
     private static String getParrotVariantName(int variant) {
@@ -464,9 +483,10 @@ public class YSMBinding extends ContextBinding {
             return entityType == EntityType.PARROT;
         }).map(entityType2 -> {
             // Parrot.Variant 内枚举 1.18+（1.16.5 javap 无）：变体名序 vanilla 同源，1.16.5 走名字表
-        //? if <1.17
+        // Parrot.Variant 1.19.4+（1192 merged jar 无 Variant 内类）：中段+1.16.5 走名字表
+        //? if <1.19.4
         /*return getParrotVariantName(shoulderEntityLeft.getInt("Variant"));*/
-        //? if >=1.17
+        //? if >=1.19.4
         return Parrot.Variant.byId(shoulderEntityLeft.getInt("Variant")).name().toLowerCase(Locale.ENGLISH);
         }).orElse("empty");
     }

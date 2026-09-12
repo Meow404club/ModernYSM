@@ -1,12 +1,16 @@
 package com.elfmcys.yesstevemodel.geckolib3.core.molang.builtin.query;
 
 //? if <1.17 {
-// import net.minecraft.tags.BlockTags;
-// import net.minecraft.tags.Tag;
-//? } else {
+/*import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.Tag;
+ *///?}
+//? if >=1.17 && <1.19.4 {
+/*import net.minecraft.tags.TagKey;
+ *///?}
+//? if >=1.19.4 {
 import net.minecraft.core.registries.Registries;
 import net.minecraft.tags.TagKey;
-//? }
+//?}
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.context.IContext;
 import com.elfmcys.yesstevemodel.geckolib3.util.MolangUtils;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.funciton.entity.EntityFunction;
@@ -30,11 +34,19 @@ public class RelativeBlockHasAllTags extends EntityFunction {
             }
 
             //? if <1.17 {
-            // Tag<net.minecraft.world.level.block.Block> tag = (Tag<net.minecraft.world.level.block.Block>) BlockTags.getAllTags().getTagOrEmpty(tagId);
-            // if (!block.is(tag)) {
-                // return false;
-            // }
-            //? } else {
+            /*Tag<net.minecraft.world.level.block.Block> tag = (Tag<net.minecraft.world.level.block.Block>) BlockTags.getAllTags().getTagOrEmpty(tagId);
+            if (!block.is(tag)) {
+                return false;
+            }
+             *///?}
+            //? if >=1.17 && <1.19.4 {
+            /*
+            TagKey<Block> tag = TagKey.create(net.minecraft.core.Registry.BLOCK_REGISTRY, tagId);
+            if (!block.is(tag)) {
+                return false;
+            }
+             *///?}
+            //? if >=1.19.4 {
             TagKey<Block> tag = TagKey.create(Registries.BLOCK, tagId);
             if (!block.is(tag)) {
                 return false;

@@ -1,12 +1,12 @@
 package com.elfmcys.yesstevemodel.client.gui.button;
 
 import com.elfmcys.yesstevemodel.util.YsmText;
-//? if >1.17 {
+//? if >=1.19.4 {
 import net.minecraft.client.InputType;
 //?}
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.vertex.PoseStack;
-//? if >1.17 {
+//? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import rip.ysm.gui.YsmGui;
@@ -93,8 +93,9 @@ public class RangedSliderWidget extends YsmSliderButton {
         if (!focused) {
             this.canChangeValue = false;
         } else {
-            // InputType/getLastInputType 1.17+：<1.17 无键盘导航输入类型判定 → 恒可改值
-            //? if <1.17 {
+            // InputType/getLastInputType 1.19.4 引入（1182/1192 sources jar 零命中，1194 有）；
+            // 1.16.5~1.19.2 无输入类型判定 → 恒可改值
+            //? if <1.19.4 {
             /*this.canChangeValue = true;*/
             //?} else {
             InputType inputType = Minecraft.getInstance().getLastInputType();
@@ -156,11 +157,11 @@ public class RangedSliderWidget extends YsmSliderButton {
     }
 
     protected int getHandleTextureY() {
-        int i = !this.isHovered() && !this.canChangeValue ? 2 : 3;
+        int i = /*? if <1.17 {*/ /*!this.isHovered()*//*?} else {*/ !this.isHoveredOrFocused() /*?}*/ && !this.canChangeValue ? 2 : 3;
         return i * 20;
     }
 
-    //? if >1.17 {
+    //? if >=1.20 {
     @Override
     public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);

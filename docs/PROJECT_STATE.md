@@ -49,10 +49,12 @@
 - **构建陷阱入册**：1.16.5 生产形态必须 `buildAndCollect`（裸 remapJar 缺 MixinExtras/JOML/unsafe8 内嵌，MixinTweaker onLoad 即 NCDFE）；harness 重建脚本+README 在 tmp/refmap-audit/
 - 教训：xvfb+llvmpipe 下进程内 glReadPixels 截图 100% 制造 native 堆损坏假崩溃——测试一律外部抓屏
 
-## 跨版本通用测试 harness（tasks.cross-version-harness，进行中）
-- 主仓常驻：harness/tour.sh 按版本线参数化 + src/main/java/rip/ysm/harness driver（isDevEnv 守卫，产物 jar 零 harness 字节）
-- 服务器和平启动：difficulty=0（peaceful）+锁日+无天气+flat，Done 后经 stdin 注入控制台命令（全版本一致）
-- 进程卫生（用户纪律）：--no-daemon+setsid 独立进程组，清理只对自记 PID；禁绝 pkill/pgrep/killall/--stop//proc 扫描，脚本内置自检
+## 跨版本通用测试 harness（tasks.cross-version-harness，已合入 dev=ccb6b23，2026-09-13）
+- 交付：harness/tour.sh orchestrator（--no-daemon+setsid+PIDFILE/PGID 阶梯清理、和平启动五命令 stdin 注入、版本参数化 case 表单点）+ 零 GL GuiTourDriver/HarnessScreens（cmd.txt→harness.ready，14 屏）+ YsmEventBootstrap 3 指令守卫挂载（惰性解析实证）+ 双 buildscript 生产 jar 排除
+- 实证：双线 tour exit 0/16 屏/零崩溃零手工；双产物 jar 零 harness 字节；1.20.1 javap 1661/1662 类全同；生产安装器实启 25s 到主菜单全日志零 harness 引用
+- 新增版本线接入约定：tour.sh case 推导表 + buildscript runs.gameDirectory 对齐 + options.txt onboarding 项核对（1.17~1.19 待核）
+- 遗留 P1：cleanup FIFO 写入在 server 已死时可无限阻塞（timeout 包裹待修）；runs 拆分后旧 run/saves 不自动迁移（冒烟改走 tour 自管世界）；crash 快速失败覆盖窄
+- 发布卡新增：主仓 build/libs/2.6.6.6/ 是 mojmap 陈旧副本（真基线在 versions/1.20.1-forge/build/libs/，SRG 形态），发布前必重建
 
 ## M3 平铺（tasks.m3-flat-tiling，矩阵已定，前置卡 m3-condition-axis）
 - **17 行必铺矩阵**（tasks.m3-matrix-research，官方 maven 证据）：forge 6 行 1.16.5/1.17.1/1.18.2/1.19.2/1.19.4/1.20.1（legacyforge，1.16.5 走 unimined）+ neoforge 11 行 1.20.4/1.20.6/1.21.1/21.3/21.4/21.5/21.8/21.10/21.11/26.1.2/26.2（moddev）；1.20.1 一 jar 双跑（neoforge fork 47.1.106 兼容声明）；26.x 需 Java 25 toolchain；短命版官方无 stable 跳过（1.17.0/1.18.0/1.19.1/20.3/20.5/21.2/21.6/21.7/21.9 等）

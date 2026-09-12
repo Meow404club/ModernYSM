@@ -26,7 +26,7 @@ public abstract class OptionRow<T> extends YsmWidget {
     @Override
     protected void renderWidget(YsmGui g, int mouseX, int mouseY, float partialTick) {
         boolean dirty = option != null && option.isDirty();
-        int bg = /*? if <1.17 {*/ /*isHovered()*//*?} else {*/ isHoveredOrFocused() /*?}*/ ? 0x90171717 : (dirty ? 0x90060606 : 0x90000000);
+        int bg = /*? if <1.18.2 {*/ /*isHovered()*//*?} else {*/ isHoveredOrFocused() /*?}*/ ? 0x90171717 : (dirty ? 0x90060606 : 0x90000000);
         g.fill(getX(), getY(), getX() + width, getY() + height, bg);
 
         Component label = getMessage();

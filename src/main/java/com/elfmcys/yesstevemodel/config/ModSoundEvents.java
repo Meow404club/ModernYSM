@@ -11,7 +11,11 @@ import net.minecraftforge.registries.IForgeRegistry;
 // RegistryObject 1.17 起在 net.minecraftforge.registries（1.16.5 在 net.minecraftforge.fml，javap 实证）
 //? if <1.17 {
 /*import net.minecraftforge.fml.RegistryObject;
- *///?} else {
+ *///?}
+//? if >=1.17 && <1.18.2 {
+/*import net.minecraftforge.fmllegacy.RegistryObject;
+ *///?}
+//? if >=1.18.2 {
 import net.minecraftforge.registries.RegistryObject;
 //?}
 
@@ -37,7 +41,7 @@ public class ModSoundEvents {
             //? if <1.17 {
             /*() -> new SoundEvent(new ResourceLocation(YesSteveModel.MOD_ID, "custom"))*/
             //?}
-            //? if >=1.17 && <1.19.2 {
+            //? if >=1.17 && <1.19.4 {
             /*() -> new SoundEvent(new ResourceLocation(YesSteveModel.MOD_ID, "custom"))*/
             //?}
             //? if >=1.19.4 {

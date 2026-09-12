@@ -114,6 +114,12 @@ public final class GpuRenderPath {
         float fogStart = RenderSystem.getShaderFogStart();
         float fogEnd = RenderSystem.getShaderFogEnd();
         float[] fogColor = RenderSystem.getShaderFogColor();
+        // 1171 无 RenderSystem.getShaderFogShape（1171 编译实证）→ 常量 0=FogShape.SPHERE（pre-1.18 恒球 fog 语义）
+        //? if <1.17
+        /*int fogShape = RenderSystem.getShaderFogShape().getIndex();*/
+        //? if >=1.17 && <1.18.2
+        /*int fogShape = 0;*/
+        //? if >=1.18.2
         int fogShape = RenderSystem.getShaderFogShape().getIndex();
 
         GlStateManager._glUseProgram(BoneSkinShader.program());

@@ -157,9 +157,10 @@ public class RangedSliderWidget extends YsmSliderButton {
     }
 
     protected int getHandleTextureY() {
-        //? if <1.17
+        // isHovered 1.16.5~1.18.2 / isHoveredOrFocused 1.18.2+
+        //? if <1.18.2
         /*int i = !this.isHovered() && !this.canChangeValue ? 2 : 3;*/
-        //? if >=1.17
+        //? if >=1.18.2
         int i = !this.isHoveredOrFocused() && !this.canChangeValue ? 2 : 3;
         return i * 20;
     }

@@ -81,6 +81,9 @@ public final class ModelPreviewRenderer {
         // //? if <1.17
         /*RenderSystem.assertThread(RenderSystem::isOnRenderThread);*/
         //? if >=1.17
+        //? if <1.18.2
+        /*RenderSystem.assertThread(RenderSystem::isOnRenderThread);*/
+        //? if >=1.18.2
         RenderSystem.assertOnRenderThread();
         return isFirstPersonMode && !FirstPersonCompat.isFirstPersonActive();
     }
@@ -358,23 +361,23 @@ public final class ModelPreviewRenderer {
         AnimationTracker animationTracker = ((IPreviewAnimatable) animatableEntity).getAnimationStateMachine();
 
         if (animationTracker.isCurrentAnimation("ride")) {
-            //? if <1.17
+            //? if <1.18.2
             // renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.HORSE), () -> EntityType.HORSE.create(entity.level)), partialTick);
-            //? if >=1.17 && <1.20
+            //? if >=1.18.2 && <1.20
             /*renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.HORSE), () -> EntityType.HORSE.create(entity.getLevel())), partialTick);*/
             //? if >=1.20
             renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.HORSE), () -> EntityType.HORSE.create(entity.level())), partialTick);
         } else if (animationTracker.isCurrentAnimation("ride_pig")) {
-            //? if <1.17
+            //? if <1.18.2
             // renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.PIG), () -> EntityType.PIG.create(entity.level)), partialTick);
-            //? if >=1.17 && <1.20
+            //? if >=1.18.2 && <1.20
             /*renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.PIG), () -> EntityType.PIG.create(entity.getLevel())), partialTick);*/
             //? if >=1.20
             renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.PIG), () -> EntityType.PIG.create(entity.level())), partialTick);
         } else if (animationTracker.isCurrentAnimation("boat")) {
-            //? if <1.17
+            //? if <1.18.2
             // renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.BOAT), () -> EntityType.BOAT.create(entity.level)), partialTick);
-            //? if >=1.17 && <1.20
+            //? if >=1.18.2 && <1.20
             /*renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.BOAT), () -> EntityType.BOAT.create(entity.getLevel())), partialTick);*/
             //? if >=1.20
             renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.BOAT), () -> EntityType.BOAT.create(entity.level())), partialTick);

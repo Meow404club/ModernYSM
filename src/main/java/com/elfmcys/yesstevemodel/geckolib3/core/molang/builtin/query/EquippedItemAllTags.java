@@ -1,10 +1,10 @@
 package com.elfmcys.yesstevemodel.geckolib3.core.molang.builtin.query;
 
-//? if <1.17 {
+//? if <1.18.2 {
 /*import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.Tag;
  *///?}
-//? if >=1.17 && <1.19.4 {
+//? if >=1.18.2 && <1.19.4 {
 /*import net.minecraft.tags.TagKey;
 import net.minecraft.core.Registry;
  *///?}
@@ -38,12 +38,12 @@ public class EquippedItemAllTags extends LivingEntityFunction {
             if (key == null) {
                 return null;
             }
-            //? if <1.17 {
-            /*if (!stack.getItem().is((Tag<net.minecraft.world.item.Item>) ItemTags.getAllTags().getTagOrEmpty(key))) {
+            //? if <1.18.2 {
+            /*if (!net.minecraft.tags.ItemTags.getAllTags().getTagOrEmpty(key).contains(stack.getItem())) {
                 return false;
             }
              *///?}
-            //? if >=1.17 && <1.19.4 {
+            //? if >=1.18.2 && <1.19.4 {
             /*if (!stack.is(TagKey.create(net.minecraft.core.Registry.ITEM_REGISTRY, key))) {
                 return false;
             }

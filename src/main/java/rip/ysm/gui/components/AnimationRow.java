@@ -27,7 +27,7 @@ public final class AnimationRow extends OptionRow<Object> {
     @Override
     protected void renderWidget(YsmGui g, int mouseX, int mouseY, float partialTick) {
         boolean selected = animKey.equals(owner.currentAnimation());
-        int bg = selected ? 0x90333333 : (/*? if <1.17 {*/ /*isHovered()*//*?} else {*/ isHoveredOrFocused() /*?}*/ ? 0x90171717 : 0x90000000);
+        int bg = selected ? 0x90333333 : (/*? if <1.18.2 {*/ /*isHovered()*//*?} else {*/ isHoveredOrFocused() /*?}*/ ? 0x90171717 : 0x90000000);
         g.fill(getX(), getY(), getX() + width, getY() + height, bg);
         if (selected) g.fill(getX(), getY(), getX() + 2, getY() + height, -1);
         int textY = getY() + (height - 8) / 2;

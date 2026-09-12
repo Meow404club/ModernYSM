@@ -1,10 +1,10 @@
 package com.elfmcys.yesstevemodel.geckolib3.core.molang.builtin.query;
 
-//? if <1.17 {
+//? if <1.18.2 {
 /*import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.Tag;
  *///?}
-//? if >=1.17 && <1.19.4 {
+//? if >=1.18.2 && <1.19.4 {
 /*import net.minecraft.tags.TagKey;
  *///?}
 //? if >=1.19.4 {
@@ -33,13 +33,13 @@ public class RelativeBlockHasAllTags extends EntityFunction {
                 return null;
             }
 
-            //? if <1.17 {
+            //? if <1.18.2 {
             /*Tag<net.minecraft.world.level.block.Block> tag = (Tag<net.minecraft.world.level.block.Block>) BlockTags.getAllTags().getTagOrEmpty(tagId);
             if (!block.is(tag)) {
                 return false;
             }
              *///?}
-            //? if >=1.17 && <1.19.4 {
+            //? if >=1.18.2 && <1.19.4 {
             /*
             TagKey<Block> tag = TagKey.create(net.minecraft.core.Registry.BLOCK_REGISTRY, tagId);
             if (!block.is(tag)) {

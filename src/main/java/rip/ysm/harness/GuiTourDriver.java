@@ -150,11 +150,18 @@ public final class GuiTourDriver {
         return true;
     }
 
-    /** 版本差异收口：1.16.5 公共 4 参构造 ↔ 1.20.1 静态 startConnecting。 */
+    /** 版本差异收口：1.16.5 公共 4 参构造 ↔ 1.17.1~1.19.4 静态 4 参 ↔ 1.20.1 静态 5 参（quickPlay）。
+     *  4/5 参边界实证：vanilla-mc-{1182,1192,1194}/ConnectScreen.java:47/46/45 均 4 参，1201:54 五参。 */
     private static void connectToServer(Minecraft mc) {
         //? if <1.17 {
         /*mc.setScreen(new net.minecraft.client.gui.screens.ConnectScreen(null, mc, "localhost", 25565));
-        *///?} else {
+        *///?}
+        //? if >=1.17 && <1.20 {
+        /*net.minecraft.client.gui.screens.ConnectScreen.startConnecting(null, mc,
+                net.minecraft.client.multiplayer.resolver.ServerAddress.parseString("localhost:25565"),
+                new net.minecraft.client.multiplayer.ServerData("harness", "localhost:25565", false));
+         *///?}
+        //? if >=1.20 {
         net.minecraft.client.gui.screens.ConnectScreen.startConnecting(null, mc,
                 net.minecraft.client.multiplayer.resolver.ServerAddress.parseString("localhost:25565"),
                 new net.minecraft.client.multiplayer.ServerData("harness", "localhost:25565", false), false);

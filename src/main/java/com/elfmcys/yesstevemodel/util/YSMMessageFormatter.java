@@ -9,7 +9,11 @@ import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.Nullable;
 //? if <1.17 {
 /*import net.minecraftforge.fml.server.ServerLifecycleHooks;
- *///?} else {
+ *///?}
+//? if >=1.17 && <1.18.2 {
+/*import net.minecraftforge.fmllegacy.server.ServerLifecycleHooks;
+ *///?}
+//? if >=1.18.2 {
 import net.minecraftforge.server.ServerLifecycleHooks;
 //?}
 import rip.ysm.api.PlatformAPI;
@@ -45,7 +49,11 @@ public class YSMMessageFormatter {
         // javap 实证）；import 条件化置于文件头
         //? if <1.17 {
         /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();
-         *///?} else {
+         *///?}
+        //? if >=1.17 && <1.18.2 {
+        /*MinecraftServer currentServer = net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();
+         *///?}
+        //? if >=1.18.2 {
         MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
         //?}
         if (currentServer == null) {

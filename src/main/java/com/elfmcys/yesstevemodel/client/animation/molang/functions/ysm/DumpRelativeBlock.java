@@ -25,7 +25,8 @@ public class DumpRelativeBlock extends EntityFunction {
         //? if <1.17 {
         /*net.minecraft.tags.BlockTags.getAllTags().getMatchingTags(blockState.getBlock()).forEach(tagRl ->
             context.entity().logWarningComponent(YsmText.literal("Tag ").append(copyOnClickTextCompat(tagRl.toString()))));*/
-        //?} else {
+        //?}
+        //? if >=1.18.2 {
         blockState.getTags().forEach(tagKey -> {
             context.entity().logWarningComponent(YsmText.literal("Tag ").append(copyOnClickTextCompat(tagKey.location().toString())));
         });

@@ -50,12 +50,12 @@ public final class ForgeCapabilityHooks {
      * unimined 1.16.5 mojmap jar javap 实证 {@code public Level level}。
      */
     private static boolean isClientWorld(Entity entity) {
-        //? if >=1.17 && <1.20
+        //? if <1.18.2
+        /*return entity.level.isClientSide();*/
+        //? if >=1.18.2 && <1.20
         /*return entity.getLevel().isClientSide();*/
         //? if >=1.20
         return entity.level().isClientSide();
-        //? if <1.17
-        /*return entity.level.isClientSide;*/
     }
 
     @SubscribeEvent

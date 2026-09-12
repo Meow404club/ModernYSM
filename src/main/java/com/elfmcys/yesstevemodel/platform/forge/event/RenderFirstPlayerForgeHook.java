@@ -3,7 +3,7 @@ package com.elfmcys.yesstevemodel.platform.forge.event;
 import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.client.event.RenderFirstPlayerBackground;
 import net.minecraftforge.api.distmarker.Dist;
-//? if <1.17 {
+//? if <1.18.2 {
 // import net.minecraftforge.event.TickEvent;
 //? } else {
 import net.minecraftforge.client.event.RenderLevelStageEvent;
@@ -20,14 +20,15 @@ public final class RenderFirstPlayerForgeHook {
     private RenderFirstPlayerForgeHook() {
     }
 
-    //? if <1.17 {
-    // @SubscribeEvent
-    // public static void onRenderTick(TickEvent.RenderTickEvent event) {
-    //     if (event.phase == TickEvent.Phase.START) {
-    //         RenderFirstPlayerBackground.resetFrame();
-    //     }
-    // }
-    //? } else {
+    //? if <1.18.2 {
+    /*@SubscribeEvent
+    public static void onRenderTick(TickEvent.RenderTickEvent event) {
+        if (event.phase == TickEvent.Phase.START) {
+            RenderFirstPlayerBackground.resetFrame();
+        }
+    }
+     *///? }
+    //? if >=1.18.2 {
     @SubscribeEvent
     public static void onRenderLevelStage(RenderLevelStageEvent event) {
         if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_CUTOUT_BLOCKS) {
@@ -42,7 +43,12 @@ public final class RenderFirstPlayerForgeHook {
         //? if <1.17 {
         // RenderFirstPlayerBackground.onRenderHand(event.getMatrixStack(), event.getBuffers(), event.getLight(), event.getPartialTicks());
         //? }
-        //? if >=1.17 && <1.19.2 {
+        //? if >=1.17 && <1.18.2 {
+        /*
+        // 1.17~1.18.1 RenderHandEvent getter=旧名（1171 sources：getMatrixStack/getBuffers/getLight/getPartialTicks）
+        RenderFirstPlayerBackground.onRenderHand(event.getMatrixStack(), event.getBuffers(), event.getLight(), event.getPartialTicks());
+         *///?}
+        //? if >=1.18.2 && <1.19.2 {
         /*
         // 1182 RenderHandEvent.getPartialTicks（:70）；getPartialTick 1.19.3+ 改名
         RenderFirstPlayerBackground.onRenderHand(event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight(), event.getPartialTicks());

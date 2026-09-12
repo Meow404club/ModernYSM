@@ -45,7 +45,7 @@ import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.LightLayer;
-//? if >1.17 {
+//? if >=1.18.2 {
 import net.minecraft.core.Holder;
 //?}
 import net.minecraft.world.level.biome.Biome;
@@ -473,9 +473,9 @@ public class YSMBinding extends ContextBinding {
 
     private static boolean isOpenAir(Entity entity) {
         BlockPos blockPosBlockPosition = entity.blockPosition();
-                //? if <1.17
+                //? if <1.18.2
         /*return entity.level.canSeeSky(blockPosBlockPosition) && entity.level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, blockPosBlockPosition).getY() <= blockPosBlockPosition.getY();*/
-        //? if >=1.17 && <1.19.4
+        //? if >=1.18.2 && <1.19.4
         /*return entity.getLevel().canSeeSky(blockPosBlockPosition) && entity.getLevel().getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, blockPosBlockPosition).getY() <= blockPosBlockPosition.getY();*/
         //? if >=1.19.4 && <1.20
         /*return entity.getLevel().canSeeSky(blockPosBlockPosition) && entity.getLevel().getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, blockPosBlockPosition).getY() <= blockPosBlockPosition.getY();*/

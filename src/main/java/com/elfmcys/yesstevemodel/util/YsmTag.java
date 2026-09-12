@@ -24,7 +24,7 @@ public final class YsmTag {
 
     /** 物品标签句柄（opaque）。 */
     public static final class ItemTag {
-        //? if <1.17 {
+        //? if <1.18.2 {
         /*private final net.minecraftforge.common.Tags.IOptionalNamedTag<Item> tag;
 
         private ItemTag(net.minecraftforge.common.Tags.IOptionalNamedTag<Item> tag) {
@@ -56,7 +56,7 @@ public final class YsmTag {
         }
          *///?}
         // 中段（1.17~1.19.2）：TagKey.create(Registry.ITEM_REGISTRY)；TagKey 为 record（location() 同名）
-        //? if >=1.17 && <1.19.4 {
+        //? if >=1.18.2 && <1.19.4 {
         /*
         private final net.minecraft.tags.TagKey<Item> tag;
 
@@ -99,7 +99,7 @@ public final class YsmTag {
 
     /** 实体类型标签句柄（opaque）。 */
     public static final class EntityTypeTag {
-        //? if <1.17 {
+        //? if <1.18.2 {
         /*private final net.minecraftforge.common.Tags.IOptionalNamedTag<EntityType<?>> tag;
 
         private EntityTypeTag(net.minecraftforge.common.Tags.IOptionalNamedTag<EntityType<?>> tag) {
@@ -124,7 +124,7 @@ public final class YsmTag {
         }
          *///?}
         // 中段：TagKey.create(Registry.ENTITY_TYPE_REGISTRY)
-        //? if >=1.17 && <1.19.4 {
+        //? if >=1.18.2 && <1.19.4 {
         /*
         private final net.minecraft.tags.TagKey<EntityType<?>> tag;
 

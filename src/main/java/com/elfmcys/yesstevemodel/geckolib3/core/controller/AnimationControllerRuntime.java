@@ -17,7 +17,7 @@ import com.elfmcys.yesstevemodel.geckolib3.core.molang.context.AnimationContext;
 import com.elfmcys.yesstevemodel.geckolib3.core.util.TransitionVector3f;
 import com.elfmcys.yesstevemodel.molang.runtime.ExpressionEvaluator;
 // 1.16.5 自带 fastutil 8.3.1 缺 8.5.0 的 IntReferenceImmutablePair，走同名 shim（geckolib3/core/util）
-//? if <1.17 {
+//? if <1.18.2 {
 // import com.elfmcys.yesstevemodel.geckolib3.core.util.IntReferenceImmutablePair;
 //? } else {
 import it.unimi.dsi.fastutil.ints.IntReferenceImmutablePair;
@@ -403,9 +403,9 @@ public class AnimationControllerRuntime<T extends AnimatableEntity<?>> implement
 
         private final BoneTopLevelSnapshot boneTarget;
 
-        //? if <1.17
+        //? if <1.18.2
         // private final ReferenceArrayList<com.elfmcys.yesstevemodel.geckolib3.core.util.Pair<ConditionalEvaluator, BoneAnimationQueue>> blendSources = new ReferenceArrayList<>(4);
-        //? if >=1.17
+        //? if >=1.18.2
         private final ReferenceArrayList<it.unimi.dsi.fastutil.Pair<ConditionalEvaluator, BoneAnimationQueue>> blendSources = new ReferenceArrayList<>(4);
 
         private boolean isMarked;
@@ -427,9 +427,9 @@ public class AnimationControllerRuntime<T extends AnimatableEntity<?>> implement
         }
 
         public void addBlendSource(ConditionalEvaluator evaluator, BoneAnimationQueue queue) {
-            //? if <1.17
+            //? if <1.18.2
             // this.blendSources.add(com.elfmcys.yesstevemodel.geckolib3.core.util.Pair.of(evaluator, queue));
-            //? if >=1.17
+            //? if >=1.18.2
             this.blendSources.add(it.unimi.dsi.fastutil.Pair.of(evaluator, queue));
         }
 
@@ -463,9 +463,9 @@ public class AnimationControllerRuntime<T extends AnimatableEntity<?>> implement
 
         @Override
         public TransitionVector3f getRotation(ExpressionEvaluator<AnimationContext<?>> evaluator) {
-            //? if <1.17
+            //? if <1.18.2
             // final ReferenceArrayList<com.elfmcys.yesstevemodel.geckolib3.core.util.Pair<ConditionalEvaluator, BoneAnimationQueue>> sources = this.blendSources;
-            //? if >=1.17
+            //? if >=1.18.2
             final ReferenceArrayList<it.unimi.dsi.fastutil.Pair<ConditionalEvaluator, BoneAnimationQueue>> sources = this.blendSources;
             final int size = sources.size();
             if (size == 0) return null;
@@ -480,9 +480,9 @@ public class AnimationControllerRuntime<T extends AnimatableEntity<?>> implement
             Vector3f initialRotaiton = null;
             float lerpFactor = 0.0f;
             for (int i = 0; i < size; i++) {
-                //? if <1.17
+                //? if <1.18.2
                 // com.elfmcys.yesstevemodel.geckolib3.core.util.Pair<ConditionalEvaluator, BoneAnimationQueue> pair = sources.get(i);
-                //? if >=1.17
+                //? if >=1.18.2
                 it.unimi.dsi.fastutil.Pair<ConditionalEvaluator, BoneAnimationQueue> pair = sources.get(i);
                 if (pair.left().isActive()) {
                     BoneAnimationQueue boneQueue = pair.right();
@@ -530,9 +530,9 @@ public class AnimationControllerRuntime<T extends AnimatableEntity<?>> implement
 
         @Override
         public TransitionVector3f getPosition(ExpressionEvaluator<AnimationContext<?>> evaluator) {
-            //? if <1.17
+            //? if <1.18.2
             // final ReferenceArrayList<com.elfmcys.yesstevemodel.geckolib3.core.util.Pair<ConditionalEvaluator, BoneAnimationQueue>> sources = this.blendSources;
-            //? if >=1.17
+            //? if >=1.18.2
             final ReferenceArrayList<it.unimi.dsi.fastutil.Pair<ConditionalEvaluator, BoneAnimationQueue>> sources = this.blendSources;
             final int size = sources.size();
             if (size == 0) return null;
@@ -546,9 +546,9 @@ public class AnimationControllerRuntime<T extends AnimatableEntity<?>> implement
             Vector3f offsetPoint = null;
             float lerpFactor = 0.0f;
             for (int i = 0; i < size; i++) {
-                //? if <1.17
+                //? if <1.18.2
                 // com.elfmcys.yesstevemodel.geckolib3.core.util.Pair<ConditionalEvaluator, BoneAnimationQueue> pair = sources.get(i);
-                //? if >=1.17
+                //? if >=1.18.2
                 it.unimi.dsi.fastutil.Pair<ConditionalEvaluator, BoneAnimationQueue> pair = sources.get(i);
                 if (pair.left().isActive()) {
                     BoneAnimationQueue boneQueue = pair.right();
@@ -595,9 +595,9 @@ public class AnimationControllerRuntime<T extends AnimatableEntity<?>> implement
 
         @Override
         public TransitionVector3f getScale(ExpressionEvaluator<AnimationContext<?>> evaluator) {
-            //? if <1.17
+            //? if <1.18.2
             // final ReferenceArrayList<com.elfmcys.yesstevemodel.geckolib3.core.util.Pair<ConditionalEvaluator, BoneAnimationQueue>> sources = this.blendSources;
-            //? if >=1.17
+            //? if >=1.18.2
             final ReferenceArrayList<it.unimi.dsi.fastutil.Pair<ConditionalEvaluator, BoneAnimationQueue>> sources = this.blendSources;
             final int size = sources.size();
             if (size == 0) return null;
@@ -612,9 +612,9 @@ public class AnimationControllerRuntime<T extends AnimatableEntity<?>> implement
             Vector3f offsetPoint = null;
             float lerpFactor = 0.0f;
             for (int i = 0; i < size; i++) {
-                //? if <1.17
+                //? if <1.18.2
                 // com.elfmcys.yesstevemodel.geckolib3.core.util.Pair<ConditionalEvaluator, BoneAnimationQueue> pair = sources.get(i);
-                //? if >=1.17
+                //? if >=1.18.2
                 it.unimi.dsi.fastutil.Pair<ConditionalEvaluator, BoneAnimationQueue> pair = sources.get(i);
                 if (pair.left().isActive()) {
                     BoneAnimationQueue boneQueue = pair.right();

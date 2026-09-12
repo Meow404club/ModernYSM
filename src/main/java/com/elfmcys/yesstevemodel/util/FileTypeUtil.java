@@ -16,9 +16,10 @@ public final class FileTypeUtil {
         return Integer.parseUnsignedInt(str.substring(0, 8), 16);
     }
 
-    // fastutil Pair 接口 8.3.0 才有（1.16.5 打包 8.2.1 实证无 it.unimi.dsi.fastutil.Pair）：
-    // 1.20.1 轴保持 fastutil Pair 原样；1.16.5 轴换 YsmPair.StrPair（同名 left()/right() 消费面）
-    //? if <1.17 {
+    // fastutil Pair 接口 8.3.0 才有（1.16.5 打包 8.2.1 / 1.17.1 打包 8.2.1 实证无 it.unimi.dsi.fastutil.Pair；
+    // 1182 起打包 8.3.1 有 Pair）：
+    // 1.20.1 轴保持 fastutil Pair 原样；<1.18.2 轴换 YsmPair.StrPair（同名 left()/right() 消费面）
+    //? if <1.18.2 {
     /*public static YsmPair.StrPair splitFileNameAndParentDir(String filePath) {
         int lastSlashIndex = filePath.lastIndexOf('/');
         if (lastSlashIndex == -1) {
@@ -26,7 +27,8 @@ public final class FileTypeUtil {
         }
         return YsmPair.of(filePath.substring(lastSlashIndex + 1), filePath.substring(0, lastSlashIndex + 1));
     }
-     *///?} else {
+     *///?}
+    //? if >=1.18.2 {
     public static it.unimi.dsi.fastutil.Pair<String, String> splitFileNameAndParentDir(String filePath) {
         int lastSlashIndex = filePath.lastIndexOf('/');
         if (lastSlashIndex == -1) {
@@ -83,7 +85,7 @@ public final class FileTypeUtil {
                 if (resourceLocation != null) {
                     // 1.20.1 BuiltInRegistries.ENTITY_TYPE.getTag(TagKey)（Holder 链）↔
                     // 1.16.5 EntityTypeTags.getAllTags().getTagOrEmpty(rl)（Tag 直查，getValues 为实体类型清单）
-                    //? if <1.17 {
+                    //? if <1.18.2 {
                     /*for (EntityType<?> type : net.minecraft.tags.EntityTypeTags.getAllTags().getTagOrEmpty(resourceLocation).getValues()) {
                         ResourceLocation key = net.minecraft.core.Registry.ENTITY_TYPE.getKey(type);
                         if (key != null) {
@@ -91,9 +93,9 @@ public final class FileTypeUtil {
                         }
                     }
                      *///?}
-                    //? if >=1.17 && <1.19.4 {
+                    //? if >=1.18.2 && <1.19.4 {
                     /*
-                    // Registries/BuiltInRegistries 1.19.4 起；1.17~1.19.2 用 Registry 静态字段（1192 Registry.java:190/143 形）
+                    // Registries/BuiltInRegistries 1.19.4 起；1.18.2~1.19.2 用 Registry 静态字段（1192 Registry.java:190/143 形）
                     net.minecraft.tags.TagKey<EntityType<?>> tagKey = net.minecraft.tags.TagKey.create(net.minecraft.core.Registry.ENTITY_TYPE_REGISTRY, resourceLocation);
                     net.minecraft.core.Registry.ENTITY_TYPE.getTag(tagKey).ifPresent(holderSet ->
                         holderSet.forEach(holder -> holder.unwrapKey().ifPresent(rk -> hashSet.add(rk.location())))

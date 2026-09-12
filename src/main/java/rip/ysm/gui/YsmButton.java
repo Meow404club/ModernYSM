@@ -90,7 +90,7 @@ public abstract class YsmButton extends Button {
     }
 
     protected boolean hoveredOrFocused() {
-        //? if >=1.17 {
+        //? if >=1.18.2 {
         return this.isHoveredOrFocused();
         //?} else {
         /*return this.isHovered();

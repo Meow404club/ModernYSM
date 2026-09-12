@@ -154,7 +154,9 @@ public final class CapabilityEvent {
         // net.minecraftforge.server 包 / 1.19.3+ 事件自带
         //? if <1.17
         /*onServerTickEnd(net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer());*/
-        //? if >=1.17 && <1.19.2
+        //? if >=1.17 && <1.18.2
+        /*onServerTickEnd(net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer());*/
+        //? if >=1.18.2 && <1.19.2
         /*onServerTickEnd(net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer());*/
         //? if >=1.19.2
         onServerTickEnd(event.getServer());

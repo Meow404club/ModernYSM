@@ -40,10 +40,10 @@ public final class YsmEntity {
     }
 
     public static Level level(Entity entity) {
-        //? if <1.17 {
+        //? if <1.18.2 {
         /*return entity.level;
          *///?}
-        //? if >=1.17 && <1.20 {
+        //? if >=1.18.2 && <1.20 {
         /*return entity.getLevel();
          *///?}
         //? if >=1.20 {

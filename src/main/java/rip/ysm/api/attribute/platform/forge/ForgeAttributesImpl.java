@@ -44,7 +44,7 @@ public final class ForgeAttributesImpl {
     }
 
     public static Attribute stepHeightAddition() {
-        //? if <1.17 {
+        //? if <1.18.2 {
         /*return null;
          *///?} else {
         return ForgeMod.STEP_HEIGHT_ADDITION.get();

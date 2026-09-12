@@ -61,6 +61,9 @@ dependencies {
     // additionalRuntimeClasspath）；生产 jar 内嵌见上方 imageStreamEmbed。
     // 1.17.1（pre118）不声明：符号由源码 vendor 源集直接提供（上方注释）
     if (imageStreamEmbed != null) implementation("com.github.TartaricAlkaline:ImageStream:-SNAPSHOT")
+    // 1.17.1 userdev 类路径无 org.jetbrains:annotations（1.16.5 mojmap userdev /
+    // 1.18.2+ MC 库自带）→ compileOnly 补齐（不进产物）
+    if (pre118) compileOnly("org.jetbrains:annotations:24.0.1")
     // JOML：共享源 geckolib3 渲染/动画栈 49 文件 import org.joml，MC 1.19.3 才内置
     //（<1.19.3 三线编译期缺失即红）；1.10.5 = MC 1.20.1 自带版本，字节码 major 46
     //（Java 1.2），1.17.1 的 Java 16 运行时可载。产物内嵌见 jar 任务（运行时同因缺失）。
@@ -94,6 +97,17 @@ mixin {
     config("yes_steve_model.mixins.json")
     if (!pre120) {
         config("yes_steve_model_forge.mixins.json")
+    }
+}
+
+// 1.17.1（pre118）工具链固定本地 21：MDG 依 MC 版本请求 Java 16 工具链 → 本机无 16 需
+// foojay 下载，而 foojay-resolver-convention 0.9.0 在 Gradle 9.2 上初始化即
+// NoSuchFieldError: IBM_SEMERU（JvmVendor 枚举跨版本不兼容，stacktrace 实证）→
+// 编译目标以 javac --release 16 下发（Java 16 语义/字节码 major 60），运行期工具链 21。
+if (pre118) {
+    java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+    tasks.withType<JavaCompile>().configureEach {
+        options.release = 16
     }
 }
 
@@ -148,6 +162,9 @@ if (pre120) {
     sourceSets.main {
         java {
             srcDir(rootProject.file("versions/1.16.5-forge/src/shim/rip/ysm/compat"))
+            // 1.17.1（pre118）：ImageStream 源码 vendor（JitPack 产物 major 61 不可入 Java 16 产物，
+            // 同 1.16.5 线 src/imagestream 8 文件，语义逐行等价）——见上方 dependencies 注释
+            if (pre118) srcDir(rootProject.file("versions/1.16.5-forge/src/imagestream"))
             exclude(
                 "rip/ysm/compat/**",
                 "com/elfmcys/yesstevemodel/client/compat/**",

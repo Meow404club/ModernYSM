@@ -33,7 +33,7 @@ import com.google.gson.JsonParser;
 import io.netty.buffer.Unpooled;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import net.minecraft.network.Connection;
-//? if >=1.17 {
+//? if >=1.18.2 {
 import it.unimi.dsi.fastutil.floats.FloatReferencePair;
 //?}
 //? if >=1.19.2 {
@@ -1208,7 +1208,9 @@ public final class ServerModelManager {
             try {
                 //? if <1.17
                 /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
-                //? if >=1.17
+                //? if >=1.17 && <1.18.2
+                /*MinecraftServer currentServer = net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();*/
+                //? if >=1.18.2
                 MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
                 if (currentServer == null) return;
 
@@ -1525,13 +1527,15 @@ public final class ServerModelManager {
     public static void requestPlayerAuth(ServerPlayer serverPlayer, @Nullable Consumer<UUIDComponentData> consumer) {
         //? if <1.17
                 /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
-                //? if >=1.17
+                //? if >=1.17 && <1.18.2
+                /*MinecraftServer currentServer = net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();*/
+                //? if >=1.18.2
                 MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
         currentServer.execute(() -> {
             List<ServerPlayer> players = currentServer.getPlayerList().getPlayers();
             // FloatReferencePair/Pair 接口 fastutil 8.3.0 才有（1.16.5=8.2.1，jar 实证）：
             // <1.17 直接按距离稳定排序玩家列表（Comparator.comparingDouble，结果与 pair 排序一致）
-            //? if <1.17 {
+            //? if <1.18.2 {
             /*List<ServerPlayer> sorted = new ArrayList<>(players);
             sorted.removeIf(p2 -> p2.level.dimensionType() != serverPlayer.level.dimensionType());
             sorted.sort(java.util.Comparator.comparingDouble(p2 -> p2.distanceTo(serverPlayer)));
@@ -1559,7 +1563,9 @@ public final class ServerModelManager {
             }
             //? if <1.17
                 /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
-                //? if >=1.17
+                //? if >=1.17 && <1.18.2
+                /*MinecraftServer currentServer = net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();*/
+                //? if >=1.18.2
                 MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
             if (currentServer == null) {
                 return;
@@ -1583,7 +1589,9 @@ public final class ServerModelManager {
         Consumer<ModelLoadResult> consumer = (Consumer<ModelLoadResult>) obj;
         //? if <1.17
                 /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
-                //? if >=1.17
+                //? if >=1.17 && <1.18.2
+                /*MinecraftServer currentServer = net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();*/
+                //? if >=1.18.2
                 MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
         if (modelLoadResult.isSuccess()) {
             IntOpenHashSet hashes = new IntOpenHashSet(modelLoadResult.getModelDefinitions().size());
@@ -1623,7 +1631,9 @@ public final class ServerModelManager {
         ServerPlayer player;
 //? if <1.17
         /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
-        //? if >=1.17
+        //? if >=1.17 && <1.18.2
+        /*MinecraftServer currentServer = net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();*/
+        //? if >=1.18.2
         MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
         if (currentServer == null || (player = currentServer.getPlayerList().getPlayer(uuid)) == null) {
             return null;

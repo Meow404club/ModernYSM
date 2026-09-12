@@ -80,7 +80,8 @@ public final class CommandRegistry {
     // OpenYSMClientCommand 并入 RegisterCommandsEvent 的客户端分支（集成服务器调度器）。
     // 功能差：远程服务器对局时 1.20.1 客户端侧 /openysm 仍可用，1.16.5 不可用（无客户端调度器）→ 记债务清单
     public static void register() {
-        //? if >=1.17 {
+        // RegisterClientCommandsEvent 1.18.2+（1171 forge 无此事件）→ 1.17.1 跳过（功能差：客户端 /openysm）
+        //? if >=1.18.2 {
         MinecraftForge.EVENT_BUS.addListener((net.minecraftforge.client.event.RegisterClientCommandsEvent event) -> {
             if (!YesSteveModel.isAvailable()) {
                 return;

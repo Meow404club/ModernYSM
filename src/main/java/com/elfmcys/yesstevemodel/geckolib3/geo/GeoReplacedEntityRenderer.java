@@ -189,7 +189,9 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
             if (lastClimbablePos.isPresent()) {
                 //? if <1.17
                 // Optional<Direction> optionalValue = tentity.level.getBlockState(lastClimbablePos.get()).getOptionalValue(HorizontalDirectionalBlock.FACING);
-                //? if >=1.17 && <1.20
+                //? if >=1.17 && <1.18.2
+                /*Optional<Direction> optionalValue = tentity.level.getBlockState(lastClimbablePos.get()).getOptionalValue(HorizontalDirectionalBlock.FACING);*/
+                //? if >=1.18.2 && <1.20
                 /*Optional<Direction> optionalValue = tentity.getLevel().getBlockState(lastClimbablePos.get()).getOptionalValue(HorizontalDirectionalBlock.FACING);*/
                 //? if >=1.20
                 Optional<Direction> optionalValue = tentity.level().getBlockState(lastClimbablePos.get()).getOptionalValue(HorizontalDirectionalBlock.FACING);

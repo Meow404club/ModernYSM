@@ -46,6 +46,9 @@ public final class GpuCapability {
         String glslVersion;
         try {
             //? if >1.17 {
+        //? if <1.18.2
+        /*RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);*/
+        //? if >=1.18.2
         RenderSystem.assertOnRenderThreadOrInit();
         //?}
             caps = GL.getCapabilities();

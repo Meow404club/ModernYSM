@@ -19,7 +19,11 @@ import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 /*import net.minecraft.network.chat.TextComponent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;*/
 //?}
-//? if >=1.17 && <1.19.2 {
+//? if >=1.17 && <1.18.2 {
+/*import net.minecraft.network.chat.TextComponent;
+import net.minecraftforge.fmlclient.registry.ClientRegistry;
+ *///?}
+//? if >=1.18.2 && <1.19.2 {
 /*import net.minecraft.network.chat.TextComponent;
 import net.minecraftforge.client.ClientRegistry;
  *///?}

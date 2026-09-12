@@ -39,6 +39,10 @@ public final class GuiTourDriver {
     private static boolean joined;
     private static int diag;
     private static int beat;
+    private static int titleTicks;
+    /** mark title 后延迟连接：orchestrator 的 await+ffmpeg 抓屏约需 1.5s，
+     *  同 tick 立即 connect 会把 000-title 截成 "Joining world..."（1.20.1 实测）。 */
+    private static final int CONNECT_DELAY_TICKS = 60;
 
     private GuiTourDriver() {
     }
@@ -79,8 +83,12 @@ public final class GuiTourDriver {
         }
         if (!joined) {
             if (mc.screen instanceof net.minecraft.client.gui.screens.TitleScreen && mc.level == null) {
-                mark("title");
-                connectToServer(mc);
+                if (titleTicks == 0) {
+                    mark("title");
+                }
+                if (++titleTicks >= CONNECT_DELAY_TICKS) {
+                    connectToServer(mc);
+                }
             } else if (mc.player != null && mc.level != null && mc.screen == null) {
                 // 注意：勿加 getHealth()>0 之类判定——join 瞬间客户端 health sync 未到
                 // （getHealth()==0）会永久阻断 mark（M2.5 实证）；死亡由上方 respawn 兜底

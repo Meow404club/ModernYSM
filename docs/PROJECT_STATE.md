@@ -42,15 +42,22 @@
 | native-openysm-cpp | closed | - | 自带实现完整；上游仅档案存查 |
 | harvest-curator-1/2 | merged | - | stonecutter-template+stonecutter-src-07+celeritas-mva 入 RAG |
 
-## M2.5 GUI 全量排查修复（tasks.m2.5-gui-full-fix，已落账待启动）
-- 症状1：1.16.5 按 Z 动画轮盘崩端——Pie.draw:51 glGetFloatv 缓冲 remaining=0（1.16.5 Pie 保留路径缺缓冲分配，需 16 float direct buffer）
-- 症状2：Alt+Y 大多数按钮空白未渲染（含 EULA 屏）——YsmWidget/YsmGui 双轴桥接 1.16.5 按钮贴图/blit 路径待排查
-- 范围：9 屏+12 按钮+门面全走查，双版本回归，生产 jar 复验（refmap-audit harness）；崩溃日志 tmp/crash-2026-09-11_19.24.38-client.txt
+## M2.5 GUI 全量排查修复（tasks.m2.5-gui-full-fix，已合入 dev=39db64a，2026-09-11）
+- S1 Z 轮盘崩溃：Pie 1.16.5 分支 rewind 在 GL 填充之后，第二次 drawSlice remaining=0 IAE——修复=填充前 clear()（5d52a31），>1.17 分支零改动（1.20.1 jar javap 逐指令 0 diff 实证）
+- S2 Alt+Y 按钮空白：1.16.5 vanilla Screen 双列表（addButton=渲染+事件、addWidget 仅事件不渲染），ysmAddWidget 桥误用 addWidget——修复=instanceof 分流：AbstractButton→addButton、纯 AbstractWidget→addWidget+ScreenAccessor 入渲染列表（bc7c9b8）
+- 审查裁决 MERGE：refmap 疑云解除（ScreenAccessor 条目在 refmap mappings 层，buttons→field_230710_m_ 与真实安装器 Screen 逐字命中）；生产安装器 6 次启动 0 mixin 失败至主菜单+进世界（~/m25-prod-audit/shots/）；15/15 屏走查过
+- **构建陷阱入册**：1.16.5 生产形态必须 `buildAndCollect`（裸 remapJar 缺 MixinExtras/JOML/unsafe8 内嵌，MixinTweaker onLoad 即 NCDFE）；harness 重建脚本+README 在 tmp/refmap-audit/
+- 教训：xvfb+llvmpipe 下进程内 glReadPixels 截图 100% 制造 native 堆损坏假崩溃——测试一律外部抓屏
 
-## M3 平铺原则（用户指示 2026-09-11，tasks.m3-flat-tiling）
-- 铺到 1.16.5+ forge/neoforge 支持的全部版本（地图玩家友好：地图绑定 MC 版本）；
-- 枚举以 Forge/NeoForge maven 官方清单为准；Forge 终点 1.20.4，NeoForge 1.20.1（一 jar 双跑）+1.20.2 起全谱；
-- 相邻补丁版 API 面一致可共享条件组；20+ 条目考虑 settings/properties 生成脚本化。
+## 跨版本通用测试 harness（tasks.cross-version-harness，进行中）
+- 主仓常驻：harness/tour.sh 按版本线参数化 + src/main/java/rip/ysm/harness driver（isDevEnv 守卫，产物 jar 零 harness 字节）
+- 服务器和平启动：difficulty=0（peaceful）+锁日+无天气+flat，Done 后经 stdin 注入控制台命令（全版本一致）
+- 进程卫生（用户纪律）：--no-daemon+setsid 独立进程组，清理只对自记 PID；禁绝 pkill/pgrep/killall/--stop//proc 扫描，脚本内置自检
+
+## M3 平铺（tasks.m3-flat-tiling，矩阵已定，前置卡 m3-condition-axis）
+- **17 行必铺矩阵**（tasks.m3-matrix-research，官方 maven 证据）：forge 6 行 1.16.5/1.17.1/1.18.2/1.19.2/1.19.4/1.20.1（legacyforge，1.16.5 走 unimined）+ neoforge 11 行 1.20.4/1.20.6/1.21.1/21.3/21.4/21.5/21.8/21.10/21.11/26.1.2/26.2（moddev）；1.20.1 一 jar 双跑（neoforge fork 47.1.106 兼容声明）；26.x 需 Java 25 toolchain；短命版官方无 stable 跳过（1.17.0/1.18.0/1.19.1/20.3/20.5/21.2/21.6/21.7/21.9 等）
+- **前置：条件轴四段化**（tasks.m3-condition-axis，>1.17 二元轴被证伪）：GuiGraphics=1.20、renderWidget GuiGraphics 签名=1.20、getX/narration 新 API=1.19.3——重排为 <1.17/<1.19.3/<1.20/≥1.20；与 M2.5 同文件域，已解除阻塞
+- 相邻补丁版 API 面一致可共享条件组；20+ 条目考虑 settings/properties 生成脚本化
 
 ## 功能差债务清单（tasks.feature-debts-1165，M2 收官后排期发卡）
 | id | 功能差 | 现状 | 可行性 | 卡 |

@@ -249,7 +249,12 @@ public class ModelUploadScreen extends Screen implements ModelUploadSession.List
     // 泛型返回保持原 addRenderableWidget 的链式取回语义（如 .setTooltipText 续链）
     //? if <1.17 {
     /*private <T extends net.minecraft.client.gui.components.AbstractWidget> T ysmAddWidget(T widget) {
-        this.addWidget(widget);
+        if (widget instanceof net.minecraft.client.gui.components.AbstractButton) {
+            this.addButton((net.minecraft.client.gui.components.AbstractButton) widget);
+        } else {
+            this.addWidget(widget);
+            ((com.elfmcys.yesstevemodel.mixin.client.ScreenAccessor) this).ysm$getRenderables().add(widget);
+        }
         return widget;
     }
      *///?} else {

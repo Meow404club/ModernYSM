@@ -43,7 +43,7 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
         //? if <1.17
         // addLayerRenderer(new CustomPlayerItemInHandLayer(new net.minecraft.client.renderer.ItemInHandRenderer(net.minecraft.client.Minecraft.getInstance())));
         // EntityRendererProvider.Context.getItemInHandRenderer 1.19.2 起（1182 Context 无该字段）
-        //? if <1.19.2
+        //? if >=1.17 && <1.19.2
         /*addLayerRenderer(new CustomPlayerItemInHandLayer(new net.minecraft.client.renderer.ItemInHandRenderer(Minecraft.getInstance())));*/
         //? if >=1.19.2
         addLayerRenderer(new CustomPlayerItemInHandLayer(context.getItemInHandRenderer()));

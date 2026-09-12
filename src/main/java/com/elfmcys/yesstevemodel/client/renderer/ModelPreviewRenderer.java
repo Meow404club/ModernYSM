@@ -80,8 +80,7 @@ public final class ModelPreviewRenderer {
         //? if >=1.17
         // //? if <1.17
         /*RenderSystem.assertThread(RenderSystem::isOnRenderThread);*/
-        //? if >=1.17
-        //? if <1.18.2
+        //? if >=1.17 && <1.18.2
         /*RenderSystem.assertThread(RenderSystem::isOnRenderThread);*/
         //? if >=1.18.2
         RenderSystem.assertOnRenderThread();

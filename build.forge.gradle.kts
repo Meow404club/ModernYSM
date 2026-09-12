@@ -297,5 +297,13 @@ tasks.named<ProcessResources>("processResources") {
         filesMatching("pack.mcmeta") {
             filter { line: String -> line.replace("\"pack_format\": 15", "\"pack_format\": $packFormat") }
         }
+        // mixins.json compatibilityLevel：1.17.1 产物为 Java 16 字节码（pre118 javac --release 16），
+        // 且 1.17.1 运行时 JVM=16 → JAVA_17 级别声明与产物/运行时双双不符（机制同 1.16.5 线
+        // build.unimined.gradle.kts 的 JAVA_17→JAVA_8 替换）；1.18.2+ 运行时 JVM=17 保持 JAVA_17
+        if (pre118) {
+            filesMatching("*.mixins.json") {
+                filter { line: String -> line.replace("\"JAVA_17\"", "\"JAVA_16\"") }
+            }
+        }
     }
 }

@@ -38,7 +38,13 @@ public class EquipmentItemAnyTag extends LivingEntityFunction {
             if (key == null) {
                 return null;
             }
-            //? if <1.18.2 {
+            //? if <1.17
+            // if (stack.getItem().is((Tag<net.minecraft.world.item.Item>) ItemTags.getAllTags().getTagOrEmpty(key))) {
+            //? if <1.17
+                // return true;
+            //? if <1.17
+            // }
+            //? if >=1.17 && <1.18.2 {
             /*if (net.minecraft.tags.ItemTags.getAllTags().getTagOrEmpty(key).contains(stack.getItem())) {
                 return true;
             }

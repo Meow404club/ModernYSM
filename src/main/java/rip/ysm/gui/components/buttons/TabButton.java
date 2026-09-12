@@ -34,7 +34,7 @@ public class TabButton extends YsmWidget {
 
     @Override
     protected void renderWidget(YsmGui g, int mouseX, int mouseY, float partialTick) {
-        int bg = selected ? 0x90171717 : (/*? if <1.18.2 {*/ /*isHovered()*//*?} else {*/ isHoveredOrFocused() /*?}*/ ? 0x900B0B0B : 0x90000000);
+        int bg = selected ? 0x90171717 : (/*? if >=1.18.2 && <1.19.4 {*/ /*isHoveredOrFocused()*//*?} else {*/ isHovered() /*?}*/ ? 0x900B0B0B : 0x90000000);
         g.fill(getX(), getY(), getX() + width, getY() + height, bg);
         if (selected) {
             if (horizontal) g.fill(getX(), getY(), getX() + width, getY() + 1, -1);

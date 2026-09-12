@@ -26,7 +26,7 @@ public final class ExtraPlayerRenderKey {
         MinecraftForge.EVENT_BUS.addListener(ExtraPlayerRenderKey::onKeyInput);
     }
 
-    //? if >=1.17 {
+    //? if >=1.19.2 {
     private static void onKeyInput(InputEvent.Key event) {
         handleKeyInput(event.getKey(), event.getScanCode(), event.getAction());
     }

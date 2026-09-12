@@ -105,7 +105,10 @@ public final class Pie {
 
         GlStateManager._glUseProgram(0);
         //? if >1.17 {
+        //? if >=1.19.2
         BufferUploader.invalidate();
+        //? if <1.19.2
+        /*BufferUploader.reset();*/
         //?}
         //? if <1.17 {
         /*GL30.glBindVertexArray(0);

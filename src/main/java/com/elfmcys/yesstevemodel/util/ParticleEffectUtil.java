@@ -19,7 +19,11 @@ import net.minecraft.world.entity.Entity;
 // RandomSource 为 1.17+ 类；1.16.5 IContext.random() 走 java.util.Random（见 IContext 同款条件）
 //? if <1.17 {
 /*import java.util.Random;
- *///?} else {
+ *///?}
+//? if >=1.17 && <1.19.2 {
+/*import net.minecraft.world.level.levelgen.RandomSource;
+ *///?}
+//? if >=1.19.2 {
 import net.minecraft.util.RandomSource;
 //?}
 import net.minecraft.world.entity.player.Player;

@@ -35,6 +35,8 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import net.minecraft.network.Connection;
 //? if >=1.17 {
 import it.unimi.dsi.fastutil.floats.FloatReferencePair;
+//?}
+//? if >=1.19.2 {
 import net.minecraft.network.PacketSendListener;
 //?}
 import net.minecraft.network.chat.Component;
@@ -1700,7 +1702,7 @@ public final class ServerModelManager {
                 try {
                     // PacketSendListener 1.19.4+：<1.17 用 GenericFutureListener（发送即视为成功，
                     // 失败探测由后续 deadline 轮询 isConnected 兜底，语义等价）
-                    //? if <1.17 {
+                    //? if <1.19.2 {
                     /*connection.send((Packet<?>) obj, future -> atomicInteger.set(1));
                      *///?} else {
                     connection.send((Packet<?>) obj, new PacketSendListener() {

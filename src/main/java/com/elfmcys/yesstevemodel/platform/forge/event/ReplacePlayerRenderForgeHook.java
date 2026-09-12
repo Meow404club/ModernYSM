@@ -23,7 +23,11 @@ public final class ReplacePlayerRenderForgeHook {
         //     event.setCanceled(true);
         // }
         //? } else {
+        // RenderPlayerEvent.Pre.getEntity() 协变 Player 覆写 1.19.2 起（1182 返回 Entity）
+        //? if >=1.19.2
         if (ReplacePlayerRenderEvent.onRenderPlayerPre(event.getEntity(), event.getPartialTick(), event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight())) {
+        //? if <1.19.2
+        /*if (ReplacePlayerRenderEvent.onRenderPlayerPre((net.minecraft.world.entity.player.Player) event.getEntity(), event.getPartialTick(), event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight())) {*/
             event.setCanceled(true);
         }
         //? }

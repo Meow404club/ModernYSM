@@ -160,7 +160,10 @@ public final class BlurStack {
         }
 
         GlStateManager._glUseProgram(0);
+        //? if >=1.19.2
         BufferUploader.invalidate();
+        //? if <1.19.2
+        /*BufferUploader.reset();*/
         GlStateManager._glBindVertexArray(0);
         RenderSystem.disableBlend();
 

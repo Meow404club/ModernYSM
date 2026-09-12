@@ -37,8 +37,8 @@ public class ModSoundEvents {
             //? if <1.17 {
             /*() -> new SoundEvent(new ResourceLocation(YesSteveModel.MOD_ID, "custom"))*/
             //?}
-            //? if >=1.17 && <1.19.4 {
-            /*() -> new SoundEvent(new ResourceLocation(YesSteveModel.MOD_ID, "custom"), 16.0f)*/
+            //? if >=1.17 && <1.19.2 {
+            /*() -> new SoundEvent(new ResourceLocation(YesSteveModel.MOD_ID, "custom"))*/
             //?}
             //? if >=1.19.4 {
             () -> SoundEvent.createFixedRangeEvent(new ResourceLocation(YesSteveModel.MOD_ID, "custom"), 16.0f)

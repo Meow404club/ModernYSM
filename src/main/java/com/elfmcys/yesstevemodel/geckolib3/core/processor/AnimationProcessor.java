@@ -27,7 +27,13 @@ import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 // （new Random() 无参构造自带唯一种子，语义对应 RandomSupport.generateUniqueSeed()）
 //? if <1.17 {
 // import java.util.Random;
-//? } else {
+//? }
+//? if >=1.17 && <1.19.2 {
+// import net.minecraft.world.level.levelgen.RandomSource;
+// import net.minecraft.world.level.levelgen.RandomSupport;
+// import net.minecraft.world.level.levelgen.XoroshiroRandomSource;
+//? }
+//? if >=1.19.2 {
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.levelgen.RandomSupport;
 import net.minecraft.world.level.levelgen.XoroshiroRandomSource;
@@ -65,7 +71,10 @@ public class AnimationProcessor<TEntity extends Entity> {
 
     //? if <1.17
     // private final Random random = new Random();
-    //? if >=1.17
+    //? if >=1.17 && <1.19.2
+    /*private final RandomSource random = new XoroshiroRandomSource(System.nanoTime());*/
+    // 1182 RandomSupport 无 generateUniqueSeed（1.19.2+ 才有）→ nanoTime 种子，语义同唯一种子
+    //? if >=1.19.2
     private final RandomSource random = new XoroshiroRandomSource(RandomSupport.generateUniqueSeed());
 
     private final ConcurrentLinkedQueue<PendingExpression> pendingExpressions = new ConcurrentLinkedQueue<>();

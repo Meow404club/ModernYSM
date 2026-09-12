@@ -33,6 +33,9 @@ public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity>
     // }
     //? } else {
     public CustomPlayerArmorLayer(EntityRendererProvider.Context context) {
+        //? if <1.19.2
+        /*this.itemRenderer = new ItemInHandRenderer(net.minecraft.client.Minecraft.getInstance());*/
+        //? if >=1.19.2
         this.itemRenderer = context.getItemInHandRenderer();
     }
     //? }

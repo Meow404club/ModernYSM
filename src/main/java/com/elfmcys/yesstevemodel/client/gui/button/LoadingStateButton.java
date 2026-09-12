@@ -13,7 +13,7 @@ import net.minecraft.network.chat.Component;
 
 public class LoadingStateButton extends YsmButton {
     public LoadingStateButton(int x, int y) {
-        //? if <1.17 {
+        //? if <1.19.2 {
         /*super(x, y, 100, 20, YsmText.literal(""), button -> {*/
         //?} else {
         super(x, y, 100, 20, Component.empty(), button -> {

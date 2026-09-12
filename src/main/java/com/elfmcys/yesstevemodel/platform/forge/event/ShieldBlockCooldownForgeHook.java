@@ -18,12 +18,13 @@ public final class ShieldBlockCooldownForgeHook {
 
     // ShieldBlockEvent 1.16.5 forge jar 不存在（unzip 全文检索 0 命中，1.18+ 才引入）：
     // <1.17 仅保留冷却 tick 路径；盾牌格挡触发的冷却起点缺失 → 功能差已记 tasks.feature-debts-1165
-    //? if <1.17 {
+    //? if <1.19.2 {
     /*@SubscribeEvent
     public static void onLivingTick(LivingEvent.LivingUpdateEvent event) {
         ShieldBlockCooldownEvent.onLivingTick((LivingEntity) event.getEntity());
     }
-     *///?} else {
+     *///?}
+    //? if >=1.19.2 {
     @SubscribeEvent
     public static void onShieldBlock(ShieldBlockEvent event) {
         ShieldBlockCooldownEvent.onShieldBlock(event.getEntity());

@@ -43,6 +43,9 @@ public class YSMNativeHelper {
         //? if <1.17 {
         /*return Minecraft.getInstance().getUser().getGameProfile().getId();
          *///?} else {
+        //? if <1.19.2
+        /*return Minecraft.getInstance().getUser().getGameProfile().getId();*/
+        //? if >=1.19.2
         return Minecraft.getInstance().getUser().getProfileId();
         //?}
     }

@@ -109,7 +109,10 @@ public final class IrisRenderPath {
         }
 
         shader.clear();
+        //? if >=1.19.2
         com.mojang.blaze3d.vertex.BufferUploader.invalidate();
+        //? if <1.19.2
+        /*com.mojang.blaze3d.vertex.BufferUploader.reset();*/
         GlStateManager._glBindVertexArray(0);
         rt.clearRenderState();
 

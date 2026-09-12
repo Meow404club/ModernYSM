@@ -6,7 +6,11 @@ import com.elfmcys.yesstevemodel.molang.runtime.ExecutionContext;
 // RandomSource 为 1.17+ 类；1.16.5 用 java.util.Random
 //? if <1.17 {
 // import java.util.Random;
-//? } else {
+//? }
+//? if >=1.17 && <1.19.2 {
+// import net.minecraft.world.level.levelgen.RandomSource;
+//? }
+//? if >=1.19.2 {
 import net.minecraft.util.RandomSource;
 //? }
 

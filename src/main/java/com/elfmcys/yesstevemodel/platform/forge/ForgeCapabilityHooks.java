@@ -107,11 +107,12 @@ public final class ForgeCapabilityHooks {
         Entity target = startTracking.getTarget();
         if (target instanceof ServerPlayer) {
             ServerPlayer trackPlayer = (ServerPlayer) target;
-            // 1.16.5 StartTracking.getEntity() 无协变 Player 覆写（继承 EntityEvent.getEntity() 返回 Entity）
-            //? if >=1.17
+            // StartTracking.getEntity() 协变 Player 覆写 1.19.2 起（1182 返回 Entity）
+            //? if >=1.19.2
             Player entity = startTracking.getEntity();
-            //? if <1.17
+            //? if <1.19.2
             /*Player entity = (Player) startTracking.getEntity();*/
+
             CapabilityEvent.getModelInfoCap(trackPlayer).ifPresent(cap -> {
                 if (!NetworkHandler.isPlayerConnected(trackPlayer) && !cap.isMandatory()) {
                     return;
@@ -131,18 +132,18 @@ public final class ForgeCapabilityHooks {
             Projectile projectile = (Projectile) target;
             projectile.getCapability(ProjectileModelCapabilityProvider.PROJECTILE_MODEL).ifPresent(cap -> {
                 if (cap.isInitialized()) {
-                    //? if >=1.17
+                    //? if >=1.19.2
                     NetworkHandler.sendToClientPlayer(new S2CSyncProjectileModelPacket(projectile.getId(), cap), startTracking.getEntity());
-                    //? if <1.17
+                    //? if <1.19.2
                     /*NetworkHandler.sendToClientPlayer(new S2CSyncProjectileModelPacket(projectile.getId(), cap), (Player) startTracking.getEntity());*/
                 }
             });
         } else if (target != null) {
             target.getCapability(VehicleModelCapabilityProvider.VEHICLE_MODEL_CAP).ifPresent(cap -> {
                 if (cap.isInitialized()) {
-                    //? if >=1.17
+                    //? if >=1.19.2
                     NetworkHandler.sendToClientPlayer(new S2CSyncVehicleModelPacket(target.getId(), cap), startTracking.getEntity());
-                    //? if <1.17
+                    //? if <1.19.2
                     /*NetworkHandler.sendToClientPlayer(new S2CSyncVehicleModelPacket(target.getId(), cap), (Player) startTracking.getEntity());*/
                 }
             });

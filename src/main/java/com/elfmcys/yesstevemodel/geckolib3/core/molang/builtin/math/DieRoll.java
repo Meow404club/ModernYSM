@@ -3,10 +3,14 @@ package com.elfmcys.yesstevemodel.geckolib3.core.molang.builtin.math;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.context.IContext;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.funciton.ContextFunction;
 import com.elfmcys.yesstevemodel.molang.runtime.ExecutionContext;
-// RandomSource 为 1.17+ 类；1.16.5 用 java.util.Random
+// RandomSource 1.17~1.18.2 在 levelgen 包、1.19.2 起在 util 包；1.16.5 用 java.util.Random
 //? if <1.17 {
 // import java.util.Random;
-//? } else {
+//? }
+//? if >=1.17 && <1.19.2 {
+// import net.minecraft.world.level.levelgen.RandomSource;
+//? }
+//? if >=1.19.2 {
 import net.minecraft.util.RandomSource;
 //? }
 

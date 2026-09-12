@@ -156,7 +156,10 @@ public final class GpuRenderPath {
         GL15.glBindBuffer(GL43.GL_SHADER_STORAGE_BUFFER, 0);
         GlStateManager._glUseProgram(0);
 
+        //? if >=1.19.2
         com.mojang.blaze3d.vertex.BufferUploader.invalidate();
+        //? if <1.19.2
+        /*com.mojang.blaze3d.vertex.BufferUploader.reset();*/
         GlStateManager._glBindVertexArray(0);
 
         mc.gameRenderer.lightTexture().turnOffLightLayer();

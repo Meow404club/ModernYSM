@@ -45,9 +45,9 @@ public final class ClientPlayerJoinNotification {
         MinecraftForge.EVENT_BUS.addListener(ClientPlayerJoinNotification::onClientTickEvent);
     }
 
-    //? if <1.17
+    //? if <1.19.2
     /*private static void onLoggingIn(ClientPlayerNetworkEvent.LoggedInEvent event) {*/
-    //? if >=1.17
+    //? if >=1.19.2
     private static void onLoggingIn(ClientPlayerNetworkEvent.LoggingIn event) {
         onPlayerJoin(event.getPlayer());
     }
@@ -56,9 +56,9 @@ public final class ClientPlayerJoinNotification {
      * LoggingOut 的 getPlayer() 可为 null（新建集成服/连接远程服时也会触发，
      * forge-api 1.20.1 ClientPlayerNetworkEvent.java:85-125），原逻辑本就不读该参数。
      */
-    //? if <1.17
+    //? if <1.19.2
     /*private static void onLoggingOut(ClientPlayerNetworkEvent.LoggedOutEvent event) {*/
-    //? if >=1.17
+    //? if >=1.19.2
     private static void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         onPlayerQuit(event.getPlayer());
     }

@@ -7,7 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraftforge.common.MinecraftForge;
-//? if >=1.17 {
+//? if >=1.19.2 {
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 //?} else {
 /*import net.minecraftforge.event.entity.EntityJoinWorldEvent;*/
@@ -35,7 +35,7 @@ public class EntityJoinCallbackEvent {
 
     // 事件名反向差：1.16.x 为 EntityJoinWorldEvent（1.19+ 才改名 JoinLevel），且 world 访问器
     // getWorld()（1.16.x）vs getLevel()（1.19+）；getEntity() 两侧同名（javap 实证）。
-    //? if >=1.17 {
+    //? if >=1.19.2 {
     private static void onEntityJoinLevel(EntityJoinLevelEvent event) {
         onEntityJoin(event.getEntity(), event.getLevel().isClientSide());
     }

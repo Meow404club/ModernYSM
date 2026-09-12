@@ -12,7 +12,8 @@ public final class ToolActionBridgeImpl {
     // ToolActions/canPerformAction 为 1.18+ API（1.16.5 jar 检索 0 命中）：<1.17 以
     // FishingRodItem 类型判定等价替代（vanilla FISHING_ROD_CAST 唯一实现即 FishingRodItem）
     public static boolean canFishingRodCast(ItemStack stack) {
-        //? if <1.17 {
+        // ToolActions.FISHING_ROD_CAST 1182 无此常量（forge-1.18.2 ToolActions 源码 0 命中）
+        //? if <1.19.2 {
         /*return stack.getItem() instanceof FishingRodItem;
          *///?} else {
         return stack.canPerformAction(net.minecraftforge.common.ToolActions.FISHING_ROD_CAST);

@@ -68,7 +68,9 @@ public class RenderFirstPlayerBackground {
                 // 1.16.5 Options.bobView 为 public boolean 字段（1.17+ 才是 OptionInstance 供应商风格）
                 //? if <1.17
                 // if (Minecraft.getInstance().options.bobView) {
-                //? if >=1.17
+                //? if >=1.17 && <1.19.2
+                /*if (Minecraft.getInstance().options.bobView) {*/
+                //? if >=1.19.2
                 if (Minecraft.getInstance().options.bobView().get()) {
                     applyHandTransform(poseStack, partialTick, player);
                 }

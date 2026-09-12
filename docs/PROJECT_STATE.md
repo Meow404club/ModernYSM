@@ -59,7 +59,7 @@
 - 交付：harness/tour.sh orchestrator（--no-daemon+setsid+PIDFILE/PGID 阶梯清理、和平启动五命令 stdin 注入、版本参数化 case 表单点）+ 零 GL GuiTourDriver/HarnessScreens（cmd.txt→harness.ready，14 屏）+ YsmEventBootstrap 3 指令守卫挂载（惰性解析实证）+ 双 buildscript 生产 jar 排除
 - 实证：双线 tour exit 0/16 屏/零崩溃零手工；双产物 jar 零 harness 字节；1.20.1 javap 1661/1662 类全同；生产安装器实启 25s 到主菜单全日志零 harness 引用
 - 新增版本线接入约定：tour.sh case 推导表 + buildscript runs.gameDirectory 对齐 + options.txt onboarding 项核对（1.17~1.19 待核）
-- 遗留 P1：cleanup FIFO 写入在 server 已死时可无限阻塞（timeout 包裹待修）；runs 拆分后旧 run/saves 不自动迁移（冒烟改走 tour 自管世界）；crash 快速失败覆盖窄
+- 遗留 P1 已修（dev=4983cbb）：cleanup FIFO 写入 timeout 包裹；runs 拆分后旧 run/saves 不自动迁移（冒烟改走 tour 自管世界）；crash 快速失败覆盖窄
 - 发布卡新增：主仓 build/libs/2.6.6.6/ 是 mojmap 陈旧副本（真基线在 versions/1.20.1-forge/build/libs/，SRG 形态），发布前必重建
 
 ## M3 平铺（tasks.m3-flat-tiling，矩阵已定，前置卡 m3-condition-axis）

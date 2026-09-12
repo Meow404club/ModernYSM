@@ -55,6 +55,16 @@
 - **订正**：1.20.1 标签目录也是复数 tags/items（单数化是 1.21+），mod 标签在 1.20.1 正常绑定——此前"静默失效"判断证伪，无修复卡
 - 待办：其余九屏重入 init 同型坑未查（SPEC 外）；用户实机复测三症状
 
+## M2.6.1 翻页动画重刷（tasks.m2.6.1-page-anim-reset，已合入 dev=62de96e，2026-09-13）
+- 翻案：非 M2.6 副作用——每轮模型 flush 广播 onModelsUpdated→init() 整页重建→resetModel 清动画时间轴，M2.6 之前同码已存在，修掉幽灵卡后显性化
+- 修复：增量回调只更新 pending→loaded/同 key 换 assembly 槽位（动画时间轴保位），结构变化回退 init() 保 M2.6 清场；旧屏实例守卫；ModelButton pending 缓存抽幂等刷新
+- 审查：根因链逐环命中；判据穷举闭合；seekTime 断言（增量 191→191/正控制 292→0）；1.20.1 同病同修
+- 发布卡观察项：懒加载 LRU 驱逐（>64）可令可见槽瞬时回 pending，自愈但宜观测
+
+## 内置模型同步 2.6.5（tasks.builtin-sync-265，已合入 dev=ce1aaf9，2026-09-13）
+- 367 文件内容更新（default 26/misc 31/wine_fox 310）+ boat.json 标签补丁（上游改 #tag 语法但两轴 vanilla 无 boat tag，补 tag 恢复载具匹配），资源与上游逐字节一致
+- 双线 tour 14 屏全过、27 模型零解析错误；双构建绿
+
 ## 跨版本通用测试 harness（tasks.cross-version-harness，已合入 dev=ccb6b23，2026-09-13）
 - 交付：harness/tour.sh orchestrator（--no-daemon+setsid+PIDFILE/PGID 阶梯清理、和平启动五命令 stdin 注入、版本参数化 case 表单点）+ 零 GL GuiTourDriver/HarnessScreens（cmd.txt→harness.ready，14 屏）+ YsmEventBootstrap 3 指令守卫挂载（惰性解析实证）+ 双 buildscript 生产 jar 排除
 - 实证：双线 tour exit 0/16 屏/零崩溃零手工；双产物 jar 零 harness 字节；1.20.1 javap 1661/1662 类全同；生产安装器实启 25s 到主菜单全日志零 harness 引用

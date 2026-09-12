@@ -118,3 +118,6 @@ tools/sources.json
 
 # ZCode 本地覆盖
 .zcode/config.local.json
+# 跨版本走查 harness 产物（截图/日志/运行时握手文件）
+harness/out/
+harness/run/

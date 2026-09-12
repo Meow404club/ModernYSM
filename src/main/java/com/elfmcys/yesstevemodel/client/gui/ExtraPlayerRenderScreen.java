@@ -115,12 +115,16 @@ public class ExtraPlayerRenderScreen extends Screen {
         }
         guiGraphics.pose().popPose();
         if (Minecraft.getInstance().player != null && !ExtraPlayerRenderConfig.DISABLE_PLAYER_RENDER.get().booleanValue()) {
-            //? if >=1.17
+            //? if >=1.17 && <1.20
+            /*ModelPreviewRenderer.renderPlayerOverlay(guiGraphics.pose(), Minecraft.getInstance().player, this.mouseStartX, this.mouseStartY, this.rotationX, this.rotationY, -500, this.minecraft.getFrameTime());*/
+            //? if >=1.20
             ModelPreviewRenderer.renderPlayerOverlay(guiGraphics.graphics(), Minecraft.getInstance().player, this.mouseStartX, this.mouseStartY, this.rotationX, this.rotationY, -500, this.minecraft.getFrameTime());
         }
         //? if <1.17
         /*super.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
-        //? if >=1.17
+        //? if >=1.17 && <1.20
+        /*super.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
+        //? if >=1.20
         super.render(guiGraphics.graphics(), mouseX, mouseY, partialTick);
     }
 

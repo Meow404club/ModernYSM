@@ -18,7 +18,9 @@ public abstract class YsmSliderButton extends AbstractSliderButton {
         super(x, y, width, height, message, value);
     }
 
-    //? if <1.17 {
+    // 1.16.5~1.19.2 AbstractSliderButton 无 getX/getY（x/y 为 public 字段，1192 AbstractWidget.java:25-26），
+    // 补桥接；1.19.4+ 侧父类自带同名方法（1194:315+），桥接注释态
+    //? if <1.19.4 {
     /*public int getX() {
         return this.x;
     }
@@ -28,13 +30,24 @@ public abstract class YsmSliderButton extends AbstractSliderButton {
     }
      *///?}
 
+    // 渲染钩子三段：renderWidget(GuiGraphics) 1.20 起 / renderWidget(PoseStack) 1.19.4
+    //（1194 AbstractSliderButton.java:65）/ renderButton(PoseStack) 1.16.5~1.19.2
     //? if >=1.20 {
     @Override
     public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
-    //?} else {
-    /*@Override
+    //?}
+    //? if >=1.19.4 && <1.20 {
+    /*
+    @Override
+    public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
+    }
+     *///?}
+    //? if <1.19.4 {
+    /*
+    @Override
     public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
     }

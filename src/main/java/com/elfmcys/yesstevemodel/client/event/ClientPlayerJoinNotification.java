@@ -99,9 +99,13 @@ public final class ClientPlayerJoinNotification {
                         return;
                     }
                     LocalPlayer localPlayer = Minecraft.getInstance().player;
+                    // isAcceptingMessages 1.19.4 起（1194 ClientPacketListener.java:2413 = connection.isConnected()），
+                    // 1.16.5~1.19.2 直调 Connection.isConnected（等价展开）
                     //? if <1.17
                     /*if (localPlayer != null && localPlayer.connection.getConnection().isConnected() && !NetworkHandler.isConnectionValid(localPlayer.connection.getConnection())) {*/
-                    //? if >=1.17
+                    //? if >=1.17 && <1.19.4
+                    /*if (localPlayer != null && localPlayer.connection.getConnection().isConnected() && !NetworkHandler.isConnectionValid(localPlayer.connection.getConnection())) {*/
+                    //? if >=1.19.4
                     if (localPlayer != null && localPlayer.connection.isAcceptingMessages() && !NetworkHandler.isConnectionValid(localPlayer.connection.getConnection())) {
                         YsmText.sendSystemMessage(localPlayer, YsmText.translatable("message.yes_steve_model.client.server_not_found"));
                     }
@@ -121,7 +125,9 @@ public final class ClientPlayerJoinNotification {
         LocalPlayer player = client.player;
 //? if <1.17
         /*if (player == null || !player.connection.getConnection().isConnected()) {*/
-        //? if >=1.17
+//? if >=1.17 && <1.19.4
+        /*if (player == null || !player.connection.getConnection().isConnected()) {*/
+//? if >=1.19.4
         if (player == null || !player.connection.isAcceptingMessages()) {
             return;
         }

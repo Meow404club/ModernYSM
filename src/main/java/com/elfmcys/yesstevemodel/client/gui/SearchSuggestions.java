@@ -269,10 +269,15 @@ public class SearchSuggestions {
         Entry entry = entries.get(selected);
         if (entry.packPath != null) {
             searchBox.setValue(StringPool.EMPTY);
-    // 1.20.1 EditBox.setFocused public 可直调；1.16.5 为 protected → 经 Screen.setFocused(null) 解焦
-    //? if <1.17 {
+    // EditBox.setFocused(boolean) 1.16.5~1.19.2 均 protected（1192 AbstractWidget.java:217）→
+    // 经 Screen.setFocused(null) 解焦；1.19.4+ public 可直调（1194 AbstractWidget.java:280）
+    //? if <1.19.4 {
     /*net.minecraft.client.Minecraft.getInstance().screen.setFocused(null);*/
-    //?} else {
+    //?}
+    //? if >=1.17 && <1.19.4 {
+    /*net.minecraft.client.Minecraft.getInstance().screen.setFocused(null);
+     *///?}
+    //? if >=1.19.4 {
     searchBox.setFocused(false);
     //?}
         } else {
@@ -287,14 +292,19 @@ public class SearchSuggestions {
     private int getLeft() {
 //? if <1.17
         /*return searchBox.x - 1;*/
-        //? if >=1.17
+        // EditBox.getX/getY 1.19.4 起；1.16.5~1.19.2 x/y 为 public 字段（1192 EditBox 经 AbstractWidget :25-26）
+//? if >=1.17 && <1.19.4
+/*return searchBox.x - 1;*/
+//? if >=1.19.4
         return searchBox.getX() - 1;
     }
 
     private int getTop() {
 //? if <1.17
         /*return searchBox.y + searchBox.getHeight() + 1;*/
-        //? if >=1.17
+//? if >=1.17 && <1.19.4
+/*return searchBox.y + searchBox.getHeight() + 1;*/
+//? if >=1.19.4
         return searchBox.getY() + searchBox.getHeight() + 1;
     }
 

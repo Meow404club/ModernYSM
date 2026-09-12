@@ -22,7 +22,11 @@ public final class YsmEntity {
     public static boolean onGround(Entity entity) {
         //? if <1.17 {
         /*return entity.isOnGround();
-         *///?} else {
+         *///?}
+        //? if >=1.17 && <1.20 {
+        /*return entity.isOnGround();
+         *///?}
+        //? if >=1.20 {
         return entity.onGround();
         //?}
     }
@@ -38,7 +42,11 @@ public final class YsmEntity {
     public static Level level(Entity entity) {
         //? if <1.17 {
         /*return entity.level;
-         *///?} else {
+         *///?}
+        //? if >=1.17 && <1.20 {
+        /*return entity.getLevel();
+         *///?}
+        //? if >=1.20 {
         return entity.level();
         //?}
     }
@@ -69,19 +77,29 @@ public final class YsmEntity {
     }
 
     /** 1.16.5 无 walkAnimation：limbSwingAmount（1.16.5 实体摆动量字段/渲染入参）等价物由调用侧条件化，此处仅同物品比较。 */
+    // ItemStack.isSameItem 1.20 起（1182/1192/1194 仅 isSameItemSameTags）→ 中段回退 item 比较
     public static boolean sameItem(ItemStack a, ItemStack b) {
         //? if <1.17 {
         /*return a.getItem() == b.getItem();
-         *///?} else {
+         *///?}
+        //? if >=1.17 && <1.20 {
+        /*return a.getItem() == b.getItem();
+         *///?}
+        //? if >=1.20 {
         return ItemStack.isSameItem(a, b);
         //?}
     }
 
     /** LivingEntity 摆动量（1.20.1 walkAnimation.speed(partialTick) ↔ 1.16.5 oBob/limbSwing 聚合，取值口径见调用点注释）。 */
+    // WalkAnimationState 1.19.4 起（1192 LivingEntity.java:177-178 animationSpeed 公开字段）
     public static float limbSwingAmount(LivingEntity entity, float partialTick) {
         //? if <1.17 {
         /*return entity.animationSpeedOld + (entity.animationSpeed - entity.animationSpeedOld) * partialTick;
-         *///?} else {
+         *///?}
+        //? if >=1.17 && <1.19.4 {
+        /*return entity.animationSpeedOld + (entity.animationSpeed - entity.animationSpeedOld) * partialTick;
+         *///?}
+        //? if >=1.19.4 {
         return entity.walkAnimation.speed(partialTick);
         //?}
     }

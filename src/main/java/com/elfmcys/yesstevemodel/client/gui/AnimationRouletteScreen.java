@@ -66,9 +66,10 @@ import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-//? if <1.17 {
+//? if <1.19.4 {
 /*import com.mojang.math.Matrix4f;
- *///?} else {
+ *///?}
+//? if >=1.19.4 {
 import org.joml.Matrix4f;
 //?}
 import rip.ysm.api.client.KeyMappingFactory;
@@ -385,8 +386,17 @@ public class AnimationRouletteScreen extends Screen {
             public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
                 this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
             }
-            //?} else {
-            /*@Override
+            //?}
+            //? if >=1.19.4 && <1.20 {
+            /*
+            @Override
+            public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+                this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
+            }
+             *///?}
+            //? if <1.19.4 {
+            /*
+            @Override
             public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
                 this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
             }

@@ -88,7 +88,12 @@ public class ParticleEffectUtil {
             // 1.20.1 readParticle(reader, HolderLookup) ↔ 1.16.5 readParticle(reader)（javap 实证单参）
             //? if <1.17 {
             /*return ParticleArgument.readParticle(new StringReader(particleId));
-             *///?} else {
+             *///?}
+            // readParticle 双参（HolderLookup）1.19.4 起；1.17~1.19.2 单参（1192 ParticleArgument.java:43）
+            //? if >=1.17 && <1.19.4 {
+            /*return ParticleArgument.readParticle(new StringReader(particleId));
+             *///?}
+            //? if >=1.19.4 {
             return ParticleArgument.readParticle(new StringReader(particleId), net.minecraft.core.registries.BuiltInRegistries.PARTICLE_TYPE.asLookup());
             //?}
         });

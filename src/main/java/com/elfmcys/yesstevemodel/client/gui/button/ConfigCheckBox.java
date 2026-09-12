@@ -37,20 +37,32 @@ public class ConfigCheckBox extends StateSwitchingButton implements ISpecialWidg
         this(x, y, 115, component, consumer);
     }
 
+    // 渲染钩子三段：StateSwitchingButton.renderWidget(PoseStack) 1.19.4 起（1194:44）/
+    // renderButton(PoseStack) 1.16.5~1.19.2（1192 StateSwitchingButton.java:50）/ GuiGraphics 1.20 起
     //? if >=1.20 {
     @Override
     public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
-    //?} else {
-    /*@Override
+    //?}
+    //? if >=1.19.4 && <1.20 {
+    /*
+    @Override
+    public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
+    }
+     *///?}
+    //? if <1.19.4 {
+    /*
+    @Override
     public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
     }
      *///?}
 
-    // 1.16.5 StateSwitchingButton 无 getX/getY → 桥接（对位 YsmButton 同款）
-    //? if <1.17 {
+    // 1.16.5~1.19.2 StateSwitchingButton 无 getX/getY（x/y 为 public 字段 1192 AbstractWidget.java:25-26）
+    // → 桥接（对位 YsmButton 同款）；1.19.4+ 父类自带
+    //? if <1.19.4 {
     /*public int getX() {
         return this.x;
     }
@@ -61,9 +73,11 @@ public class ConfigCheckBox extends StateSwitchingButton implements ISpecialWidg
      *///?}
 
     public void renderWidget(YsmGui guiGraphics, int mouseX, int mouseY, float partialTick) {
-        //? if <1.17
+        //? if <1.19.4
         /*super.renderButton(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
-        //? if >=1.17
+        //? if >=1.19.4 && <1.20
+        /*super.renderWidget(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
+        //? if >=1.20
         super.renderWidget(guiGraphics.graphics(), mouseX, mouseY, partialTick);
         guiGraphics.drawString(Minecraft.getInstance().font, this.component2, getX() + 14, getY() + 2, -1, false);
     }

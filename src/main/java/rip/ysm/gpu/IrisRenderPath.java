@@ -59,6 +59,9 @@ public final class IrisRenderPath {
         if (BoneXformCompute.locOverlay() >= 0) GL20.glUniform1i(BoneXformCompute.locOverlay(), packedOverlay);
 
         if (BoneXformCompute.locModelView() >= 0) {
+            //? if >=1.17 && <1.19.4
+            /*com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.pose(pose).get(modelViewScratch);*/
+            //? if >=1.19.4
             pose.pose().get(modelViewScratch);
             GL20.glUniformMatrix4fv(BoneXformCompute.locModelView(), false, modelViewScratch);
         }
@@ -86,9 +89,13 @@ public final class IrisRenderPath {
             return false;
         }
 
+        // MODEL_VIEW/PROJECTION 为 Uniform（1192 ShaderInstance.java:66/68），Uniform.set(Matrix4f)
+        // 参数型随版本走（<1.19.3 moj / 1.19.4+ joml），同一源码两侧均合法，无需分段；
+        // GLINT_ALPHA 1.19.4 起才有（1192 ShaderInstance 无此字段）
         if (shader.MODEL_VIEW_MATRIX != null) shader.MODEL_VIEW_MATRIX.set(pose.pose());
         if (shader.PROJECTION_MATRIX != null) shader.PROJECTION_MATRIX.set(RenderSystem.getProjectionMatrix());
         if (shader.COLOR_MODULATOR != null) shader.COLOR_MODULATOR.set(1.0f, 1.0f, 1.0f, 1.0f);
+        //? if >=1.19.4
         if (shader.GLINT_ALPHA != null) shader.GLINT_ALPHA.set(1.0f);
 
         shader.apply();

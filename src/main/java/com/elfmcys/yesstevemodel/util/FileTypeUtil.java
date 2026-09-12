@@ -90,7 +90,16 @@ public final class FileTypeUtil {
                             hashSet.add(key);
                         }
                     }
-                     *///?} else {
+                     *///?}
+                    //? if >=1.17 && <1.19.4 {
+                    /*
+                    // Registries/BuiltInRegistries 1.19.4 起；1.17~1.19.2 用 Registry 静态字段（1192 Registry.java:190/143 形）
+                    net.minecraft.tags.TagKey<EntityType<?>> tagKey = net.minecraft.tags.TagKey.create(net.minecraft.core.Registry.ENTITY_TYPE_REGISTRY, resourceLocation);
+                    net.minecraft.core.Registry.ENTITY_TYPE.getTag(tagKey).ifPresent(holderSet ->
+                        holderSet.forEach(holder -> holder.unwrapKey().ifPresent(rk -> hashSet.add(rk.location())))
+                    );
+                     *///?}
+                    //? if >=1.19.4 {
                     net.minecraft.tags.TagKey<EntityType<?>> tagKey = net.minecraft.tags.TagKey.create(net.minecraft.core.registries.Registries.ENTITY_TYPE, resourceLocation);
                     net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getTag(tagKey).ifPresent(holderSet ->
                         holderSet.forEach(holder -> holder.unwrapKey().ifPresent(rk -> hashSet.add(rk.location())))

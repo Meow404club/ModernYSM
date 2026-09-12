@@ -33,9 +33,13 @@ public class ModelMetadataPresenter {
         if (defaultValue == null) {
             defaultValue = StringPool.EMPTY;
         }
+        // LanguageManager.getSelected() 1.19.4 起返回 String（1194:70）；1.16.5~1.19.2 返回
+        // LanguageInfo（1192:69）→ getCode()（1192 LanguageInfo.java:19）
         //? if <1.17
         /*String selectedLocale = Minecraft.getInstance().getLanguageManager().getSelected().getCode();*/
-        //? if >=1.17
+        //? if >=1.17 && <1.19.4
+        /*String selectedLocale = Minecraft.getInstance().getLanguageManager().getSelected().getCode();*/
+        //? if >=1.19.4
         String selectedLocale = Minecraft.getInstance().getLanguageManager().getSelected();
         Map<String, Map<String, String>> translations = modelPackData.getTranslations();
 
@@ -54,7 +58,11 @@ public class ModelMetadataPresenter {
     public static String getLocalizedModelString(ModelAssembly modelAssembly, String key, String defaultValue) {
         //? if <1.17 {
         /*return getLocalizedModelStringForLocale(modelAssembly, Minecraft.getInstance().getLanguageManager().getSelected().getCode(), key, defaultValue);
-         *///?} else {
+         *///?}
+        //? if >=1.17 && <1.19.4 {
+        /*return getLocalizedModelStringForLocale(modelAssembly, Minecraft.getInstance().getLanguageManager().getSelected().getCode(), key, defaultValue);
+         *///?}
+        //? if >=1.19.4 {
         return getLocalizedModelStringForLocale(modelAssembly, Minecraft.getInstance().getLanguageManager().getSelected(), key, defaultValue);
         //?}
     }
@@ -92,12 +100,9 @@ public class ModelMetadataPresenter {
             }
 
             if (!extraInfo.getAuthors().isEmpty() || StringUtils.isNoneBlank(extraInfo.getLicense().getFirst())) {
-                //? if <1.17
-
+                //? if <1.19.4
                 /*tooltipLines.add(YsmText.literal(" "));*/
-
-                //? if >=1.17
-
+                //? if >=1.19.4
                 tooltipLines.add(CommonComponents.space());
             }
 
@@ -137,13 +142,10 @@ public class ModelMetadataPresenter {
 
         MainModelInfo info = modelAssembly.getModelData().getMainModelInfo();
         if (info != null) {
-            //? if <1.17
-
-            /*tooltipLines.add(YsmText.literal(" "));*/
-
-            //? if >=1.17
-
-            tooltipLines.add(CommonComponents.space());
+                //? if <1.19.4
+                /*tooltipLines.add(YsmText.literal(" "));*/
+                //? if >=1.19.4
+                tooltipLines.add(CommonComponents.space());
             tooltipLines.add(YsmText.translatable("gui.yes_steve_model.model.main_model_info", info.getBones(), info.getCubes(), info.getFaces()).withStyle(ChatFormatting.GRAY));
             tooltipLines.add(YsmText.translatable("gui.yes_steve_model.model.texture_info", modelAssembly.getAnimationBundle().getTextures().size()).withStyle(ChatFormatting.GRAY));
         }

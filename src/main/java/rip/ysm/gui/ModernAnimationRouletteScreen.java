@@ -139,7 +139,11 @@ public class ModernAnimationRouletteScreen extends Screen {
 
         //? if <1.17 {
         /*super.render(g.pose(), mouseX, mouseY, partialTick);
-         *///?} else {
+         *///?}
+        //? if >=1.17 && <1.20 {
+        /*super.render(g.pose(), mouseX, mouseY, partialTick);
+         *///?}
+        //? if >=1.20 {
         super.render(g.graphics(), mouseX, mouseY, partialTick);
         //?}
     }

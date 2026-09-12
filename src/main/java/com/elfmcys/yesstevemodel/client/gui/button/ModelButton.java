@@ -300,7 +300,10 @@ public class ModelButton extends YsmButton {
             guiGraphics.pose().translate(0.0f, 0.0f, 4000.0f);
             //? if <1.17
         /*String selected = Minecraft.getInstance().getLanguageManager().getSelected().getCode();*/
-        //? if >=1.17
+        // LanguageManager.getSelected() 1.19.4 起返回 String（1194:70），1.17~1.19.2 为 LanguageInfo → getCode()
+        //? if >=1.17 && <1.19.4
+        /*String selected = Minecraft.getInstance().getLanguageManager().getSelected().getCode();*/
+        //? if >=1.19.4
         String selected = Minecraft.getInstance().getLanguageManager().getSelected();
             if (!Objects.equals(this.cachedLanguage, selected)) {
                 this.cachedLanguage = selected;

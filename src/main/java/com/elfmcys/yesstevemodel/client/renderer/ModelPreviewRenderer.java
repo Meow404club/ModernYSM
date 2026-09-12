@@ -153,8 +153,15 @@ public final class ModelPreviewRenderer {
         // com.mojang.math.Quaternion rotationZ = new com.mojang.math.Quaternion(com.mojang.math.Vector3f.ZP, 180.0f, true);
         // com.mojang.math.Quaternion rotationX = new com.mojang.math.Quaternion(com.mojang.math.Vector3f.XP, (-10.0f) + pitch, true);
         //? } else {
-        Quaternionf rotationZ = /*? if <1.19.4 {*/ /*com.mojang.math.Vector3f.*//*?} else {*/ Axis./*?}*/ZP.rotationDegrees(180.0f);
-        Quaternionf rotationX = /*? if <1.19.4 {*/ /*com.mojang.math.Vector3f.*//*?} else {*/ Axis./*?}*/XP.rotationDegrees((-10.0f) + pitch);
+        // 中段 mojang Quaternion（rotationDegrees 返回值 1192 Vector3f.java:192）/ 1.19.4+ JOML Quaternionf，
+        // else 体（活跃区）内用行条件段化（块条件嵌套会闭合外层，YsmTag 实测）
+        //? if >=1.17 && <1.19.4
+        /*com.mojang.math.Quaternion rotationZ = com.mojang.math.Vector3f.ZP.rotationDegrees(180.0f);
+        com.mojang.math.Quaternion rotationX = com.mojang.math.Vector3f.XP.rotationDegrees((-10.0f) + pitch);*/
+        //? if >=1.19.4
+        Quaternionf rotationZ = Axis.ZP.rotationDegrees(180.0f);
+        //? if >=1.19.4
+        Quaternionf rotationX = Axis.XP.rotationDegrees((-10.0f) + pitch);
         //? }
         rotationZ.mul(rotationX);
         poseStack.mulPose(rotationZ);
@@ -197,7 +204,9 @@ public final class ModelPreviewRenderer {
         EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         //? if <1.17
         // rotationX.conj();
-        //? if >=1.17
+        //? if >=1.17 && <1.19.4
+        /*rotationX.conj();*/
+        //? if >=1.19.4
         rotationX.conjugate();
         entityRenderDispatcher.overrideCameraOrientation(rotationX);
         entityRenderDispatcher.setRenderShadow(false);
@@ -285,8 +294,13 @@ public final class ModelPreviewRenderer {
         // com.mojang.math.Quaternion rotationZ = new com.mojang.math.Quaternion(com.mojang.math.Vector3f.ZP, 180.0f, true);
         // rotationZ.mul(new com.mojang.math.Quaternion(com.mojang.math.Vector3f.XP, (-10.0f) + pitch, true));
         //? } else {
-        Quaternionf rotationZ = /*? if <1.19.4 {*/ /*com.mojang.math.Vector3f.*//*?} else {*/ Axis./*?}*/ZP.rotationDegrees(180.0f);
-        rotationZ.mul(/*? if <1.19.4 {*/ /*com.mojang.math.Vector3f.*//*?} else {*/ Axis./*?}*/XP.rotationDegrees((-10.0f) + pitch));
+        //? if >=1.17 && <1.19.4
+        /*com.mojang.math.Quaternion rotationZ = com.mojang.math.Vector3f.ZP.rotationDegrees(180.0f);
+        rotationZ.mul(com.mojang.math.Vector3f.XP.rotationDegrees((-10.0f) + pitch));*/
+        //? if >=1.19.4
+        Quaternionf rotationZ = Axis.ZP.rotationDegrees(180.0f);
+        //? if >=1.19.4
+        rotationZ.mul(Axis.XP.rotationDegrees((-10.0f) + pitch));
         //? }
         poseStack.mulPose(rotationZ);
         //? if <1.17
@@ -308,8 +322,13 @@ public final class ModelPreviewRenderer {
         // com.mojang.math.Quaternion rotationZ = new com.mojang.math.Quaternion(com.mojang.math.Vector3f.ZP, 180.0f, true);
         // rotationZ.mul(new com.mojang.math.Quaternion(com.mojang.math.Vector3f.XP, (-10.0f) + pitch, true));
         //? } else {
-        Quaternionf rotationZ = /*? if <1.19.4 {*/ /*com.mojang.math.Vector3f.*//*?} else {*/ Axis./*?}*/ZP.rotationDegrees(180.0f);
-        rotationZ.mul(/*? if <1.19.4 {*/ /*com.mojang.math.Vector3f.*//*?} else {*/ Axis./*?}*/XP.rotationDegrees((-10.0f) + pitch));
+        //? if >=1.17 && <1.19.4
+        /*com.mojang.math.Quaternion rotationZ = com.mojang.math.Vector3f.ZP.rotationDegrees(180.0f);
+        rotationZ.mul(com.mojang.math.Vector3f.XP.rotationDegrees((-10.0f) + pitch));*/
+        //? if >=1.19.4
+        Quaternionf rotationZ = Axis.ZP.rotationDegrees(180.0f);
+        //? if >=1.19.4
+        rotationZ.mul(Axis.XP.rotationDegrees((-10.0f) + pitch));
         //? }
         poseStack.mulPose(rotationZ);
         //? if <1.17
@@ -341,17 +360,23 @@ public final class ModelPreviewRenderer {
         if (animationTracker.isCurrentAnimation("ride")) {
             //? if <1.17
             // renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.HORSE), () -> EntityType.HORSE.create(entity.level)), partialTick);
-            //? if >=1.17
+            //? if >=1.17 && <1.20
+            /*renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.HORSE), () -> EntityType.HORSE.create(entity.getLevel())), partialTick);*/
+            //? if >=1.20
             renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.HORSE), () -> EntityType.HORSE.create(entity.level())), partialTick);
         } else if (animationTracker.isCurrentAnimation("ride_pig")) {
             //? if <1.17
             // renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.PIG), () -> EntityType.PIG.create(entity.level)), partialTick);
-            //? if >=1.17
+            //? if >=1.17 && <1.20
+            /*renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.PIG), () -> EntityType.PIG.create(entity.getLevel())), partialTick);*/
+            //? if >=1.20
             renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.PIG), () -> EntityType.PIG.create(entity.level())), partialTick);
         } else if (animationTracker.isCurrentAnimation("boat")) {
             //? if <1.17
             // renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.BOAT), () -> EntityType.BOAT.create(entity.level)), partialTick);
-            //? if >=1.17
+            //? if >=1.17 && <1.20
+            /*renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.BOAT), () -> EntityType.BOAT.create(entity.getLevel())), partialTick);*/
+            //? if >=1.20
             renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.BOAT), () -> EntityType.BOAT.create(entity.level())), partialTick);
         }
     }
@@ -397,8 +422,13 @@ public final class ModelPreviewRenderer {
         // com.mojang.math.Quaternion rotationZ = new com.mojang.math.Quaternion(com.mojang.math.Vector3f.ZP, 180.0f, true);
         // com.mojang.math.Quaternion rotationX = new com.mojang.math.Quaternion(com.mojang.math.Vector3f.XP, disablePreviewRotation ? 0.0f : -10.0f, true);
         //? } else {
-        Quaternionf rotationZ = /*? if <1.19.4 {*/ /*com.mojang.math.Vector3f.*//*?} else {*/ Axis./*?}*/ZP.rotationDegrees(180.0f);
-        Quaternionf rotationX = /*? if <1.19.4 {*/ /*com.mojang.math.Vector3f.*//*?} else {*/ Axis./*?}*/XP.rotationDegrees(disablePreviewRotation ? 0.0f : -10.0f);
+        //? if >=1.17 && <1.19.4
+        /*com.mojang.math.Quaternion rotationZ = com.mojang.math.Vector3f.ZP.rotationDegrees(180.0f);
+        com.mojang.math.Quaternion rotationX = com.mojang.math.Vector3f.XP.rotationDegrees(disablePreviewRotation ? 0.0f : -10.0f);*/
+        //? if >=1.19.4
+        Quaternionf rotationZ = Axis.ZP.rotationDegrees(180.0f);
+        //? if >=1.19.4
+        Quaternionf rotationX = Axis.XP.rotationDegrees(disablePreviewRotation ? 0.0f : -10.0f);
         //? }
         rotationZ.mul(rotationX);
         poseStack.mulPose(rotationZ);
@@ -496,7 +526,9 @@ public final class ModelPreviewRenderer {
         EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         //? if <1.17
         // rotationX.conj();
-        //? if >=1.17
+        //? if >=1.17 && <1.19.4
+        /*rotationX.conj();*/
+        //? if >=1.19.4
         rotationX.conjugate();
         entityRenderDispatcher.overrideCameraOrientation(rotationX);
         entityRenderDispatcher.setRenderShadow(false);

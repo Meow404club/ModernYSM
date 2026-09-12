@@ -253,7 +253,9 @@ public class PlayerTextureScreen extends Screen {
         guiGraphics.drawString(this.font, str2, this.guiLeft + 5 + ((80 - this.font.width(str2)) / 2), this.guiTop + 218, 15986656);
         //? if <1.17
         /*super.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
-        //? if >=1.17
+        //? if >=1.17 && <1.20
+        /*super.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
+        //? if >=1.20
         super.render(guiGraphics.graphics(), mouseX, mouseY, partialTick);
         ((ScreenAccessor) this).ysm$getRenderables().stream().filter(renderable -> {
             return renderable instanceof FlatColorButton;

@@ -70,7 +70,9 @@ public class DisclaimerScreen extends Screen {
         guiGraphics.drawWordWrap(this.font, YsmText.translatable("gui.yes_steve_model.disclaimer.text"), this.textY, this.textHeight, 400, -1);
         //? if <1.17
         /*super.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
-        //? if >=1.17
+        //? if >=1.17 && <1.20
+        /*super.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
+        //? if >=1.20
         super.render(guiGraphics.graphics(), mouseX, mouseY, partialTick);
     }
     // addRenderableWidget/addWidget 均为 protected 实例方法（JLS 6.6.2 子类内才可调）→ 桥方法；

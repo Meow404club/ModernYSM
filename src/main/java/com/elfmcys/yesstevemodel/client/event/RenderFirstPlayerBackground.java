@@ -85,11 +85,15 @@ public class RenderFirstPlayerBackground {
         poseStack.translate((-Mth.sin(walkPhase * 3.1415927f)) * fLerp * 0.5f, Math.abs(Mth.cos(walkPhase * 3.1415927f) * fLerp), 0.0d);
         //? if <1.17
         // poseStack.mulPose(com.mojang.math.Vector3f.ZN.rotationDegrees(Mth.sin(walkPhase * 3.1415927f) * fLerp * 3.0f));
-        //? if >=1.17
+        //? if >=1.17 && <1.19.4
+        /*poseStack.mulPose(com.mojang.math.Vector3f.ZN.rotationDegrees(Mth.sin(walkPhase * 3.1415927f) * fLerp * 3.0f));*/
+        //? if >=1.19.4
         // poseStack.mulPose(Axis.ZN.rotationDegrees(Mth.sin(walkPhase * 3.1415927f) * fLerp * 3.0f));
         //? if <1.17
         // poseStack.mulPose(com.mojang.math.Vector3f.XN.rotationDegrees(Math.abs(Mth.cos((walkPhase * 3.1415927f) - 0.2f) * fLerp) * 5.0f));
-        //? if >=1.17
+        //? if >=1.17 && <1.19.4
+        // poseStack.mulPose(com.mojang.math.Vector3f.XN.rotationDegrees(Math.abs(Mth.cos((walkPhase * 3.1415927f) - 0.2f) * fLerp) * 5.0f));
+        //? if >=1.19.4
         // poseStack.mulPose(Axis.XN.rotationDegrees(Math.abs(Mth.cos((walkPhase * 3.1415927f) - 0.2f) * fLerp) * 5.0f));
     }
 }

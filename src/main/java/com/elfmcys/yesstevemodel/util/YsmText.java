@@ -36,9 +36,14 @@ public final class YsmText {
     }
 
     public static void sendSuccess(CommandSourceStack source, Component msg, boolean broadcastToOps) {
+        // sendSuccess(Supplier) 1.19.4 起；1.16.5~1.19.2 为 (Component, boolean)（1192 同 1165 形）
         //? if <1.17 {
         /*source.sendSuccess(msg, broadcastToOps);
-         *///?} else {
+         *///?}
+        //? if >=1.17 && <1.19.4 {
+        /*source.sendSuccess(msg, broadcastToOps);
+         *///?}
+        //? if >=1.19.4 {
         source.sendSuccess(() -> msg, broadcastToOps);
         //?}
     }

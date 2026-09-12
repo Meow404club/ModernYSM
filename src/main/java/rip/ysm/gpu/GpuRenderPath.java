@@ -60,10 +60,19 @@ public final class GpuRenderPath {
         GpuMesh mesh = decodeMeshRef(model.gpuMeshHandle);
         if (mesh == null) return false;
 
+        //? if >=1.17 && <1.19.4 {
+        /*
+        Matrix4f rootPose = com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.pose(pose);
+        Matrix3f rootNormal = com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.normal(pose);
+        Matrix4f projMat = com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.projectionMatrix();
+        Matrix4f mvMat = com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.modelViewMatrix();
+         *///?}
+        //? if >=1.19.4 {
         Matrix4f rootPose = pose.pose();
         Matrix3f rootNormal = pose.normal();
         Matrix4f projMat = RenderSystem.getProjectionMatrix();
         Matrix4f mvMat = RenderSystem.getModelViewMatrix();
+        //?}
 
         rootPose.get(rootPoseScratch);
         rootNormal.get(rootNormalScratch);

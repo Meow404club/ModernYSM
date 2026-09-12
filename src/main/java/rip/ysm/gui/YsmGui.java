@@ -301,6 +301,31 @@ public final class YsmGui {
 
      *///?}
 
+    //? if >=1.17 && <1.20 {
+    /*
+    // AbstractWidget.renderScrollingString 1.19.4 才有（1194:119/137 PoseStack，1201 GuiGraphics），
+    // 1.17~1.19.2 无 → 按 1201 AbstractWidget.java:123-146 逐式等价（scissor 裁剪 + 左移滚动 +
+    // 居中回退），绘制经本门面（fill/drawString/drawCenteredString/enableScissor 全版本中性）。
+    // Util.getMillis 1165:?? 与 1182/1192 同名存活，滚动周期公式与 1201 逐字对齐。
+    public void renderScrollingString(Font font, Component message, int minX, int minY, int maxX, int maxY, int color) {
+        int textWidth = font.width(message);
+        int centerY = (minY + maxY - 9) / 2 + 1;
+        int availableWidth = maxX - minX;
+        if (textWidth > availableWidth) {
+            int overflow = textWidth - availableWidth;
+            double period = Math.max((double) overflow * 0.5d, 3.0d);
+            double phase = Math.sin((Math.PI / 2) * Math.cos((Math.PI * 2) * (double) net.minecraft.Util.getMillis() / 1000.0d / period)) / 2.0d + 0.5d;
+            double offset = net.minecraft.util.Mth.lerp(phase, 0.0d, (double) overflow);
+            this.enableScissor(minX, minY, maxX, maxY);
+            this.drawString(font, message, minX - (int) offset, centerY, color);
+            this.disableScissor();
+        } else {
+            this.drawCenteredString(font, message, (minX + maxX) / 2, centerY, color);
+        }
+    }
+
+     *///?}
+
     // ==================== blit 家族（绑定机制 1.17 分界） ====================
 
     /** 短版 256 贴图 blit：1.16.5 TextureManager.bind + (x,y,w,h,u,v,uW,vH,texW,texH) 形；

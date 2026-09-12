@@ -91,7 +91,9 @@ public class AuthorButton extends YsmButton {
         String str3 = ModelMetadataPresenter.getLocalizedModelString(this.modelAssembly, String.format("metadata.authors.%d.comment", this.authorIndex), this.authorInfo.getComment());
         //? if <1.17
         /*guiGraphics.drawString(font, YsmText.literal(str), getX() + 2, getY() + 72, ChatFormatting.GOLD.getColor().intValue(), false);*/
-        //? if >=1.17
+        //? if >=1.17 && <1.20
+        /*guiGraphics.renderScrollingString(font, YsmText.literal(str), getX() + 2, getY() + 72, (getX() + this.width) - 2, getY() + 82, ChatFormatting.GOLD.getColor().intValue());*/
+        //? if >=1.20
         renderScrollingString(guiGraphics.graphics(), font, YsmText.literal(str), getX() + 2, getY() + 72, (getX() + this.width) - 2, getY() + 82, ChatFormatting.GOLD.getColor().intValue());
         guiGraphics.drawCenteredString(font, str2, getX() + 35, getY() + 82, ChatFormatting.GREEN.getColor().intValue());
         drawWrappedText(guiGraphics, YsmText.literal(str3), getX() + 3, getY() + 95, 64, -1);

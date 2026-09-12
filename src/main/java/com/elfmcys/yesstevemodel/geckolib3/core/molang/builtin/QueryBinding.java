@@ -77,12 +77,16 @@ public class QueryBinding extends ContextBinding {
         entityVar("is_on_fire", ctx -> ctx.entity().isOnFire());
         //? if <1.17
         // entityVar("is_on_ground", ctx -> ctx.entity().isOnGround());
-//? if >=1.17
+//? if >=1.17 && <1.20
+        /*entityVar("is_on_ground", ctx -> ctx.entity().isOnGround());*/
+//? if >=1.20
         entityVar("is_on_ground", ctx -> ctx.entity().onGround());
         entityVar("is_riding", ctx -> ctx.entity().isPassenger());
         //? if <1.17
         // entityVar("is_sneaking", ctx -> ctx.entity().isOnGround() && ctx.entity().getPose() == Pose.CROUCHING);
-//? if >=1.17
+//? if >=1.17 && <1.20
+        /*entityVar("is_sneaking", ctx -> ctx.entity().isOnGround() && ctx.entity().getPose() == Pose.CROUCHING);*/
+//? if >=1.20
         entityVar("is_sneaking", ctx -> ctx.entity().onGround() && ctx.entity().getPose() == Pose.CROUCHING);
         entityVar("is_spectator", ctx -> ctx.entity().isSpectator());
         entityVar("is_sprinting", ctx -> ctx.entity().isSprinting());
@@ -109,7 +113,9 @@ public class QueryBinding extends ContextBinding {
         playerEntityVar("player_level", QueryBinding::getPlayerLevel);
         //? if <1.17
         // playerEntityVar("is_jumping", ctx -> !isFlying(ctx) && !ctx.entity().isPassenger() && !ctx.entity().isOnGround() && !ctx.entity().isInWater());
-        //? if >=1.17
+        //? if >=1.17 && <1.20
+        /*playerEntityVar("is_jumping", ctx -> !isFlying(ctx) && !ctx.entity().isPassenger() && !ctx.entity().isOnGround() && !ctx.entity().isInWater());*/
+//? if >=1.20
         playerEntityVar("is_jumping", ctx -> !isFlying(ctx) && !ctx.entity().isPassenger() && !ctx.entity().onGround() && !ctx.entity().isInWater());
 
         clientPlayerEntityVar("has_cape", ctx -> hasCape(ctx.entity()));
@@ -177,9 +183,13 @@ public class QueryBinding extends ContextBinding {
     private static int getEquipmentCount(LivingEntity entity) {
         int i = 0;
         for (EquipmentSlot equipmentSlot : EquipmentSlot.values()) {
+            // EquipmentSlot.isArmor() 1.19.4 起（1194 EquipmentSlot.java:43；1182/1192 无）→
+            // <1.19.4 用 getType()==ARMOR（等价展开）
             //? if <1.17
             // if (equipmentSlot.getType() == EquipmentSlot.Type.ARMOR && !CosmeticArmorHelper.getArmorItem(entity, equipmentSlot).isEmpty()) {
-            //? if >=1.17
+            //? if >=1.17 && <1.19.4
+            /*if (equipmentSlot.getType() == EquipmentSlot.Type.ARMOR && !CosmeticArmorHelper.getArmorItem(entity, equipmentSlot).isEmpty()) {*/
+            //? if >=1.19.4
             if (equipmentSlot.isArmor() && !CosmeticArmorHelper.getArmorItem(entity, equipmentSlot).isEmpty()) {
                 i++;
             }

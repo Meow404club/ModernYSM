@@ -30,11 +30,17 @@ public class ModSoundEvents {
 
     public static final SoundEventsRegister REGISTER = new SoundEventsRegister(ForgeRegistries.SOUND_EVENTS, YesSteveModel.MOD_ID);
 
-    // createFixedRangeEvent(rl,16f) 为 1.19+ API；1.16.5 SoundEvent(RL) 构造器即固定 16 格衰减（等价语义）
+    // createFixedRangeEvent(rl,16f) 为 1.19.3+ API；1.16.5~1.19.2 SoundEvent(RL)/SoundEvent(RL,float)
+    // public 构造器等价（1165 SoundEvent.java / 1192 SoundEvent.java:13-17，2 参=range+newSystem，
+    // 与 createFixedRangeEvent 逐字节同语义）；1.16.5 单参即固定 16 格衰减
     public static final RegistryObject<SoundEvent> CUSTOM_SOUND = REGISTER.register("custom",
             //? if <1.17 {
             /*() -> new SoundEvent(new ResourceLocation(YesSteveModel.MOD_ID, "custom"))*/
-            //?} else {
+            //?}
+            //? if >=1.17 && <1.19.4 {
+            /*() -> new SoundEvent(new ResourceLocation(YesSteveModel.MOD_ID, "custom"), 16.0f)*/
+            //?}
+            //? if >=1.19.4 {
             () -> SoundEvent.createFixedRangeEvent(new ResourceLocation(YesSteveModel.MOD_ID, "custom"), 16.0f)
             //?}
     );

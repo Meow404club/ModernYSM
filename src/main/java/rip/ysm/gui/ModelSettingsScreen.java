@@ -300,7 +300,11 @@ public class ModelSettingsScreen extends OptionScreen {
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         //? if <1.17 {
         /*rotationX.conj();
-         *///?} else {
+         *///?}
+        //? if >=1.17 && <1.19.4 {
+        /*rotationX.conj();
+         *///?}
+        //? if >=1.19.4 {
         rotationX.conjugate();
         //?}
         dispatcher.overrideCameraOrientation(rotationX);

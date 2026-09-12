@@ -173,7 +173,9 @@ public class ModelInfoScreen extends Screen {
         }
         //? if <1.17
         /*super.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
-        //? if >=1.17
+        //? if >=1.17 && <1.20
+        /*super.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
+        //? if >=1.20
         super.render(guiGraphics.graphics(), mouseX, mouseY, partialTick);
         ((ScreenAccessor) this).ysm$getRenderables().stream().filter(renderable -> {
             return renderable instanceof AuthorButton;

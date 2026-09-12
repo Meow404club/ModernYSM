@@ -55,10 +55,13 @@ public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity>
 
     private boolean isArmorItem(ItemStack stack) {
         Item item = stack.getItem();
-        // 1.16.5 无 IForgeItem.getEquipmentSlot()（1.17+），用 vanilla ArmorItem.getSlot()
+        // ArmorItem 取槽位：1.16.5~1.19.2 getSlot()（1165/1182:91/1192:91）；1.19.4 起
+        // getEquipmentSlot()（1194 ArmorItem.java:128）
         //? if <1.17
         // return (item instanceof ArmorItem) && ((ArmorItem) item).getSlot() == EquipmentSlot.HEAD;
-        //? if >=1.17
+        //? if >=1.17 && <1.19.4
+        /*return (item instanceof ArmorItem) && ((ArmorItem) item).getSlot() == EquipmentSlot.HEAD;*/
+        //? if >=1.19.4
         return (item instanceof ArmorItem) && ((ArmorItem) item).getEquipmentSlot() == EquipmentSlot.HEAD;
     }
 

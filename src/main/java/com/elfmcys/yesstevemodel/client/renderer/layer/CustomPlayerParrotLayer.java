@@ -68,11 +68,14 @@ public class CustomPlayerParrotLayer extends GeoLayerRenderer<CustomPlayerEntity
             /*poseStack.mulPose(com.mojang.math.Vector3f.ZP.rotationDegrees(180.0f));*/
             //? if >=1.19.4
             poseStack.mulPose(Axis.ZP.rotationDegrees(180.0f));
-            // 1.16.5 无 Parrot.Variant/ParrotRenderer.getVariantTexture：variant 为 int，
-            // 贴图查 ParrotRenderer.PARROT_LOCATIONS[variant]（vanilla 1.16.5 同款索引，越界防护取模）
-            //? if <1.17
+            // <1.19.4 无 Parrot.Variant 枚举（getVariant 仍为 int，1192 Parrot.java:413；1.19.4 起才
+            // Parrot.Variant + getVariantTexture，1194 Parrot.java:497）：贴图查
+            // ParrotRenderer.PARROT_LOCATIONS[variant]（vanilla 1192 ParrotRenderer.java:23 同款索引，越界防护取模）
+            //? if <1.19.4
             // this.parrotModel.renderOnShoulder(poseStack, bufferSource.getBuffer(this.parrotModel.renderType(ParrotRenderer.PARROT_LOCATIONS[Math.floorMod(shoulderEntityLeft.getInt(TAG_VARIANT), ParrotRenderer.PARROT_LOCATIONS.length)])), packedLightIn, OverlayTexture.NO_OVERLAY, limbSwing, limbSwingAmount, netHeadYaw, headPitch, player.tickCount);
-            //? if >=1.17
+            //? if >=1.17 && <1.19.4
+            /*this.parrotModel.renderOnShoulder(poseStack, bufferSource.getBuffer(this.parrotModel.renderType(ParrotRenderer.PARROT_LOCATIONS[Math.floorMod(shoulderEntityLeft.getInt(TAG_VARIANT), ParrotRenderer.PARROT_LOCATIONS.length)])), packedLightIn, OverlayTexture.NO_OVERLAY, limbSwing, limbSwingAmount, netHeadYaw, headPitch, player.tickCount);*/
+            //? if >=1.19.4
             this.parrotModel.renderOnShoulder(poseStack, bufferSource.getBuffer(this.parrotModel.renderType(ParrotRenderer.getVariantTexture(Parrot.Variant.byId(shoulderEntityLeft.getInt(TAG_VARIANT))))), packedLightIn, OverlayTexture.NO_OVERLAY, limbSwing, limbSwingAmount, netHeadYaw, headPitch, player.tickCount);
             poseStack.popPose();
         });

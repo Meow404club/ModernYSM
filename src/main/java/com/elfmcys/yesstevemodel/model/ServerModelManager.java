@@ -1537,6 +1537,9 @@ public final class ServerModelManager {
              *///?} else {
             ArrayList<FloatReferencePair<ServerPlayer>> arrayList = new ArrayList<>();
             for (ServerPlayer serverPlayer2 : players) {
+                //? if <1.20
+                /*if (serverPlayer2.getLevel().dimensionType() == serverPlayer.getLevel().dimensionType()) {*/
+//? if >=1.20
                 if (serverPlayer2.level().dimensionType() == serverPlayer.level().dimensionType()) {
                     arrayList.add(it.unimi.dsi.fastutil.floats.FloatReferencePair.of(serverPlayer2.distanceTo(serverPlayer), serverPlayer2));
                 }
@@ -1627,11 +1630,22 @@ public final class ServerModelManager {
         // isAcceptingMessages/ServerCommonPacketListenerImpl 为 1.20 API（1.16.5 无）：
         // <1.17 对位 Connection.isConnected + connection 字段直取
         //? if <1.17 {
-        /*if (!serverGamePacketListenerImpl.connection.isConnected() || !serverGamePacketListenerImpl.getClass().equals(ServerGamePacketListenerImpl.class)) {
+        /*
+        // isAcceptingMessages 1.19.4 起；1.16.5~1.19.2 connection 为 public final 字段（1192:190）
+        // 直连 isConnected 等价
+        if (!serverGamePacketListenerImpl.connection.isConnected() || !serverGamePacketListenerImpl.getClass().equals(ServerGamePacketListenerImpl.class)) {
             return null;
         }
         return serverGamePacketListenerImpl.connection;
-         *///?} else {
+         *///?}
+        //? if >=1.17 && <1.19.4 {
+        /*
+        if (!serverGamePacketListenerImpl.connection.isConnected() || !serverGamePacketListenerImpl.getClass().equals(ServerGamePacketListenerImpl.class)) {
+            return null;
+        }
+        return serverGamePacketListenerImpl.connection;
+         *///?}
+        //? if >=1.19.4 {
         if (!serverGamePacketListenerImpl.isAcceptingMessages() || !serverGamePacketListenerImpl.getClass().equals(ServerGamePacketListenerImpl.class)) {
             return null;
         }

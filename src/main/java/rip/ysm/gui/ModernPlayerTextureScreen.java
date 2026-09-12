@@ -162,7 +162,8 @@ public class ModernPlayerTextureScreen extends OptionScreen {
         String oldQuery = searchBox != null ? searchBox.getValue() : "";
         searchBox = new EditBox(this.font, searchX, iconY, searchW, 18, YsmGui.trans("gui.yes_steve_model.search.placeholder"));
         searchBox.setTextColor(0xFFFFFF);
-        //? if >1.17 {
+        // EditBox.setHint 1.19.4 起（1194 EditBox.java:581）
+        //? if >=1.19.4 {
         searchBox.setHint(YsmGui.trans("gui.yes_steve_model.search.placeholder"));
         //?}
         searchBox.setMaxLength(64);
@@ -311,7 +312,11 @@ public class ModernPlayerTextureScreen extends OptionScreen {
         if (searchBox != null && searchBox.visible) {
             //? if <1.17 {
             /*out.add(new int[]{searchBox.x, searchBox.y, searchBox.getWidth(), searchBox.getHeight()});
-             *///?} else {
+             *///?}
+            //? if >=1.17 && <1.19.4 {
+            /*out.add(new int[]{searchBox.x, searchBox.y, searchBox.getWidth(), searchBox.getHeight()});
+             *///?}
+            //? if >=1.19.4 {
             out.add(new int[]{searchBox.getX(), searchBox.getY(), searchBox.getWidth(), searchBox.getHeight()});
             //?}
         }

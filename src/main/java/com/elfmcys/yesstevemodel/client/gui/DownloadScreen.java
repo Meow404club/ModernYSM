@@ -51,7 +51,9 @@ public class DownloadScreen extends Screen {
         guiGraphics.drawCenteredString(this.font, "Coming Soooooooooooooooooooooooooon™", this.width / 2, (this.height / 2) - 5, ChatFormatting.DARK_RED.getColor().intValue());
         //? if <1.17
         /*super.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
-        //? if >=1.17
+        //? if >=1.17 && <1.20
+        /*super.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
+        //? if >=1.20
         super.render(guiGraphics.graphics(), mouseX, mouseY, partialTick);
     }
     // addRenderableWidget/addWidget 均为 protected 实例方法（JLS 6.6.2 子类内才可调）→ 桥方法；

@@ -126,7 +126,52 @@ public final class MatrixBridge {
     //     }
     //     return out;
     // }
-    //? } else {
+    //? }
+    // 1.17~1.19.2 PoseStack.last() 产出 com.mojang.math 矩阵（JOML 1.19.3 才内置），
+    // RenderSystem.getProjectionMatrix/getModelViewMatrix 同为 moj（1192 RenderSystem.java:872/882）；
+    // moj store=GL 列主序（1192 Matrix4f.bufferIndex(i,j)=j*4+i，buf[c*4+r]=G(r,c)，与 1165 同构），
+    // JOML set(a,b,v) 直写 mem[a*4+b]=m{a}{b}（digits=列,行）→ 恒等拷贝循环沿用 1165 已证形态。
+    // Matrix3f 1.17~1.19.2 有 public store(FloatBuffer)（1192 Matrix3f.java:420，9 值），
+    // 免 1165 的反射读 field 路径。
+    //? if >=1.17 && <1.19.4 {
+    /*public static Matrix4f pose(PoseStack.Pose pose) {
+        return fromMoj(pose.pose());
+    }
+
+    private static Matrix4f fromMoj(com.mojang.math.Matrix4f moj) {
+        java.nio.FloatBuffer buf = java.nio.FloatBuffer.allocate(16);
+        moj.store(buf);
+        Matrix4f out = new Matrix4f();
+        for (int c = 0; c < 4; c++) {
+            for (int r = 0; r < 4; r++) {
+                out.set(c, r, buf.get(c * 4 + r));
+            }
+        }
+        return out;
+    }
+
+    public static Matrix3f normal(PoseStack.Pose pose) {
+        java.nio.FloatBuffer buf = java.nio.FloatBuffer.allocate(9);
+        pose.normal().store(buf);
+        Matrix3f out = new Matrix3f();
+        for (int c = 0; c < 3; c++) {
+            for (int r = 0; r < 3; r++) {
+                out.set(c, r, buf.get(c * 3 + r));
+            }
+        }
+        return out;
+    }
+
+    public static Matrix4f projectionMatrix() {
+        return fromMoj(com.mojang.blaze3d.systems.RenderSystem.getProjectionMatrix());
+    }
+
+    public static Matrix4f modelViewMatrix() {
+        return fromMoj(com.mojang.blaze3d.systems.RenderSystem.getModelViewMatrix());
+    }
+
+     *///?}
+    //? if >=1.19.4 {
     public static Matrix4f pose(PoseStack.Pose pose) {
         return pose.pose();
     }

@@ -14,7 +14,11 @@ public final class ForgeAttributesImpl {
     public static Attribute blockReach() {
         //? if <1.17 {
         /*return ForgeMod.REACH_DISTANCE.get();
-         *///?} else {
+         *///?}
+        //? if >=1.17 && <1.19.4 {
+        /*return ForgeMod.REACH_DISTANCE.get();
+         *///?}
+        //? if >=1.19.4 {
         return ForgeMod.BLOCK_REACH.get();
         //?}
     }
@@ -22,7 +26,11 @@ public final class ForgeAttributesImpl {
     public static Attribute entityReach() {
         //? if <1.17 {
         /*return ForgeMod.REACH_DISTANCE.get();
-         *///?} else {
+         *///?}
+        //? if >=1.17 && <1.19.4 {
+        /*return ForgeMod.REACH_DISTANCE.get();
+         *///?}
+        //? if >=1.19.4 {
         return ForgeMod.ENTITY_REACH.get();
         //?}
     }

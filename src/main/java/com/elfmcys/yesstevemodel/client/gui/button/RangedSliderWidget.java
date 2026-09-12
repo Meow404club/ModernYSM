@@ -157,7 +157,10 @@ public class RangedSliderWidget extends YsmSliderButton {
     }
 
     protected int getHandleTextureY() {
-        int i = /*? if <1.17 {*/ /*!this.isHovered()*//*?} else {*/ !this.isHoveredOrFocused() /*?}*/ && !this.canChangeValue ? 2 : 3;
+        //? if <1.17
+        /*int i = !this.isHovered() && !this.canChangeValue ? 2 : 3;*/
+        //? if >=1.17
+        int i = !this.isHoveredOrFocused() && !this.canChangeValue ? 2 : 3;
         return i * 20;
     }
 
@@ -166,8 +169,17 @@ public class RangedSliderWidget extends YsmSliderButton {
     public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
-    //?} else {
-    /*@Override
+    //?}
+    //? if >=1.19.4 && <1.20 {
+    /*
+    @Override
+    public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
+    }
+     *///?}
+    //? if <1.19.4 {
+    /*
+    @Override
     public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
     }
@@ -185,7 +197,9 @@ public class RangedSliderWidget extends YsmSliderButton {
         int color = this.active ? 16777215 : 10526880;
         //? if <1.17
         /*guiGraphics.drawString(mc.font, this.getMessage(), this.getX() + 2, this.getY() + (this.height - 8) / 2, color | Mth.ceil(this.alpha * 255.0F) << 24, false);*/
-        //? if >=1.17
+        //? if >=1.17 && <1.20
+        /*guiGraphics.renderScrollingString(mc.font, this.getMessage(), this.getX() + 2, this.getY(), (this.getX() + this.width) - 2, this.getY() + this.height, color | Mth.ceil(this.alpha * 255.0F) << 24);*/
+        //? if >=1.20
         renderScrollingString(guiGraphics.graphics(), mc.font, 2, color | Mth.ceil(this.alpha * 255.0F) << 24);
     }
 

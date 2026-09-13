@@ -1,5 +1,6 @@
 package com.elfmcys.yesstevemodel.platform.neoforge.network;
 
+import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.platform.neoforge.YesSteveModelForge;
 import com.elfmcys.yesstevemodel.network.NetworkHandler;
 import com.elfmcys.yesstevemodel.network.message.C2SModelSyncPayload;
@@ -72,7 +73,9 @@ public final class YSMChannelImpl {
     }
 
     private static void onRegisterPayloads(RegisterPayloadHandlerEvent event) {
-        IPayloadRegistrar registrar = event.registrar(version).optional();
+        // registrar 参数=payload 命名空间（须等于 modId，ModdedPacketRegistrar.validatePayload 校验），
+        // 非 channel 版本；.optional() 对应 forge newSimpleChannel 的 str -> true（接受任意版本）
+        IPayloadRegistrar registrar = event.registrar(YesSteveModel.MOD_ID).optional();
         registerPayload(registrar, FRAGMENT_DISCRIMINATOR);
         for (Map.Entry<Integer, LocalCodec<?>> entry : codecs.entrySet()) {
             registerPayload(registrar, entry.getKey());
@@ -207,7 +210,12 @@ public final class YSMChannelImpl {
     private static byte[] encode(Object packet) {
         FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
         try {
-            codecOf(discriminatorOf(packet)).encoder.accept(packet, buf);
+            // forge SimpleChannel.encodeMessage 的编码首字节即 discriminator（handleFragment
+            // 重排后 readUnsignedByte 读取的就是它）——Wrapped 直发路径由 payload id 路由
+            // 无此字节，分片内数据必须显式补齐，否则重排流错位一位
+            int discriminator = discriminatorOf(packet);
+            buf.writeByte(discriminator & 0xff);
+            codecOf(discriminator).encoder.accept(packet, buf);
             byte[] data = new byte[buf.readableBytes()];
             buf.readBytes(data);
             return data;

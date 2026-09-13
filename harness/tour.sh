@@ -51,6 +51,10 @@ case "$VERSION" in
     SERVER_DIR="$ROOT/versions/$VERSION/run/server"
     CLIENT_DIR="$ROOT/versions/$VERSION/run/client"
     ;;
+  1.20.4-neoforge|1.20.6-neoforge|1.21.1-neoforge)
+    SERVER_DIR="$ROOT/versions/$VERSION/run/server"
+    CLIENT_DIR="$ROOT/versions/$VERSION/run/client"
+    ;;
   *)
     echo "[tour] unknown version line: $VERSION" >&2
     exit 1

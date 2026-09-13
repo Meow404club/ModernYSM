@@ -22,6 +22,16 @@ val mcVersion = property("deps.minecraft") as String
 // neoforge 装载区间用线大版本（20.4.251→20.4 / 21.1.250→21.1）
 val neoMajor = (property("deps.neoforge") as String).substringBeforeLast('.')
 
+// NFRT 类路径含版本区间依赖（log4j-core 2.11.+），每次解析都 HEAD maven-metadata——
+// maven.neoforged.net 偶发 502 即断构建（实测两次）→ 钉死具体版本（loader 2.0.17 自带 2.19.0）去抖
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.apache.logging.log4j" && requested.name == "log4j-core") {
+            useVersion("2.19.0")
+        }
+    }
+}
+
 repositories {
     mavenCentral()
     maven("https://maven.neoforged.net/releases/") { name = "NeoForged" }

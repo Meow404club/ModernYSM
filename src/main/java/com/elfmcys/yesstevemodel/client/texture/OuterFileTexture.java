@@ -23,6 +23,9 @@ public class OuterFileTexture extends AbstractTexture implements ITextureMap {
         this.data = data;
     }
 
+    // 1.21.4 AbstractTexture.load 抽象删除（vanilla-1.21.4 AbstractTexture 无 load，
+    // 纹理注册不再回调）→ 方法降级为本类自有 API，注册点显式调用
+    //? if <1.21.4
     @Override
     public void load(@NotNull ResourceManager resourceManager) {
         if (!RenderSystem.isOnRenderThreadOrInit()) {
@@ -37,7 +40,12 @@ public class OuterFileTexture extends AbstractTexture implements ITextureMap {
             int width = imageIn.getWidth();
             int height = imageIn.getHeight();
             TextureUtil.prepareImage(this.getId(), 0, width, height);
+            // 1.21.2 NativeImage.upload 11 参（含 blur/clamp/mipmap 布尔）删 → 8 参
+            //（vanilla-1.21.4 NativeImage.java:347）
+            //? if <1.21.2
             imageIn.upload(0, 0, 0, 0, 0, width, height, false, true, false, false);
+            //? if >=1.21.2
+            /*imageIn.upload(0, 0, 0, 0, 0, width, height, false);*/
         } catch (IOException e) {
             e.printStackTrace();
         }

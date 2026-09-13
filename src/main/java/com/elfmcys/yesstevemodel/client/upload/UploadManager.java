@@ -171,6 +171,11 @@ public class UploadManager {
     private static void registerTexture(AbstractTexture texture, TextureLocatable locatable) {
         if (!locatable.registered) {
             Minecraft.getInstance().getTextureManager().register(locatable.resourceLocation, texture);
+            //? if >=1.21.4 {
+            if (texture instanceof com.elfmcys.yesstevemodel.client.texture.OuterFileTexture outerTexture) {
+                outerTexture.load(Minecraft.getInstance().getResourceManager());
+            }
+            //?}
             ResourceCleanupHelper.registerBiCleanup(locatable, locatable.resourceLocation, locatable.resolution, (resourceLocation, rlcNum) -> {
                 //? if <1.18.2 {
                 /*expiredTextures.put(texture, new RlInt(resourceLocation, rlcNum));

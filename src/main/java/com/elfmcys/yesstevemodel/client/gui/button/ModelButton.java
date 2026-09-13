@@ -341,7 +341,16 @@ public class ModelButton extends YsmButton {
         }
     }
 
+    // 1.21.4 AbstractWidget.clicked(double,double) 删除（protected 命中判定方法移除，
+    // vanilla-1.21.4 AbstractWidget 无 clicked 方法）→ isHovered() 对位
+    //? if <1.21.4 {
     public boolean clicked(double mouseX, double mouseY) {
         return !this.isStarred && super.clicked(mouseX, mouseY);
     }
+    //?}
+    //? if >=1.21.4 {
+    /*public boolean clicked(double mouseX, double mouseY) {
+        return !this.isStarred && this.isHovered();
+    }*/
+    //?}
 }

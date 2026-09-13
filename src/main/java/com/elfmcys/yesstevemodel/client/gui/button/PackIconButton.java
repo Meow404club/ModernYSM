@@ -67,11 +67,20 @@ public class PackIconButton extends YsmButton {
         AbstractTexture texture = guiGraphics.getTexture(location);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
+        // 1.21.4 MissingTextureAtlasSprite.getTexture() 删除 → 以缺省纹理
+        // TextureManager.getTexture(rl) 的返回比对改为引用缺省单参返回值不可行，
+        // 直接以 RegisteredTexture 判定改为：对缺省纹理不做特判（未注册 rl 本就返回缺省
+        // 纹理实例，blit 同样渲染灰白占位）——保留图标分支仅 <1.21.4
+        //? if <1.21.4 {
         if (texture == MissingTextureAtlasSprite.getTexture()) {
             guiGraphics.blit(default_pack_icon, getX(), getY(), 0.0f, 0.0f, this.width, this.height, this.width, this.height);
         } else {
             guiGraphics.blit(location, getX(), getY(), 0.0f, 0.0f, this.width, this.height, this.width, this.height);
         }
+        //?}
+        //? if >=1.21.4 {
+        /*guiGraphics.blit(location, getX(), getY(), 0.0f, 0.0f, this.width, this.height, this.width, this.height);*/
+        //?}
         RenderSystem.disableBlend();
         List listSplit = font.split(getMessage(), 45);
         if (listSplit.size() > 1) {

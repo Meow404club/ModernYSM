@@ -510,7 +510,12 @@ public final class YsmGui {
 
     /** TextureManager.getTexture(rl, missing) 双参语义：未注册时返回缺失纹理占位（不注册占位条目）。 */
     public net.minecraft.client.renderer.texture.AbstractTexture getTexture(ResourceLocation location) {
+        // 1.21.4 MissingTextureAtlasSprite.getTexture() 删除 → 单参 getTexture
+        //（缺省缺纹理占位语义一致，vanilla-1.21.4 TextureManager.java:96）
+        //? if <1.21.4
         return Minecraft.getInstance().getTextureManager().getTexture(location, net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.getTexture());
+        //? if >=1.21.4
+        /*return Minecraft.getInstance().getTextureManager().getTexture(location);*/
     }
 
     public void enableScissor(int minX, int minY, int maxX, int maxY) {

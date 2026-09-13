@@ -127,7 +127,13 @@ val imageStreamEmbedJars: Set<File> = imageStreamEmbed.files
 //  - compat shim 复用 1.16.5 线版本中立 shim（同 build.forge.gradle.kts pre120 块）
 sourceSets.main {
     java {
-        srcDir(rootProject.file("src/neoforge/java"))
+        // 基础树按 1.21.5 分代：>=1.21.5 挂 1215 树（= neoforge ∪ neoforge-1205 的 1.21.5 代副本，
+        // 见下方 else 分支注记），防同 FQCN 双份类定义
+        if (stonecutter.eval(stonecutter.current.version, "<21.5")) {
+            srcDir(rootProject.file("src/neoforge/java"))
+        } else {
+            srcDir(rootProject.file("src/neoforge-1215/java"))
+        }
         if (pre1205) {
             srcDir(rootProject.file("src/neoforge-1204/java"))
             srcDir(rootProject.file("src/neoforge-pre1213/java"))
@@ -144,8 +150,8 @@ sourceSets.main {
             srcDir(rootProject.file("src/neoforge-1205/java"))
             srcDir(rootProject.file("src/neoforge-1211/java"))
             srcDir(rootProject.file("src/neoforge-pre1213/java"))
-        } else {
-            // 1.21.2+（批二 b）：1205 树跨代同形部分（MobEffect/FirstPlayer/HandRender 钩子、
+        } else if (stonecutter.eval(stonecutter.current.version, "<21.5")) {
+            // 1.21.2~1.21.4：1205 树跨代同形部分（MobEffect/FirstPlayer/HandRender 钩子、
             // 网络与能力桥、ArrowPotionAccessor——ReplacePlayerRenderForgeHook 已移出至
             // 1206/1211 树）+ 1213 树 = 1.21.2 render-state 化分歧独占（RenderLivingBridgeImpl
             // state 形 / ReplacePlayerRenderForgeHook state 形 + 实体反查缓存 /
@@ -153,6 +159,13 @@ sourceSets.main {
             // BufferBuilder 桥）；shim 沿用 1211 副本（1.21.2+ ResourceLocation 面与 1.21.1
             // 同形，21.3 编译实证）
             srcDir(rootProject.file("src/neoforge-1205/java"))
+            srcDir(rootProject.file("src/neoforge-1213/java"))
+        } else {
+            // 1.21.5+（21.5/21.8/21.10/21.11/26.x）：1215 树 = (neoforge ∪ neoforge-1205)
+            // 1.21.5 代副本（已在上方基础挂载处挂载）。分裂动因：CompoundTag.getCompound
+            // Optional 化（ForgeCapabilityHooks）与 KeyModifier.getActiveModifier 删除
+            // （KeyMappingFactoryImpl）在 RAW 树无条件下不可两代共存（同 FQCN 二选一挂载
+            // 防双份类定义）；1213 树 21.5 编译零残差，继续共用。
             srcDir(rootProject.file("src/neoforge-1213/java"))
         }
         // shim：<1.21 挂原件；1.21+ 挂整树副本（ResourceLocation 私有构造 /

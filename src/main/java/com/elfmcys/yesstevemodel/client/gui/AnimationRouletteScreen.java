@@ -723,7 +723,7 @@ public class AnimationRouletteScreen extends Screen {
         }
     }
 
-    //? if <1.21.5 {
+    //? if <21.5 {
     private void renderRadialBackground(YsmGui guiGraphics, PoseStack poseStack, int mouseX, int mouseY) {
         if (this.currentProperties.isEmpty()) {
             return;
@@ -731,7 +731,7 @@ public class AnimationRouletteScreen extends Screen {
         RenderCompat.enableBlend();
         RenderCompat.defaultBlendFunc();
 // 1.17+ shader 管线绑定 + VertexFormat.Mode.QUADS ↔ 1.16.5 固定管线（POSITION_COLOR 走固定管线，GL_QUADS=7）
-        //? if <1.21.5 {
+        //? if <21.5 {
         Tesselator tesselator = Tesselator.getInstance();
         // 1.21 Tesselator.getBuilder/end 删除 → begin(Mode,Format) 直接返回 BufferBuilder，
         // 收尾走 buildOrThrow()+BufferUploader（vanilla-1.21.1 Tesselator.java:38 实证）
@@ -784,7 +784,7 @@ public class AnimationRouletteScreen extends Screen {
         if (!hoveredConfig) {
             this.hoveredConfigIndex = -1;
         }
-        //? if <1.21.5
+        //? if <1.21
         tesselator.end();
         //? if >=1.21
         /*com.mojang.blaze3d.vertex.BufferUploader.drawWithShader(builder.buildOrThrow());*/
@@ -794,7 +794,7 @@ public class AnimationRouletteScreen extends Screen {
 
     // 1.21.5+ 专用形：BufferUploader/Tesselator.getBuilder 删除（RenderPipeline 化）→
     // 扇形经 drawSpecial 进入 gui 渲染器集成管线（vanilla-1.21.5 GuiGraphics.java:1087）
-    //? if >=1.21.5 {
+    //? if >=21.5 {
     /*private void renderRadialBackground(YsmGui guiGraphics, PoseStack poseStack, int mouseX, int mouseY) {
         if (this.currentProperties.isEmpty()) {
             return;
@@ -861,13 +861,13 @@ public class AnimationRouletteScreen extends Screen {
         float green = ((color >> 8) & 255) / 255.0f;
         float blue = (color & 255) / 255.0f;
         // 1.21 vertex/color/endVertex → addVertex/setColor（无 endVertex）
-        //? if >=1.21 && <1.21.5
+        //? if >=1.21 && <21.5
         /*bufferBuilder.addVertex(matrix4f, this.centerX + (outerRadius * Mth.cos(startAngle)), this.centerY + (outerRadius * Mth.sin(startAngle)), 0.0f).setColor(red, green, blue, alpha);
         bufferBuilder.addVertex(matrix4f, this.centerX + (innerRadius * Mth.cos(startAngle)), this.centerY + (innerRadius * Mth.sin(startAngle)), 0.0f).setColor(red, green, blue, alpha);
         bufferBuilder.addVertex(matrix4f, this.centerX + (innerRadius * Mth.cos(endAngle)), this.centerY + (innerRadius * Mth.sin(endAngle)), 0.0f).setColor(red, green, blue, alpha);
         bufferBuilder.addVertex(matrix4f, this.centerX + (outerRadius * Mth.cos(endAngle)), this.centerY + (outerRadius * Mth.sin(endAngle)), 0.0f).setColor(red, green, blue, alpha);*/
         // 1.21.5 addVertex(Matrix4f,...) 重载删除（Pose 制化）→ Matrix4f 手工变换
-        //? if >=1.21.5 {
+        //? if >=21.5 {
         /*org.joml.Vector3f ysmV = new org.joml.Vector3f();
         ysmV.set(this.centerX + (outerRadius * Mth.cos(startAngle)), this.centerY + (outerRadius * Mth.sin(startAngle)), 0.0f).mulPosition(matrix4f);
         bufferBuilder.addVertex(ysmV.x(), ysmV.y(), ysmV.z()).setColor(red, green, blue, alpha);

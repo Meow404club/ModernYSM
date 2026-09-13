@@ -1,26 +1,30 @@
 package com.elfmcys.yesstevemodel.client.renderer;
 
-//? if <1.17 {
-// import net.minecraft.Util;
-//? } else {
-import net.minecraft.Util;
-//? }
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
+
+// 1.16.5 无 net.minecraft.Util（1.17+ 才有，1165 为 net.minecraft.util.Util）
+//? if >=1.17
+import net.minecraft.Util;
+
+import java.util.function.Function;
+
+//? if <21.5 {
+
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 
 public class CustomEntityTranslucentRenderType extends RenderType {
 
-    // 1.16.5 无 Util.memoize（1.17+），ConcurrentHashMap+computeIfAbsent 等价缓存
-    //? if <1.17 {
-    // private static final java.util.concurrent.ConcurrentMap<ResourceLocation, CustomEntityTranslucentRenderType> CACHE_MAP = new ConcurrentHashMap<>();
-    //? } else {
+    // 1.16.5 无 Util.memoize（1.17+），ConcurrentHashMap+computeIfAbsent 等价缓存。
+    // 铁律：非活跃块包裹区内禁「行条件假→裸行」（stitcher /^ 转义损坏，21.5 生成树实证），
+    // 须用已注释态/存储态形式
+    //? if <1.17
+    // private static final java.util.concurrent.ConcurrentMap<ResourceLocation, CustomEntityTranslucentRenderType> CACHE_MAP = new java.util.concurrent.ConcurrentHashMap<>();
+    //? if >=1.17
     private static final Function<ResourceLocation, CustomEntityTranslucentRenderType> CACHE = Util.memoize(CustomEntityTranslucentRenderType::new);
-    //? }
 
     private final boolean useBlend;
 
@@ -51,7 +55,22 @@ public class CustomEntityTranslucentRenderType extends RenderType {
         //? if >=1.17
         return CACHE.apply(resourceLocation);
     }
-
-    //? if <1.17 {
-    //? }
 }
+//?}
+//? if >=21.5 {
+/*// 1.21.5 RenderPipeline 化：RenderType 变抽象基类（mode() 抽象化、ctor 变形
+//(String,int,boolean,boolean,Runnable,Runnable)），「包一层改 isOutline/outline」形态不可达
+//→ 降级直用原版 RenderType.entityTranslucent（neoforge-21.5.98-sources RenderType.java:769）。
+//三处调用点（RenderFirstPlayerBackground/HandItemRenderer/IGeoRenderer）只消费 RenderType。
+public final class CustomEntityTranslucentRenderType {
+
+    private static final Function<ResourceLocation, RenderType> CACHE = rl -> RenderType.entityTranslucent(rl);
+
+    private CustomEntityTranslucentRenderType() {
+    }
+
+    public static RenderType get(ResourceLocation resourceLocation) {
+        return CACHE.apply(resourceLocation);
+    }
+}*/
+//?}

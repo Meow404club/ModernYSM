@@ -3,10 +3,11 @@ package rip.ysm.gpu;
 import rip.ysm.util.RenderCompat;
 import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
 // 1.21.5 GlStateManager 迁移 platform→opengl 包
-//? if <1.21.5
-/*import com.mojang.blaze3d.platform.GlStateManager;*/
-//? if >=1.21.5
-import com.mojang.blaze3d.opengl.GlStateManager;
+//? if <21.5
+import com.mojang.blaze3d.platform.GlStateManager;
+// 1.21.5 GlStateManager 迁移 platform→opengl 包（vcs 直通铁律：非 1.20.1 分支源码态必须注释）
+//? if >=21.5
+/*import com.mojang.blaze3d.opengl.GlStateManager;*/
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.resources.ResourceLocation;
@@ -124,7 +125,7 @@ public final class IrisRenderPath {
         // GLINT_ALPHA 1.19.4 起才有（1192 ShaderInstance 无此字段）
         //? if >=1.19.4 && <1.21.2
         /*if (shader.GLINT_ALPHA != null) shader.GLINT_ALPHA.set(1.0f);*/
-        //? if >=1.19.2 && <1.21.5
+        //? if >=1.19.2 && <21.5
         RenderCompat.invalidate();
         //? if <1.19.2
         /*RenderCompat.reset();*/

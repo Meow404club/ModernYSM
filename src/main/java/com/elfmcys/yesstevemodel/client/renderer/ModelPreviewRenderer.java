@@ -513,21 +513,32 @@ public final class ModelPreviewRenderer {
                 if (equipmentSlot == EquipmentSlot.MAINHAND) {
                     //? if <1.17
                     // player.inventory.items.set(player.inventory.selected, ItemStack.EMPTY);
-                    //? if >=1.17
+                    //? if >=1.17 && <21.5
                     player.getInventory().items.set(player.getInventory().selected, ItemStack.EMPTY);
+                    // 1.21.5 Inventory selected/items/offhand/armor 字段私有化/移除
+                    //（neoforge-21.5.98-sources Inventory.java:47-50/getSelectedSlot:58/setSelectedItem:74）
+                    //? if >=21.5
+                    /*player.getInventory().setSelectedItem(ItemStack.EMPTY);*/
                 } else if (equipmentSlot == EquipmentSlot.OFFHAND) {
                     //? if <1.17
                     // player.inventory.offhand.set(0, ItemStack.EMPTY);
-                    //? if >=1.17
+                    //? if >=1.17 && <21.5
                     player.getInventory().offhand.set(0, ItemStack.EMPTY);
+                    //? if >=21.5
+                    /*player.getInventory().setItem(net.minecraft.world.entity.player.Inventory.SLOT_OFFHAND, ItemStack.EMPTY);*/
                 } else {
                     //? if <1.17
                     // NonNullList<ItemStack> armorList = player.inventory.armor;
-                    //? if >=1.17
+                    //? if >=1.17 && <21.5
                     NonNullList<ItemStack> armorList = player.getInventory().armor;
+                    //? if <21.5 {
                     if (armorList.size() > equipmentSlot.getIndex()) {
                         armorList.set(equipmentSlot.getIndex(), ItemStack.EMPTY);
                     }
+                    //?}
+                    // 21.5 盔甲槽 = 36+EquipmentSlot.getIndex（Inventory.java:33 EQUIPMENT_SLOT_MAPPING FEET→36）
+                    //? if >=21.5
+                    /*player.getInventory().setItem(36 + equipmentSlot.getIndex(), ItemStack.EMPTY);*/
                 }
                 savedEquipment[slotIndex] = player.getItemBySlot(equipmentSlot);
                 slotIndex++;
@@ -620,21 +631,29 @@ public final class ModelPreviewRenderer {
                 if (equipmentSlot == EquipmentSlot.MAINHAND) {
                     //? if <1.17
                     // player.inventory.items.set(player.inventory.selected, itemStack);
-                    //? if >=1.17
+                    //? if >=1.17 && <21.5
                     player.getInventory().items.set(player.getInventory().selected, itemStack);
+                    //? if >=21.5
+                    /*player.getInventory().setSelectedItem(itemStack);*/
                 } else if (equipmentSlot == EquipmentSlot.OFFHAND) {
                     //? if <1.17
                     // player.inventory.offhand.set(0, itemStack);
-                    //? if >=1.17
+                    //? if >=1.17 && <21.5
                     player.getInventory().offhand.set(0, itemStack);
+                    //? if >=21.5
+                    /*player.getInventory().setItem(net.minecraft.world.entity.player.Inventory.SLOT_OFFHAND, itemStack);*/
                 } else {
                     //? if <1.17
                     // NonNullList<ItemStack> armorList = player.inventory.armor;
-                    //? if >=1.17
+                    //? if >=1.17 && <21.5
                     NonNullList<ItemStack> armorList = player.getInventory().armor;
+                    //? if <21.5 {
                     if (armorList.size() > equipmentSlot.getIndex()) {
                         armorList.set(equipmentSlot.getIndex(), itemStack);
                     }
+                    //?}
+                    //? if >=21.5
+                    /*player.getInventory().setItem(36 + equipmentSlot.getIndex(), itemStack);*/
                 }
                 slotIndex++;
             }

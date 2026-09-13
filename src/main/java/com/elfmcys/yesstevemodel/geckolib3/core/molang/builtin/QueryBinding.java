@@ -78,7 +78,13 @@ public class QueryBinding extends ContextBinding {
         entityVar("has_rider", ctx -> ctx.entity().isVehicle());
         entityVar("is_first_person", ctx -> CameraUtil.getCameraType(ctx) == CameraType.FIRST_PERSON.ordinal());
         entityVar("is_in_water", ctx -> ctx.entity().isInWater());
+        // 1.21.5 Entity.isInWaterRainOrBubble 删除（21.5 Entity 无此方法，21.4 Entity.java:1304 尚在；
+        // isInBubbleColumn 一并删除）→ 降级 isInWaterOrRain（21.5 Entity.java:1341 公有），
+        // 功能差：气泡列不再计入 is_in_water_or_rain（molang 查询语义微差，入功能债）
+        //? if <21.5
         entityVar("is_in_water_or_rain", ctx -> ctx.entity().isInWaterRainOrBubble());
+        //? if >=21.5
+        /*entityVar("is_in_water_or_rain", ctx -> ctx.entity().isInWaterOrRain());*/
         entityVar("is_on_fire", ctx -> ctx.entity().isOnFire());
         //? if <1.17
         // entityVar("is_on_ground", ctx -> ctx.entity().isOnGround());

@@ -12,9 +12,9 @@ import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 /*import net.neoforged.api.distmarker.Dist;*/
 //? if forge
 import net.minecraftforge.api.distmarker.Dist;
-//? if >=1.17 && neoforge && <1.21.4
+//? if >=1.17 && neoforge && <21.4
 /*import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;*/
-//? if >=1.17 && neoforge && >=1.21.4 {
+//? if >=1.17 && neoforge && >=21.4 {
 /*import net.neoforged.neoforge.client.event.AddClientReloadListenersEvent;
  *///?}
 //? if >=1.17 && forge
@@ -79,14 +79,14 @@ public class RendererManager {
     //?}
     // 1.21.4 RegisterClientReloadListenersEvent 删除（neoforge-1.21.4 无此类，
     // AddClientReloadListenersEvent 接管，addListener 需显式 RL key）
-    //? if neoforge && <1.21.4 {
+    //? if neoforge && <21.4 {
     /*@SubscribeEvent
     public static void onRegisterReloadListeners(RegisterClientReloadListenersEvent event) {
         ResourceManagerReloadListener listener = resourceManager -> resetRenderers();
         event.registerReloadListener(listener);
     }*/
     //?}
-    //? if neoforge && >=1.21.4 {
+    //? if neoforge && >=21.4 {
     /*@SubscribeEvent
     public static void onRegisterReloadListeners(net.neoforged.neoforge.client.event.AddClientReloadListenersEvent event) {
         ResourceManagerReloadListener listener = resourceManager -> resetRenderers();
@@ -121,12 +121,12 @@ public class RendererManager {
         // vanilla-1.21.3 EntityRendererProvider.java:35 实证）
         //? if >=1.19.2 && <1.21.2
         EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemRenderer(), Minecraft.getInstance().getBlockRenderer(), entityRenderDispatcher.getItemInHandRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), Minecraft.getInstance().font);
-        //? if >=1.21.2 && <1.21.4
+        //? if >=21.3 && <21.4
         /*EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemRenderer(), Minecraft.getInstance().getMapRenderer(), Minecraft.getInstance().getBlockRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), Minecraft.getInstance().getEquipmentModels(), Minecraft.getInstance().font);*/
         // 1.21.4 Context：ItemRenderer→ItemModelResolver、EquipmentModelSet→EquipmentAssetManager
         //（vanilla-1.21.4 EntityRendererProvider.java:38-48）；EquipmentAssetManager 无
         // Minecraft getter（vanilla 本地构造+注册重载，:530-531 同款）
-        //? if >=1.21.4 {
+        //? if >=21.4 {
         /*net.minecraft.client.resources.model.EquipmentAssetManager ysmEquipmentAssets = new net.minecraft.client.resources.model.EquipmentAssetManager();
         ((net.minecraft.server.packs.resources.ReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener(ysmEquipmentAssets);
         EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemModelResolver(), Minecraft.getInstance().getMapRenderer(), Minecraft.getInstance().getBlockRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), ysmEquipmentAssets, Minecraft.getInstance().font);*/

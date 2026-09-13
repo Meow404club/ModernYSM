@@ -55,9 +55,17 @@ public class C2SSwingArmPacket {
         if (MobEffectUtil.hasDigSpeed(entity)) {
             return 6 - (1 + MobEffectUtil.getDigSpeedAmplification(entity));
         }
+        // 1.21.5 MobEffects.DIG_SLOWDOWN 更名 MINING_FATIGUE（neoforge-21.5.98-sources MobEffects.java:37）
+        //? if <21.5 {
         if (entity.hasEffect(MobEffects.DIG_SLOWDOWN)) {
             return 6 + ((1 + entity.getEffect(MobEffects.DIG_SLOWDOWN).getAmplifier()) * 2);
         }
+        //?}
+        //? if >=21.5 {
+        /*if (entity.hasEffect(MobEffects.MINING_FATIGUE)) {
+            return 6 + ((1 + entity.getEffect(MobEffects.MINING_FATIGUE).getAmplifier()) * 2);
+        }*/
+        //?}
         return 6;
     }
 }

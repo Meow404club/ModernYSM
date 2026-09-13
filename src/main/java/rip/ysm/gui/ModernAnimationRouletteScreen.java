@@ -17,6 +17,7 @@ import com.elfmcys.yesstevemodel.util.data.OrderedStringMap;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import rip.ysm.util.RenderCompat;
 import rip.ysm.gui.YsmGui;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
@@ -233,12 +234,12 @@ public class ModernAnimationRouletteScreen extends Screen {
         float r = 34.0f;
         int ix = centerX + (int) (r * Math.cos(mid)) - 8;
         int iy = centerY + (int) (r * Math.sin(mid)) - 8;
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+        RenderCompat.enableBlend();
+        RenderCompat.defaultBlendFunc();
         if (hover) g.setColor(1.0f, 1.0f, 0.6f, 1.0f);
         g.blit(settingsIcon, ix, iy, 16, 16, 0.0f, 0.0f, 32, 32, 32, 32);
         if (hover) g.setColor(1.0f, 1.0f, 1.0f, 1.0f);
-        RenderSystem.disableBlend();
+        RenderCompat.disableBlend();
     }
 
     private void renderLabels(YsmGui g) {
@@ -294,10 +295,10 @@ public class ModernAnimationRouletteScreen extends Screen {
     private void renderCenter(YsmGui g) {
         if (animatableModel.getEntity() instanceof Player) {
             ResourceLocation tex = AnimationLockEvent.isLocked() ? lockIcon : unlockIcon;
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
+            RenderCompat.enableBlend();
+            RenderCompat.defaultBlendFunc();
             g.blit(tex, centerX - 16, centerY - 16, 32, 32, 0.0f, 0.0f, 64, 64, 64, 64);
-            RenderSystem.disableBlend();
+            RenderCompat.disableBlend();
         } else {
             g.drawCenteredString(this.font, YsmGui.trans("gui.yes_steve_model.roulette.stop"), centerX, centerY - 4, 0xFFFFFFFF);
         }

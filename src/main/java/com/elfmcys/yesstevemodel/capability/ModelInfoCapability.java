@@ -219,24 +219,55 @@ public class ModelInfoCapability {
     }
 
     public void deserializeNBT(CompoundTag compoundTag) throws NumberFormatException {
+        // 1.21.5 CompoundTag getter 全 Optional 化：getString→getStringOr(k,def)、getBoolean→getBooleanOr、
+        // getCompound→getCompoundOrEmpty、getAllKeys→keySet、getFloat→getFloatOr
+        //（neoforge-21.5.98-sources CompoundTag.java:329/361/381/397/216）
+        //? if <21.5
         this.modelId = compoundTag.getString("model_id");
+        //? if >=21.5
+        /*this.modelId = compoundTag.getStringOr("model_id", "");*/
+        //? if <21.5
         this.selectTexture = compoundTag.getString("select_texture");
+        //? if >=21.5
+        /*this.selectTexture = compoundTag.getStringOr("select_texture", "");*/
         if (this.selectTexture.length() > 4 && this.selectTexture.toLowerCase().endsWith(".png")) {
             this.selectTexture = this.selectTexture.substring(0, this.selectTexture.length() - 4);
         }
+        //? if <21.5
         this.mandatory = compoundTag.getBoolean("mandatory");
+        //? if >=21.5
+        /*this.mandatory = compoundTag.getBooleanOr("mandatory", false);*/
+        //? if <21.5
         this.disabled = compoundTag.getBoolean("disabled");
+        //? if >=21.5
+        /*this.disabled = compoundTag.getBooleanOr("disabled", false);*/
         this.molangStorage.clear();
+        //? if <21.5
         CompoundTag compound = compoundTag.getCompound("molang_storage");
+        //? if >=21.5
+        /*CompoundTag compound = compoundTag.getCompoundOrEmpty("molang_storage");*/
+        //? if <21.5
         for (String str : compound.getAllKeys()) {
+        //? if >=21.5
+        /*for (String str : compound.keySet()) {*/
+            //? if <21.5
             CompoundTag compound2 = compound.getCompound(str);
+            //? if >=21.5
+            /*CompoundTag compound2 = compound.getCompoundOrEmpty(str);*/
             int i = Integer.parseInt(str);
+            //? if <21.5
             Set<String> allKeys = compound2.getAllKeys();
+            //? if >=21.5
+            /*Set<String> allKeys = compound2.keySet();*/
             Object2FloatOpenHashMap object2FloatOpenHashMap = this.molangStorage.computeIfAbsent(i, i2 -> {
                 return new Object2FloatOpenHashMap(allKeys.size());
             });
             for (String str2 : allKeys) {
+                //? if <21.5
                 object2FloatOpenHashMap.put(str2, compound2.getFloat(str2));
+                // 1.21.5 getFloat 返回 Optional<Float>，原样 put 会把 Optional 装箱成值（读侧 ClassCastException）
+                //? if >=21.5
+                /*object2FloatOpenHashMap.put(str2, compound2.getFloatOr(str2, 0.0F));*/
             }
         }
     }

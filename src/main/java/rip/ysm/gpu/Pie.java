@@ -1,11 +1,13 @@
 package rip.ysm.gpu;
 
 // 1.21.5 GlStateManager 迁移 platform→opengl 包
-//? if <1.21.5
-/*import rip.ysm.util.RenderCompat;
-import com.mojang.blaze3d.platform.GlStateManager;*/
-//? if >=1.21.5
-import com.mojang.blaze3d.opengl.GlStateManager;
+// 1.21.5 GlStateManager 迁移 platform→opengl 包（vcs 直通铁律：非 1.20.1 分支源码态必须注释）
+//? if <21.5
+import rip.ysm.util.RenderCompat;
+//? if <21.5
+import com.mojang.blaze3d.platform.GlStateManager;
+//? if >=21.5
+/*import com.mojang.blaze3d.opengl.GlStateManager;*/
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 //? if >1.17 {
@@ -39,6 +41,13 @@ public final class Pie {
     }
 
     public static void draw(PoseStack pose, float centerX, float centerY, float innerRadius, float outerRadius, float startAngle, float endAngle, int rgba, float feather) {
+        // 1.21.5+ RenderPipeline 化：立即绘制的 blend/cull/depth 状态面整体删除（21.5 RenderSystem
+        // 无 enableBlend/disableCull/depthMask 等静态入口）→ Pie 立即绘制无后继，整路径降级 no-op。
+        // 功能债：加载圈（ModelButton.drawLoading）/现代转轮扇形（ModernAnimationRouletteScreen.drawSlice）
+        // 21.5+ 不再绘制；经典转轮走 AnimationRouletteScreen drawSpecial 双轨不受影响（裁决②）。
+        //? if >=21.5
+        /*return;*/
+        //? if <21.5 {
         if (!PieShader.ensureCompiled()) return;
 
         float pad = feather + 1.0f;
@@ -121,6 +130,7 @@ public final class Pie {
         //?}
 
         RenderSystem.disableBlend();
+        //?}
     }
 
     //? if <1.17 {

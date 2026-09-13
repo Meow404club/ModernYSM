@@ -3,11 +3,12 @@ package rip.ysm.gpu;
 import rip.ysm.util.RenderCompat;
 import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
 import com.elfmcys.yesstevemodel.mixin.client.RenderSystemAccessor;
-// 1.21.5 GlStateManager 迁移 platform→opengl 包
-//? if <1.21.5
-/*import com.mojang.blaze3d.platform.GlStateManager;*/
-//? if >=1.21.5
-import com.mojang.blaze3d.opengl.GlStateManager;
+// 1.21.5 GlStateManager 迁移 platform→opengl 包（vcs 直通铁律：非 1.20.1 分支源码态必须注释）
+//? if <21.5
+import com.mojang.blaze3d.platform.GlStateManager;
+//? if >=21.5
+/*import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.opengl.GlTexture;*/
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
@@ -93,21 +94,40 @@ public final class GpuRenderPath {
         boneBuf.position(0);
         boneBuf.limit(mesh.boneCount * 144);
 
+        //? if <21.5 {
         RenderSystem.disableCull();
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(true);
         RenderSystem.disableBlend();
+        //?}
+        // 1.21.5 状态面进 RenderPipeline，RenderSystem 无静态入口 → GlStateManager._*（opengl 包）。
+        // 注意：else+存储态不展开（21.5 生成树实证），一律拆兄弟 if 块
+        //? if >=21.5 {
+        /*GlStateManager._disableCull();
+        GlStateManager._enableDepthTest();
+        GlStateManager._depthMask(true);
+        GlStateManager._disableBlend();*/
+        //?}
 
         Minecraft mc = Minecraft.getInstance();
         AbstractTexture modelTex = mc.getTextureManager().getTexture(textureLocation);
+        //? if <21.5
         int modelTexId = modelTex.getId();
+        // 1.21.5 AbstractTexture.getId 删 → getTexture()(GpuTexture) 具体类 GlTexture.glId()
+        //（neoforge-21.5.98-sources AbstractTexture.java:51 / GlTexture.java:82）
+        //? if >=21.5
+        /*int modelTexId = ((GlTexture) modelTex.getTexture()).glId();*/
 
         GlStateManager._activeTexture(GL13.GL_TEXTURE0 + 2);
         mc.gameRenderer.lightTexture().turnOnLightLayer();
 
         GlStateManager._activeTexture(GL13.GL_TEXTURE0 + 1);
         mc.gameRenderer.overlayTexture().setupOverlayColor();
+        // 1.21.5 getShaderTexture 返回 GpuTexture（RenderSystem.java:306）
+        //? if <21.5
         GlStateManager._bindTexture(RenderSystem.getShaderTexture(1)); // overlayTexture里的texture没getter，固定bind 1
+        //? if >=21.5
+        /*GlStateManager._bindTexture(((GlTexture) RenderSystem.getShaderTexture(1)).glId());*/
 
         GlStateManager._activeTexture(GL13.GL_TEXTURE0);
         GlStateManager._bindTexture(modelTexId);
@@ -168,11 +188,20 @@ public final class GpuRenderPath {
             GL11.glDrawElements(GL11.GL_TRIANGLES, drawCount, GL11.GL_UNSIGNED_INT, offsetBytes);
 
             if (model.isTranslucentTexture(textureIndex)) {
+                //? if <21.5 {
                 RenderSystem.enableBlend();
                 RenderSystem.defaultBlendFunc();
+                //?}
+                //? if >=21.5 {
+                /*GlStateManager._enableBlend();
+                GlStateManager._blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);*/
+                //?}
                 if (BoneSkinShader.locAlphaMode() >= 0) GL20.glUniform1i(BoneSkinShader.locAlphaMode(), 2);
                 GL11.glDrawElements(GL11.GL_TRIANGLES, drawCount, GL11.GL_UNSIGNED_INT, offsetBytes);
+                //? if <21.5
                 RenderSystem.disableBlend();
+                //? if >=21.5
+                /*GlStateManager._disableBlend();*/
             }
         }
 
@@ -180,7 +209,7 @@ public final class GpuRenderPath {
         GL15.glBindBuffer(GL43.GL_SHADER_STORAGE_BUFFER, 0);
         GlStateManager._glUseProgram(0);
 
-        //? if >=1.19.2 && <1.21.5
+        //? if >=1.19.2 && <21.5
 
         RenderCompat.invalidate();
         //? if <1.19.2

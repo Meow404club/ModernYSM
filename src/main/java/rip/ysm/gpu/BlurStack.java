@@ -1,11 +1,13 @@
 package rip.ysm.gpu;
 
 // 1.21.5 GlStateManager 迁移 platform→opengl 包
-//? if <1.21.5
-/*import rip.ysm.util.RenderCompat;
-import com.mojang.blaze3d.platform.GlStateManager;*/
-//? if >=1.21.5
-import com.mojang.blaze3d.opengl.GlStateManager;
+// 1.21.5 GlStateManager 迁移 platform→opengl 包（vcs 直通铁律：非 1.20.1 分支源码态必须注释）
+//? if <21.5
+import rip.ysm.util.RenderCompat;
+//? if <21.5
+import com.mojang.blaze3d.platform.GlStateManager;
+//? if >=21.5
+/*import com.mojang.blaze3d.opengl.GlStateManager;*/
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 //? if >1.17 {
@@ -98,7 +100,13 @@ public final class BlurStack {
     }
      *///?} else {
     private static void flushModern(PoseStack pose) {
-        if (regions.isEmpty()) return;
+        // 1.21.5+ RenderPipeline 化：毛玻璃 capture（RenderTarget 抽象化删 frameBufferId）与
+        // blend/cull/depth 立即绘制状态删除 → Blur 整路径降级，仅清区域队列防泄漏（裁决②，功能债）。
+        // SearchSuggestions.pushBlur/flush 调用点保持原样（pushBlur 只入队、flush 降级后即时清空）。
+        //? if >=21.5
+        /*regions.clear();
+        return;*/
+        //? if <21.5 {
         if (!BlurShader.ensureCompiled()) {
             regions.clear();
             return;
@@ -172,6 +180,7 @@ public final class BlurStack {
         RenderSystem.disableBlend();
 
         regions.clear();
+        //?}
     }
     //?}
 

@@ -29,6 +29,7 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import com.mojang.blaze3d.vertex.PoseStack;
+import rip.ysm.util.RenderCompat;
 //? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
@@ -247,10 +248,10 @@ public class ModelButton extends YsmButton {
         int y = getY();
         guiGraphics.fillGradient(x, y, x + this.width, y + this.height, this.backgroundColor, this.backgroundColor);
         if (this.backgroundTexture != null) {
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
+            RenderCompat.enableBlend();
+            RenderCompat.defaultBlendFunc();
             guiGraphics.blit(this.backgroundTexture.getResourceLocation().get(), x, y, 0.0f, 0.0f, this.width, this.height, this.width, this.height);
-            RenderSystem.disableBlend();
+            RenderCompat.disableBlend();
         }
         if (ClientModelManager.isModelPending(this.targetModelId)) {
             drawLoading(guiGraphics, x + (this.width / 2.0f), y + ((this.height - 20) / 2.0f), 8.0f);
@@ -265,10 +266,10 @@ public class ModelButton extends YsmButton {
         }
         int starZ = 3500;
         if (this.foregroundTexture != null) {
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
+            RenderCompat.enableBlend();
+            RenderCompat.defaultBlendFunc();
             guiGraphics.blit(this.foregroundTexture.getResourceLocation().get(), x, y, 3500, 0, 0, this.width, this.height, this.width, this.height);
-            RenderSystem.disableBlend();
+            RenderCompat.disableBlend();
         }
         List listSplit = font.split(getMessage(), 45);
         if (listSplit.size() > 1) {
@@ -343,12 +344,12 @@ public class ModelButton extends YsmButton {
 
     // 1.21.4 AbstractWidget.clicked(double,double) 删除（protected 命中判定方法移除，
     // vanilla-1.21.4 AbstractWidget 无 clicked 方法）→ isHovered() 对位
-    //? if <1.21.4 {
+    //? if <21.4 {
     public boolean clicked(double mouseX, double mouseY) {
         return !this.isStarred && super.clicked(mouseX, mouseY);
     }
     //?}
-    //? if >=1.21.4 {
+    //? if >=21.4 {
     /*public boolean clicked(double mouseX, double mouseY) {
         return !this.isStarred && this.isHovered();
     }*/

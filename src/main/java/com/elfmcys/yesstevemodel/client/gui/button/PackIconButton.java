@@ -8,6 +8,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import com.mojang.blaze3d.vertex.PoseStack;
+import rip.ysm.util.RenderCompat;
 //? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
@@ -65,23 +66,23 @@ public class PackIconButton extends YsmButton {
         guiGraphics.fillGradient(getX(), getY(), getX() + this.width, getY() + this.height, -6598176, -6598176);
         ResourceLocation location = FileTypeUtil.getPackIconLocation(this.packData.getPath());
         AbstractTexture texture = guiGraphics.getTexture(location);
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+        RenderCompat.enableBlend();
+        RenderCompat.defaultBlendFunc();
         // 1.21.4 MissingTextureAtlasSprite.getTexture() 删除 → 以缺省纹理
         // TextureManager.getTexture(rl) 的返回比对改为引用缺省单参返回值不可行，
         // 直接以 RegisteredTexture 判定改为：对缺省纹理不做特判（未注册 rl 本就返回缺省
-        // 纹理实例，blit 同样渲染灰白占位）——保留图标分支仅 <1.21.4
-        //? if <1.21.4 {
+        // 纹理实例，blit 同样渲染灰白占位）——保留图标分支仅 <21.4
+        //? if <21.4 {
         if (texture == MissingTextureAtlasSprite.getTexture()) {
             guiGraphics.blit(default_pack_icon, getX(), getY(), 0.0f, 0.0f, this.width, this.height, this.width, this.height);
         } else {
             guiGraphics.blit(location, getX(), getY(), 0.0f, 0.0f, this.width, this.height, this.width, this.height);
         }
         //?}
-        //? if >=1.21.4 {
+        //? if >=21.4 {
         /*guiGraphics.blit(location, getX(), getY(), 0.0f, 0.0f, this.width, this.height, this.width, this.height);*/
         //?}
-        RenderSystem.disableBlend();
+        RenderCompat.disableBlend();
         List listSplit = font.split(getMessage(), 45);
         if (listSplit.size() > 1) {
             drawCenteredString(guiGraphics, font, (FormattedCharSequence) listSplit.get(0), getX() + (this.width / 2), (getY() + this.height) - 19, 5592405);

@@ -501,15 +501,21 @@ public class YSMBinding extends ContextBinding {
     }*/
     public static String getShoulderParrotVariant(Player player, boolean leftShoulder) {
         CompoundTag shoulderEntityLeft = leftShoulder ? player.getShoulderEntityLeft() : player.getShoulderEntityRight();
+        // 1.21.5 CompoundTag getString/getInt 返回 Optional（CompoundTag.java:357/325）
+        //? if <21.5
         return EntityType.byString(shoulderEntityLeft.getString("id")).filter(entityType -> {
+        //? if >=21.5
+        /*return EntityType.byString(shoulderEntityLeft.getStringOr("id", "")).filter(entityType -> {*/
             return entityType == EntityType.PARROT;
         }).map(entityType2 -> {
             // Parrot.Variant 内枚举 1.18+（1.16.5 javap 无）：变体名序 vanilla 同源，1.16.5 走名字表
         // Parrot.Variant 1.19.4+（1192 merged jar 无 Variant 内类）：中段+1.16.5 走名字表
         //? if <1.19.4
         /*return getParrotVariantName(shoulderEntityLeft.getInt("Variant"));*/
-        //? if >=1.19.4
+        //? if >=1.19.4 && <21.5
         return Parrot.Variant.byId(shoulderEntityLeft.getInt("Variant")).name().toLowerCase(Locale.ENGLISH);
+        //? if >=21.5
+        /*return Parrot.Variant.byId(shoulderEntityLeft.getIntOr("Variant", 0)).name().toLowerCase(Locale.ENGLISH);*/
         }).orElse("empty");
     }
 

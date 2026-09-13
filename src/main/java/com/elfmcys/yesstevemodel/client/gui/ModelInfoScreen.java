@@ -72,9 +72,9 @@ public class ModelInfoScreen extends Screen {
         for (int i = 0; i < authorInfo.size(); i++) {
             OuterFileTexture avatar = avatars.get(authorInfo.get(i).getName());
             if (avatar != null) {
-                //? if >=1.21 && <1.21.4
+                //? if >=1.21 && <21.4
                 /*textureManager.register(ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "avatars/" + i), avatar);*/
-                //? if >=1.21.4 {
+                //? if >=21.4 {
                 /*ResourceLocation ysmAvatarRl = ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "avatars/" + i);
                 textureManager.register(ysmAvatarRl, avatar);
                 avatar.load(Minecraft.getInstance().getResourceManager());*/

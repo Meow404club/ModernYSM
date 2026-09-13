@@ -94,9 +94,16 @@ public class AnimationLockEvent {
     }
 
     public static boolean isPlayerMoving(LocalPlayer localPlayer) {
-        //? if >=1.21.2 {
+        //? if >=21.3 && <21.5 {
         /*ClientInput input = localPlayer.input;
         return input != null && (isSignificantImpulse(input.leftImpulse) || isSignificantImpulse(input.forwardImpulse)
+                || input.keyPresses.jump() || input.keyPresses.shift());*/
+        //?}
+        // 1.21.5 ClientInput 冲量字段删除（21.5 ClientInput 仅 keyPresses/moveVector，ClientInput.java:9-24）：
+        // leftImpulse/forwardImpulse 语义 = moveVector x/y（ClientInput.getMoveVector），判定阈值同 1.0E-5
+        //? if >=21.5 {
+        /*ClientInput input = localPlayer.input;
+        return input != null && (isSignificantImpulse(input.getMoveVector().x) || isSignificantImpulse(input.getMoveVector().y)
                 || input.keyPresses.jump() || input.keyPresses.shift());*/
         //?}
         //? if <1.21.2

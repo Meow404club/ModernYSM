@@ -57,7 +57,11 @@ public class CustomPlayerParrotLayer extends GeoLayerRenderer<CustomPlayerEntity
 
     private void renderParrot(PoseStack poseStack, MultiBufferSource bufferSource, AnimatedGeoModel model, int packedLightIn, Player player, float limbSwing, float limbSwingAmount, float netHeadYaw, float headPitch, boolean isLeftShoulder) {
         CompoundTag shoulderEntityLeft = isLeftShoulder ? player.getShoulderEntityLeft() : player.getShoulderEntityRight();
+        // 1.21.5 CompoundTag getString/getInt 返回 Optional（同 YSMBinding 注）
+        //? if <21.5
         EntityType.byString(shoulderEntityLeft.getString(TAG_ID)).filter(entityType -> entityType == EntityType.PARROT).ifPresent(entityType -> {
+        //? if >=21.5
+        /*EntityType.byString(shoulderEntityLeft.getStringOr(TAG_ID, "")).filter(entityType -> entityType == EntityType.PARROT).ifPresent(entityType -> {*/
             poseStack.pushPose();
             applyParrotTransform(poseStack, model, isLeftShoulder);
             poseStack.translate(0.0d, 1.5d, 0.0d);
@@ -81,7 +85,7 @@ public class CustomPlayerParrotLayer extends GeoLayerRenderer<CustomPlayerEntity
             // ParrotOnShoulderLayer 同款状态制（ParrotRenderState.pose=ON_SHOULDER +
             // setupAnim + renderToBuffer，vanilla-1.21.3 ParrotOnShoulderLayer.java:50-68/
             // ParrotModel.java:83 实证）
-            //? if >=1.21.2 {
+            //? if >=21.3 && <21.5 {
             /*net.minecraft.client.renderer.entity.state.ParrotRenderState parrotState = new net.minecraft.client.renderer.entity.state.ParrotRenderState();
             parrotState.pose = ParrotModel.Pose.ON_SHOULDER;
             parrotState.ageInTicks = player.tickCount;
@@ -90,6 +94,17 @@ public class CustomPlayerParrotLayer extends GeoLayerRenderer<CustomPlayerEntity
             this.parrotModel.setupAnim(parrotState);
             this.parrotModel.renderToBuffer(poseStack, bufferSource.getBuffer(this.parrotModel.renderType(ParrotRenderer.getVariantTexture(Parrot.Variant.byId(shoulderEntityLeft.getInt(TAG_VARIANT))))), packedLightIn, OverlayTexture.NO_OVERLAY);*/
             //?}
+            // 1.21.5 getInt 返回 Optional<Integer>（CompoundTag.java:325）→ getIntOr
+            //? if >=21.5 {
+            /*net.minecraft.client.renderer.entity.state.ParrotRenderState parrotState = new net.minecraft.client.renderer.entity.state.ParrotRenderState();
+            parrotState.pose = ParrotModel.Pose.ON_SHOULDER;
+            parrotState.ageInTicks = player.tickCount;
+            parrotState.yRot = netHeadYaw;
+            parrotState.xRot = headPitch;
+            this.parrotModel.setupAnim(parrotState);
+            this.parrotModel.renderToBuffer(poseStack, bufferSource.getBuffer(this.parrotModel.renderType(ParrotRenderer.getVariantTexture(Parrot.Variant.byId(shoulderEntityLeft.getIntOr(TAG_VARIANT, 0))))), packedLightIn, OverlayTexture.NO_OVERLAY);*/
+            //?}
+
             poseStack.popPose();
         });
     }

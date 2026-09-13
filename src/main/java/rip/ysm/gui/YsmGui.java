@@ -512,12 +512,12 @@ public final class YsmGui {
     // 1.21.4 MissingTextureAtlasSprite.getTexture() 删除 → 单参 getTexture
     //（缺省缺纹理占位语义一致，vanilla-1.21.4 TextureManager.java:96）。
     // 用块条件复制方法体（行条件翻转触发 stitcher 注释转义，21.5 产物 /^ 实证——勿改回）
-    //? if <1.21.4 {
+    //? if <21.4 {
     public net.minecraft.client.renderer.texture.AbstractTexture getTexture(ResourceLocation location) {
         return Minecraft.getInstance().getTextureManager().getTexture(location, net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.getTexture());
     }
     //?}
-    //? if >=1.21.4 {
+    //? if >=21.4 {
     /*public net.minecraft.client.renderer.texture.AbstractTexture getTexture(ResourceLocation location) {
         return Minecraft.getInstance().getTextureManager().getTexture(location);
     }*/

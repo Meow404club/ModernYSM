@@ -80,7 +80,9 @@
 
 ## M3 第二批 neoforge（2a 已合入 dev=a129edc，2026-09-13；2b 进行中）
 - 2a：1.20.4/1.20.6/1.21.1 三线全绿+16 屏走查进世界；moddev 构建线建成（MDG2 neoforge、分代树 srcDir、neoforge.mods.toml、[[mixins]] 声明、零 refmap 直配、compatLevel JAVA_17/21/21）；双在产线对基线逐类 javap+资源全同（4 处回归抓回修复）；TouhouMaidCompat @OnlyIn 中立化裁决通过（专用服更安全）
-- 2b（进行中）：21.3/21.4/21.5/21.8/21.10/21.11（Java 21）+ 26.1.2/26.2（Java 25）——复用分代树模式+nerfed_learnings 四条沉淀
+- 2b（已合入 dev=07e171e）：21.3/21.4/21.5/21.8/21.10/21.11 六线绿+主菜单证据；26.1.2/26.2 park（NFRT 由 MDG 2.0.147 解除，剩自身代号适配 26.1.2≈100 错 GuiGraphics 移包/26.2≈100 错 TextureFormat 移包）→26.x 适配卡（26.1/26.1.1 同代一并）
+- 批二 c（进行中）：2c-1=forge 6 条（1.18/1.18.1/1.19/1.19.1/1.19.3/1.20）+1.16.1~1.16.4 unimined 四线；2c-2=neoforge 8 条（1.20.2 POC/1.20.3 POC/1.20.5/1.21/1.21.2/1.21.6/1.21.7/21.9）；1.19.3 条件轴过渡形态/21.6 排尾
+- 全谱 37 线；semver 铁律（stonecutter 版本 ID 数值比较，分代用 <21.5/>=21.5 风格）与 vcs 直通铁律（1.20.1 根活动节点，21 轴门控必须存储态）为平铺期两大新沉淀
 - 2a：1.20.4（20.4.x stable）/1.20.6（20.6.x）/1.21.1（21.1.x）——moddev 构建线首次建立（MDG neoforge），Java 17/21/21
 - 2b：21.3/21.4/21.5/21.8/21.10/21.11/26.1.2/26.2（Java 21→25）
 - 已知要点：NeoForge 1.20.2+ 运行时=mojmap（无 SRG reobf，mixin refmap 口径待验证）；1.20.5+ neoforge.mods.toml/Component 体系；26.x 需 Java 25 toolchain

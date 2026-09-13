@@ -35,6 +35,11 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import net.minecraft.ChatFormatting;
+//? if >=21.9 {
+/*import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+ *///?}
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -838,17 +843,62 @@ moveCursorToEnd();;
         }
     }
 
+    // 1.21.11 Screen.resize 去 Minecraft 头参（2111 Screen.java:450）
+    //? if >=21.11 {
+    public void resize(int width, int height) {
+        String value = this.searchBox.getValue();
+        super.resize(width, height);
+        this.searchBox.setValue(value);
+    }
+    //?}
+    //? if <21.11 {
     public void resize(Minecraft minecraft, int width, int height) {
         String value = this.searchBox.getValue();
         super.resize(minecraft, width, height);
         this.searchBox.setValue(value);
     }
+    //?}
 
     public void tick() {
         //? if forge
         this.searchBox.tick();
     }
 
+    // 1.21.9+ 输入事件对象化（GuiEventListener/EditBox mouseClicked(MouseButtonEvent,boolean)）
+    //? if >=21.9 {
+    /*public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+        if (button == 0 && this.suggestions != null && this.suggestions.mouseClicked(mouseX, mouseY)) {
+            navigateToSuggestedPack();
+            resetCurrentPage();
+            init();
+            return true;
+        }
+        if (button == 0 && breadcrumbClicked(mouseX, mouseY)) {
+            return true;
+        }
+        if (this.searchBox.mouseClicked(new MouseButtonEvent(mouseX, mouseY, event.buttonInfo()), doubleClick)) {
+            setFocused(this.searchBox);
+            return true;
+        }
+        if (this.searchBox.isFocused()) {
+            this.searchBox.setFocused(false);
+            if (this.suggestions != null) {
+                this.suggestions.suppress();
+            }
+        }
+        boolean zMouseClicked = super.mouseClicked(event, doubleClick);
+        if (!zMouseClicked && button == 1 && StringUtils.isNotBlank(currentPath)) {
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+            navigateUp();
+            zMouseClicked = true;
+        }
+        return zMouseClicked;
+    }
+    *///?}
+    //? if <21.9 {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0 && this.suggestions != null && this.suggestions.mouseClicked(mouseX, mouseY)) {
             navigateToSuggestedPack();
@@ -882,7 +932,27 @@ moveCursorToEnd();;
         }
         return zMouseClicked;
     }
+    //?}
 
+    // 1.21.9+ 输入事件对象化（charTyped(CharacterEvent)，GuiEventListener.java:44）
+    //? if >=21.9 {
+    /*public boolean charTyped(CharacterEvent event) {
+        if (this.searchBox == null) {
+            return false;
+        }
+        String value = this.searchBox.getValue();
+        if (this.searchBox.charTyped(event)) {
+            if (!Objects.equals(value, this.searchBox.getValue())) {
+                resetCurrentPage();
+                init();
+                return true;
+            }
+            return true;
+        }
+        return false;
+    }
+    *///?}
+    //? if <21.9 {
     public boolean charTyped(char codePoint, int modifiers) {
         if (this.searchBox == null) {
             return false;
@@ -898,7 +968,43 @@ moveCursorToEnd();;
         }
         return false;
     }
+    //?}
 
+    // 1.21.9+ 输入事件对象化（keyPressed(KeyEvent)，GuiEventListener.java:36；EditBox 同步换代）
+    //? if >=21.9 {
+    /*public boolean keyPressed(KeyEvent event) {
+        int keyCode = event.key();
+        int scanCode = event.scancode();
+        if (handleToggleKey(keyCode, scanCode, event.modifiers())) {
+            return true;
+        }
+        if (keyCode == InputConstants.KEY_F && event.hasControlDown()) {
+            toggleSearchFocus();
+            return true;
+        }
+        if (this.searchBox.isFocused() && this.suggestions != null && this.suggestions.keyPressed(keyCode)) {
+            navigateToSuggestedPack();
+            resetCurrentPage();
+            init();
+            return true;
+        }
+        boolean zIsPresent = InputConstants.getKey(new KeyEvent(keyCode, scanCode, 0)).getNumericKeyValue().isPresent();
+        String value = this.searchBox.getValue();
+        if (zIsPresent) {
+            return true;
+        }
+        if (!this.searchBox.keyPressed(event)) {
+            return (this.searchBox.isFocused() && this.searchBox.isVisible() && keyCode != 256) || super.keyPressed(event);
+        }
+        if (!Objects.equals(value, this.searchBox.getValue())) {
+            resetCurrentPage();
+            init();
+            return true;
+        }
+        return true;
+    }
+    *///?}
+    //? if <21.9 {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (handleToggleKey(keyCode, scanCode, modifiers)) {
             return true;
@@ -931,6 +1037,7 @@ moveCursorToEnd();;
         }
         return true;
     }
+    //?}
 
     private void toggleSearchFocus() {
         Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
@@ -954,6 +1061,10 @@ moveCursorToEnd();;
     }
 
     private boolean handleToggleKey(int keyCode, int scanCode, int modifiers) {
+        // 1.21.9 KeyMapping.matches(int,int) → matches(KeyEvent)（同 AnimationLockEvent 注）
+        //? if >=21.9
+        /*if (PlayerModelToggleKey.KEY_MAPPING.matches(new KeyEvent(keyCode, scanCode, 0)) && !this.searchBox.isFocused()) {*/
+        //? if <21.9
         if (PlayerModelToggleKey.KEY_MAPPING.matches(keyCode, scanCode) && !this.searchBox.isFocused()) {
             onClose();
             return true;

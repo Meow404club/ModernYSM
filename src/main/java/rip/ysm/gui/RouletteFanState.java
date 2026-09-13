@@ -27,12 +27,37 @@ public final class RouletteFanState implements GuiElementRenderState {
         return new Sink();
     }
 
+    // 1.21.10 buildVertices(VertexConsumer,float z) → buildVertices(VertexConsumer)（z 由
+    // GuiRenderer 控制面承接，neoforge-21.10.64 GuiElementRenderState.java:16 实证）
+    // 1.21.10 buildVertices(VertexConsumer,float z) → buildVertices(VertexConsumer)（z 由
+    // GuiRenderer 控制面承接，neoforge-21.10.64 GuiElementRenderState.java:16 实证）。
+    // 本类整体为 >=21.6 存储态（铁律：存储态块内禁字面块注释符）→ 内层分代一律用嵌套块+活性文本
+    //? if >=21.10 {
+    @Override
+    public void buildVertices(VertexConsumer vc) {
+        this.buildVerticesImpl(vc, 0.0f);
+    }
+    //?}
+    //? if <21.10 {
     @Override
     public void buildVertices(VertexConsumer vc, float z) {
+        this.buildVerticesImpl(vc, z);
+    }
+    //?}
+    //? if >=21.10 {
+    private void buildVerticesImpl(VertexConsumer vc, float z) {
         for (float[] v : this.vertices) {
             vc.addVertex(v[0], v[1], z).setColor(v[2], v[3], v[4], v[5]);
         }
     }
+    //?}
+    //? if <21.10 {
+    private void buildVerticesImpl(VertexConsumer vc, float z) {
+        for (float[] v : this.vertices) {
+            vc.addVertex(v[0], v[1], z).setColor(v[2], v[3], v[4], v[5]);
+        }
+    }
+    //?}
 
     @Override
     public ScreenRectangle bounds() {
@@ -61,6 +86,18 @@ public final class RouletteFanState implements GuiElementRenderState {
     }
 
     private final class Sink implements VertexConsumer {
+        // 1.21.11 VertexConsumer 新增抽象 setLineWidth(float)（2111 VertexConsumer 实证）
+        //? if >=21.11 {
+        @Override
+        public VertexConsumer setLineWidth(float width) {
+            return this;
+        }
+
+        @Override
+        public VertexConsumer setColor(int color) {
+            return this;
+        }
+        //?}
         private float[] cur;
 
         @Override

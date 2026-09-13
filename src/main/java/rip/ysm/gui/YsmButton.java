@@ -65,9 +65,17 @@ public abstract class YsmButton extends Button {
         this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
     }
      *///?}
-    //? if >=1.20 {
+    //? if >=1.20 && <21.11 {
     @Override
     public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+    //?}
+    // 1.21.11 AbstractButton.renderWidget final 化，可覆写钩子改名 renderContents
+    //（2111 AbstractWidget.java:62/89 renderWidget+renderContents 分工实证）
+    //? if >=21.11 {
+    @Override
+    public void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
     //?}

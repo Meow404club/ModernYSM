@@ -56,6 +56,11 @@ public class QueryBinding extends ContextBinding {
         var("life_time", ctx -> ctx.geoInstance().getSeekTime() / 20.0d);
         var("head_x_rotation", ctx -> ctx.data().netHeadYaw);
         var("head_y_rotation", ctx -> ctx.data().headPitch);
+        // 1.21.11 Level.getMoonPhase 删（月相改 EnvironmentAttributes 探针，SkyRenderState.moonPhase
+        // 枚举化）→ 按默认主世界公式 dayTime/24000%8 折算，维度感知差异入功能债
+        //? if >=21.11
+        /*var("moon_phase", ctx -> (int) (ctx.level().getDayTime() / 24000L % 8L));*/
+        //? if <21.11
         var("moon_phase", ctx -> ctx.level().getMoonPhase());
         var("time_of_day", ctx -> MolangUtils.normalizeTime(ctx.level().getDayTime()));
         var("time_stamp", ctx -> ctx.level().getDayTime());
@@ -63,6 +68,10 @@ public class QueryBinding extends ContextBinding {
 
         entityVar("yaw_speed", QueryBinding::getYawSpeed);
         entityVar("cardinal_facing_2d", ctx -> ctx.entity().getDirection().get3DDataValue());
+        // 1.21.11 Camera.getPosition() → position()（2111 Camera.java:168）
+        //? if >=21.11
+        /*entityVar("distance_from_camera", ctx -> ctx.mc().gameRenderer.getMainCamera().position().distanceTo(ctx.entity().position()));*/
+        //? if <21.11
         entityVar("distance_from_camera", ctx -> ctx.mc().gameRenderer.getMainCamera().getPosition().distanceTo(ctx.entity().position()));
         entityVar("eye_target_x_rotation", ctx -> ctx.entity().getViewXRot(ctx.animationEvent().getPartialTick()));
         entityVar("eye_target_y_rotation", ctx -> ctx.entity().getViewYRot(ctx.animationEvent().getPartialTick()));
@@ -190,7 +199,11 @@ public class QueryBinding extends ContextBinding {
     }
 
     private static boolean hasCape(AbstractClientPlayer abstractClientPlayer) {
-        //? if neoforge
+        // 1.21.9 PlayerSkin 重组：capeTexture() 删 → cape()（ClientAsset.Texture 可空，
+        // neoforge-21.10.64 world/entity/player/PlayerSkin.java:15 实证）
+        //? if neoforge && >=21.9
+        /*return !abstractClientPlayer.isInvisible() && abstractClientPlayer.isModelPartShown(PlayerModelPart.CAPE) && abstractClientPlayer.getSkin().cape() != null;*/
+        //? if neoforge && <21.9
         /*return !abstractClientPlayer.isInvisible() && abstractClientPlayer.isModelPartShown(PlayerModelPart.CAPE) && abstractClientPlayer.getSkin().capeTexture() != null;*/
         //? if forge
         return abstractClientPlayer.isCapeLoaded() && !abstractClientPlayer.isInvisible() && abstractClientPlayer.isModelPartShown(PlayerModelPart.CAPE) && abstractClientPlayer.getCloakTextureLocation() != null;
@@ -251,6 +264,33 @@ public class QueryBinding extends ContextBinding {
         //? if <1.21
         float gameTime = context.animationEvent().getFrameTime();
         Player player = context.entity();
+        // 1.21.9 cloak/bob 字段从 Player 迁入 ClientAvatarState（xCloak 系私有化 →
+        // getInterpolatedCloakX/Y/Z(f)、oBob/bob → getInterpolatedBob(f)，neoforge-21.10.64
+        // ClientAvatarState.java:16-25 实证），f=插值系数 与旧 Mth.lerp(o,x) 同语义
+        //? if >=21.9 {
+        /*net.minecraft.client.entity.ClientAvatarState ysmAvatar = (player instanceof net.minecraft.client.player.AbstractClientPlayer)
+            ? ((net.minecraft.client.player.AbstractClientPlayer) player).avatarState() : null;
+        float fLerp = ysmAvatar == null ? 0.0f : (float) (ysmAvatar.getInterpolatedCloakX(gameTime) - Mth.lerp(gameTime, player.xo, player.getX()));
+        float fLerp2 = ysmAvatar == null ? 0.0f : (float) (ysmAvatar.getInterpolatedCloakY(gameTime) - Mth.lerp(gameTime, player.yo, player.getY()));
+        float fLerp3 = ysmAvatar == null ? 0.0f : (float) (ysmAvatar.getInterpolatedCloakZ(gameTime) - Mth.lerp(gameTime, player.zo, player.getZ()));
+        float f = player.yBodyRotO + (player.yBodyRot - player.yBodyRotO);
+        float fSin = Mth.sin(f * 0.017453292f);
+        float f2 = -Mth.cos(f * 0.017453292f);
+        float fClamp = Mth.clamp(fLerp2 * 10.0f, -6.0f, 32.0f);
+        float fClamp2 = Mth.clamp(((fLerp * fSin) + (fLerp3 * f2)) * 100.0f, 0.0f, 150.0f);
+        if (fClamp2 < 0.0f) {
+            fClamp2 = 0.0f;
+        }
+        float ysmBob = ysmAvatar == null ? 0.0f : ysmAvatar.getInterpolatedBob(gameTime);
+        // 1.21.2 walkDist/walkDistO → walkAnimation.position(f)（含插值语义）
+        //? if <1.21.2 {
+        float fSin2 = fClamp + (Mth.sin(Mth.lerp(gameTime, player.walkDistO, player.walkDist) * 6.0f) * 32.0f * ysmBob);
+        //?}
+        //? if >=1.21.2 {
+        float fSin2 = fClamp + (Mth.sin(player.walkAnimation.position(gameTime) * 6.0f) * 32.0f * ysmBob);
+        //?}
+        *///?}
+        //? if <21.9 {
         float fLerp = (float) (Mth.lerp(gameTime, player.xCloakO, player.xCloak) - Mth.lerp(gameTime, player.xo, player.getX()));
         float fLerp2 = (float) (Mth.lerp(gameTime, player.yCloakO, player.yCloak) - Mth.lerp(gameTime, player.yo, player.getY()));
         float fLerp3 = (float) (Mth.lerp(gameTime, player.zCloakO, player.zCloak) - Mth.lerp(gameTime, player.zo, player.getZ()));
@@ -268,6 +308,7 @@ public class QueryBinding extends ContextBinding {
         //?}
         //? if >=1.21.2 {
         /*float fSin2 = fClamp + (Mth.sin(player.walkAnimation.position(gameTime) * 6.0f) * 32.0f * Mth.lerp(gameTime, player.oBob, player.bob));*/
+        //?}
         //?}
         if (player.isCrouching()) {
             fSin2 += 25.0f;

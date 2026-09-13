@@ -4,6 +4,10 @@ import com.elfmcys.yesstevemodel.client.gui.button.FlatColorButton;
 import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.client.upload.ModelUploadSession;
 import net.minecraft.ChatFormatting;
+// 1.21.11 Util 移 net.minecraft.util 子包
+//? if >=21.11
+/*import net.minecraft.util.Util;*/
+//? if <21.11
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.vertex.PoseStack;

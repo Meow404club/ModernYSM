@@ -650,6 +650,16 @@ public final class YsmGui {
     }
 
     public void renderOutline(int x, int y, int width, int height, int color) {
+        // 1.21.10 GuiGraphics.renderOutline 短暂删除（2110 GuiGraphics 零命中；1.21.11 恢复，
+        // 2111 GuiGraphics.java:312 同形）→ 该代 fill 四边 1px 等价改写
+        //? if >=21.10 && <21.11 {
+        /*this.graphics.fill(x, y, x + width, y + 1, color);
+        this.graphics.fill(x, y + height - 1, x + width, y + height, color);
+        this.graphics.fill(x, y + 1, x + 1, y + height - 1, color);
+        this.graphics.fill(x + width - 1, y + 1, x + width, y + height - 1, color);
+        return;
+        *///?}
+        //? if <21.10 || >=21.11
         this.graphics.renderOutline(x, y, width, height, color);
     }
 

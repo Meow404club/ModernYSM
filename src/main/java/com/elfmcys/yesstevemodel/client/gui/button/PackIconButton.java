@@ -40,9 +40,16 @@ public class PackIconButton extends YsmButton {
         this.packData = packData;
     }
 
-    //? if >=1.20 {
+    //? if >=1.20 && <21.11 {
     @Override
     public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+    //?}
+    // 1.21.11 AbstractButton.renderWidget final 化 → renderContents
+    //? if >=21.11 {
+    @Override
+    public void renderContents(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
     //?}

@@ -21,6 +21,12 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.*;
+// 1.21.11 抛射物族移子包，通配符不再覆盖 → 子包补导
+//? if >=21.11 {
+/*import net.minecraft.world.entity.projectile.arrow.Arrow;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrowableItemProjectile;
+ *///?}
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;

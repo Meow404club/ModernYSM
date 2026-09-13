@@ -128,9 +128,13 @@ public final class GpuRenderPath {
         /*int modelTexId = ((GlTexture) modelTex.getTexture()).glId();*/
 
         GlStateManager._activeTexture(GL13.GL_TEXTURE0 + 2);
+        // 1.21.11 LightTexture.turnOnLightLayer 删（2111 LightTexture 方法面实证）→ no-op
+        //? if <21.11
         mc.gameRenderer.lightTexture().turnOnLightLayer();
 
         GlStateManager._activeTexture(GL13.GL_TEXTURE0 + 1);
+        // 1.21.11 OverlayTexture 移 texture 包且 setupOverlayColor 删（2111 方法面实证）→ no-op
+        //? if <21.11
         mc.gameRenderer.overlayTexture().setupOverlayColor();
         // 1.21.5 getShaderTexture 返回 GpuTexture（RenderSystem.java:306）
         //? if <21.5
@@ -138,7 +142,7 @@ public final class GpuRenderPath {
         //? if >=21.5 && <21.8
         /*GlStateManager._bindTexture(((GlTexture) RenderSystem.getShaderTexture(1)).glId());*/
         // 1.21.8 getShaderTexture 返回 GpuTextureView（无 glId）且路径已降级：跳过冗余绑定
-        //? if >=21.8 {
+        //? if >=21.8 && <21.11 {
         /*GlStateManager._activeTexture(GL13.GL_TEXTURE0 + 1);
         mc.gameRenderer.overlayTexture().setupOverlayColor();*/
         //?}
@@ -239,6 +243,8 @@ public final class GpuRenderPath {
         /*RenderCompat.reset();*/
         GlStateManager._glBindVertexArray(0);
 
+        // 1.21.11 turnOffLightLayer removed (same note as turnOnLightLayer) -> no-op
+        //? if <21.11
         mc.gameRenderer.lightTexture().turnOffLightLayer();
 
         return true;

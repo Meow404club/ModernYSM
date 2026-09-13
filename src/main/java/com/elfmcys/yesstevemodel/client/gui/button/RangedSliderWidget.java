@@ -2,6 +2,10 @@ package com.elfmcys.yesstevemodel.client.gui.button;
 
 import com.elfmcys.yesstevemodel.util.YsmText;
 //? if >=1.19.4 {
+//? if >=21.9 {
+/*import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+ *///?}
 import net.minecraft.client.InputType;
 //?}
 import net.minecraft.client.Minecraft;
@@ -79,16 +83,21 @@ public class RangedSliderWidget extends YsmSliderButton {
         return this.format.format(this.getValue());
     }
 
-    @Override
-    public void onClick(double mouseX, double mouseY) {
-        this.setValueFromMouse(mouseX);
+    // 1.21.9+ AbstractSliderButton 事件换代：onClick(MouseButtonEvent,boolean)/
+    // onDrag(MouseButtonEvent,double,double)/onRelease(MouseButtonEvent)/keyPressed(KeyEvent)
+    //（neoforge-21.11.45 AbstractSliderButton.java:90-153 实证，21.10/21.11 同形）
+    //? if >=21.9 {
+    /*@Override
+    public void onClick(MouseButtonEvent event, boolean doubleClick) {
+        this.setValueFromMouse(event.x());
     }
 
     @Override
-    protected void onDrag(double mouseX, double mouseY, double dragX, double dragY) {
-        super.onDrag(mouseX, mouseY, dragX, dragY);
-        this.setValueFromMouse(mouseX);
+    protected void onDrag(MouseButtonEvent event, double dragX, double dragY) {
+        super.onDrag(event, dragX, dragY);
+        this.setValueFromMouse(event.x());
     }
+     *///?}
 
     @Override
     public void setFocused(boolean focused) {
@@ -109,6 +118,21 @@ public class RangedSliderWidget extends YsmSliderButton {
         }
     }
 
+    //? if >=21.9 {
+    /*@Override
+    public boolean keyPressed(KeyEvent event) {
+        boolean flag = event.key() == GLFW.GLFW_KEY_LEFT;
+        if (flag || event.key() == GLFW.GLFW_KEY_RIGHT) {
+            if (this.minValue > this.maxValue) flag = !flag;
+            float f = flag ? -1F : 1F;
+            if (stepSize <= 0D) this.setSliderValue(this.value + (f / (this.width - 8)));
+            else this.setValue(this.getValue() + f * this.stepSize);
+            return true;
+        }
+        return false;
+    }
+     *///?}
+    //? if <21.9 {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         boolean flag = keyCode == GLFW.GLFW_KEY_LEFT;
@@ -121,6 +145,7 @@ public class RangedSliderWidget extends YsmSliderButton {
         }
         return false;
     }
+    //?}
 
     private void setValueFromMouse(double mouseX) {
         this.setSliderValue((mouseX - (this.getX() + 4)) / (this.width - 8));
@@ -205,8 +230,12 @@ public class RangedSliderWidget extends YsmSliderButton {
         /*guiGraphics.drawString(mc.font, this.getMessage(), this.getX() + 2, this.getY() + (this.height - 8) / 2, color | Mth.ceil(this.alpha * 255.0F) << 24, false);*/
         //? if >=1.17 && <1.20
         /*guiGraphics.renderScrollingString(mc.font, this.getMessage(), this.getX() + 2, this.getY(), (this.getX() + this.width) - 2, this.getY() + this.height, color | Mth.ceil(this.alpha * 255.0F) << 24);*/
-        //? if >=1.20
+        //? if >=1.20 && <21.11
         renderScrollingString(guiGraphics.graphics(), mc.font, 2, color | Mth.ceil(this.alpha * 255.0F) << 24);
+        // 1.21.11 renderScrollingString(GuiGraphics,Font,...) 删（renderScrollingStringOverContents
+        // 换代）→ 滚动降级为静态单行
+        //? if >=21.11
+        /*guiGraphics.drawString(mc.font, this.getMessage(), this.getX() + 2, this.getY() + (this.height - 8) / 2, color | Mth.ceil(this.alpha * 255.0F) << 24, false);*/
     }
 
     //https://github.com/MinecraftForge/MinecraftForge/blob/26.1.2/src/main/java/net/minecraftforge/client/extensions/IForgeGuiGraphicsExtractor.java#L71

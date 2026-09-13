@@ -6,6 +6,10 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+// 1.21.11 AbstractMinecart 移 vehicle.minecart 子包
+//? if >=21.11
+/*import net.minecraft.world.entity.vehicle.minecart.AbstractMinecart;*/
+//? if <21.11
 import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.phys.Vec3;
 import rip.ysm.api.entity.EntityDataBridge;

@@ -25,6 +25,10 @@ import com.elfmcys.yesstevemodel.util.FileTypeUtil;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
+// 1.21.11 Util 移 net.minecraft.util 子包
+//? if >=21.11
+/*import net.minecraft.util.Util;*/
+//? if <21.11
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -207,9 +211,16 @@ public class ModelButton extends YsmButton {
         }
     }
 
-    //? if >=1.20 {
+    //? if >=1.20 && <21.11 {
     @Override
     public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+    //?}
+    // 1.21.11 AbstractButton.renderWidget final 化 → renderContents（2111 AbstractWidget.java 实证）
+    //? if >=21.11 {
+    @Override
+    public void renderContents(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
     //?}
@@ -344,6 +355,11 @@ public class ModelButton extends YsmButton {
                 this.detailedTooltipLines = null;
                 this.tooltipLines = null;
             }
+            // 1.21.9 Window.getWindow(long 句柄) → handle()（2110 Window.java:427）
+            // 1.21.9+ isKeyDown 首参 (long 句柄 → Window 对象)（2110 InputConstants.java:191）
+            //? if >=21.9
+            /*if (InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), 340) || InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), 344)) {*/
+            //? if <21.9
             if (InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), 340) || InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), 344)) {
                 if (this.detailedTooltipLines == null) {
                     this.detailedTooltipLines = ModelMetadataPresenter.buildModelTooltip(this.renderContext, selected, this.modelIdHolder.getModelId(), true);

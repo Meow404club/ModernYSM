@@ -12,6 +12,10 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.resources.ResourceLocation;
 //? if >1.17 {
+// 1.21.11 RenderType 移 net.minecraft.client.renderer.rendertype 子包
+//? if >=21.11
+/*import net.minecraft.client.renderer.rendertype.RenderType;*/
+//? if <21.11
 import net.minecraft.client.renderer.RenderType;
 //?}
 // 1.21.2 ShaderInstance 删除（ShaderManager/CompiledShaderProgram 重构，vanilla-1.21.3

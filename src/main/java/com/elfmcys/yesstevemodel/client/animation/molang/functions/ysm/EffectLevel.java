@@ -11,6 +11,10 @@ import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+// 1.21.11 Arrow 移 projectile.arrow 子包（neoforge-21.11.45 sources 实证）
+//? if >=21.11
+/*import net.minecraft.world.entity.projectile.arrow.Arrow;*/
+//? if <21.11
 import net.minecraft.world.entity.projectile.Arrow;
 
 public class EffectLevel extends ContextFunction<Entity> {

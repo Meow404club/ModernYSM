@@ -19,8 +19,12 @@ import net.minecraft.client.renderer.MultiBufferSource;
 //? if >=1.17 {
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 //? }
-//? if >=1.21.2 {
+//? if >=1.21.2 && <21.9 {
 /*import net.minecraft.client.renderer.entity.state.PlayerRenderState;
+ *///?}
+// 1.21.9 PlayerRenderState → AvatarRenderState（neoforge-21.10.64 state/AvatarRenderState.java 实证）
+//? if >=21.9 {
+/*import net.minecraft.client.renderer.entity.state.AvatarRenderState;
  *///?}
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.network.chat.Component;
@@ -149,9 +153,15 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
     public void renderNameTag(Player player, Component component, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
     //? if >=1.20.5 && <1.21.2
     /*private void renderNameTagInner(Player player, Component component, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, float partialTick) {*/
-    //? if >=1.21.2
+    //? if >=1.21.2 && <21.9
     /*private void renderNameTagInner(PlayerRenderState state, Component component, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
         Player player = this.ysmEntity;*/
+    // 1.21.9+ EntityRenderer.renderNameTag(S,...) 删（submitNameTag/SubmitNodeCollector 换代，
+    // 2110 EntityRenderer.java:133），名牌逻辑整体退回 vanilla 默认链
+    //? if >=21.9
+    /*private void renderNameTagInner(AvatarRenderState state, Component component, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
+        Player player = this.ysmEntity;
+        // 1.21.9 Player.getScoreboard() 删 → level().getScoreboard()（同义透传，2110 LivingEntity.java:823 同款）*/
         Scoreboard scoreboard;
         Objective displayObjective;
         if (PlayerPreviewEntity.isPreviewPlayer(player)) {
@@ -160,9 +170,9 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
         double dDistanceToSqr = this.entityRenderDispatcher.distanceToSqr(player);
         poseStack.pushPose();
         //? if neoforge
-        /*if (dDistanceToSqr < 100.0d && (displayObjective = (scoreboard = player.getScoreboard()).getDisplayObjective(net.minecraft.world.scores.DisplaySlot.BELOW_NAME)) != null) {*/
+        /*if (dDistanceToSqr < 100.0d && (displayObjective = (scoreboard = player.level().getScoreboard()).getDisplayObjective(net.minecraft.world.scores.DisplaySlot.BELOW_NAME)) != null) {*/
         //? if forge
-        if (dDistanceToSqr < 100.0d && (displayObjective = (scoreboard = player.getScoreboard()).getDisplayObjective(2)) != null) {
+        if (dDistanceToSqr < 100.0d && (displayObjective = (scoreboard = player.level().getScoreboard()).getDisplayObjective(2)) != null) {
             // Component.literal（1.19+）→ 1.16.5 new TextComponent；append 双版同名
             //? if <1.19.2
             // super.renderNameTag(player, new net.minecraft.network.chat.TextComponent(Integer.toString(scoreboard.getOrCreatePlayerScore(player.getScoreboardName(), displayObjective).getScore())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i);
@@ -170,7 +180,7 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
             /*super.renderNameTag(player, Component.literal(Integer.toString(scoreboard.getOrCreatePlayerScore(player, displayObjective).get())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i);*/
             //? if neoforge && >=1.20.5 && <1.21.2
             /*super.renderNameTag(player, Component.literal(Integer.toString(scoreboard.getOrCreatePlayerScore(player, displayObjective).get())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i, partialTick);*/
-            //? if neoforge && >=1.21.2
+            //? if neoforge && >=1.21.2 && <21.9
             /*super.renderNameTag(state, Component.literal(Integer.toString(scoreboard.getOrCreatePlayerScore(player, displayObjective).get())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i);*/
             //? if forge && >=1.19.2
             super.renderNameTag(player, Component.literal(Integer.toString(scoreboard.getOrCreatePlayerScore(player.getScoreboardName(), displayObjective).getScore())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i);
@@ -180,7 +190,7 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
         super.renderNameTag(player, component, poseStack, multiBufferSource, i);
         //? if >=1.20.5 && <1.21.2
         /*super.renderNameTag(player, component, poseStack, multiBufferSource, i, partialTick);*/
-        //? if >=1.21.2
+        //? if >=1.21.2 && <21.9
         /*super.renderNameTag(state, component, poseStack, multiBufferSource, i);*/
         poseStack.popPose();
     }
@@ -193,7 +203,7 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
     //? }
     // 1.21.2 render-state 化：renderNameTag(S, Component, ...) 五参、无 partialTick
     //（vanilla-1.21.3 EntityRenderer.java:210）；player 经 GeoReplacedEntityRenderer.ysmEntity 暂存
-    //? if >=1.21.2 {
+    //? if >=1.21.2 && <21.9 {
     /*@Override
     protected void renderNameTag(PlayerRenderState state, Component component, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
         this.renderNameTagInner(state, component, poseStack, multiBufferSource, i);
@@ -212,9 +222,19 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
         }
     }
     //?}
-    //? if >=1.21.2 {
+    //? if >=1.21.2 && <21.9 {
     /*@Override
     protected void setupRotations(PlayerRenderState state, PoseStack poseStack, float ageInTicks, float rotationYaw) {
+        super.setupRotations(state, poseStack, ageInTicks, rotationYaw);
+        Entity vehicle = this.ysmEntity.getVehicle();
+        if (TouhouLittleMaidCompat.isSimplePlanesEntity(vehicle) || TouhouLittleMaidCompat.isImmersiveAircraftEntity(vehicle)) {
+            poseStack.translate(0.0d, 0.5d, 0.0d);
+        }
+    }*/
+    //?}
+    //? if >=21.9 {
+    /*@Override
+    protected void setupRotations(AvatarRenderState state, PoseStack poseStack, float ageInTicks, float rotationYaw) {
         super.setupRotations(state, poseStack, ageInTicks, rotationYaw);
         Entity vehicle = this.ysmEntity.getVehicle();
         if (TouhouLittleMaidCompat.isSimplePlanesEntity(vehicle) || TouhouLittleMaidCompat.isImmersiveAircraftEntity(vehicle)) {

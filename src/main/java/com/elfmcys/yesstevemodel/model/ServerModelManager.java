@@ -387,13 +387,17 @@ public final class ServerModelManager {
             YesSteveModel.LOGGER.warn("Failed to remove stale builtins", e);
         }
          *///?} else {
-        try {
-            // forgespi 3.x（1.16.5 userdev 实证）IModFileInfo 无 getFile()：>=1.17 由
-            // IModFile.findResource 提供包内目录路径，Files.walk 提取逻辑保持原样
-            Path assetsBuiltin = Optional.ofNullable(ModList.get().getModFileById(YesSteveModel.MOD_ID))
-                    .map(IModFileInfo::getFile)
-                    .map(file -> file.findResource("assets", YesSteveModel.MOD_ID, "builtin"))
-                    .orElse(null);
+            //? if >=21.10 {
+            /*// 1.21.10 IModFile 瘦身：findResource/getSecureJar 删（TmpProbe 编译实证）→
+            // getFilePath 自解析（jar/dir 双形），功能等价原 findResource+Files.walk
+            ysmExtractBuiltinsFromModFile();
+            *///?}
+            //? if <21.10 {
+            try {
+                Path assetsBuiltin = Optional.ofNullable(ModList.get().getModFileById(YesSteveModel.MOD_ID))
+                        .map(IModFileInfo::getFile)
+                        .map(file -> file.findResource("assets", YesSteveModel.MOD_ID, "builtin"))
+                        .orElse(null);
 
             if (assetsBuiltin == null || !Files.isDirectory(assetsBuiltin)) return;
 
@@ -438,11 +442,82 @@ public final class ServerModelManager {
                     }
                 });
             }
+            } catch (Exception e) {
+                YesSteveModel.LOGGER.error("Failed to extract builtin models", e);
+            }
+            //?}
+        //?}
+    }
+
+    //? if >=21.10 {
+    /*private static void ysmExtractBuiltinsFromModFile() {
+        IModFileInfo modFileInfo = ModList.get().getModFileById(YesSteveModel.MOD_ID);
+        if (modFileInfo == null || modFileInfo.getFile() == null) {
+            return;
+        }
+        Path modPath = modFileInfo.getFile().getFilePath();
+        try {
+            if (Files.isDirectory(modPath)) {
+                ysmCopyBuiltinTree(modPath.resolve("assets/" + YesSteveModel.MOD_ID + "/builtin"));
+            } else if (Files.isRegularFile(modPath)) {
+                try (java.nio.file.FileSystem zipFs = java.nio.file.FileSystems.newFileSystem(modPath, (ClassLoader) null)) {
+                    ysmCopyBuiltinTree(zipFs.getPath("assets/" + YesSteveModel.MOD_ID + "/builtin"));
+                }
+            }
         } catch (Exception e) {
             YesSteveModel.LOGGER.error("Failed to extract builtin models", e);
         }
-        //?}
     }
+
+    private static void ysmCopyBuiltinTree(Path assetsBuiltin) throws IOException {
+        if (!Files.isDirectory(assetsBuiltin)) {
+            return;
+        }
+        Set<String> sourcePaths = new HashSet<>();
+        try (Stream<Path> walker = Files.walk(assetsBuiltin)) {
+            walker.forEach(src -> {
+                try {
+                    Path relative = assetsBuiltin.relativize(src);
+                    sourcePaths.add(relative.toString().replace('\\', '/'));
+                    Path dest = ServerModelManager.BUILT.resolve(relative.toString());
+                    if (Files.isDirectory(src)) {
+                        Files.createDirectories(dest);
+                    } else {
+                        Files.createDirectories(dest.getParent());
+                        boolean unchanged = Files.isRegularFile(dest)
+                                && Files.size(src) == Files.size(dest)
+                                && Files.getLastModifiedTime(src).toMillis() == Files.getLastModifiedTime(dest).toMillis();
+                        if (!unchanged) {
+                            FileTime modified = Files.getLastModifiedTime(src);
+                            Files.copy(src, dest, StandardCopyOption.REPLACE_EXISTING);
+                            try {
+                                Files.setLastModifiedTime(dest, modified);
+                            } catch (IOException ignored) {
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    YesSteveModel.LOGGER.warn("Failed to extract builtin: " + src.getFileName(), e);
+                }
+            });
+        }
+        try (Stream<Path> walker = Files.walk(BUILT)) {
+            walker.sorted(Comparator.reverseOrder()).forEach(dest -> {
+                if (dest.equals(BUILT) || dest.equals(BUILT.resolve("notice.txt"))) return;
+                String relative = BUILT.relativize(dest).toString().replace('\\', '/');
+                if (!sourcePaths.contains(relative)) {
+                    try {
+                        Files.deleteIfExists(dest);
+                    } catch (IOException e) {
+                        YesSteveModel.LOGGER.warn("Failed to remove stale builtin: " + dest.getFileName(), e);
+                    }
+                }
+            });
+        } catch (IOException e) {
+            YesSteveModel.LOGGER.warn("Failed to remove stale builtins", e);
+        }
+    }
+     *///?}
 
     private static void processBlacklist(Path blacklistFile) {
         List<Pattern> rules = new ArrayList<>();
@@ -1549,7 +1624,7 @@ public final class ServerModelManager {
             /*List<ServerPlayer> sorted = new ArrayList<>(players);
             sorted.removeIf(p2 -> p2.level.dimensionType() != serverPlayer.level.dimensionType());
             sorted.sort(java.util.Comparator.comparingDouble(p2 -> p2.distanceTo(serverPlayer)));
-            nativeSyncModels(new UUID[]{serverPlayer.getUUID()}, new String[]{serverPlayer.getGameProfile().getName()}, collectPlayerModelIds(sorted), consumer);
+            nativeSyncModels(new UUID[]{serverPlayer.getUUID()}, new String[]{ysmProfileName(serverPlayer)}, collectPlayerModelIds(sorted), consumer);
              *///?} else {
             ArrayList<FloatReferencePair<ServerPlayer>> arrayList = new ArrayList<>();
             for (ServerPlayer serverPlayer2 : players) {
@@ -1561,9 +1636,18 @@ public final class ServerModelManager {
                 }
             }
             arrayList.sort((a, b) -> Float.compare(a.firstFloat(), b.firstFloat()));
-            nativeSyncModels(new UUID[]{serverPlayer.getUUID()}, new String[]{serverPlayer.getGameProfile().getName()}, collectPlayerModelIds(arrayList.stream().map(it.unimi.dsi.fastutil.Pair::second).collect(Collectors.toCollection(ArrayList::new))), consumer);
+            nativeSyncModels(new UUID[]{serverPlayer.getUUID()}, new String[]{ysmProfileName(serverPlayer)}, collectPlayerModelIds(arrayList.stream().map(it.unimi.dsi.fastutil.Pair::second).collect(Collectors.toCollection(ArrayList::new))), consumer);
             //?}
         });
+    }
+
+    // authlib 7（21.10+）GameProfile 记录化：getName() → name()（2110 Minecraft.java:796
+    // gameprofile.name() 实证）；表达式位不可内嵌条件块 → 收编 helper
+    private static String ysmProfileName(ServerPlayer player) {
+        //? if >=21.10
+        /*return player.getGameProfile().name();*/
+        //? if <21.10
+        return player.getGameProfile().getName();
     }
 
     public static boolean loadModels(@Nullable Consumer<ModelLoadResult> consumer, @Nullable Consumer<UUIDComponentData> consumer2) {
@@ -1587,7 +1671,7 @@ public final class ServerModelManager {
                 for (ServerPlayer value : players) {
                     validatePlayerModel(value);
                 }
-                nativeSyncModels(players.stream().filter(NetworkHandler::isPlayerConnected).map((player) -> player.getUUID()).toArray(i -> new UUID[i]), players.stream().filter(NetworkHandler::isPlayerConnected).map(serverPlayer -> serverPlayer.getGameProfile().getName()).toArray(i2 -> new String[i2]), collectPlayerModelIds(players), consumer2);
+                nativeSyncModels(players.stream().filter(NetworkHandler::isPlayerConnected).map((player) -> player.getUUID()).toArray(i -> new UUID[i]), players.stream().filter(NetworkHandler::isPlayerConnected).map(ServerModelManager::ysmProfileName).toArray(i2 -> new String[i2]), collectPlayerModelIds(players), consumer2);
             });
         };
         return nativeLoadModels(action);

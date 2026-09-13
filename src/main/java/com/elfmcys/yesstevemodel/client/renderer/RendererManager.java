@@ -129,10 +129,17 @@ public class RendererManager {
         // 1.21.4 Context：ItemRenderer→ItemModelResolver、EquipmentModelSet→EquipmentAssetManager
         //（vanilla-1.21.4 EntityRendererProvider.java:38-48）；EquipmentAssetManager 无
         // Minecraft getter（vanilla 本地构造+注册重载，:530-531 同款）
-        //? if >=21.4 {
+        //? if >=21.4 && <21.9 {
         /*net.minecraft.client.resources.model.EquipmentAssetManager ysmEquipmentAssets = new net.minecraft.client.resources.model.EquipmentAssetManager();
         ((net.minecraft.server.packs.resources.ReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener(ysmEquipmentAssets);
         EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemModelResolver(), Minecraft.getInstance().getMapRenderer(), Minecraft.getInstance().getBlockRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), ysmEquipmentAssets, Minecraft.getInstance().font);*/
+        //?}
+        // 1.21.9 Context 10 参：+AtlasManager（Minecraft.getAtlasManager）+PlayerSkinRenderCache
+        //（Minecraft.playerSkinRenderCache()，2110 EntityRendererProvider.java:42-51 实证）
+        //? if >=21.9 {
+        /*net.minecraft.client.resources.model.EquipmentAssetManager ysmEquipmentAssets = new net.minecraft.client.resources.model.EquipmentAssetManager();
+        ((net.minecraft.server.packs.resources.ReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener(ysmEquipmentAssets);
+        EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemModelResolver(), Minecraft.getInstance().getMapRenderer(), Minecraft.getInstance().getBlockRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), ysmEquipmentAssets, Minecraft.getInstance().getAtlasManager(), Minecraft.getInstance().font, Minecraft.getInstance().playerSkinRenderCache());*/
         //?}
         //? if <1.19.2
         /*EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), Minecraft.getInstance().font);*/

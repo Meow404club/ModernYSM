@@ -52,6 +52,10 @@ public class AnimationLockEvent {
     /*private static void onKeyEvent(InputEvent.KeyInputEvent event) {*/
     //? if >=1.19.2
     private static void onKeyEvent(InputEvent.Key event) {
+        // 1.21.9 KeyMapping.matches(int,int) → matches(KeyEvent)（2110 KeyMapping.java:255）
+        //? if >=21.9
+        /*if (YesSteveModel.isAvailable() && event.getAction() == 1 && AnimationRouletteKey.KEY_LOCK.matches(new net.minecraft.client.input.KeyEvent(event.getKey(), event.getScanCode(), 0))) {*/
+        //? if <21.9
         if (YesSteveModel.isAvailable() && event.getAction() == 1 && AnimationRouletteKey.KEY_LOCK.matches(event.getKey(), event.getScanCode())) {
             animationLocked = !animationLocked;
         }

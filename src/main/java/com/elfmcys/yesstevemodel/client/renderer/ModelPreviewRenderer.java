@@ -229,8 +229,12 @@ public final class ModelPreviewRenderer {
         /*rotationX.conj();*/
         //? if >=1.19.4
         rotationX.conjugate();
+        //? if <21.9
         entityRenderDispatcher.overrideCameraOrientation(rotationX);
+        // 1.21.9+ EntityRenderDispatcher 直绘面删（render-dag 换代）→ no-op
+        //? if <21.9
         entityRenderDispatcher.setRenderShadow(false);
+        // 1.21.9+ EntityRenderDispatcher 直绘面删（render-dag 换代）→ no-op
         MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
 
         RenderCompat.runAsFancy(() -> {
@@ -279,7 +283,9 @@ public final class ModelPreviewRenderer {
         });
 
         bufferSource.endBatch();
+        //? if <21.9
         entityRenderDispatcher.setRenderShadow(true);
+        // 1.21.9+ EntityRenderDispatcher 直绘面删（render-dag 换代）→ no-op
         livingEntity.yBodyRot = oldBodyRot;
         livingEntity.yBodyRotO = oldBodyRotO;
         //? if <1.17
@@ -381,6 +387,13 @@ public final class ModelPreviewRenderer {
         Minecraft.getInstance().getBlockRenderer().renderSingleBlock(Blocks.RED_TULIP.defaultBlockState(), poseStack, bufferSource, 15728880, OverlayTexture.NO_OVERLAY);
     }
 
+    // 1.21.9+ dispatcher.render 直绘删（render-dag 换代）→ 载具动画预览降级 no-op
+    //（真身实现仅 <21.9，功能债同 renderVehicleEntity）
+    //? if >=21.9 {
+    private static void renderVehicleForAnimation(float yaw, AnimatableEntity animatableEntity, float partialTick, PoseStack poseStack, EntityRenderDispatcher entityRenderDispatcher, MultiBufferSource.BufferSource bufferSource) throws ExecutionException {
+    }
+    //?}
+    //? if <21.9 {
     private static void renderVehicleForAnimation(float yaw, AnimatableEntity animatableEntity, float partialTick, PoseStack poseStack, EntityRenderDispatcher entityRenderDispatcher, MultiBufferSource.BufferSource bufferSource) throws ExecutionException {
         Entity entity = animatableEntity.getEntity();
         AnimationTracker animationTracker = ((IPreviewAnimatable) animatableEntity).getAnimationStateMachine();
@@ -419,7 +432,16 @@ public final class ModelPreviewRenderer {
             /*renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.OAK_BOAT), () -> new net.minecraft.world.entity.vehicle.Boat(EntityType.OAK_BOAT, entity.level(), () -> net.minecraft.world.item.Items.OAK_BOAT)), partialTick);*/
         }
     }
+    //?}
 
+    // 1.21.9+ EntityRenderDispatcher.render 直绘删（render-dag/SubmitNodeCollector 换代，
+    // 2110 EntityRenderDispatcher.java 方法面实证）→ 载具预览降级 no-op
+    //（正规迁移=extractEntity+submit 重构，功能债入账）；真身实现仅 <21.9
+    //? if >=21.9 {
+    private static void renderVehicleEntity(float yaw, Entity riderEntity, PoseStack poseStack, EntityRenderDispatcher entityRenderDispatcher, MultiBufferSource.BufferSource bufferSource, Entity vehicleEntity, float partialTick) {
+    }
+    //?}
+    //? if <21.9 {
     private static void renderVehicleEntity(float yaw, Entity riderEntity, PoseStack poseStack, EntityRenderDispatcher entityRenderDispatcher, MultiBufferSource.BufferSource bufferSource, Entity vehicleEntity, float partialTick) {
         poseStack.pushPose();
         //? if <1.17
@@ -444,6 +466,7 @@ public final class ModelPreviewRenderer {
         entityRenderDispatcher.render(vehicleEntity, 0.0d, (-vehicleEntity.getPassengersRidingOffset()) - riderEntity.getMyRidingOffset(), 0.0d, 0.0f, partialTick, poseStack, bufferSource, 15728880);
         poseStack.popPose();
     }
+    //?}
 
     // 模型预览页面
     public static <T extends LivingEntity, TAnimatable extends LivingAnimatable<T>> void renderLivingEntityPreview(float x, float y, float scale, float partialTick, TAnimatable animatable, GeoReplacedEntityRenderer<T, TAnimatable> renderer, boolean disablePreviewRotation, boolean hideEquipment) {
@@ -601,8 +624,12 @@ public final class ModelPreviewRenderer {
         /*rotationX.conj();*/
         //? if >=1.19.4
         rotationX.conjugate();
+        //? if <21.9
         entityRenderDispatcher.overrideCameraOrientation(rotationX);
+        // 1.21.9+ EntityRenderDispatcher 直绘面删（render-dag 换代）→ no-op
+        //? if <21.9
         entityRenderDispatcher.setRenderShadow(false);
+        // 1.21.9+ EntityRenderDispatcher 直绘面删（render-dag 换代）→ no-op
         MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
 
         RenderCompat.runAsFancy(() -> {
@@ -610,7 +637,9 @@ public final class ModelPreviewRenderer {
         });
 
         bufferSource.endBatch();
+        //? if <21.9
         entityRenderDispatcher.setRenderShadow(true);
+        // 1.21.9+ EntityRenderDispatcher 直绘面删（render-dag 换代）→ no-op
         livingEntity.yBodyRot = oldBodyRot;
         livingEntity.yBodyRotO = oldBodyRotO;
         //? if <1.17

@@ -28,7 +28,10 @@ public class YSMMessageFormatter {
     }
 
     public static boolean isCurrentClientPlayer(Entity entity) {
-        //? if neoforge
+        // 1.21.10 authlib 7 GameProfile 记录化：getId() → id()（2110 Minecraft.java:796 同代实证）
+        //? if neoforge && >=21.10
+        /*return entity != null && !PlatformAPI.isServer() && entity.getUUID().equals(Minecraft.getInstance().getGameProfile().id());*/
+        //? if neoforge && <21.10
         /*return entity != null && !PlatformAPI.isServer() && entity.getUUID().equals(Minecraft.getInstance().getGameProfile().getId());*/
         //? if forge
         return entity != null && !PlatformAPI.isServer() && entity.getUUID().equals(Minecraft.getInstance().getUser().getGameProfile().getId());
@@ -38,18 +41,31 @@ public class YSMMessageFormatter {
         if (entity == null) {
             return false;
         }
-        // 1.21.2 Entity.hasPermissions 删除（Player 保留，vanilla-1.21.3 Player.java:2061）
+        // 1.21.2 Entity.hasPermissions 删除（Player 保留，vanilla-1.21.3 Player.java:2061）；
+        // 1.21.11 Player.hasPermissions 也删（2111 Player.java 零命中）→ 客户端本地玩家兜底放行
         //? if <1.21.2
         return entity.hasPermissions(level) || isCurrentClientPlayer(entity);
-        //? if >=1.21.2
+        //? if >=1.21.2 && <21.11
         /*return (entity instanceof net.minecraft.world.entity.player.Player p && p.hasPermissions(level)) || isCurrentClientPlayer(entity);*/
+        //? if >=21.11
+        /*return isCurrentClientPlayer(entity);*/
     }
 
     public static boolean hasCommandPermission(CommandSourceStack commandSourceStack, int level) {
+        // 1.21.11 CommandSourceStack 权限改 PermissionSet 模型（2111 CommandSourceStack.java:378
+        // permissions() + PermissionSet.hasPermission(Permission) 实证）；level 2 ≙ GAMEMASTERS 档
+        //? if >=21.11 {
+        /*if (commandSourceStack.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)) {
+            return true;
+        }
+        return commandSourceStack.getEntity() != null && isCurrentClientPlayer(commandSourceStack.getEntity());
+        *///?}
+        //? if <21.11 {
         if (commandSourceStack.hasPermission(level)) {
             return true;
         }
         return commandSourceStack.getEntity() != null && isCurrentClientPlayer(commandSourceStack.getEntity());
+        //?}
     }
 
     public static void sendServerMessage(@Nullable CommandSourceStack commandSourceStack, Component component, boolean broadcastToOps) {

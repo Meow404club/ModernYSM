@@ -32,7 +32,15 @@ public class FlatIconButton extends AbstractWidget implements ISpecialWidget {
         this.iconIndex = iconIndex;
     }
 
-    //? if >=1.20 {
+    //? if >=1.20 && <21.11 {
+    @Override
+    public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+    //?}
+    // FlatIconButton 直extends AbstractWidget：1.21.11 其抽象钩子仍名 renderWidget
+    //（2111 AbstractWidget.java:89）→ 恢复同名覆写
+    //? if >=21.11 {
     @Override
     public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
@@ -80,7 +88,10 @@ public class FlatIconButton extends AbstractWidget implements ISpecialWidget {
         //? if >=1.17 && <1.20
         /*guiGraphics.renderScrollingString(Minecraft.getInstance().font, this.getMessage(), this.getX() + 2, this.getY(), (this.getX() + this.width) - 2, this.getY() + this.height, 16777215);*/
         //? if >=1.20
+        //? if <21.11
         renderScrollingString(guiGraphics.graphics(), Minecraft.getInstance().font, 2, 16777215);
+        //? if >=21.11
+        /*guiGraphics.drawString(Minecraft.getInstance().font, this.getMessage(), this.getX() + 2, this.getY(), 16777215, false);*/
     }
 
     // narration：updateNarration 抽象 1.17~1.19.2（NarratableEntry extends NarrationSupplier 且

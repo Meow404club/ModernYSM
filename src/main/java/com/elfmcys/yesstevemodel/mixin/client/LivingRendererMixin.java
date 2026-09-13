@@ -51,11 +51,21 @@ public abstract class LivingRendererMixin
     }
     //?}
 
-    //? if >=1.21.2 {
+    //? if >=1.21.2 && <21.9 {
     /*@Override
     @Unique
     public void tlm$renderNameTag(LivingEntityRenderState pState, PoseStack pPoseStack, MultiBufferSource pBuffer, int pPackedLight) {
         super.render(pState, pPoseStack, pBuffer, pPackedLight);
+    }*/
+    //?}
+    // 1.21.9+ EntityRenderer.render(S, PoseStack, MultiBufferSource, int) 删
+    //（render-dag/SubmitNodeCollector 换代，2110 EntityRenderer.java:115 仅余 submit）→
+    // 本 mixin 桥在 21.9+ 无可转发的 vanilla 方法，接口方法留空实现（抽象类可不全实现，
+    // Static 预览路径名牌改走 vanilla submitNameTag，功能债同批入账）
+    //? if >=21.9 {
+    /*@Override
+    @Unique
+    public void tlm$renderNameTag(LivingEntityRenderState pState, PoseStack pPoseStack, MultiBufferSource pBuffer, int pPackedLight) {
     }*/
     //?}
 }

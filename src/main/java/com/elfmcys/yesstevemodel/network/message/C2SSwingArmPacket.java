@@ -46,6 +46,11 @@ public class C2SSwingArmPacket {
                 sender.swinging = true;
                 sender.swingingArm = interactionHand;
                 if (YsmEntity.level(sender) instanceof ServerLevel) {
+                    // 1.21.9 ServerChunkCache.broadcast 删 → sendToTrackingPlayersAndSelf
+                    //（2110 ServerChunkCache.java:547，语义同含本体）
+                    //? if >=21.9
+                    /*((ServerChunkCache) YsmEntity.level(sender).getChunkSource()).sendToTrackingPlayersAndSelf(sender, new ClientboundAnimatePacket(sender, interactionHand == InteractionHand.MAIN_HAND ? 0 : 3));*/
+                    //? if <21.9
                     ((ServerChunkCache) YsmEntity.level(sender).getChunkSource()).broadcast(sender, new ClientboundAnimatePacket(sender, interactionHand == InteractionHand.MAIN_HAND ? 0 : 3));
                 }
             }

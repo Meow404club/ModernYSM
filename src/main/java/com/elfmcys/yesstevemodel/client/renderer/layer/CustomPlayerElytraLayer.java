@@ -6,6 +6,10 @@ import com.elfmcys.yesstevemodel.geckolib3.geo.GeoLayerRenderer;
 import com.elfmcys.yesstevemodel.geckolib3.geo.animated.AnimatedGeoModel;
 import com.elfmcys.yesstevemodel.geckolib3.util.RenderUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
+// 1.21.11 ElytraModel 移 client.model.object.equipment 子包
+//? if >=21.11
+/*import net.minecraft.client.model.object.equipment.ElytraModel;*/
+//? if <21.11
 import net.minecraft.client.model.ElytraModel;
 // 1.16.5 无 ModelLayers/EntityRendererProvider，ElytraModel 为无参传统构造
 //? if >=1.17 {
@@ -17,6 +21,10 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
  *///?}
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
+// 1.21.11 RenderType 移 net.minecraft.client.renderer.rendertype 子包
+//? if >=21.11
+/*import net.minecraft.client.renderer.rendertype.RenderType;*/
+//? if <21.11
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -68,19 +76,29 @@ public class CustomPlayerElytraLayer extends GeoLayerRenderer<CustomPlayerEntity
         AnimatedGeoModel animatedGeoModel = entityLivingBaseIn.getCurrentModel();
         if (!stack.isEmpty() && animatedGeoModel != null && !animatedGeoModel.elytraBones().isEmpty() && (entity instanceof AbstractClientPlayer)) {
             AbstractClientPlayer abstractClientPlayer = (AbstractClientPlayer) entity;
-            //? if neoforge
+            // 1.21.9 PlayerSkin 重组：elytraTexture()/capeTexture() 删 → elytra()/cape()
+            //（ClientAsset.Texture 可空）+ texturePath()（neoforge-21.10.64 PlayerSkin.java:15 实证）
+            //? if neoforge && >=21.9
+            /*if (abstractClientPlayer.getSkin().elytra() != null) {*/
+            //? if neoforge && <21.9
             /*if (abstractClientPlayer.getSkin().elytraTexture() != null) {*/
             //? if forge
             if (abstractClientPlayer.isElytraLoaded() && abstractClientPlayer.getElytraTextureLocation() != null) {
-                //? if neoforge
+                //? if neoforge && >=21.9
+                /*cloakTextureLocation = abstractClientPlayer.getSkin().elytra().texturePath();*/
+                //? if neoforge && <21.9
                 /*cloakTextureLocation = abstractClientPlayer.getSkin().elytraTexture();*/
                 //? if forge
                 cloakTextureLocation = abstractClientPlayer.getElytraTextureLocation();
-            //? if neoforge
+            //? if neoforge && >=21.9
+            /*} else if (abstractClientPlayer.getSkin().cape() != null && abstractClientPlayer.isModelPartShown(PlayerModelPart.CAPE)) {*/
+            //? if neoforge && <21.9
             /*} else if (abstractClientPlayer.getSkin().capeTexture() != null && abstractClientPlayer.isModelPartShown(PlayerModelPart.CAPE)) {*/
             //? if forge
             } else if (abstractClientPlayer.isCapeLoaded() && abstractClientPlayer.getCloakTextureLocation() != null && abstractClientPlayer.isModelPartShown(PlayerModelPart.CAPE)) {
-                //? if neoforge
+                //? if neoforge && >=21.9
+                /*cloakTextureLocation = abstractClientPlayer.getSkin().cape().texturePath();*/
+                //? if neoforge && <21.9
                 /*cloakTextureLocation = abstractClientPlayer.getSkin().capeTexture();*/
                 //? if forge
                 cloakTextureLocation = abstractClientPlayer.getCloakTextureLocation();
@@ -113,8 +131,12 @@ public class CustomPlayerElytraLayer extends GeoLayerRenderer<CustomPlayerEntity
             //?}
             // 1.21 getArmorFoilBuffer 去 hasFoil 尾参（vanilla-1.21.1 ItemRenderer.java:167）、
             // renderToBuffer 颜色改 int 打包（vanilla-1.21.1 Model.java:23）
-            //? if >=1.21
+            //? if >=1.21 && <21.9
             /*this.elytraModel.renderToBuffer(poseStack, ItemRenderer.getArmorFoilBuffer(bufferSource, RenderType.armorCutoutNoCull(cloakTextureLocation), stack.hasFoil()), packedLightIn, OverlayTexture.NO_OVERLAY, -1);*/
+            //? if <1.21
+            // 1.21.9 getArmorFoilBuffer → getFoilBuffer（ItemRenderer.java:67 四参，语义同形）
+            //? if >=21.9
+            /*this.elytraModel.renderToBuffer(poseStack, ItemRenderer.getFoilBuffer(bufferSource, RenderType.armorCutoutNoCull(cloakTextureLocation), false, stack.hasFoil()), packedLightIn, OverlayTexture.NO_OVERLAY, -1);*/
             //? if <1.21
             this.elytraModel.renderToBuffer(poseStack, ItemRenderer.getArmorFoilBuffer(bufferSource, RenderType.armorCutoutNoCull(cloakTextureLocation), false, stack.hasFoil()), packedLightIn, OverlayTexture.NO_OVERLAY, 1.0f, 1.0f, 1.0f, 1.0f);
             poseStack.popPose();

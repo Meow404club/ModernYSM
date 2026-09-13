@@ -49,6 +49,11 @@ public class GeckoVehicleEntity extends GeoEntity<Entity> {
         //? if <1.18.2 {
         // VehicleModelBundle modelBundle = modelAssembly.getVehicleModels().get(net.minecraft.world.entity.EntityType.getKey(this.entity.getType()));
         //? } else {
+        // 1.21.11 ResourceKey.location() → identifier()（2111 ResourceKey.java:57）
+        //? if >=21.11 {
+        /*VehicleModelBundle modelBundle = modelAssembly.getVehicleModels().get(this.entity.getType().builtInRegistryHolder().key().identifier());*/
+        //?}
+        //? if <21.11 {
         VehicleModelBundle modelBundle = modelAssembly.getVehicleModels().get(this.entity.getType().builtInRegistryHolder().key().location());
         //? }
         if (modelBundle != null) {
@@ -62,8 +67,10 @@ public class GeckoVehicleEntity extends GeoEntity<Entity> {
         super.onModelLoaded(modelAssembly);
         //? if <1.18.2
         // this.vehicleModel = modelAssembly.getVehicleModels().get(net.minecraft.world.entity.EntityType.getKey(this.entity.getType()));
-        //? if >=1.18.2
+        //? if >=1.18.2 && <21.11
         // this.vehicleModel = modelAssembly.getVehicleModels().get(this.entity.getType().builtInRegistryHolder().key().location());
+        //? if >=21.11
+        // this.vehicleModel = modelAssembly.getVehicleModels().get(this.entity.getType().builtInRegistryHolder().key().identifier());
     }
 
     @Override

@@ -30,6 +30,9 @@ import org.joml.Quaternionf;
 //? if >=1.20.5 {
 /*import org.joml.Matrix4fStack;*/
 //?}
+//? if >=21.9 {
+/*import net.minecraft.client.input.MouseButtonEvent;
+ *///?}
 import net.minecraft.client.Minecraft;
 //? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
@@ -323,7 +326,9 @@ public class ModelSettingsScreen extends OptionScreen {
         //? if >=1.19.4 {
         rotationX.conjugate();
         //?}
+        //? if <21.9
         dispatcher.overrideCameraOrientation(rotationX);
+        //? if <21.9
         dispatcher.setRenderShadow(false);
         MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
 
@@ -331,6 +336,7 @@ public class ModelSettingsScreen extends OptionScreen {
             RenderCompat.runAsFancy(() -> renderer.renderEntity(animatable, 0.0f, partialTick, poseStack, bufferSource, 15728880));
             bufferSource.endBatch();
         } finally {
+            //? if <21.9
             dispatcher.setRenderShadow(true);
             livingEntity.yBodyRot = oldBodyRot;
             livingEntity.yBodyRotO = oldBodyRotO;
@@ -369,6 +375,51 @@ public class ModelSettingsScreen extends OptionScreen {
         }
     }
 
+    // 1.21.9+ 输入事件对象化（mouseClicked(MouseButtonEvent,boolean)/mouseReleased(MouseButtonEvent)/
+    // mouseDragged(MouseButtonEvent,double,double)，neoforge-21.10.64 GuiEventListener.java:20-28 实证）
+    //? if >=21.9 {
+    /*@Override
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+        if (isInPreview(mouseX, mouseY)) {
+            draggingPreview = true;
+            draggingButton = button;
+            return true;
+        }
+        return super.mouseClicked(event, doubleClick);
+    }
+
+    @Override
+    public boolean mouseReleased(MouseButtonEvent event) {
+        if (draggingPreview && event.button() == draggingButton) {
+            draggingPreview = false;
+            draggingButton = -1;
+            return true;
+        }
+        return super.mouseReleased(event);
+    }
+
+    @Override
+    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+        if (draggingPreview && button == draggingButton) {
+            if (button == 0) {
+                yaw = (float) (yaw + dragX * 1.2);
+                pitch = Mth.clamp((float) (pitch - dragY * 0.8), -85.0f, 85.0f);
+            } else if (button == 1) {
+                offsetX = (float) (offsetX + dragX);
+                offsetY = (float) (offsetY + dragY);
+            }
+            return true;
+        }
+        return super.mouseDragged(event, dragX, dragY);
+    }
+    *///?}
+    //? if <21.9 {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (isInPreview(mouseX, mouseY)) {
@@ -403,6 +454,7 @@ public class ModelSettingsScreen extends OptionScreen {
         }
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
+    //?}
 
     @Override
     //? if neoforge

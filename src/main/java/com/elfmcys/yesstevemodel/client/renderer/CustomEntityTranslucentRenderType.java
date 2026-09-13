@@ -1,11 +1,17 @@
 package com.elfmcys.yesstevemodel.client.renderer;
 
+// 1.21.11 RenderType 移 net.minecraft.client.renderer.rendertype 子包
+//? if >=21.11
+/*import net.minecraft.client.renderer.rendertype.RenderType;*/
+//? if <21.11
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 
-// 1.16.5 无 net.minecraft.Util（1.17+ 才有，1165 为 net.minecraft.util.Util）
-//? if >=1.17
+// 1.16.5 无 net.minecraft.Util（1.17+ 才有，1165 为 net.minecraft.util.Util）；1.21.11 移 net.minecraft.util 子包
+//? if >=1.17 && <21.11
 import net.minecraft.Util;
+//? if >=21.11
+import net.minecraft.util.Util;
 
 import java.util.function.Function;
 

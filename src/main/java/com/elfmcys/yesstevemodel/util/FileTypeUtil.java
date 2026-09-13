@@ -80,6 +80,17 @@ public final class FileTypeUtil {
      *  ],
      *  带#的是实体 Tag
      */
+    //? if >=21.11 {
+    private static net.minecraft.resources.Identifier ysmKeyString(net.minecraft.resources.ResourceKey<?> key) {
+        return key.identifier();
+    }
+    //?}
+    //? if <21.11 {
+    private static net.minecraft.resources.ResourceLocation ysmKeyString(net.minecraft.resources.ResourceKey<?> key) {
+        return key.location();
+    }
+    //?}
+
     public static Set<ResourceLocation> resolveEntityTypes(String[] strArr) {
         HashSet<ResourceLocation> hashSet = new HashSet<>();
         for (String str : strArr) {
@@ -101,7 +112,7 @@ public final class FileTypeUtil {
                     // Registries/BuiltInRegistries 1.19.4 起；1.18.2~1.19.2 用 Registry 静态字段（1192 Registry.java:190/143 形）
                     net.minecraft.tags.TagKey<EntityType<?>> tagKey = net.minecraft.tags.TagKey.create(net.minecraft.core.Registry.ENTITY_TYPE_REGISTRY, resourceLocation);
                     net.minecraft.core.Registry.ENTITY_TYPE.getTag(tagKey).ifPresent(holderSet ->
-                        holderSet.forEach(holder -> holder.unwrapKey().ifPresent(rk -> hashSet.add(rk.location())))
+                        holderSet.forEach(holder -> holder.unwrapKey().ifPresent(rk -> hashSet.add(ysmKeyString(rk))))
                     );
                      *///?}
                     //? if >=1.19.4 {
@@ -109,12 +120,12 @@ public final class FileTypeUtil {
                     // 1.21.2 Registry.getTag(TagKey) 删除 → HolderGetter.get(TagKey)（同 Optional<Named> 返回）
                     //? if <1.21.2 {
                     net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getTag(tagKey).ifPresent(holderSet ->
-                        holderSet.forEach(holder -> holder.unwrapKey().ifPresent(rk -> hashSet.add(rk.location())))
+                        holderSet.forEach(holder -> holder.unwrapKey().ifPresent(rk -> hashSet.add(ysmKeyString(rk))))
                     );
                     //?}
                     //? if >=1.21.2 {
                     /*net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.get(tagKey).ifPresent(holderSet ->
-                        holderSet.forEach(holder -> holder.unwrapKey().ifPresent(rk -> hashSet.add(rk.location())))
+                        holderSet.forEach(holder -> holder.unwrapKey().ifPresent(rk -> hashSet.add(ysmKeyString(rk))))
                     );*/
                     //?}
                     //?}

@@ -11,6 +11,10 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
+// 1.21.11 RenderType 移 net.minecraft.client.renderer.rendertype 子包
+//? if >=21.11
+/*import net.minecraft.client.renderer.rendertype.RenderType;*/
+//? if <21.11
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 //? if >=1.17 {
@@ -119,7 +123,9 @@ public abstract class GeoEntityRenderer<TEntity extends Entity, T extends Animat
         }
         //? if <1.21.2
         super.render(t.getEntity(), f, f2, poseStack, multiBufferSource, i);
-        //? if >=1.21.2
+        // 1.21.9+ EntityRenderer.render(state,...) 删（submit 范式）→ vanilla 派发链不可用，
+        // 21.9+ 走本类 Static 直绘路径（submit 移植为功能债）
+        //? if >=1.21.2 && <21.9
         /*super.render(this.createRenderState(t.getEntity(), f2), poseStack, multiBufferSource, i);*/
     }
 

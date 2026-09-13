@@ -16,6 +16,10 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.client.Minecraft;
+// 1.21.11 PlayerModel 移 client.model.player 子包
+//? if >=21.11
+/*import net.minecraft.client.model.player.PlayerModel;*/
+//? if <21.11
 import net.minecraft.client.model.PlayerModel;
 // 1.16.5 无 EntityRendererProvider/ModelLayers（1.17 模型重写产物），渲染器构造参数为
 // EntityRenderDispatcher、模型为传统手写构造（new PlayerModel(0.0f, slim)，1.16.5 vanilla
@@ -25,11 +29,22 @@ import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 //? }
 import net.minecraft.client.renderer.MultiBufferSource;
+// 1.21.11 RenderType 移 net.minecraft.client.renderer.rendertype 子包
+//? if >=21.11
+/*import net.minecraft.client.renderer.rendertype.RenderType;*/
+//? if <21.11
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
-//? if >=1.21.2 {
+//? if >=1.21.2 && <21.9 {
 /*import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.client.renderer.entity.state.PlayerRenderState;
+import net.minecraft.resources.ResourceLocation;
+ *///?}
+// 1.21.9 PlayerRenderState → AvatarRenderState（neoforge-21.10.64 state/AvatarRenderState.java
+// 实证，PlayerRenderState 全线删除）
+//? if >=21.9 {
+/*import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
+import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.resources.ResourceLocation;
  *///?}
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -51,7 +66,7 @@ import java.util.Optional;
 
 //? if <1.21.2
 public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T extends LivingAnimatable<TEntity>> extends LivingEntityRenderer<TEntity, PlayerModel<TEntity>> implements IGeoRenderer<T> {
-//? if >=1.21.2 {
+//? if >=1.21.2 && <21.9 {
 /*public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T extends LivingAnimatable<TEntity>> extends LivingEntityRenderer<TEntity, PlayerRenderState, PlayerModel> implements IGeoRenderer<T> {
 
     // render-state 化（1.21.2+）：vanilla dispatch 链 createRenderState(entity,partialTick)→
@@ -83,7 +98,44 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
         return net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.getLocation();
     }*/
 //?}
-//? if >=1.21.2 {
+//? if >=21.9 {
+/*public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T extends LivingAnimatable<TEntity>> extends LivingEntityRenderer<TEntity, AvatarRenderState, PlayerModel> implements IGeoRenderer<T> {
+
+    // render-state 化（1.21.2+）：vanilla dispatch 链 createRenderState(entity,partialTick)→
+    // render(state) 丢失实体引用，本类经 extractRenderState 暂存三元组供 renderEntityWithTexture/
+    // setupRotations/事件桥使用（复用单 state 实例，EntityRenderer.reusedState 同款生命周期）。
+    // 1.21.9 起 state 类型为 AvatarRenderState（PlayerRenderState 改名）
+    protected TEntity ysmEntity;
+
+    protected AvatarRenderState ysmState;
+
+    protected float ysmPartialTick;
+
+    @Override
+    public AvatarRenderState createRenderState() {
+        return new AvatarRenderState();
+    }
+
+    @Override
+    public void extractRenderState(TEntity entity, AvatarRenderState state, float partialTick) {
+        super.extractRenderState(entity, state, partialTick);
+        this.ysmEntity = entity;
+        this.ysmState = state;
+        this.ysmPartialTick = partialTick;
+    }
+
+    @Override
+    public ResourceLocation getTextureLocation(AvatarRenderState state) {
+        // vanilla dispatch 永不触发（Static 驱动路径，CustomPlayerRenderer.render 直调）；
+        // 纹理由 capability/t.getTextureLocation() 提供
+        return net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.getLocation();
+    }*/
+//?}
+//? if >=1.21.2 && <21.9 {
+/*    public final List<GeoLayerRenderer<T>> layerRenderers = new ObjectArrayList<>();
+*/
+//?}
+//? if >=21.9 {
 /*    public final List<GeoLayerRenderer<T>> layerRenderers = new ObjectArrayList<>();
 */
 //?}
@@ -229,9 +281,11 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
         }
         //? if <1.21.2
         ((LivingEntityRendererAccessor) this).tlm$renderNameTag(entity, entityYaw, partialTick, poseStack, multiBufferSource, packedLight);
-        //? if >=1.21.2 {
+        //? if >=1.21.2 && <21.9 {
         /*((LivingEntityRendererAccessor) this).tlm$renderNameTag(this.ysmState, poseStack, multiBufferSource, packedLight);*/
         //?}
+        // 1.21.9+ vanilla renderNameTag(S,...) 删（submitNameTag/SubmitNodeCollector 换代），
+        // 名牌交由 vanilla submitNameTag 默认链，Static 预览路径不再桥接（功能债同批入账）
         if (fireRenderEvents) {
             //? if <1.21.2
             RenderLivingBridge.firePost(entity, this, partialTick, poseStack, multiBufferSource, packedLight);

@@ -93,6 +93,11 @@ public class RenderFirstPlayerBackground {
         /*float walkPhase = -(player.walkAnimation.position() + (player.walkAnimation.speed() * partialTick));*/
         //? if <1.21.2
         float walkPhase = -(player.walkDist + ((player.walkDist - player.walkDistO) * partialTick));
+        // 1.21.9 oBob/bob 移 ClientAvatarState → getInterpolatedBob(f)（同 QueryBinding 注）
+        //? if >=21.9
+        /*float fLerp = (player instanceof net.minecraft.client.player.AbstractClientPlayer)
+            ? ((net.minecraft.client.player.AbstractClientPlayer) player).avatarState().getInterpolatedBob(partialTick) : 0.0f;*/
+        //? if <21.9
         float fLerp = Mth.lerp(partialTick, player.oBob, player.bob);
         poseStack.translate((-Mth.sin(walkPhase * 3.1415927f)) * fLerp * 0.5f, Math.abs(Mth.cos(walkPhase * 3.1415927f) * fLerp), 0.0d);
         //? if <1.17

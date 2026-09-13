@@ -12,6 +12,10 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
+// 1.21.11 RenderType 移 net.minecraft.client.renderer.rendertype 子包
+//? if >=21.11
+/*import net.minecraft.client.renderer.rendertype.RenderType;*/
+//? if <21.11
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 //? if >=1.17 {
@@ -109,7 +113,8 @@ public abstract class AbstractProjectileRenderer<TEntity extends Projectile, T e
         }
         //? if <1.21.2
         super.render(animatable.getEntity(), entityYaw, partialTick, poseStack, bufferSource, packedLight);
-        //? if >=1.21.2
+        // 1.21.9+ EntityRenderer.render(state,...) 删（submit 范式，功能债同 GeoEntityRenderer）
+        //? if >=1.21.2 && <21.9
         /*super.render(this.createRenderState(animatable.getEntity(), partialTick), poseStack, bufferSource, packedLight);*/
     }
 

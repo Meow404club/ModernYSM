@@ -1,5 +1,9 @@
 package com.elfmcys.yesstevemodel.client.gui;
 
+// 1.21.11 RenderType 移 net.minecraft.client.renderer.rendertype 子包
+//? if >=21.11
+/*import net.minecraft.client.renderer.rendertype.RenderType;*/
+//? if <21.11
 import net.minecraft.client.renderer.RenderType;
 import rip.ysm.util.RenderCompat;
 import com.elfmcys.yesstevemodel.YesSteveModel;
@@ -35,6 +39,10 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
+//? if >=21.9 {
+/*import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+ *///?}
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.vertex.PoseStack;
 //? if >=1.20 {
@@ -553,6 +561,55 @@ public class AnimationRouletteScreen extends Screen {
         this.configScrollOffset = Math.min(this.maxConfigScroll, this.configScrollOffset + i);
     }
 
+    // 1.21.9+ 输入事件对象化（GuiEventListener.mouseClicked(MouseButtonEvent,boolean)）
+    //? if >=21.9 {
+    /*@Override
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+        if (-1 < this.hoveredIndex && this.hoveredIndex < this.currentProperties.size()) {
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+            String str = this.currentProperties.getKeyAt(this.hoveredIndex);
+            if (RETURN_KEY.equals(str)) {
+                navigateBack();
+            } else if (str.startsWith(SUBMENU_PREFIX)) {
+                navigateToSubmenu(str);
+            } else {
+                playAnimation(str);
+            }
+        } else if (-1 < this.hoveredConfigIndex && this.hoveredConfigIndex < this.currentProperties.size()) {
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+            String str2 = this.currentProperties.getValueAt(this.hoveredConfigIndex);
+            if (str2.startsWith(SUBMENU_PREFIX)) {
+                String strSubstring = str2.substring(SUBMENU_PREFIX.length());
+                if (this.renderGroups.containsKey(strSubstring)) {
+                    if (GeneralConfig.ROULETTE_SETTINGS_MODE.get() == GeneralConfig.RouletteSettingsMode.CLASSIC) {
+                        showConfigGroup(strSubstring);
+                    } else {
+                        Minecraft.getInstance().setScreen(new rip.ysm.gui.ModelSettingsScreen(this.renderContext, this.animatableModel, this, strSubstring));
+                    }
+                }
+            }
+        }
+        for (GuiEventListener guiEventListener : children()) {
+            double scrolledMouseY = mouseY;
+            if (guiEventListener instanceof ISpecialWidget) {
+                scrolledMouseY = mouseY + this.configScrollOffset;
+            }
+            if (guiEventListener.mouseClicked(new MouseButtonEvent(mouseX, scrolledMouseY, event.buttonInfo()), doubleClick)) {
+                setFocused(guiEventListener);
+                if (button == 0) {
+                    setDragging(true);
+                    return true;
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+    *///?}
+    //? if <21.9 {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (-1 < this.hoveredIndex && this.hoveredIndex < this.currentProperties.size()) {
             Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
@@ -594,7 +651,20 @@ public class AnimationRouletteScreen extends Screen {
         }
         return false;
     }
+    //?}
 
+    // 1.21.9+ 输入事件对象化（GuiEventListener.keyPressed(KeyEvent)）
+    //? if >=21.9 {
+    /*@Override
+    public boolean keyPressed(KeyEvent event) {
+        if (KeyMappingFactory.isActiveAndMatches(AnimationRouletteKey.KEY_ROULETTE, event.key(), event.scancode())) {
+            onClose();
+            return true;
+        }
+        return super.keyPressed(event);
+    }
+    *///?}
+    //? if <21.9 {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (KeyMappingFactory.isActiveAndMatches(AnimationRouletteKey.KEY_ROULETTE, keyCode, scanCode)) {
             onClose();
@@ -602,6 +672,7 @@ public class AnimationRouletteScreen extends Screen {
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
+    //?}
 
     private void showConfigGroup(String str) {
         this.currentConfigGroup = this.renderGroups.get(str);

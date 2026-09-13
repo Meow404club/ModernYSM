@@ -7,6 +7,10 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.client.renderer.MultiBufferSource;
+// 1.21.11 RenderType 移 net.minecraft.client.renderer.rendertype 子包
+//? if >=21.11
+/*import net.minecraft.client.renderer.rendertype.RenderType;*/
+//? if <21.11
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.util.Mth;
@@ -99,12 +103,16 @@ public class CustomFishingHookRenderer {
         //     stringVertex(startX, startY, startZ, buffer, poseLast, fraction(size + 1), fraction(size + 1), color[0], color[1], color[2]);
         // }
         //? } else {
+        // 1.21.11 RenderType.lineStrip 删（2111 rendertype 全域零命中，线渲染走 RenderPipelines
+        // 换代）→ 鱼线绘制 21.11+ 降级 no-op（功能债入账）
+        //? if <21.11 {
         VertexConsumer buffer = bufferSource.getBuffer(RenderType.lineStrip());
         for (int size = 0; size <= 16; size++) {
             stringVertex(startX, startY, startZ, buffer, poseLast, fraction(size), fraction(size + 1), color[0], color[1], color[2]);
         }
+        //?}
         if (OculusCompat.isLoaded()) {
-            //? if >=1.21
+            //? if >=1.21 && <21.11
             /*buffer.addVertex(0.0f, 0.0f, 0.0f).setColor(0, 0, 0, 255).setNormal(0.0f, 0.0f, 0.0f);*/
             //? if <1.21
             buffer.vertex(0.0d, 0.0d, 0.0d).color(0, 0, 0, 255).normal(0.0f, 0.0f, 0.0f).endVertex();

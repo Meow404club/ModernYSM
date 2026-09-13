@@ -21,6 +21,10 @@ import rip.ysm.util.RenderCompat;
 import rip.ysm.gui.YsmGui;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
+//? if >=21.9 {
+/*import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+ *///?}
 import net.minecraft.client.Minecraft;
 //? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
@@ -367,6 +371,59 @@ public class ModernAnimationRouletteScreen extends Screen {
         }
     }
 
+    // 1.21.9+ 输入事件对象化（GuiEventListener.mouseClicked(MouseButtonEvent,boolean)）
+    //? if >=21.9 {
+    /*@Override
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        if (hoveredPrev) {
+            playClick();
+            previousPage();
+            return true;
+        }
+        if (hoveredNext) {
+            playClick();
+            nextPage();
+            return true;
+        }
+        if (hoveredPathSegment >= 0 && hoveredPathSegment < navigationStack.size() - 1) {
+            playClick();
+            navigateTo(hoveredPathSegment);
+            return true;
+        }
+        if (hoveredGearIndex >= 0) {
+            playClick();
+            String value = currentProperties.getValueAt(hoveredGearIndex);
+            if (value.startsWith("#")) {
+                String sub = value.substring(1);
+                if (renderGroups.containsKey(sub)) {
+                    Minecraft.getInstance().setScreen(new ModelSettingsScreen(renderContext, animatableModel, this, sub));
+                    return true;
+                }
+            }
+        }
+        if (hoveredIndex >= 0) {
+            playClick();
+            String key = currentProperties.getKeyAt(hoveredIndex);
+            if ("#return".equals(key)) navigateBack();
+            else if (key.startsWith("#")) navigateToSubmenu(key);
+            else playAnimation(key);
+            return true;
+        }
+        double cdx = event.x() - centerX;
+        double cdy = event.y() - centerY;
+        if (cdx * cdx + cdy * cdy <= 22.0 * 22.0) {
+            if (animatableModel.getEntity() instanceof Player) {
+                AnimationLockEvent.toggleLock();
+            } else {
+                NetworkHandler.sendToServer(C2SPlayAnimationPacket.createWithIndex(animatableModel.getEntity().getId()));
+                onClose();
+            }
+            return true;
+        }
+        return super.mouseClicked(event, doubleClick);
+    }
+    *///?}
+    //? if <21.9 {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (hoveredPrev) {
@@ -416,6 +473,7 @@ public class ModernAnimationRouletteScreen extends Screen {
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
+    //?}
 
     private void navigateTo(int targetIndex) {
         while (navigationStack.size() > targetIndex + 1) navigationStack.removeLast();
@@ -439,6 +497,18 @@ public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         if ((page() + 1) * 8 < currentProperties.size()) currentNavEntry.setValue(page() + 1);
     }
 
+    // 1.21.9+ 输入事件对象化（GuiEventListener.keyPressed(KeyEvent)）
+    //? if >=21.9 {
+    /*@Override
+    public boolean keyPressed(KeyEvent event) {
+        if (KeyMappingFactory.isActiveAndMatches(AnimationRouletteKey.KEY_ROULETTE, event.key(), event.scancode())) {
+            onClose();
+            return true;
+        }
+        return super.keyPressed(event);
+    }
+    *///?}
+    //? if <21.9 {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (KeyMappingFactory.isActiveAndMatches(AnimationRouletteKey.KEY_ROULETTE, keyCode, scanCode)) {
@@ -447,6 +517,7 @@ public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
+    //?}
 
     private void navigateToSubmenu(String value) {
         if (navigationStack.size() > 5) {

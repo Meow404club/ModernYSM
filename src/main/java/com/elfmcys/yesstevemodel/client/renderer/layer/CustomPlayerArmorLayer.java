@@ -94,8 +94,12 @@ public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity>
         //? if >=1.19.4 && <21.5
         this.itemRenderer.renderItem(player, stack, ItemDisplayContext.HEAD, false, poseStack, bufferSource, i);
         // 1.21.5 ItemInHandRenderer.renderItem 删 isLeftHand 布尔参（ItemInHandRenderer.java:132 六参形）
-        //? if >=21.5
+        //? if >=21.5 && <21.9
         /*this.itemRenderer.renderItem(player, stack, ItemDisplayContext.HEAD, poseStack, bufferSource, i);*/
+        // 1.21.9 renderItem 尾参 SubmitNodeCollector（同 ItemInHandLayer 注）→ 21.9+ 不渲染，功能债入账
+        //? if >=21.9 {
+        /*// no-op
+         *///?}
         poseStack.popPose();
     }
 }

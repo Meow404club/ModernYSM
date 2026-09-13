@@ -13,6 +13,9 @@ import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+//? if >=21.11
+/*import net.minecraft.world.entity.projectile.arrow.AbstractArrow;*/
+//? if <21.11
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -21,6 +24,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+//? if >=21.11
+/*@Mixin({AbstractArrow.class})*/
+//? if <21.11
 @Mixin({AbstractArrow.class})
 public class AbstractArrowEntityMixin implements ProjectileStateAccessor {
 

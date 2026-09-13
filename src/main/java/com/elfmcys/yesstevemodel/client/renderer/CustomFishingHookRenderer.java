@@ -104,6 +104,9 @@ public class CustomFishingHookRenderer {
             stringVertex(startX, startY, startZ, buffer, poseLast, fraction(size), fraction(size + 1), color[0], color[1], color[2]);
         }
         if (OculusCompat.isLoaded()) {
+            //? if >=1.21
+            /*buffer.addVertex(0.0f, 0.0f, 0.0f).setColor(0, 0, 0, 255).setNormal(0.0f, 0.0f, 0.0f);*/
+            //? if <1.21
             buffer.vertex(0.0d, 0.0d, 0.0d).color(0, 0, 0, 255).normal(0.0f, 0.0f, 0.0f).endVertex();
         }
         //? }
@@ -134,7 +137,15 @@ public class CustomFishingHookRenderer {
         float dy = (((y * ((endFrac * endFrac) + endFrac)) * 0.5f) + 0.25f) - vy;
         float dz = (z * endFrac) - vz;
         float length = Mth.sqrt((dx * dx) + (dy * dy) + (dz * dz));
+        // 1.20.5+ 删 normal(Matrix3f,...)（vanilla-1.20.6 VertexConsumer.java:133 仅余 Pose 重载）；
+        // 1.21 起 vertex/color/normal 改名 addVertex/setColor/setNormal 且无 endVertex
+        //（vanilla-1.21.1 VertexConsumer.java:16-49）
+        //? if >=1.21
+        /*vertexConsumer.addVertex(pose.pose(), vx, vy, vz).setColor(red, green, blue, 1.0f).setNormal(pose, dx / length, dy / length, dz / length);*/
+        //? if >=1.17 && <1.20.5
         vertexConsumer.vertex(pose.pose(), vx, vy, vz).color(red, green, blue, 1.0f).normal(pose.normal(), dx / length, dy / length, dz / length).endVertex();
+        //? if >=1.20.5 && <1.21
+        /*vertexConsumer.vertex(pose.pose(), vx, vy, vz).color(red, green, blue, 1.0f).normal(pose, dx / length, dy / length, dz / length).endVertex();*/
         //? }
     }
 }

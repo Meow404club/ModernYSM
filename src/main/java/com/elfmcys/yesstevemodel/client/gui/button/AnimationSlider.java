@@ -23,6 +23,9 @@ import java.text.DecimalFormat;
 
 public class AnimationSlider extends RangedSliderWidget implements ISpecialWidget {
 
+    //? if >=1.21
+    /*private static final ResourceLocation ROULETTE_TEXTURE = ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "texture/roulette.png");*/
+    //? if <1.21
     private static final ResourceLocation ROULETTE_TEXTURE = new ResourceLocation(YesSteveModel.MOD_ID, "texture/roulette.png");
 
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.##");

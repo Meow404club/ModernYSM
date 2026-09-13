@@ -52,7 +52,11 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
-//? if neoforge
+//? if neoforge && >=1.20.5
+/*import net.neoforged.fml.common.EventBusSubscriber;*/
+//? if neoforge && >=1.20.5
+/*import net.neoforged.neoforge.event.tick.ServerTickEvent;*/
+//? if neoforge && <1.20.5
 /*import net.neoforged.neoforge.event.TickEvent;*/
 //? if forge
 import net.minecraftforge.event.TickEvent;
@@ -97,6 +101,13 @@ import java.util.function.Consumer;
  * </ul>
  * capability attach 不在本类：由 platform/forge/ForgeCapabilityHooks 的 AttachCapabilitiesEvent 注解式处理。
  */
+// 事件总线注解：1.20.5+ neoforge 换代为 fml.common.EventBusSubscriber（默认 game bus）；
+// <1.20.5 neoforge 与 forge 全线 = Mod.EventBusSubscriber.Bus.FORGE（game bus 同义）
+//? if neoforge && >=1.20.5
+/*@EventBusSubscriber(modid = YesSteveModel.MOD_ID, bus = EventBusSubscriber.Bus.GAME)*/
+//? if neoforge && <1.20.5
+/*@Mod.EventBusSubscriber(modid = YesSteveModel.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)*/
+//? if forge
 @Mod.EventBusSubscriber(modid = YesSteveModel.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class CapabilityEvent {
 
@@ -183,6 +194,14 @@ public final class CapabilityEvent {
         }
     }
 
+    // TickEvent.SERVER_POST：neoforge 1.20.5+ = ServerTickEvent.Post（自带 getServer）
+    //? if neoforge && >=1.20.5 {
+    /*@SubscribeEvent
+    public static void onServerTick(ServerTickEvent.Post event) {
+        onServerTickEnd(event.getServer());
+    }*/
+    //? }
+    //? if forge || neoforge && <1.20.5 {
     @SubscribeEvent
     public static void onServerTick(TickEvent.ServerTickEvent event) {
         if (event.phase != TickEvent.Phase.END) {
@@ -199,6 +218,7 @@ public final class CapabilityEvent {
         //? if >=1.19.2
         onServerTickEnd(event.getServer());
     }
+    //? }
 
     private static void onServerTickEnd(MinecraftServer server) {
         if (!YesSteveModel.isAvailable()) {

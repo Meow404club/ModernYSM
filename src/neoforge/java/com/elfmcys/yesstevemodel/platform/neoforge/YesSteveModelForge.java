@@ -16,6 +16,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.capabilities.EntityCapability;
 import net.neoforged.neoforge.capabilities.ICapabilityProvider;
@@ -38,9 +39,11 @@ import rip.ysm.api.PlatformAPI;
 @Mod(YesSteveModel.MOD_ID)
 public final class YesSteveModelForge {
     private static volatile IEventBus modEventBus;
+    private static volatile ModContainer modContainer;
 
-    public YesSteveModelForge(IEventBus modEventBus) {
+    public YesSteveModelForge(IEventBus modEventBus, ModContainer container) {
         YesSteveModelForge.modEventBus = modEventBus;
+        YesSteveModelForge.modContainer = container;
         modEventBus.addListener(YesSteveModelForge::onRegisterCapabilities);
         YesSteveModel.init();
     }
@@ -48,6 +51,12 @@ public final class YesSteveModelForge {
     /** mod 事件总线（构造期赋值，此后只读）；供注册类域显式接线复用。 */
     public static IEventBus getModEventBus() {
         return modEventBus;
+    }
+
+    /** mod 容器（构造期赋值）：1.20.6/1.21.1 ModLoadingContext 删除后 config 注册的
+     * 官方入口 = ModContainer#registerConfig（docs version-1.20.6/1.21.1 config.md 实证）。 */
+    public static ModContainer modContainer() {
+        return modContainer;
     }
 
     private static void onRegisterCapabilities(RegisterCapabilitiesEvent event) {

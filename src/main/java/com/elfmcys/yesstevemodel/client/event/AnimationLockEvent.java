@@ -16,7 +16,7 @@ import net.minecraftforge.client.event.InputEvent;
 /*import net.neoforged.neoforge.common.NeoForge;*/
 //? if forge
 import net.minecraftforge.common.MinecraftForge;
-//? if neoforge
+//? if neoforge && <1.20.5
 /*import net.neoforged.neoforge.event.TickEvent;*/
 //? if forge
 import net.minecraftforge.event.TickEvent;
@@ -50,12 +50,27 @@ public class AnimationLockEvent {
         }
     }
 
+    // ClientTickEvent.CLIENT_POST：neoforge 1.20.5+ = ClientTickEvent.Post（TickEvent.Phase 拆分）
+    //? if neoforge && >=1.20.5 {
+    /*private static void onClientTickEvent(net.neoforged.neoforge.client.event.ClientTickEvent.Post event) {
+        onClientTick(Minecraft.getInstance());
+    }*/
+    //? }
+    //? if neoforge && <1.20.5
+    /*private static void onClientTickEvent(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) {
+            return;
+        }
+        onClientTick(Minecraft.getInstance());
+    }*/
+    //? if forge {
     private static void onClientTickEvent(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) {
             return;
         }
         onClientTick(Minecraft.getInstance());
     }
+    //? }
 
     private static void onClientTick(Minecraft client) {
         LocalPlayer localPlayer;

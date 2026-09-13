@@ -30,6 +30,9 @@ public class ItemTagsConstants {
     public static final YsmTag.ItemTag SLASHBLADE = createTag("slashblade");
 
     private static YsmTag.ItemTag createTag(String str) {
+        //? if >=1.21
+        /*return YsmTag.itemTag(ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, str));*/
+        //? if <1.21
         return YsmTag.itemTag(new ResourceLocation(YesSteveModel.MOD_ID, str));
     }
 }

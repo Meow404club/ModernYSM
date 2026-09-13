@@ -36,9 +36,13 @@ import rip.ysm.util.YsmCollections;
 
 import java.util.List;
 import java.util.Map;
+import com.elfmcys.yesstevemodel.util.YsmFrame;
 
 public class ModernPlayerTextureScreen extends OptionScreen {
 
+    //? if >=1.21
+    /*private static final ResourceLocation ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "texture/icon.png");*/
+    //? if <1.21
     private static final ResourceLocation ICON_TEXTURE = new ResourceLocation(YesSteveModel.MOD_ID, "texture/icon.png");
     private static final List<String> CATEGORY_ORDER = YsmCollections.immutableListOf("_textures", "main", "extra", "arm", "fp_arm", "tac", "carryon", "parcool", "swem", "slashblade", "tlm", "immersive_melodies", "irons_spell_books", "arrow");
 
@@ -367,6 +371,9 @@ public class ModernPlayerTextureScreen extends OptionScreen {
             modelHolder.initModelWithTexture(modelId, cap.getCurrentTextureName());
             float cx = (previewLeft + previewRight) / 2.0f + offsetX;
             float cy = previewTop + (previewBottom - previewTop) * 0.65f + offsetY;
+            //? if >=1.21
+            /*ModelPreviewRenderer.renderEntityPreview(cx, cy, zoom, pitch, yaw, YsmFrame.partialTick(this.minecraft), modelHolder, RendererManager.getPlayerRenderer(), showGround);*/
+            //? if <1.21
             ModelPreviewRenderer.renderEntityPreview(cx, cy, zoom, pitch, yaw, this.minecraft.getFrameTime(), modelHolder, RendererManager.getPlayerRenderer(), showGround);
         });
         YsmGui.disableScissorBox();

@@ -38,6 +38,9 @@ public final class CommandRegistry {
     private CommandRegistry() {
     }
 
+    //? if >=1.21
+    /*public static final SuggestionProvider<CommandSourceStack> MODEL_IDS = SuggestionProviders.register(ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "models"), (commandContext, suggestionsBuilder) -> {*/
+    //? if <1.21
     public static final SuggestionProvider<CommandSourceStack> MODEL_IDS = SuggestionProviders.register(new ResourceLocation(YesSteveModel.MOD_ID, "models"), (commandContext, suggestionsBuilder) -> {
         if (commandContext.getSource() instanceof SharedSuggestionProvider) {
             if (PlatformAPI.isServer()) {
@@ -50,6 +53,9 @@ public final class CommandRegistry {
         return Suggestions.empty();
     });
 
+    //? if >=1.21
+    /*public static final SuggestionProvider<CommandSourceStack> ANIMATION_NAMES = SuggestionProviders.register(ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "animations"), (commandContext, suggestionsBuilder) -> {*/
+    //? if <1.21
     public static final SuggestionProvider<CommandSourceStack> ANIMATION_NAMES = SuggestionProviders.register(new ResourceLocation(YesSteveModel.MOD_ID, "animations"), (commandContext, suggestionsBuilder) -> {
         if (commandContext.getSource() instanceof SharedSuggestionProvider) {
             if (PlatformAPI.isServer()) {
@@ -64,6 +70,9 @@ public final class CommandRegistry {
         return Suggestions.empty();
     });
 
+    //? if >=1.21
+    /*public static final SuggestionProvider<CommandSourceStack> TEXTURE_IDS = SuggestionProviders.register(ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "textures"), (commandContext, suggestionsBuilder) -> {*/
+    //? if <1.21
     public static final SuggestionProvider<CommandSourceStack> TEXTURE_IDS = SuggestionProviders.register(new ResourceLocation(YesSteveModel.MOD_ID, "textures"), (commandContext, suggestionsBuilder) -> {
         if (commandContext.getSource() instanceof SharedSuggestionProvider) {
             String str = commandContext.getArgument("model_id", String.class);

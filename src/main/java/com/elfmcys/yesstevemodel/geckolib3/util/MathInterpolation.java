@@ -9,6 +9,9 @@ import net.minecraft.world.phys.Vec3;
 public class MathInterpolation {
     public static double getYawInterpolation(IContext<Entity> context) {
         Entity entity = context.entity();
+        //? if >=1.21
+        /*float frameTime = context.animationEvent().getFrameTime();*/
+        //? if <1.21
         float frameTime = context.animationEvent().getFrameTime();
         Vec3 positionDelta = context.geoInstance().getPositionTracker().getPositionDelta();
         double d = positionDelta.x;
@@ -21,6 +24,9 @@ public class MathInterpolation {
 
     public static double getPitchInterpolation(IContext<Entity> context) {
         Entity entityMo327xaffeef43 = context.entity();
+        //? if >=1.21
+        /*float frameTime = context.animationEvent().getFrameTime();*/
+        //? if <1.21
         float frameTime = context.animationEvent().getFrameTime();
         Vec3 positionDelta = context.geoInstance().getPositionTracker().getPositionDelta();
         double d = positionDelta.x;

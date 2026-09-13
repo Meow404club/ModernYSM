@@ -47,6 +47,11 @@ public final class ForgeAttributes {
         if (attribute == null) {
             return defaultValue;
         }
+        // 1.20.5+ vanilla getAttributeValue 收 Holder<Attribute>（vanilla-1.20.6 LivingEntity.java:1897）
+        // → neoforge >=1.20.5 委托分代孪生 wrapAsHolder 包裹；其余线 Attribute 直取
+        //? if neoforge && >=1.20.5
+        /*return ForgeAttributesImpl.getValue(entity, attribute, defaultValue);*/
+        //? if forge || neoforge && <1.20.5
         return entity.getAttributeValue(attribute);
     }
 }

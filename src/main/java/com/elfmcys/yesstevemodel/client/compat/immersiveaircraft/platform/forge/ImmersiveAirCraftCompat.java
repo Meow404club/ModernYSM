@@ -35,6 +35,9 @@ public class ImmersiveAirCraftCompat {
                 AircraftEntity aircraftEntity = (AircraftEntity) entity;
                 Vector3f vector3f = aircraftEntity.onGround() ? new Vector3f(0.0f, 0.0f, 0.0f) : aircraftEntity.getWindEffect();
                 Vector3f vector3f2 = new Vector3f();
+                //? if >=1.21
+                /*MathUtil.getEulerAnglesZYX(Axis.XP.rotationDegrees(vector3f.z).rotateZ(MathUtil.degreesToRadians(vector3f.x)).rotateX(-MathUtil.degreesToRadians(aircraftEntity.getViewXRot(event.getFrameTime()))).rotateZ(-MathUtil.degreesToRadians(aircraftEntity.getRoll(event.getFrameTime()))), vector3f2);*/
+                //? if <1.21
                 MathUtil.getEulerAnglesZYX(Axis.XP.rotationDegrees(vector3f.z).rotateZ(MathUtil.degreesToRadians(vector3f.x)).rotateX(-MathUtil.degreesToRadians(aircraftEntity.getViewXRot(event.getFrameTime()))).rotateZ(-MathUtil.degreesToRadians(aircraftEntity.getRoll(event.getFrameTime()))), vector3f2);
                 return Optional.of(vector3f2);
             }

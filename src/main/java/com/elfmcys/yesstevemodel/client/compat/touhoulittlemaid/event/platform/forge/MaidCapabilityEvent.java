@@ -14,6 +14,9 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 @OnlyIn(Dist.CLIENT)
 public final class MaidCapabilityEvent {
 
+    //? if >=1.21
+    /*private static final ResourceLocation CAPABILITY_KEY = ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "ysm_maid");*/
+    //? if <1.21
     private static final ResourceLocation CAPABILITY_KEY = new ResourceLocation(YesSteveModel.MOD_ID, "ysm_maid");
 
     @SubscribeEvent

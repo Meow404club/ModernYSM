@@ -10,6 +10,9 @@ public class Position extends EntityFunction {
     @Override
     public Object eval(ExecutionContext<IContext<Entity>> context, ArgumentCollection arguments) {
         int value = arguments.getAsInt(context, 0);
+        //? if >=1.21
+        /*float partialTicks = context.entity().animationEvent().getFrameTime();*/
+        //? if <1.21
         float partialTicks = context.entity().animationEvent().getFrameTime();
         Entity entity = context.entity().entity();
         switch (value) {

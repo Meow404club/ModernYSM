@@ -200,7 +200,12 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
                 }
             }
         }
+        // 1.20.5+ setupRotations 增 scale 尾参（vanilla-1.20.6 LivingEntityRenderer.java:175，
+        // render 内调值 = entity.getScale()，:91-95 实证）
+        //? if <1.20.5
         super.setupRotations(tentity, poseStack, ageInTicks, rotationYaw, partialTicks);
+        //? if >=1.20.5
+        /*super.setupRotations(tentity, poseStack, ageInTicks, rotationYaw, partialTicks, tentity.getScale());*/
         if (t > 0) {
             tentity.deathTime = t;
         }

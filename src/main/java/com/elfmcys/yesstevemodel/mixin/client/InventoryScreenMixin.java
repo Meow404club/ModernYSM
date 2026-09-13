@@ -33,9 +33,11 @@ public class InventoryScreenMixin {
         ModelPreviewRenderer.setPreviewMode(false);
     }
     //?}
-    // 1.20.2+（neoforge 三线）：bounding box 扩为 x1,y1,x2,y2 五 int + scale/angleX/angleY 三 float
+    // 1.20.2+（neoforge 三线）：bounding box 扩为 x1,y1,x2,y2 五 int + scale/angleX/angleY 三 float。
+    // 注释态包裹：1.20.1 vcs 直通编译原文，裸 @Inject 会被 mixin AP 解析 1.20.2+ 签名失败
+    //（d8fcfbd 回归实证）；其余 <1.19.4 块同款注释态先例
     //? if neoforge && >=1.20 {
-    @Inject(at = {@At("HEAD")}, method = {"renderEntityInInventoryFollowsMouse(Lnet/minecraft/client/gui/GuiGraphics;IIIIIFFFLnet/minecraft/world/entity/LivingEntity;)V"})
+    /*@Inject(at = {@At("HEAD")}, method = {"renderEntityInInventoryFollowsMouse(Lnet/minecraft/client/gui/GuiGraphics;IIIIIFFFLnet/minecraft/world/entity/LivingEntity;)V"})
     private static void renderEntityInInventoryFollowsAnglePreNeo(GuiGraphics guiGraphics, int x, int y, int x2, int y2, int scale, float angleXComponent, float angleYComponent, float partialTicks, LivingEntity entity, CallbackInfo ci) {
         ModelPreviewRenderer.setPreviewMode(true);
     }
@@ -44,7 +46,7 @@ public class InventoryScreenMixin {
     private static void renderEntityInInventoryFollowsAnglePostNeo(GuiGraphics guiGraphics, int x, int y, int x2, int y2, int scale, float angleXComponent, float angleYComponent, float partialTicks, LivingEntity entity, CallbackInfo ci) {
         ModelPreviewRenderer.setPreviewMode(false);
     }
-    //?}
+     *///?}
     // 1.19.4：renderEntityInInventory 更名 FollowsMouse 且首参 PoseStack（1194 InventoryScreen.java:112）
     //? if >=1.19.4 && <1.20 {
     /*

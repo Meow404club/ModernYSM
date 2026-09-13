@@ -135,6 +135,10 @@ public class PlayerEntityFrameState extends LivingEntityFrameState<Player> {
 
     public byte getEffectAmplifier(MobEffect mobEffect) {
         if (this.isLocalPlayer) {
+            // 1.20.5+ getEffect 收 Holder<MobEffect> → wrapAsHolder（同步包内 MobEffect 键不变）
+            //? if neoforge && >=1.20.5
+            /*MobEffectInstance effect = this.entity.getEffect(net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.wrapAsHolder(mobEffect));*/
+            //? if forge || neoforge && <1.20.5
             MobEffectInstance effect = this.entity.getEffect(mobEffect);
             if (effect != null) {
                 return (byte) (effect.getAmplifier() + 1);

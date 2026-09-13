@@ -17,6 +17,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
+import rip.ysm.util.Rl;
 
 public class ConditionHold {
 
@@ -61,10 +62,22 @@ public class ConditionHold {
             return;
         }
         String strSubstring = name.substring(this.preSize);
+        //? if >=1.21
+        /*if (name.startsWith(this.idPre) && Rl.isValid(strSubstring)) {*/
+        //? if <1.21
         if (name.startsWith(this.idPre) && ResourceLocation.isValidResourceLocation(strSubstring)) {
+            //? if >=1.21
+            /*this.idTest.add(ResourceLocation.parse(strSubstring));*/
+            //? if <1.21
             this.idTest.add(new ResourceLocation(strSubstring));
         }
+        //? if >=1.21
+        /*if (name.startsWith(this.tagPre) && Rl.isValid(strSubstring)) {*/
+        //? if <1.21
         if (name.startsWith(this.tagPre) && ResourceLocation.isValidResourceLocation(strSubstring)) {
+            //? if >=1.21
+            /*this.tagTest.add(YsmTag.itemTag(ResourceLocation.parse(strSubstring)));*/
+            //? if <1.21
             this.tagTest.add(YsmTag.itemTag(new ResourceLocation(strSubstring)));
         }
         if (!name.startsWith(this.extraPre) || strSubstring.equals(UseAnim.NONE.name().toLowerCase(Locale.US))) {

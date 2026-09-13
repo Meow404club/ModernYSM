@@ -27,6 +27,9 @@ import java.util.List;
 
 public class PackIconButton extends YsmButton {
 
+    //? if >=1.21
+    /*private static final ResourceLocation default_pack_icon = ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "texture/default_pack_icon.png");*/
+    //? if <1.21
     private static final ResourceLocation default_pack_icon = new ResourceLocation(YesSteveModel.MOD_ID, "texture/default_pack_icon.png");
 
     private final ModelPackData packData;

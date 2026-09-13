@@ -33,6 +33,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import org.joml.Quaternionf;
+//? if >=1.20.5 {
+/*import org.joml.Matrix4fStack;*/
+//? }
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -114,8 +117,12 @@ public final class ModelPreviewRenderer {
                 /*poseStack.mulPose(com.mojang.math.Vector3f.YN.rotationDegrees(180.0f - bodyRotation));*/
                 //? if >=1.19.4
                 poseStack.mulPose(Axis.YN.rotationDegrees(180.0f - bodyRotation));
-                //? if neoforge && >=1.19.4
+                //? if neoforge && >=1.19.4 && <1.20.5
                 /*double myRidingOffset = (-vehicle.getMyRidingOffset(entity)) - entity.getMyRidingOffset(vehicle);*/
+                // 1.20.5+ 骑乘偏移 API：getMyRidingOffset(Entity) 删 → getVehicleAttachmentPoint(Entity)=Vec3
+                //（vanilla-1.20.6 Entity.java:1877），预览取 y 分量（视觉近似，差异已入接续账）
+                //? if neoforge && >=1.20.5
+                /*double myRidingOffset = (-vehicle.getVehicleAttachmentPoint(entity).y) - entity.getVehicleAttachmentPoint(vehicle).y;*/
                 //? if forge
                 double myRidingOffset = (-vehicle.getPassengersRidingOffset()) - entity.getMyRidingOffset();
                 if (((entity instanceof Player) && PlayerCapability.get(entity).isPresent()) || TouhouLittleMaidCompat.isMaidRideable(entity)) {
@@ -133,18 +140,26 @@ public final class ModelPreviewRenderer {
         // 1.16.5 无 RenderSystem.getModelViewStack（1.17+），GL_MODELVIEW 直推
         //? if <1.17
         // RenderSystem.pushMatrix();
-        //? if >=1.17
+        //? if >=1.17 && <1.20.5
         // PoseStack modelViewStack = RenderSystem.getModelViewStack();
-        //? if >=1.17
+        //? if >=1.17 && <1.20.5
         // modelViewStack.pushPose();
+        //? if >=1.20.5
+        /*Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();*/
+        //? if >=1.20.5
+        /*modelViewStack.pushMatrix();*/
         //? if <1.17
         // RenderSystem.translatef((float) x, (float) y, 1250.0f);
         //? if <1.17
         // RenderSystem.scalef(1.0f, 1.0f, -1.0f);
-        //? if >=1.17
+        //? if >=1.17 && <1.20.5
         // modelViewStack.translate(x, y, 1250.0d);
-        //? if >=1.17
+        //? if >=1.17 && <1.20.5
         // modelViewStack.scale(1.0f, 1.0f, -1.0f);
+        //? if >=1.20.5
+        /*modelViewStack.translate((float) x, (float) y, 1250.0f);*/
+        //? if >=1.20.5
+        /*modelViewStack.scale(1.0f, 1.0f, -1.0f);*/
         //? if >=1.17
         // RenderSystem.applyModelViewMatrix();
 
@@ -282,8 +297,10 @@ public final class ModelPreviewRenderer {
 
         //? if <1.17
         // RenderSystem.popMatrix();
-        //? if >=1.17
+        //? if >=1.17 && <1.20.5
         // modelViewStack.popPose();
+        //? if >=1.20.5
+        /*modelViewStack.popMatrix();*/
         //? if >=1.17
         // RenderSystem.applyModelViewMatrix();
         Lighting.setupFor3DItems();
@@ -397,8 +414,10 @@ public final class ModelPreviewRenderer {
         /*poseStack.mulPose(com.mojang.math.Vector3f.YP.rotationDegrees(yaw));*/
         //? if >=1.19.4
         poseStack.mulPose(Axis.YP.rotationDegrees(yaw));
-        //? if neoforge && >=1.19.4
+        //? if neoforge && >=1.19.4 && <1.20.5
         /*entityRenderDispatcher.render(vehicleEntity, 0.0d, (-vehicleEntity.getMyRidingOffset(riderEntity) - riderEntity.getMyRidingOffset(vehicleEntity)), 0.0d, 0.0f, partialTick, poseStack, bufferSource, 15728880);*/
+        //? if neoforge && >=1.20.5
+        /*entityRenderDispatcher.render(vehicleEntity, 0.0d, (-vehicleEntity.getVehicleAttachmentPoint(riderEntity).y - riderEntity.getVehicleAttachmentPoint(vehicleEntity).y), 0.0d, 0.0f, partialTick, poseStack, bufferSource, 15728880);*/
         //? if forge && >=1.19.4
         entityRenderDispatcher.render(vehicleEntity, 0.0d, (-vehicleEntity.getPassengersRidingOffset()) - riderEntity.getMyRidingOffset(), 0.0d, 0.0f, partialTick, poseStack, bufferSource, 15728880);
         poseStack.popPose();
@@ -411,18 +430,26 @@ public final class ModelPreviewRenderer {
         LivingEntity livingEntity = animatable.getEntity();
         //? if <1.17
         // RenderSystem.pushMatrix();
-        //? if >=1.17
+        //? if >=1.17 && <1.20.5
         // PoseStack modelViewStack = RenderSystem.getModelViewStack();
-        //? if >=1.17
+        //? if >=1.17 && <1.20.5
         // modelViewStack.pushPose();
+        //? if >=1.20.5
+        /*Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();*/
+        //? if >=1.20.5
+        /*modelViewStack.pushMatrix();*/
         //? if <1.17
         // RenderSystem.translatef((float) x, (float) y, 1050.0f);
         //? if <1.17
         // RenderSystem.scalef(1.0f, 1.0f, -1.0f);
-        //? if >=1.17
+        //? if >=1.17 && <1.20.5
         // modelViewStack.translate(x, y, 1050.0d);
-        //? if >=1.17
+        //? if >=1.17 && <1.20.5
         // modelViewStack.scale(1.0f, 1.0f, -1.0f);
+        //? if >=1.20.5
+        /*modelViewStack.translate((float) x, (float) y, 1050.0f);*/
+        //? if >=1.20.5
+        /*modelViewStack.scale(1.0f, 1.0f, -1.0f);*/
         //? if >=1.17
         // RenderSystem.applyModelViewMatrix();
 
@@ -595,8 +622,10 @@ public final class ModelPreviewRenderer {
 
         //? if <1.17
         // RenderSystem.popMatrix();
-        //? if >=1.17
+        //? if >=1.17 && <1.20.5
         // modelViewStack.popPose();
+        //? if >=1.20.5
+        /*modelViewStack.popMatrix();*/
         //? if >=1.17
         // RenderSystem.applyModelViewMatrix();
         Lighting.setupFor3DItems();
@@ -706,9 +735,21 @@ public final class ModelPreviewRenderer {
     //? if >=1.20 {
     public static void renderPlayerOverlay(GuiGraphics guiGraphics, LocalPlayer localPlayer, double x, double y, float scale, float yawOffset, int zDepth, float partialTick) {
         setExtraPlayerMode(true);
+        //? if >=1.20.5
+        /*Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();*/
+        //? if >=1.20.5
+        /*modelViewStack.pushMatrix();*/
+        //? if >=1.20.5
+        /*modelViewStack.translate((float) (x + (scale * 0.5d)), (float) (y + (scale * 2.0f)), 0.0f);*/
+        //? if >=1.20.5
+        /*modelViewStack.scale(1.0f, 1.0f, -1.0f);*/
+        //? if >=1.20 && <1.20.5
         PoseStack modelViewStack = RenderSystem.getModelViewStack();
+        //? if >=1.20 && <1.20.5
         modelViewStack.pushPose();
+        //? if >=1.20 && <1.20.5
         modelViewStack.translate(x + (scale * 0.5d), y + (scale * 2.0f), 0.0d);
+        //? if >=1.20 && <1.20.5
         modelViewStack.scale(1.0f, 1.0f, -1.0f);
         RenderSystem.applyModelViewMatrix();
 
@@ -738,6 +779,9 @@ public final class ModelPreviewRenderer {
         guiGraphics.flush();
         entityRenderDispatcher.setRenderShadow(true);
         guiGraphics.pose().popPose();
+        //? if >=1.20.5
+        /*modelViewStack.popMatrix();*/
+        //? if >=1.20 && <1.20.5
         modelViewStack.popPose();
         RenderSystem.applyModelViewMatrix();
         Lighting.setupFor3DItems();

@@ -169,6 +169,11 @@ public class NativeModelRenderer {
                         int positionOffset = v * 3;
                         int uvOffset = v * 2;
                         tempPos.set(quad.positions[positionOffset], quad.positions[positionOffset + 1], quad.positions[positionOffset + 2], 1.0f).mul(globalBoneMat);
+                        // 1.21 十四参 vertex 拆为 addVertex(x,y,z,packedColor,u,v,overlay,light,nx,ny,nz)
+                        //（vanilla-1.21.1 VertexConsumer.java:28 + ModelPart.java:362 用法实证）
+                        //? if >=1.21
+                        /*vertexConsumer.addVertex(tempPos.x(), tempPos.y(), tempPos.z(), net.minecraft.util.FastColor.ABGR32.color(net.minecraft.util.FastColor.as8BitChannel(a), net.minecraft.util.FastColor.as8BitChannel(b), net.minecraft.util.FastColor.as8BitChannel(g), net.minecraft.util.FastColor.as8BitChannel(r)), quad.uvs[uvOffset], quad.uvs[uvOffset + 1], packedOverlay, currentPackedLight, tempNorm.x(), tempNorm.y(), tempNorm.z());*/
+                        //? if <1.21
                         vertexConsumer.vertex(tempPos.x(), tempPos.y(), tempPos.z(), r, g, b, a, quad.uvs[uvOffset], quad.uvs[uvOffset + 1], packedOverlay, currentPackedLight, tempNorm.x(), tempNorm.y(), tempNorm.z());
                     }
                 }
@@ -258,18 +263,22 @@ public class NativeModelRenderer {
         VertexConsumer vc = (VertexConsumer) v;
         int fIdx = 0, iIdx = 0;
         for (int n = 0; n < vertexCount; n++) {
-            vc.vertex(
-                    // position
+            //? if >=1.21
+            /*vc.addVertex(
                     f.get(fIdx),     f.get(fIdx + 1), f.get(fIdx + 2),
-                    // rgba
-                    f.get(fIdx + 3), f.get(fIdx + 4), f.get(fIdx + 5), f.get(fIdx + 6),
-                    // uv
+                    net.minecraft.util.FastColor.ABGR32.color(net.minecraft.util.FastColor.as8BitChannel(f.get(fIdx + 6)), net.minecraft.util.FastColor.as8BitChannel(f.get(fIdx + 5)), net.minecraft.util.FastColor.as8BitChannel(f.get(fIdx + 4)), net.minecraft.util.FastColor.as8BitChannel(f.get(fIdx + 3))),
                     f.get(fIdx + 7), f.get(fIdx + 8),
-                    // overlay light
                     in.get(iIdx),    in.get(iIdx + 1),
-                    // normal
                     f.get(fIdx + 9), f.get(fIdx + 10), f.get(fIdx + 11)
-            );
+            );*/
+            //? if <1.21
+            /*vc.vertex(
+                    f.get(fIdx),     f.get(fIdx + 1), f.get(fIdx + 2),
+                    f.get(fIdx + 3), f.get(fIdx + 4), f.get(fIdx + 5), f.get(fIdx + 6),
+                    f.get(fIdx + 7), f.get(fIdx + 8),
+                    in.get(iIdx),    in.get(iIdx + 1),
+                    f.get(fIdx + 9), f.get(fIdx + 10), f.get(fIdx + 11)
+            );*/
             fIdx += 12;
             iIdx += 2;
         }

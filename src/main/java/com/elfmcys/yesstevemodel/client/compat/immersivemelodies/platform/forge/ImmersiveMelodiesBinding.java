@@ -7,6 +7,7 @@ import immersive_melodies.client.MelodyProgressManager;
 import immersive_melodies.client.animation.EntityModelAnimator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.LivingEntity;
+import com.elfmcys.yesstevemodel.util.YsmFrame;
 
 public class ImmersiveMelodiesBinding {
     public static void registerControllerFunctions(CtrlBinding binding) {
@@ -49,6 +50,9 @@ public class ImmersiveMelodiesBinding {
 
     public static void updateInstrumentData(LivingEntity entity, ImmersiveMelodiesCompat.ImmersiveMelodiesData imData) {
         if (EntityModelAnimator.getInstrument(entity) != null) {
+            //? if >=1.21
+            /*float frameTime = (Minecraft.getInstance().isPaused() ? 0.0f : YsmFrame.partialTick(Minecraft.getInstance())) + entity.tickCount;*/
+            //? if <1.21
             float frameTime = (Minecraft.getInstance().isPaused() ? 0.0f : Minecraft.getInstance().getFrameTime()) + entity.tickCount;
             MelodyProgress progress = MelodyProgressManager.INSTANCE.getProgress(entity);
             progress.visualTick(frameTime);

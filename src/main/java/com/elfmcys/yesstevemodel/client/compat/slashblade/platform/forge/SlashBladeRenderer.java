@@ -26,8 +26,14 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 @OnlyIn(Dist.CLIENT)
 public class SlashBladeRenderer {
 
+    //? if >=1.21
+    /*private static final ResourceLocation BLADE_OBJ = ResourceLocation.fromNamespaceAndPath("slashblade", "model/blade.obj");*/
+    //? if <1.21
     private static final ResourceLocation BLADE_OBJ = new ResourceLocation("slashblade", "model/blade.obj");
 
+    //? if >=1.21
+    /*private static final ResourceLocation BLADE_TEXTURE = ResourceLocation.fromNamespaceAndPath("slashblade", "model/blade.png");*/
+    //? if <1.21
     private static final ResourceLocation BLADE_TEXTURE = new ResourceLocation("slashblade", "model/blade.png");
 
     public static void renderBladeOnly(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, ItemStack stack) {

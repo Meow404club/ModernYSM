@@ -17,7 +17,7 @@ import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 /*import net.neoforged.neoforge.common.NeoForge;*/
 //? if forge
 import net.minecraftforge.common.MinecraftForge;
-//? if neoforge
+//? if neoforge && <1.20.5
 /*import net.neoforged.neoforge.event.TickEvent;*/
 //? if forge
 import net.minecraftforge.event.TickEvent;
@@ -81,12 +81,27 @@ public final class ClientPlayerJoinNotification {
         onPlayerQuit(event.getPlayer());
     }
 
+    // ClientTickEvent.CLIENT_PRE：neoforge 1.20.5+ = ClientTickEvent.Pre（TickEvent.Phase 拆分）
+    //? if neoforge && >=1.20.5 {
+    /*private static void onClientTickEvent(net.neoforged.neoforge.client.event.ClientTickEvent.Pre event) {
+        onClientTick(Minecraft.getInstance());
+    }*/
+    //? }
+    //? if neoforge && <1.20.5
+    /*private static void onClientTickEvent(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.START) {
+            return;
+        }
+        onClientTick(Minecraft.getInstance());
+    }*/
+    //? if forge {
     private static void onClientTickEvent(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.START) {
             return;
         }
         onClientTick(Minecraft.getInstance());
     }
+    //? }
 
     private static void onPlayerJoin(LocalPlayer player) {
         if (notified) {

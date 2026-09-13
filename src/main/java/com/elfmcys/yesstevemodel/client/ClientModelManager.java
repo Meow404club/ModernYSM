@@ -795,7 +795,8 @@ public class ClientModelManager {
         /*RenderSystem.assertThread(RenderSystem::isOnGameThread);*/
         //? if >=1.17 && <1.18.2
         /*RenderSystem.assertThread(RenderSystem::isOnGameThread);*/
-        //? if >=1.18.2
+        // 1.21 RenderSystem.assertOnGameThread 删除（vanilla-1.21.1 RenderSystem 无此方法）
+        //? if >=1.18.2 && <1.21
         RenderSystem.assertOnGameThread();
         return syncState;
     }

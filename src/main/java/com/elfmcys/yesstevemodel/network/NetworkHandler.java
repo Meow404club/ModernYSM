@@ -35,6 +35,9 @@ public final class NetworkHandler {
 
     public static final String VERSION = "2.6.0";
 
+    //? if >=1.21
+    /*public static final ResourceLocation CHANNEL_ID = ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, VERSION.replace('.', '_'));*/
+    //? if <1.21
     public static final ResourceLocation CHANNEL_ID = new ResourceLocation(YesSteveModel.MOD_ID, VERSION.replace('.', '_'));
 
     private static final AttributeKey<String> CHANNEL_VERSION_KEY = AttributeKey.valueOf("yes_steve_model_channel_version");

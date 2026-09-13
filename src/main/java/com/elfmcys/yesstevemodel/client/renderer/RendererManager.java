@@ -26,12 +26,19 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 /*import net.neoforged.bus.api.SubscribeEvent;*/
 //? if forge
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-//? if neoforge
+//? if neoforge && >=1.20.5
+/*import net.neoforged.fml.common.EventBusSubscriber;*/
+//? if neoforge && <1.20.5
 /*import net.neoforged.fml.common.Mod;*/
 //? if forge
 import net.minecraftforge.fml.common.Mod;
 import rip.ysm.compat.sbackpack.SBackpackCompat;
 
+//? if neoforge && >=1.20.5
+/*@EventBusSubscriber(modid = YesSteveModel.MOD_ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)*/
+//? if neoforge && <1.20.5
+/*@Mod.EventBusSubscriber(modid = YesSteveModel.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)*/
+//? if forge
 @Mod.EventBusSubscriber(modid = YesSteveModel.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class RendererManager {
 

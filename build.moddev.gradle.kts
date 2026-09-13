@@ -93,8 +93,14 @@ dependencies {
 val imageStreamEmbedJars: Set<File> = imageStreamEmbed.files
 
 // ===== neoforge 线专属源集（绕开 stonecutter 的 RAW srcDir，同 forge 线 shim srcDir 先例）=====
-//  - src/neoforge/java：platform/neoforge 平台实现（主类/网络/能力 provider 等，纯 neoforge
-//    代码零条件块）——与 platform/forge 树镜像互斥，forge 六线 sourceSet 不含此目录零接触
+//  - src/neoforge/java：platform/neoforge 平台实现跨代同形部分（主类/能力 provider/桥，纯
+//    neoforge 代码零条件块）——与 platform/forge 树镜像互斥，forge 六线 sourceSet 不含此目录零接触
+//  - src/neoforge-1204/java、src/neoforge-1205/java：1.20.5 网络重铸/事件注解换代的孪生分代树
+//    （同 FQCN 双版本，按线二选一挂载，防同源集双份类定义冲突）：
+//      1204=1.20.4 代（RegisterPayloadHandlerEvent/IPayloadRegistrar/PlayPayloadContext/
+//           Mod.EventBusSubscriber/NeoForgeMod.BLOCK_REACH），
+//      1205=1.20.6/1.21.1 共用代（RegisterPayloadHandlersEvent/PayloadRegistrar.playBidirectional
+//           +StreamCodec/IPayloadContext/fml.common.EventBusSubscriber/vanilla Attributes.*）
 //  - src/neoforge-resources：META-INF/neoforge.mods.toml 模板（20.5+ 口径，1.20.4 线在
 //    processResources 里 rename 回 mods.toml）——不能放共享 src/main/resources：
 //    build.unimined.gradle.kts（1.16.5 在产线）的 processResources 无 neoforge.mods.toml
@@ -103,7 +109,27 @@ val imageStreamEmbedJars: Set<File> = imageStreamEmbed.files
 sourceSets.main {
     java {
         srcDir(rootProject.file("src/neoforge/java"))
-        srcDir(rootProject.file("versions/1.16.5-forge/src/shim/rip/ysm/compat"))
+        if (pre1205) {
+            srcDir(rootProject.file("src/neoforge-1204/java"))
+        } else if (stonecutter.eval(stonecutter.current.version, "<1.21")) {
+            // 1205 树 = 1.20.6 代共用部分；1206 树 = 1.20.6 独占分歧
+            //（ShieldBlockEvent 在 1.21.1 更名 LivingShieldBlockEvent）
+            srcDir(rootProject.file("src/neoforge-1205/java"))
+            srcDir(rootProject.file("src/neoforge-1206/java"))
+        } else {
+            // 1211 树 = 1.21.1 分歧（LivingShieldBlockEvent、ItemAbilities 更名，
+            // neoforge-1.21.1 实证）；shim 整树副本（ResourceLocation 私有构造 /
+            // isValidResourceLocation 删除 → Rl/parse，2 文件已修），不挂原 shim 防 RAW 双份
+            srcDir(rootProject.file("src/neoforge-1205/java"))
+            srcDir(rootProject.file("src/neoforge-1211/java"))
+        }
+        // shim：<1.21 挂原件；1.21.1 挂整树副本（ResourceLocation 私有构造 /
+        // isValidResourceLocation 删除 → Rl/parse，2 文件已修，RAW 无条件化能力）
+        if (stonecutter.eval(stonecutter.current.version, "<1.21")) {
+            srcDir(rootProject.file("versions/1.16.5-forge/src/shim/rip/ysm/compat"))
+        } else {
+            srcDir(rootProject.file("src/neoforge-1211/shim/rip/ysm/compat"))
+        }
         // 第三方触点源码闸门 + platform/forge 树整体排除（清单与 build.forge.gradle.kts pre120
         // 块同源）。孪生走异包策略：src/neoforge/java 下 platform/neoforge 包（类名不变），
         // 接缝消费方 import 交换（transform_neoforge.py），排除 glob 不会误伤孪生：
@@ -191,10 +217,14 @@ tasks.named<ProcessResources>("processResources") {
     // ===== per-line 资源口径替换（模板基线值=1.20.6 线；与共享源字面量逐字对照）=====
     // neoforge.mods.toml / 1.20.4 改名后的 mods.toml：neoforge/minecraft 装载区间
     //（loaderVersion 三线统一 "[1,)"，docs version-1.20.4/1.20.6/1.21.1 modfiles.md 明文）
+    // 配置缓存铁律：filter lambda 只可捕获任务配置块内的局部 val（脚本顶层 val = 脚本对象
+    // 引用，不可序列化——1.20.6 build 配置缓存实测报错），先物化为局部量
+    val neoMajorLocal = neoMajor
+    val mcVersionLocal = mcVersion
     filesMatching(listOf("META-INF/neoforge.mods.toml", "META-INF/mods.toml")) {
         filter { line: String ->
-            line.replace("versionRange = \"[20.6,)\"", "versionRange = \"[$neoMajor,)\"")
-                .replace("versionRange = \"[1.20.6,)\"", "versionRange = \"[$mcVersion,)\"")
+            line.replace("versionRange = \"[20.6,)\"", "versionRange = \"[$neoMajorLocal,)\"")
+                .replace("versionRange = \"[1.20.6,)\"", "versionRange = \"[$mcVersionLocal,)\"")
         }
     }
     // pack.mcmeta：资源包格式 1.20.4=22 / 1.20.6=32 / 1.21.1=34（共享源为 1.20.1 口径 15）

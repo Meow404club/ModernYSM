@@ -42,7 +42,9 @@ import net.minecraftforge.eventbus.api.EventPriority;
 /*import net.neoforged.bus.api.SubscribeEvent;*/
 //? if forge
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-//? if neoforge
+//? if neoforge && >=1.20.5
+/*import net.neoforged.fml.common.EventBusSubscriber;*/
+//? if neoforge && <1.20.5
 /*import net.neoforged.fml.common.Mod;*/
 //? if forge
 import net.minecraftforge.fml.common.Mod;
@@ -57,6 +59,11 @@ import org.lwjgl.opengl.GL20;
  * mod 总线事件走注解式静态订阅（与 platform/forge/ForgeClientSetupHooks 同款），
  * 不依赖 {@link #register()} 的构造期调用时序。
  */
+//? if neoforge && >=1.20.5
+/*@EventBusSubscriber(modid = YesSteveModel.MOD_ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)*/
+//? if neoforge && <1.20.5
+/*@Mod.EventBusSubscriber(modid = YesSteveModel.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)*/
+//? if forge
 @Mod.EventBusSubscriber(modid = YesSteveModel.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public final class ClientSetupEvent {
 

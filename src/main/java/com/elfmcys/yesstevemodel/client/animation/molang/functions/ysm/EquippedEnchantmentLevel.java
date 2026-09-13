@@ -16,6 +16,7 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 public class EquippedEnchantmentLevel extends LivingEntityFunction {
     @Override
     public Object eval(ExecutionContext<IContext<LivingEntity>> context, ArgumentCollection arguments) {
+        //? if <1.21
         Enchantment enchantment;
         EquipmentSlot slotType = MolangUtils.parseSlotType(context, arguments, 0);
         if (slotType == null) {
@@ -28,9 +29,21 @@ public class EquippedEnchantmentLevel extends LivingEntityFunction {
         int enchantmentLevel = 0;
         for (int i = 1; i < arguments.size(); i++) {
             ResourceLocation id = arguments.getResourceLocation(context, 1);
+            // 1.21 EnchantmentHelper.getItemEnchantmentLevel 收 Holder<Enchantment>，
+            // YsmTag.enchantment 同步返回 Holder
+            //? if >=1.21 {
+            /*if (id != null) {
+                var enchHolder = YsmTag.enchantment(context.entity().entity().level().registryAccess(), id);
+                if (enchHolder != null) {
+                    enchantmentLevel += EnchantmentHelper.getItemEnchantmentLevel(enchHolder, stack);
+                }
+            }*/
+            //?}
+            //? if <1.21 {
             if (id != null && (enchantment = YsmTag.enchantment(id)) != null) {
                 enchantmentLevel += EnchantmentHelper.getItemEnchantmentLevel(enchantment, stack);
             }
+            //?}
         }
         return enchantmentLevel;
     }

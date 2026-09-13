@@ -103,8 +103,13 @@ public class ParticleEffectUtil {
             //? if >=1.17 && <1.19.4 {
             /*return ParticleArgument.readParticle(new StringReader(particleId));
              *///?}
-            //? if >=1.19.4 {
+            //? if >=1.19.4 && <1.20.5 {
             return ParticleArgument.readParticle(new StringReader(particleId), net.minecraft.core.registries.BuiltInRegistries.PARTICLE_TYPE.asLookup());
+            //?}
+            // 1.20.5+ 收 HolderLookup.Provider（vanilla-1.20.6 ParticleArgument.java:57）；spawn 只在
+            // 世界内发生（入参 entity 有 level），registryAccess 走实体所在世界注册表
+            //? if >=1.20.5 {
+            /*return ParticleArgument.readParticle(new StringReader(particleId), entity.level().registryAccess());*/
             //?}
         });
 

@@ -4,6 +4,7 @@ import rip.ysm.compat.touhoulittlemaid.TouhouLittleMaidCompat;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
+import rip.ysm.util.Rl;
 
 public class ConditionChair {
 
@@ -23,6 +24,9 @@ public class ConditionChair {
             return;
         }
         String strSubstring = name.substring(preSize);
+        //? if >=1.21
+        /*if (name.startsWith(this.idPre) && Rl.isValid(strSubstring)) {*/
+        //? if <1.21
         if (name.startsWith(this.idPre) && ResourceLocation.isValidResourceLocation(strSubstring)) {
             this.idTest.add(strSubstring);
         }

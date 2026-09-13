@@ -26,6 +26,9 @@ import java.util.function.Consumer;
 @OnlyIn(Dist.CLIENT)
 public class ConfigCheckBox extends StateSwitchingButton implements ISpecialWidget {
 
+    //? if >=1.21
+    /*private static final ResourceLocation location = ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "texture/roulette.png");*/
+    //? if <1.21
     private static final ResourceLocation location = new ResourceLocation(YesSteveModel.MOD_ID, "texture/roulette.png");
 
     private final Consumer<Boolean> consumer2;

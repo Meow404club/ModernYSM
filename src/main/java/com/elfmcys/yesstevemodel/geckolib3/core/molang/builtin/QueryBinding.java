@@ -94,8 +94,10 @@ public class QueryBinding extends ContextBinding {
 
         //? if <1.17
         // livingEntityVar("body_x_rotation", ctx -> Mth.lerp(ctx.animationEvent().getFrameTime(), ctx.entity().xRotO, ctx.entity().xRot));
-//? if >=1.17
+//? if >=1.17 && <1.21
         livingEntityVar("body_x_rotation", ctx -> Mth.lerp(ctx.animationEvent().getFrameTime(), ctx.entity().xRotO, ctx.entity().getXRot()));
+        //? if >=1.21
+        /*livingEntityVar("body_x_rotation", ctx -> Mth.lerp(ctx.animationEvent().getFrameTime(), ctx.entity().xRotO, ctx.entity().getXRot()));*/
         livingEntityVar("body_y_rotation", ctx -> Mth.wrapDegrees(Mth.lerp(ctx.animationEvent().getPartialTick(), ctx.entity().yBodyRotO, ctx.entity().yBodyRot)));
         livingEntityVar("health", QueryBinding::getHealth);
         livingEntityVar("max_health", QueryBinding::getMaxHealth);
@@ -205,6 +207,10 @@ public class QueryBinding extends ContextBinding {
         if (useItem.isEmpty()) {
             return 0;
         }
+        // 1.21 ItemStack.getUseDuration 收 LivingEntity（vanilla-1.21.1:672）
+        //? if >=1.21
+        /*return useItem.getUseDuration(entity);*/
+        //? if <1.21
         return useItem.getUseDuration();
     }
 
@@ -229,6 +235,9 @@ public class QueryBinding extends ContextBinding {
     }
 
     private static float getCapeFlapAmount(IContext<Player> context) {
+        //? if >=1.21
+        /*float gameTime = context.animationEvent().getFrameTime();*/
+        //? if <1.21
         float gameTime = context.animationEvent().getFrameTime();
         Player player = context.entity();
         float fLerp = (float) (Mth.lerp(gameTime, player.xCloakO, player.xCloak) - Mth.lerp(gameTime, player.xo, player.getX()));

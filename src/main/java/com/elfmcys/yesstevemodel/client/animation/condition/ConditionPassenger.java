@@ -8,6 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import rip.ysm.util.Rl;
 
 public class ConditionPassenger {
 
@@ -31,12 +32,24 @@ public class ConditionPassenger {
             return;
         }
         String strSubstring = name.substring(preSize);
+        //? if >=1.21
+        /*if (name.startsWith(this.idPre) && Rl.isValid(strSubstring)) {*/
+        //? if <1.21
         if (name.startsWith(this.idPre) && ResourceLocation.isValidResourceLocation(strSubstring)) {
+            //? if >=1.21
+            /*this.idTest.add(ResourceLocation.parse(strSubstring));*/
+            //? if <1.21
             this.idTest.add(new ResourceLocation(strSubstring));
         }
+        //? if >=1.21
+        /*if (!name.startsWith(this.tagPre) || !Rl.isValid(strSubstring)) {*/
+        //? if <1.21
         if (!name.startsWith(this.tagPre) || !ResourceLocation.isValidResourceLocation(strSubstring)) {
             return;
         }
+        //? if >=1.21
+        /*this.tagTest.add(YsmTag.entityTypeTag(ResourceLocation.parse(strSubstring)));*/
+        //? if <1.21
         this.tagTest.add(YsmTag.entityTypeTag(new ResourceLocation(strSubstring)));
     }
 

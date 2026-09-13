@@ -26,6 +26,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.FormattedCharSequence;
 
 import java.util.List;
+import com.elfmcys.yesstevemodel.util.YsmFrame;
 
 public class TextureButton extends YsmButton {
 
@@ -79,6 +80,9 @@ public class TextureButton extends YsmButton {
         Minecraft minecraft = Minecraft.getInstance();
         Font font = minecraft.font;
         guiGraphics.fillGradient(getX(), getY(), getX() + this.width, getY() + this.height, -12369342, -12369342);
+        //? if >=1.21
+        /*renderPlayerPreview(guiGraphics, YsmFrame.partialTick(minecraft));*/
+        //? if <1.21
         renderPlayerPreview(guiGraphics, minecraft.getFrameTime());
         String str = this.previewEntity.getCurrentTextureName();
         MutableComponent mutableComponentLiteral = YsmText.literal(ModelMetadataPresenter.getLocalizedModelString(this.modelAssembly, String.format("files.player.texture.%s", str), str));

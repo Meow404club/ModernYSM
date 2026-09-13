@@ -58,6 +58,7 @@ import rip.ysm.gpu.GpuCapability;
 import rip.ysm.pinyin.PinyinMatcher;
 
 import java.util.*;
+import com.elfmcys.yesstevemodel.util.YsmFrame;
 
 public class PlayerModelScreen extends Screen implements IGuiWidget {
 
@@ -554,6 +555,9 @@ moveCursorToEnd();;
         /*this.searchBox.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
         //? if >=1.20
         this.searchBox.render(guiGraphics.graphics(), mouseX, mouseY, partialTick);
+        //? if >=1.21
+        /*renderModelPreview(guiGraphics, mouseX, mouseY, YsmFrame.partialTick(this.minecraft));*/
+        //? if <1.21
         renderModelPreview(guiGraphics, mouseX, mouseY, this.minecraft.getFrameTime());
         if (this.searchBox.getValue().isEmpty() && !this.searchBox.isFocused()) {
             guiGraphics.drawString(this.font, YsmText.translatable("gui.yes_steve_model.search").withStyle(ChatFormatting.ITALIC), this.guiLeft + 148, this.guiTop + 10, 7829367);

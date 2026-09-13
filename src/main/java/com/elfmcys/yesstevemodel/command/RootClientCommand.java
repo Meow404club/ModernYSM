@@ -37,6 +37,9 @@ public class RootClientCommand {
 
     private static final String ROOT_NAME = "ysmclient";
 
+    //? if >=1.21
+    /*public static final SuggestionProvider<CommandSourceStack> VARS_SUGGESTION_PROVIDER = SuggestionProviders.register(ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "vars"), (context, builder) -> {*/
+    //? if <1.21
     public static final SuggestionProvider<CommandSourceStack> VARS_SUGGESTION_PROVIDER = SuggestionProviders.register(new ResourceLocation(YesSteveModel.MOD_ID, "vars"), (context, builder) -> {
         if (context.getSource() instanceof SharedSuggestionProvider && !PlatformAPI.isServer()) {
             return getActiveGeoModel().map(geo -> {
@@ -69,6 +72,9 @@ public class RootClientCommand {
         return Suggestions.empty();
     });
 
+    //? if >=1.21
+    /*public static final SuggestionProvider<CommandSourceStack> CONTROLLERS_SUGGESTION_PROVIDER = SuggestionProviders.register(ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "controllers"), (commandContext, suggestionsBuilder) -> {*/
+    //? if <1.21
     public static final SuggestionProvider<CommandSourceStack> CONTROLLERS_SUGGESTION_PROVIDER = SuggestionProviders.register(new ResourceLocation(YesSteveModel.MOD_ID, "controllers"), (commandContext, suggestionsBuilder) -> {
         if (commandContext.getSource() instanceof SharedSuggestionProvider && !PlatformAPI.isServer()) {
             return getActiveGeoModel().map(geo -> SharedSuggestionProvider.suggest(geo.getAnimationData().getAnimationControllers().stream().map(IAnimationController::getName).collect(Collectors.toSet()), suggestionsBuilder)).orElseGet(Suggestions::empty);

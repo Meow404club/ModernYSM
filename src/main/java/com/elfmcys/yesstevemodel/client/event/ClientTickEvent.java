@@ -12,7 +12,7 @@ import net.minecraft.client.player.LocalPlayer;
 /*import net.neoforged.neoforge.common.NeoForge;*/
 //? if forge
 import net.minecraftforge.common.MinecraftForge;
-//? if neoforge
+//? if neoforge && <1.20.5
 /*import net.neoforged.neoforge.event.TickEvent;*/
 //? if forge
 import net.minecraftforge.event.TickEvent;
@@ -28,18 +28,36 @@ public final class ClientTickEvent {
 
     public static void register() {
         // architectury ClientTickEvent.CLIENT_PRE 在 forge 端 = TickEvent.ClientTickEvent phase START
-        //? if neoforge
-        /*NeoForge.EVENT_BUS.addListener(ClientTickEvent::onClientTick);*/
+        //? if neoforge && <1.20.5
+        /*NeoForge.EVENT_BUS.addListener(ClientTickEvent::onClientTickEvent);*/
+        //? if neoforge && >=1.20.5
+        /*NeoForge.EVENT_BUS.addListener(ClientTickEvent::onClientPreTickEvent);*/
         //? if forge
-        MinecraftForge.EVENT_BUS.addListener(ClientTickEvent::onClientTick);
+        MinecraftForge.EVENT_BUS.addListener(ClientTickEvent::onClientTickEvent);
     }
 
-    private static void onClientTick(TickEvent.ClientTickEvent event) {
+    // 同简单名冲突：neoforge 1.20.5+ 的 ClientTickEvent 不能单类型 import（与本类同名），
+    // 处理器签名一律 FQN
+    //? if neoforge && >=1.20.5 {
+    /*private static void onClientPreTickEvent(net.neoforged.neoforge.client.event.ClientTickEvent.Pre event) {
+        onClientPreTick(Minecraft.getInstance());
+    }*/
+    //? }
+    //? if neoforge && <1.20.5
+    /*private static void onClientTickEvent(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.START) {
+            return;
+        }
+        onClientPreTick(Minecraft.getInstance());
+    }*/
+    //? if forge {
+    private static void onClientTickEvent(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.START) {
             return;
         }
         onClientPreTick(Minecraft.getInstance());
     }
+    //? }
 
     private static void onClientPreTick(Minecraft client) {
         if (!YesSteveModel.isAvailable()) {

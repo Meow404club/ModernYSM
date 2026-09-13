@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import com.elfmcys.yesstevemodel.util.YsmFrame;
 
 public abstract class AnimatableEntity<TEntity extends Entity> {
 
@@ -224,6 +225,9 @@ public abstract class AnimatableEntity<TEntity extends Entity> {
         Entity entity = this.entity;
         LivingEntity livingEntity = entity instanceof LivingEntity ? (LivingEntity) entity : null;
         int tickCount = this instanceof IPreviewAnimatable ? ClientTickEvent.getTickCount() : entity.tickCount;
+        //? if >=1.21
+        /*float frameTime = partialTick != 1.0f ? partialTick : YsmFrame.partialTick(Minecraft.getInstance());*/
+        //? if <1.21
         float frameTime = partialTick != 1.0f ? partialTick : Minecraft.getInstance().getFrameTime();
         boolean shouldSit = entity.isPassenger() && entity.getVehicle() != null && EntityDataBridge.shouldRiderSit(entity.getVehicle());
         float limbSwingAmount = 0.0f;
@@ -319,6 +323,9 @@ public abstract class AnimatableEntity<TEntity extends Entity> {
             if (z2) {
                 if (z3) {
                     this.hasUpdatedThisTick = true;
+                    //? if >=1.21
+                    /*this.positionTracker.updateState(event.getTickCount(), this.seekTime, event.getFrameTime());*/
+                    //? if <1.21
                     this.positionTracker.updateState(event.getTickCount(), this.seekTime, event.getFrameTime());
                 }
                 getPhysicsManager().update(this.seekTime);

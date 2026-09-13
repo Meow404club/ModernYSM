@@ -102,7 +102,12 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
         return this.currentTexture == null ? PlayerCapability.get(player).map((cap) -> cap.getTextureLocation()).orElse(MissingTextureAtlasSprite.getLocation()) : this.currentTexture;
     }
 
+    // 1.20.5+ EntityRenderer.renderNameTag 增 partialTick 尾参（vanilla-1.20.6 EntityRenderer.java:79）：
+    // 本方法 <1.20.5 直接覆写（5 参）；>=1.20.5 改私有 6 参实现 + 下方 6 参覆写转发，记分板下挂名逻辑不变
+    //? if <1.20.5
     public void renderNameTag(Player player, Component component, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
+    //? if >=1.20.5
+    /*private void renderNameTagInner(Player player, Component component, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, float partialTick) {*/
         Scoreboard scoreboard;
         Objective displayObjective;
         if (PlayerPreviewEntity.isPreviewPlayer(player)) {
@@ -117,15 +122,27 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
             // Component.literal（1.19+）→ 1.16.5 new TextComponent；append 双版同名
             //? if <1.19.2
             // super.renderNameTag(player, new net.minecraft.network.chat.TextComponent(Integer.toString(scoreboard.getOrCreatePlayerScore(player.getScoreboardName(), displayObjective).getScore())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i);
-            //? if neoforge && >=1.19.2
+            //? if neoforge && >=1.19.2 && <1.20.5
             /*super.renderNameTag(player, Component.literal(Integer.toString(scoreboard.getOrCreatePlayerScore(player, displayObjective).get())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i);*/
+            //? if neoforge && >=1.20.5
+            /*super.renderNameTag(player, Component.literal(Integer.toString(scoreboard.getOrCreatePlayerScore(player, displayObjective).get())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i, partialTick);*/
             //? if forge && >=1.19.2
             super.renderNameTag(player, Component.literal(Integer.toString(scoreboard.getOrCreatePlayerScore(player.getScoreboardName(), displayObjective).getScore())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i);
             poseStack.translate(0.0d, 0.25875d, 0.0d);
         }
+        //? if <1.20.5
         super.renderNameTag(player, component, poseStack, multiBufferSource, i);
+        //? if >=1.20.5
+        /*super.renderNameTag(player, component, poseStack, multiBufferSource, i, partialTick);*/
         poseStack.popPose();
     }
+
+    //? if >=1.20.5 {
+    /*@Override
+    protected void renderNameTag(Player player, Component component, PoseStack poseStack, MultiBufferSource multiBufferSource, int i, float partialTick) {
+        this.renderNameTagInner(player, component, poseStack, multiBufferSource, i, partialTick);
+    }*/
+    //? }
 
     @Override
     public void setupRotations(Player player, PoseStack poseStack, float ageInTicks, float rotationYaw, float partialTicks) {

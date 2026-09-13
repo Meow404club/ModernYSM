@@ -33,8 +33,15 @@ public class EffectLevel extends ContextFunction<Entity> {
                         PlayerCapability cap = (PlayerCapability) context.entity().geoInstance();
                         effects += cap.getPositionTracker().getEffectAmplifier(mobEffect);
                     } else if (((IContext<?>)context.entity()).entity() instanceof LivingEntity) {
+                        // 1.20.5+ LivingEntity.getEffect 收 Holder<MobEffect>（vanilla-1.20.6:955）
+                        // → 注册表内值 wrapAsHolder 取回 canonical reference holder
+                        //? if neoforge && >=1.20.5 {
+                        /*MobEffectInstance mobEffectInstance = ((LivingEntity)((IContext<?>)context.entity()).entity())
+                                .getEffect(net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.wrapAsHolder(mobEffect));*/
+                        //?} else {
                         MobEffectInstance mobEffectInstance = ((LivingEntity)((IContext<?>)context.entity()).entity())
                                 .getEffect(mobEffect);
+                        //?}
                         if (mobEffectInstance != null) {
                             effects += mobEffectInstance.getAmplifier() + 1;
                         }

@@ -15,6 +15,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.FormattedCharSequence;
+import com.elfmcys.yesstevemodel.util.YsmFrame;
 
 
 public class ExtraPlayerRenderScreen extends Screen {
@@ -125,8 +126,10 @@ public class ExtraPlayerRenderScreen extends Screen {
         if (Minecraft.getInstance().player != null && !ExtraPlayerRenderConfig.DISABLE_PLAYER_RENDER.get().booleanValue()) {
             //? if >=1.17 && <1.20
             /*ModelPreviewRenderer.renderPlayerOverlay(guiGraphics.pose(), Minecraft.getInstance().player, this.mouseStartX, this.mouseStartY, this.rotationX, this.rotationY, -500, this.minecraft.getFrameTime());*/
-            //? if >=1.20
+            //? if >=1.20 && <1.21
             ModelPreviewRenderer.renderPlayerOverlay(guiGraphics.graphics(), Minecraft.getInstance().player, this.mouseStartX, this.mouseStartY, this.rotationX, this.rotationY, -500, this.minecraft.getFrameTime());
+            //? if >=1.21
+            /*ModelPreviewRenderer.renderPlayerOverlay(guiGraphics.graphics(), Minecraft.getInstance().player, this.mouseStartX, this.mouseStartY, this.rotationX, this.rotationY, -500, YsmFrame.partialTick(this.minecraft));*/
         }
         //? if <1.17
         /*super.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/

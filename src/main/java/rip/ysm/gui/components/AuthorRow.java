@@ -19,6 +19,9 @@ import rip.ysm.gui.OptionRow;
 import java.util.List;
 
 public final class AuthorRow extends OptionRow<Object> {
+    //? if >=1.21
+    /*private static final ResourceLocation DEFAULT_AVATAR = ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "texture/default_avatar.png");*/
+    //? if <1.21
     private static final ResourceLocation DEFAULT_AVATAR = new ResourceLocation(YesSteveModel.MOD_ID, "texture/default_avatar.png");
     private static final int AVATAR_SIZE = 48;
 

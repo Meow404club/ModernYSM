@@ -420,6 +420,10 @@ public class YSMBinding extends ContextBinding {
             return null;
         }
         for (MobEffectInstance mobEffectInstance : activeEffects) {
+            // 1.20.5+ getEffect 返回 Holder → .value() 还原 MobEffect（显示名/键名门面不变）
+            //? if neoforge && >=1.20.5
+            /*context.logWarningComponent(YsmText.literal("Effect: display ").append(copyOnClickTextCompat(mobEffectInstance.getEffect().value().getDisplayName().getString(99))).append(YsmText.literal("  name ").append(copyOnClickTextCompat(YsmTag.mobEffectKey(mobEffectInstance.getEffect().value()).toString()))).append("  lv=").append(String.valueOf(mobEffectInstance.getAmplifier() + 1)));*/
+            //? if forge || neoforge && <1.20.5
             context.logWarningComponent(YsmText.literal("Effect: display ").append(copyOnClickTextCompat(mobEffectInstance.getEffect().getDisplayName().getString(99))).append(YsmText.literal("  name ").append(copyOnClickTextCompat(YsmTag.mobEffectKey(mobEffectInstance.getEffect()).toString()))).append("  lv=").append(String.valueOf(mobEffectInstance.getAmplifier() + 1)));
         }
         return null;

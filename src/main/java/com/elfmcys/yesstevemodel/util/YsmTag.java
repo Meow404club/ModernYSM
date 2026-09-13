@@ -190,7 +190,11 @@ public final class YsmTag {
         //?}
     }
 
-    /** 附魔注册表直查（1.16.5 Registry.ENCHANTMENT ↔ 1.20.1 BuiltInRegistries.ENCHANTMENT）。 */
+    /** 附魔注册表直查（1.16.5 Registry.ENCHANTMENT ↔ 1.20.1 BuiltInRegistries.ENCHANTMENT）。
+     * 1.21 起 Registry 接口删除 get(ResourceLocation)（vanilla-1.21.1 Registry.java 仅余
+     * getHolder(ResourceLocation):141），且下游 EnchantmentHelper/ItemEnchantments 全收
+     * Holder<Enchantment> → >=1.21 返回值即 Holder（同名异返回类型按版本二选一）。 */
+    //? if <1.21 {
     public static net.minecraft.world.item.enchantment.Enchantment enchantment(ResourceLocation rl) {
         //? if <1.19.4 {
         /*return net.minecraft.core.Registry.ENCHANTMENT.get(rl);
@@ -198,6 +202,16 @@ public final class YsmTag {
         return net.minecraft.core.registries.BuiltInRegistries.ENCHANTMENT.get(rl);
         //?}
     }
+    //?}
+    // 1.21 附魔数据驱动化：BuiltInRegistries.ENCHANTMENT 字段删除（vanilla-1.21.1
+    // BuiltInRegistries.java 实证）→ 经 HolderLookup.Provider 动态解析
+    //? if >=1.21 {
+    /*public static net.minecraft.core.Holder<net.minecraft.world.item.enchantment.Enchantment> enchantment(net.minecraft.core.HolderLookup.Provider provider, ResourceLocation rl) {
+        // HolderGetter 仅收 ResourceKey（vanilla-1.21.1 HolderGetter.java:8）→ rl 先建 key
+        return provider.lookupOrThrow(net.minecraft.core.registries.Registries.ENCHANTMENT)
+                .get(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.ENCHANTMENT, rl)).orElse(null);
+    }*/
+    //?}
 
     /** 物品注册表直查。 */
     public static Item item(ResourceLocation rl) {

@@ -33,13 +33,37 @@ import java.util.function.Consumer;
 @Mod.EventBusSubscriber(modid = YesSteveModel.MOD_ID)
 public final class ForgeCapabilityHooks {
 
+    //? if >=1.21
+    /*private static final ResourceLocation MODEL_INFO_CAP = ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "model_id");*/
+    //? if <1.21
     private static final ResourceLocation MODEL_INFO_CAP = new ResourceLocation(YesSteveModel.MOD_ID, "model_id");
+    //? if >=1.21
+    /*private static final ResourceLocation PROJECTILE_MODEL_CAP = ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "projectile_model_id");*/
+    //? if <1.21
     private static final ResourceLocation PROJECTILE_MODEL_CAP = new ResourceLocation(YesSteveModel.MOD_ID, "projectile_model_id");
+    //? if >=1.21
+    /*private static final ResourceLocation VEHICLE_MODEL_CAP = ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "vehicle_model_id");*/
+    //? if <1.21
     private static final ResourceLocation VEHICLE_MODEL_CAP = new ResourceLocation(YesSteveModel.MOD_ID, "vehicle_model_id");
+    //? if >=1.21
+    /*private static final ResourceLocation AUTH_MODELS_CAP = ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "own_models");*/
+    //? if <1.21
     private static final ResourceLocation AUTH_MODELS_CAP = new ResourceLocation(YesSteveModel.MOD_ID, "own_models");
+    //? if >=1.21
+    /*private static final ResourceLocation STAR_MODELS_CAP = ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "star_models");*/
+    //? if <1.21
     private static final ResourceLocation STAR_MODELS_CAP = new ResourceLocation(YesSteveModel.MOD_ID, "star_models");
+    //? if >=1.21
+    /*private static final ResourceLocation PLAYER_CAP = ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "animatable");*/
+    //? if <1.21
     private static final ResourceLocation PLAYER_CAP = new ResourceLocation(YesSteveModel.MOD_ID, "animatable");
+    //? if >=1.21
+    /*private static final ResourceLocation PROJECTILE_CAP = ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "projectile_animatable");*/
+    //? if <1.21
     private static final ResourceLocation PROJECTILE_CAP = new ResourceLocation(YesSteveModel.MOD_ID, "projectile_animatable");
+    //? if >=1.21
+    /*private static final ResourceLocation VEHICLE_CAP = ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "vehicle_animatable");*/
+    //? if <1.21
     private static final ResourceLocation VEHICLE_CAP = new ResourceLocation(YesSteveModel.MOD_ID, "vehicle_animatable");
 
     private ForgeCapabilityHooks() {

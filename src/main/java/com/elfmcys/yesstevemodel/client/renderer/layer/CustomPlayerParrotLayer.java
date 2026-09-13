@@ -75,8 +75,21 @@ public class CustomPlayerParrotLayer extends GeoLayerRenderer<CustomPlayerEntity
             // this.parrotModel.renderOnShoulder(poseStack, bufferSource.getBuffer(this.parrotModel.renderType(ParrotRenderer.PARROT_LOCATIONS[Math.floorMod(shoulderEntityLeft.getInt(TAG_VARIANT), ParrotRenderer.PARROT_LOCATIONS.length)])), packedLightIn, OverlayTexture.NO_OVERLAY, limbSwing, limbSwingAmount, netHeadYaw, headPitch, player.tickCount);
             //? if >=1.17 && <1.19.4
             /*this.parrotModel.renderOnShoulder(poseStack, bufferSource.getBuffer(this.parrotModel.renderType(ParrotRenderer.PARROT_LOCATIONS[Math.floorMod(shoulderEntityLeft.getInt(TAG_VARIANT), ParrotRenderer.PARROT_LOCATIONS.length)])), packedLightIn, OverlayTexture.NO_OVERLAY, limbSwing, limbSwingAmount, netHeadYaw, headPitch, player.tickCount);*/
-            //? if >=1.19.4
+            //? if >=1.19.4 && <1.21.2
             this.parrotModel.renderOnShoulder(poseStack, bufferSource.getBuffer(this.parrotModel.renderType(ParrotRenderer.getVariantTexture(Parrot.Variant.byId(shoulderEntityLeft.getInt(TAG_VARIANT))))), packedLightIn, OverlayTexture.NO_OVERLAY, limbSwing, limbSwingAmount, netHeadYaw, headPitch, player.tickCount);
+            // 1.21.2 ParrotModel.renderOnShoulder(PoseStack,VertexConsumer,...) 九参删除 →
+            // ParrotOnShoulderLayer 同款状态制（ParrotRenderState.pose=ON_SHOULDER +
+            // setupAnim + renderToBuffer，vanilla-1.21.3 ParrotOnShoulderLayer.java:50-68/
+            // ParrotModel.java:83 实证）
+            //? if >=1.21.2 {
+            /*net.minecraft.client.renderer.entity.state.ParrotRenderState parrotState = new net.minecraft.client.renderer.entity.state.ParrotRenderState();
+            parrotState.pose = ParrotModel.Pose.ON_SHOULDER;
+            parrotState.ageInTicks = player.tickCount;
+            parrotState.yRot = netHeadYaw;
+            parrotState.xRot = headPitch;
+            this.parrotModel.setupAnim(parrotState);
+            this.parrotModel.renderToBuffer(poseStack, bufferSource.getBuffer(this.parrotModel.renderType(ParrotRenderer.getVariantTexture(Parrot.Variant.byId(shoulderEntityLeft.getInt(TAG_VARIANT))))), packedLightIn, OverlayTexture.NO_OVERLAY);*/
+            //?}
             poseStack.popPose();
         });
     }

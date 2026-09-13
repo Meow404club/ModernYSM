@@ -7,7 +7,12 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.resources.ResourceLocation;
 //? if >1.17 {
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.ShaderInstance;
+//?}
+// 1.21.2 ShaderInstance 删除（ShaderManager/CompiledShaderProgram 重构，vanilla-1.21.3
+// 无该类）→ ShaderInstance 触点全部收进 <1.21.2 分支，1.21.2+ 本路径降级
+//? if >1.17 && <1.21.2
+/*import net.minecraft.client.renderer.ShaderInstance;*/
+//? if >1.17 {
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
@@ -24,17 +29,20 @@ public final class IrisRenderPath {
 
 
     public static boolean tryRender(GeoModel model, PoseStack.Pose pose, float[] boneParams, int renderPartMask, int packedLight, int packedOverlay, float r, float g, float b, float a, ResourceLocation textureLocation) {
-        //? if <1.17 {
-        /*return false;
-         *///?} else {
+        //? if <1.17
+        /*return false;*/
+        // 1.21.2+ 降级：ShaderInstance 删除后 uniform 直写面随 CompiledShaderProgram 重构变化，
+        // 且 iris neoforge 生态未接——本路径整体回退 geckolib3 原路径（与 1.16.5 同级功能债）
+        //? if >=1.21.2
+        /*return false;*/
+        //? if >=1.17 && <1.21.2
         return tryRenderModern(model, pose, boneParams, renderPartMask, packedLight, packedOverlay, r, g, b, a, textureLocation);
-        //?}
     }
 
     // 1.16.5 降级：整路径不存在（GL43 compute + 1.17+ ShaderInstance uniform 管线 +
     // RenderSystem.getShader/getProjectionMatrix 均为 1.17+ API；Iris 1.16.5 无官方移植，
     // oculus 系 compat 包也被 1.16.5 sourceSet 排除——记录功能差，渲染回退 geckolib3 原路径）
-    //? if >1.17 {
+    //? if >1.17 && <1.21.2 {
     private static boolean tryRenderModern(GeoModel model, PoseStack.Pose pose, float[] boneParams, int renderPartMask, int packedLight, int packedOverlay, float r, float g, float b, float a, ResourceLocation textureLocation) {
         if (!GpuCapability.isAvailable()) return false;
         if (!BoneXformCompute.ensureCompiled()) return false;
@@ -83,20 +91,18 @@ public final class IrisRenderPath {
         RenderType rt = RenderType.entityCutoutNoCull(textureLocation);
         rt.setupRenderState();
 
-        ShaderInstance shader = RenderSystem.getShader();
+        //? if <1.21.2 {
+        /*ShaderInstance shader = RenderSystem.getShader();
         if (shader == null) {
             rt.clearRenderState();
             return false;
         }
 
         // MODEL_VIEW/PROJECTION 为 Uniform（1192 ShaderInstance.java:66/68），Uniform.set(Matrix4f)
-        // 参数型随版本走（<1.19.3 moj / 1.19.4+ joml），同一源码两侧均合法，无需分段；
-        // GLINT_ALPHA 1.19.4 起才有（1192 ShaderInstance 无此字段）
+        // 参数型随版本走（<1.19.3 moj / 1.19.4+ joml），同一源码两侧均合法，无需分段
         if (shader.MODEL_VIEW_MATRIX != null) shader.MODEL_VIEW_MATRIX.set(pose.pose());
         if (shader.PROJECTION_MATRIX != null) shader.PROJECTION_MATRIX.set(RenderSystem.getProjectionMatrix());
         if (shader.COLOR_MODULATOR != null) shader.COLOR_MODULATOR.set(1.0f, 1.0f, 1.0f, 1.0f);
-        //? if >=1.19.4
-        if (shader.GLINT_ALPHA != null) shader.GLINT_ALPHA.set(1.0f);
 
         shader.apply();
 
@@ -108,7 +114,11 @@ public final class IrisRenderPath {
             GL11.glDrawElements(GL11.GL_TRIANGLES, drawCount, GL11.GL_UNSIGNED_INT, offsetBytes);
         }
 
-        shader.clear();
+        shader.clear();*/
+        //?}
+        // GLINT_ALPHA 1.19.4 起才有（1192 ShaderInstance 无此字段）
+        //? if >=1.19.4 && <1.21.2
+        /*if (shader.GLINT_ALPHA != null) shader.GLINT_ALPHA.set(1.0f);*/
         //? if >=1.19.2
         com.mojang.blaze3d.vertex.BufferUploader.invalidate();
         //? if <1.19.2

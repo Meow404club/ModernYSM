@@ -18,6 +18,11 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 //? }
 import net.minecraft.client.renderer.texture.OverlayTexture;
+//? if >=1.21.2 {
+/*import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
+ *///?}
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.Projectile;
@@ -27,7 +32,30 @@ import org.joml.Matrix4f;
 import com.mojang.math.Axis;
 //? }
 
+//? if <1.21.2
 public abstract class AbstractProjectileRenderer<TEntity extends Projectile, T extends AnimatableEntity<TEntity>> extends EntityRenderer<TEntity> implements IGeoRenderer<T> {
+//? if >=1.21.2 {
+/*public abstract class AbstractProjectileRenderer<TEntity extends Projectile, T extends AnimatableEntity<TEntity>> extends EntityRenderer<TEntity, EntityRenderState> implements IGeoRenderer<T> {
+
+    private TEntity currentEntity;
+
+    @Override
+    public EntityRenderState createRenderState() {
+        return new EntityRenderState();
+    }
+
+    @Override
+    public void extractRenderState(TEntity entity, EntityRenderState state, float partialTick) {
+        super.extractRenderState(entity, state, partialTick);
+        this.currentEntity = entity;
+    }
+
+    // 无 @Override：EntityRenderer 基类无 getTextureLocation 抽象（实现占位）
+    public ResourceLocation getTextureLocation(EntityRenderState state) {
+        // vanilla dispatch 永不触发（dispatcher mixin Static 驱动路径）
+        return MissingTextureAtlasSprite.getLocation();
+    }*/
+//?}
 
     public Matrix4f modelViewMatrix;
 
@@ -79,7 +107,10 @@ public abstract class AbstractProjectileRenderer<TEntity extends Projectile, T e
                 poseStack.popPose();
             }
         }
+        //? if <1.21.2
         super.render(animatable.getEntity(), entityYaw, partialTick, poseStack, bufferSource, packedLight);
+        //? if >=1.21.2
+        /*super.render(this.createRenderState(animatable.getEntity(), partialTick), poseStack, bufferSource, packedLight);*/
     }
 
     @Override

@@ -23,7 +23,7 @@ import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.PlayerModelPart;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.UseAnim;
+import rip.ysm.util.UseAction;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Optional;
@@ -67,7 +67,12 @@ public class QueryBinding extends ContextBinding {
         entityVar("eye_target_x_rotation", ctx -> ctx.entity().getViewXRot(ctx.animationEvent().getPartialTick()));
         entityVar("eye_target_y_rotation", ctx -> ctx.entity().getViewYRot(ctx.animationEvent().getPartialTick()));
         entityVar("ground_speed", ctx -> getGroundSpeed(ctx.entity()));
+        // 1.21.2 Entity.walkDist 删除 → LivingEntity.walkAnimation.position()
+        //（vanilla-1.21.3 LivingEntity.java:213/WalkAnimationState 实证）
+        //? if <1.21.2
         entityVar("modified_distance_moved", ctx -> ctx.entity().walkDist);
+        //? if >=1.21.2
+        entityVar("modified_distance_moved", ctx -> ((net.minecraft.world.entity.LivingEntity) ctx.entity()).walkAnimation.position());
         entityVar("vertical_speed", QueryBinding::getVerticalSpeed);
         entityVar("walk_distance", ctx -> ctx.entity().moveDist);
         entityVar("has_rider", ctx -> ctx.entity().isVehicle());
@@ -102,7 +107,7 @@ public class QueryBinding extends ContextBinding {
         livingEntityVar("health", QueryBinding::getHealth);
         livingEntityVar("max_health", QueryBinding::getMaxHealth);
         livingEntityVar("hurt_time", ctx -> ctx.entity().hurtTime);
-        livingEntityVar("is_eating", ctx -> ctx.entity().getUseItem().getUseAnimation() == UseAnim.EAT);
+        livingEntityVar("is_eating", ctx -> rip.ysm.util.UseAction.of(ctx.entity().getUseItem()) == UseAction.EAT);
         livingEntityVar("is_playing_dead", ctx -> ctx.entity().isDeadOrDying());
         livingEntityVar("is_sleeping", ctx -> ctx.entity().isSleeping());
         livingEntityVar("is_using_item", ctx -> ctx.entity().isUsingItem());
@@ -251,7 +256,13 @@ public class QueryBinding extends ContextBinding {
         if (fClamp2 < 0.0f) {
             fClamp2 = 0.0f;
         }
+        // 1.21.2 walkDist/walkDistO → walkAnimation.position(f)（含插值语义）
+        //? if <1.21.2 {
         float fSin2 = fClamp + (Mth.sin(Mth.lerp(gameTime, player.walkDistO, player.walkDist) * 6.0f) * 32.0f * Mth.lerp(gameTime, player.oBob, player.bob));
+        //?}
+        //? if >=1.21.2 {
+        /*float fSin2 = fClamp + (Mth.sin(player.walkAnimation.position(gameTime) * 6.0f) * 32.0f * Mth.lerp(gameTime, player.oBob, player.bob));*/
+        //?}
         if (player.isCrouching()) {
             fSin2 += 25.0f;
         }

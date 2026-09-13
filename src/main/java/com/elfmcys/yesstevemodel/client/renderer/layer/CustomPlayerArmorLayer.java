@@ -35,8 +35,11 @@ public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity>
     public CustomPlayerArmorLayer(EntityRendererProvider.Context context) {
         //? if <1.19.2
         /*this.itemRenderer = new ItemInHandRenderer(net.minecraft.client.Minecraft.getInstance());*/
-        //? if >=1.19.2
+        //? if >=1.19.2 && <1.21.2
         this.itemRenderer = context.getItemInHandRenderer();
+        // 1.21.2 Context 删 getItemInHandRenderer → GameRenderer 公有字段
+        //? if >=1.21.2
+        /*this.itemRenderer = net.minecraft.client.Minecraft.getInstance().gameRenderer.itemInHandRenderer;*/
     }
     //? }
 
@@ -64,8 +67,11 @@ public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity>
         // return (item instanceof ArmorItem) && ((ArmorItem) item).getSlot() == EquipmentSlot.HEAD;
         //? if >=1.17 && <1.19.4
         /*return (item instanceof ArmorItem) && ((ArmorItem) item).getSlot() == EquipmentSlot.HEAD;*/
-        //? if >=1.19.4
+        //? if >=1.19.4 && <1.21.2
         return (item instanceof ArmorItem) && ((ArmorItem) item).getEquipmentSlot() == EquipmentSlot.HEAD;
+        // 1.21.2 槽位查询改 IItemExtension.getEquipmentSlot(ItemStack)（ArmorItem 无参形删除）
+        //? if >=1.21.2
+        /*return (item instanceof ArmorItem) && ((ArmorItem) item).getEquipmentSlot(stack) == EquipmentSlot.HEAD;*/
     }
 
     private void renderArmorPiece(PoseStack poseStack, MultiBufferSource bufferSource, int i, AnimatedGeoModel model, Player player, ItemStack stack) {

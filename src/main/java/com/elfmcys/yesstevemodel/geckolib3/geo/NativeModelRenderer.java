@@ -171,7 +171,12 @@ public class NativeModelRenderer {
                         tempPos.set(quad.positions[positionOffset], quad.positions[positionOffset + 1], quad.positions[positionOffset + 2], 1.0f).mul(globalBoneMat);
                         // 1.21 十四参 vertex 拆为 addVertex(x,y,z,packedColor,u,v,overlay,light,nx,ny,nz)
                         //（vanilla-1.21.1 VertexConsumer.java:28 + ModelPart.java:362 用法实证）
-                        //? if >=1.21
+                        // 1.21.2 FastColor 删除（ARGB 接管）：setColor(int) 按 ARGB 序解包
+                        //（vanilla-1.21.3 VertexConsumer.java:50-52），1.21~1.21.2 的
+                        // ABGR32.color(a,b,g,r) 位序与其不符系既有线自洽，1.21.2+ 统一 ARGB.color(a,r,g,b)
+                        //? if >=1.21.2
+                        /*vertexConsumer.addVertex(tempPos.x(), tempPos.y(), tempPos.z(), net.minecraft.util.ARGB.color(net.minecraft.util.ARGB.as8BitChannel(a), net.minecraft.util.ARGB.as8BitChannel(r), net.minecraft.util.ARGB.as8BitChannel(g), net.minecraft.util.ARGB.as8BitChannel(b)), quad.uvs[uvOffset], quad.uvs[uvOffset + 1], packedOverlay, currentPackedLight, tempNorm.x(), tempNorm.y(), tempNorm.z());*/
+                        //? if >=1.21 && <1.21.2
                         /*vertexConsumer.addVertex(tempPos.x(), tempPos.y(), tempPos.z(), net.minecraft.util.FastColor.ABGR32.color(net.minecraft.util.FastColor.as8BitChannel(a), net.minecraft.util.FastColor.as8BitChannel(b), net.minecraft.util.FastColor.as8BitChannel(g), net.minecraft.util.FastColor.as8BitChannel(r)), quad.uvs[uvOffset], quad.uvs[uvOffset + 1], packedOverlay, currentPackedLight, tempNorm.x(), tempNorm.y(), tempNorm.z());*/
                         //? if <1.21
                         vertexConsumer.vertex(tempPos.x(), tempPos.y(), tempPos.z(), r, g, b, a, quad.uvs[uvOffset], quad.uvs[uvOffset + 1], packedOverlay, currentPackedLight, tempNorm.x(), tempNorm.y(), tempNorm.z());
@@ -263,7 +268,18 @@ public class NativeModelRenderer {
         VertexConsumer vc = (VertexConsumer) v;
         int fIdx = 0, iIdx = 0;
         for (int n = 0; n < vertexCount; n++) {
-            //? if >=1.21 {
+            // 1.21.2 FastColor 删除（ARGB 接管）；缓冲布局 f[idx+3..6]=r,g,b,a（见下方 <1.21
+            // 分支参数序），packedColor 统一 ARGB 序（同上 addVertex 点注释）
+            //? if >=1.21.2 {
+            /*vc.addVertex(
+                    f.get(fIdx),     f.get(fIdx + 1), f.get(fIdx + 2),
+                    net.minecraft.util.ARGB.color(net.minecraft.util.ARGB.as8BitChannel(f.get(fIdx + 6)), net.minecraft.util.ARGB.as8BitChannel(f.get(fIdx + 3)), net.minecraft.util.ARGB.as8BitChannel(f.get(fIdx + 4)), net.minecraft.util.ARGB.as8BitChannel(f.get(fIdx + 5))),
+                    f.get(fIdx + 7), f.get(fIdx + 8),
+                    in.get(iIdx),    in.get(iIdx + 1),
+                    f.get(fIdx + 9), f.get(fIdx + 10), f.get(fIdx + 11)
+            );*/
+            //?}
+            //? if >=1.21 && <1.21.2 {
             /*vc.addVertex(
                     f.get(fIdx),     f.get(fIdx + 1), f.get(fIdx + 2),
                     net.minecraft.util.FastColor.ABGR32.color(net.minecraft.util.FastColor.as8BitChannel(f.get(fIdx + 6)), net.minecraft.util.FastColor.as8BitChannel(f.get(fIdx + 5)), net.minecraft.util.FastColor.as8BitChannel(f.get(fIdx + 4)), net.minecraft.util.FastColor.as8BitChannel(f.get(fIdx + 3))),

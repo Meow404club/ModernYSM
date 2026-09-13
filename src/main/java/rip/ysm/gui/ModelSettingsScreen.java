@@ -1,5 +1,6 @@
 package rip.ysm.gui;
 
+import rip.ysm.util.RenderCompat;
 import com.elfmcys.yesstevemodel.client.entity.CustomPlayerEntity;
 import com.elfmcys.yesstevemodel.client.entity.LivingAnimatable;
 import com.elfmcys.yesstevemodel.client.gui.ModelMetadataPresenter;
@@ -242,14 +243,14 @@ public class ModelSettingsScreen extends OptionScreen {
         modelViewStack.pushPose();
         modelViewStack.translate(x, y, 1250.0d);
         modelViewStack.scale(1.0f, 1.0f, -1.0f);
-        RenderSystem.applyModelViewMatrix();
+        RenderCompat.applyModelViewMatrix();
         //?}
         //? if >=1.20.5 {
         /*Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();
         modelViewStack.pushMatrix();
         modelViewStack.translate((float) x, (float) y, 1250.0f);
         modelViewStack.scale(1.0f, 1.0f, -1.0f);
-        RenderSystem.applyModelViewMatrix();*/
+        RenderCompat.applyModelViewMatrix();*/
         //?}
 
         PoseStack poseStack = new PoseStack();
@@ -325,7 +326,7 @@ public class ModelSettingsScreen extends OptionScreen {
         MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
 
         try {
-            RenderSystem.runAsFancy(() -> renderer.renderEntity(animatable, 0.0f, partialTick, poseStack, bufferSource, 15728880));
+            RenderCompat.runAsFancy(() -> renderer.renderEntity(animatable, 0.0f, partialTick, poseStack, bufferSource, 15728880));
             bufferSource.endBatch();
         } finally {
             dispatcher.setRenderShadow(true);
@@ -350,12 +351,12 @@ public class ModelSettingsScreen extends OptionScreen {
              *///?}
             //? if >=1.17 && <1.20.5 {
             modelViewStack.popPose();
-            RenderSystem.applyModelViewMatrix();
+            RenderCompat.applyModelViewMatrix();
             Lighting.setupFor3DItems();
             //?}
             //? if >=1.20.5 {
             /*modelViewStack.popMatrix();
-            RenderSystem.applyModelViewMatrix();
+            RenderCompat.applyModelViewMatrix();
             Lighting.setupFor3DItems();*/
             //?}
             ModelPreviewRenderer.setPreviewMode(false);

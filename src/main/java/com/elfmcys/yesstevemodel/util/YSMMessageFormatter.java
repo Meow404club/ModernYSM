@@ -38,7 +38,11 @@ public class YSMMessageFormatter {
         if (entity == null) {
             return false;
         }
+        // 1.21.2 Entity.hasPermissions 删除（Player 保留，vanilla-1.21.3 Player.java:2061）
+        //? if <1.21.2
         return entity.hasPermissions(level) || isCurrentClientPlayer(entity);
+        //? if >=1.21.2
+        /*return (entity instanceof net.minecraft.world.entity.player.Player p && p.hasPermissions(level)) || isCurrentClientPlayer(entity);*/
     }
 
     public static boolean hasCommandPermission(CommandSourceStack commandSourceStack, int level) {

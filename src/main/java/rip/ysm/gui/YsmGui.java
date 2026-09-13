@@ -345,11 +345,21 @@ public final class YsmGui {
     }
 
      *///?}
-    //? if >=1.20 {
+    // 1.21.2 GuiGraphics.blit(RL,...) 全家改 Function<ResourceLocation,RenderType> 头参
+    //（vanilla-1.21.3 GuiGraphics.java:689-737），GUI 贴图走 guiTexturedOverlay(RL)
+    //（RenderType.java:1240，带混合 position_tex，对位旧 innerBlit 语义）
+    //? if >=1.20 && <1.21.2 {
     public void blit(ResourceLocation atlas, int x, int y, int u, int v, int width, int height) {
         this.graphics.blit(atlas, x, y, u, v, width, height);
     }
 
+    //?}
+    //? if >=1.21.2 {
+    /*public void blit(ResourceLocation atlas, int x, int y, int u, int v, int width, int height) {
+        this.graphics.blit(net.minecraft.client.renderer.RenderType::guiTexturedOverlay, atlas, x, y, (float) u, (float) v, width, height, 256, 256);
+    }
+
+     */
     //?}
 
     /** 全参版（独立 uW/vH）：1.16.5 与 1.17+ 参数序同形（1165:155 / 1182:165 / 1194:207），
@@ -369,11 +379,18 @@ public final class YsmGui {
     }
 
      *///?}
-    //? if >=1.20 {
+    //? if >=1.20 && <1.21.2 {
     public void blit(ResourceLocation atlas, int x, int y, int renderWidth, int renderHeight, float uOffset, float vOffset, int uWidth, int vHeight, int textureWidth, int textureHeight) {
         this.graphics.blit(atlas, x, y, renderWidth, renderHeight, uOffset, vOffset, uWidth, vHeight, textureWidth, textureHeight);
     }
 
+    //?}
+    //? if >=1.21.2 {
+    /*public void blit(ResourceLocation atlas, int x, int y, int renderWidth, int renderHeight, float uOffset, float vOffset, int uWidth, int vHeight, int textureWidth, int textureHeight) {
+        this.graphics.blit(net.minecraft.client.renderer.RenderType::guiTexturedOverlay, atlas, x, y, uOffset, vOffset, uWidth, vHeight, renderWidth, renderHeight, textureWidth, textureHeight);
+    }
+
+     */
     //?}
 
     /** float u/v + 显式纹理尺寸 blit：1.16.5 (x,y,w,h,u,v,uW,vH,texW,texH) 形；
@@ -393,11 +410,16 @@ public final class YsmGui {
     }
 
      *///?}
-    //? if >=1.20 {
+    //? if >=1.20 && <1.21.2 {
     public void blit(ResourceLocation atlas, int x, int y, float uOffset, float vOffset, int width, int height, int textureWidth, int textureHeight) {
         this.graphics.blit(atlas, x, y, width, height, uOffset, vOffset, width, height, textureWidth, textureHeight);
     }
-
+    //?}
+    //? if >=1.21.2 {
+    /*public void blit(ResourceLocation atlas, int x, int y, float uOffset, float vOffset, int width, int height, int textureWidth, int textureHeight) {
+        this.graphics.blit(net.minecraft.client.renderer.RenderType::guiTexturedOverlay, atlas, x, y, uOffset, vOffset, width, height, textureWidth, textureHeight);
+    }
+    */
     //?}
 
     /** 带 z 序 blit：1.17+ 有 z 形 (x,y,z,u,v,w,h,texW,texH)（1182:157）；1.16.5 无 z → 落 0 层同形。 */
@@ -417,13 +439,20 @@ public final class YsmGui {
     }
 
      *///?}
-    //? if >=1.20 {
+    //? if >=1.20 && <1.21.2 {
     public void blit(ResourceLocation atlas, int x, int y, int z, int uOffset, int vOffset, int width, int height, int textureWidth, int textureHeight) {
         // 1.20.1 的带 z blit 是 GuiGraphics 包私有/异序重载（javap 实证 public 无 z-int 形）→
         // 落回无 z 形（z 序层叠差 = 该重载本为 tooltip/悬浮层专用，此处调用点均为面板本体绘制，等价）
         this.graphics.blit(atlas, x, y, uOffset, vOffset, width, height, textureWidth, textureHeight);
     }
 
+    //?}
+    //? if >=1.21.2 {
+    /*public void blit(ResourceLocation atlas, int x, int y, int z, int uOffset, int vOffset, int width, int height, int textureWidth, int textureHeight) {
+        this.graphics.blit(net.minecraft.client.renderer.RenderType::guiTexturedOverlay, atlas, x, y, uOffset, vOffset, width, height, textureWidth, textureHeight);
+    }
+
+     */
     //?}
 
     // ==================== setColor（color4f 1.17 分界） ====================
@@ -443,11 +472,21 @@ public final class YsmGui {
     }
 
      *///?}
-    //? if >=1.20 {
+    //? if >=1.20 && <1.21.2 {
     public void setColor(float r, float g, float b, float a) {
         this.graphics.setColor(r, g, b, a);
     }
 
+    //?}
+    // 1.21.2 GuiGraphics.setColor 删除 → 全局 setShaderColor（vanilla-1.21.3 GuiGraphics
+    // 无 setColor 定义、RenderSystem.java:384 仍在）；管线对 shaderColor 的读取
+    // 归 runClient 视觉走查核验
+    //? if >=1.21.2 {
+    /*public void setColor(float r, float g, float b, float a) {
+        com.mojang.blaze3d.systems.RenderSystem.setShaderColor(r, g, b, a);
+    }
+
+     */
     //?}
 
     /** 垂直渐变填充（GuiGraphics.fillGradient 对位）。 */
@@ -457,9 +496,17 @@ public final class YsmGui {
     }
 
     /** GuiGraphics.blit(rl,x,y,u,v,w,h,texW,texH)（float u/v + 显式纹理尺寸）对位。 */
+    //? if >=1.20 && <1.21.2 {
     public void blit(ResourceLocation atlas, int x, int y, int uOffset, int vOffset, int width, int height, int textureWidth, int textureHeight) {
         this.graphics.blit(atlas, x, y, uOffset, vOffset, width, height, textureWidth, textureHeight);
     }
+    //?}
+    //? if >=1.21.2 {
+    /*public void blit(ResourceLocation atlas, int x, int y, int uOffset, int vOffset, int width, int height, int textureWidth, int textureHeight) {
+        this.graphics.blit(net.minecraft.client.renderer.RenderType::guiTexturedOverlay, atlas, x, y, uOffset, vOffset, width, height, textureWidth, textureHeight);
+    }
+     */
+    //?}
 
     /** TextureManager.getTexture(rl, missing) 双参语义：未注册时返回缺失纹理占位（不注册占位条目）。 */
     public net.minecraft.client.renderer.texture.AbstractTexture getTexture(ResourceLocation location) {

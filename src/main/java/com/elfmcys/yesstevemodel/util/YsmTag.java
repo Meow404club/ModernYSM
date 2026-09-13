@@ -218,6 +218,11 @@ public final class YsmTag {
         //? if <1.19.4 {
         /*return net.minecraft.core.Registry.ITEM.get(rl);
          *///?} else {
+        // 1.21.2 Registry.get(rl) 语义变 Optional<Reference<T>>，直取 T 改名 getValue
+        //（vanilla-1.21.3 Registry.java:73 getValue(ResourceLocation)）
+        //? if >=1.21.2
+        /*return net.minecraft.core.registries.BuiltInRegistries.ITEM.getValue(rl);*/
+        //? if <1.21.2
         return net.minecraft.core.registries.BuiltInRegistries.ITEM.get(rl);
         //?}
     }
@@ -243,6 +248,10 @@ public final class YsmTag {
         //? if <1.19.4 {
         /*return net.minecraft.core.Registry.MOB_EFFECT.get(rl);
          *///?} else {
+        // 1.21.2 get(rl) 语义变 Optional<Reference<T>>，直取 T 改名 getValue（同 item()）
+        //? if >=1.21.2
+        /*return net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.getValue(rl);*/
+        //? if <1.21.2
         return net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.get(rl);
         //?}
     }

@@ -46,6 +46,26 @@ stonecutter {
         vers("1.20.6-neoforge", "1.20.6").buildscript = "build.moddev.gradle.kts"
         vers("1.21.1-neoforge", "1.21.1").buildscript = "build.moddev.gradle.kts"
 
+        // M3 批二 b：neoforge 后八线（21.3/21.4/21.5/21.8/21.10/21.11 Java 21 +
+        // 26.1.2/26.2 Java 25）。版本号取 maven metadata 该线最新 stable（2026-09-13 实拉
+        // https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml，
+        // 与 tmp/harvest/m3-matrix/maven-metadata.xml 2026-09-11 快照互证，仅 26.2 线由
+        // .86 → .87 前进一版）：
+        //   21.3.97 / 21.4.157 / 21.5.98 / 21.8.54 / 21.10.64 / 21.11.45
+        //   26.1.2.109 / 26.2.0.87
+        // 21.2/21.6/21.7/21.9 无 stable 线不注册（tasks.m3-matrix-research 跳过依据）。
+        // Java 分段依据 piston-meta version_manifest_v2（2026-09-13 实拉）：21.3~21.11
+        // javaVersion.majorVersion=21、26.1/26.2=25；26.x 版本号去 1.x 前缀后 stonecutter
+        // 版本轴直接用 "26.1.2"/"26.2"（数值段比较 ">=1.21.x" 恒 true、"<1.21" 恒 false）。
+        vers("21.3-neoforge", "21.3").buildscript = "build.moddev.gradle.kts"
+        vers("21.4-neoforge", "21.4").buildscript = "build.moddev.gradle.kts"
+        vers("21.5-neoforge", "21.5").buildscript = "build.moddev.gradle.kts"
+        vers("21.8-neoforge", "21.8").buildscript = "build.moddev.gradle.kts"
+        vers("21.10-neoforge", "21.10").buildscript = "build.moddev.gradle.kts"
+        vers("21.11-neoforge", "21.11").buildscript = "build.moddev.gradle.kts"
+        vers("26.1.2-neoforge", "26.1.2").buildscript = "build.moddev.gradle.kts"
+        vers("26.2-neoforge", "26.2").buildscript = "build.moddev.gradle.kts"
+
         vcsVersion = "1.20.1-forge"
     }
 }

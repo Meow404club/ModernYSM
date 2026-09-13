@@ -52,11 +52,13 @@ public final class YsmText {
 
     public static void sendSystemMessage(Player player, Component msg) {
         // Player.sendSystemMessage 1.19+；1.16.5~1.18.2 displayClientMessage(msg,false)（聊天栏同语义）
-        //? if <1.19.2 {
-        /*player.displayClientMessage(msg, false);
-         *///?} else {
+        // 1.21.2 Player.sendSystemMessage 删除（vanilla-1.21.3 Player.java 无此方法）→ 回退 displayClientMessage
+        //? if >=1.19.2 && <1.21.2
         player.sendSystemMessage(msg);
-        //?}
+        //? if <1.19.2
+        /*player.displayClientMessage(msg, false);*/
+        //? if >=1.21.2
+        player.displayClientMessage(msg, false);
     }
 
     /** 1.20.1 CommandSourceStack.isPlayer()（1.16.5 无）↔ getEntity() instanceof ServerPlayer（两版同语义）。 */

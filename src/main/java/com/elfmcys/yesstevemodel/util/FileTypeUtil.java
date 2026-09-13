@@ -106,9 +106,17 @@ public final class FileTypeUtil {
                      *///?}
                     //? if >=1.19.4 {
                     net.minecraft.tags.TagKey<EntityType<?>> tagKey = net.minecraft.tags.TagKey.create(net.minecraft.core.registries.Registries.ENTITY_TYPE, resourceLocation);
+                    // 1.21.2 Registry.getTag(TagKey) 删除 → HolderGetter.get(TagKey)（同 Optional<Named> 返回）
+                    //? if <1.21.2 {
                     net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getTag(tagKey).ifPresent(holderSet ->
                         holderSet.forEach(holder -> holder.unwrapKey().ifPresent(rk -> hashSet.add(rk.location())))
                     );
+                    //?}
+                    //? if >=1.21.2 {
+                    /*net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.get(tagKey).ifPresent(holderSet ->
+                        holderSet.forEach(holder -> holder.unwrapKey().ifPresent(rk -> hashSet.add(rk.location())))
+                    );*/
+                    //?}
                     //?}
                 }
             } else {

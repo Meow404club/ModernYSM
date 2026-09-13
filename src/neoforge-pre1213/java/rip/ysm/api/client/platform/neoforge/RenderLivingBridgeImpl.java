@@ -9,7 +9,8 @@ import net.neoforged.neoforge.client.event.RenderLivingEvent;
 import net.neoforged.neoforge.common.NeoForge;
 
 /**
- * neoforge 孪生（同 FQCN；RAW 源集）。MinecraftForge.EVENT_BUS → NeoForge.EVENT_BUS、
+ * neoforge 孪生（同 FQCN；RAW 源集，<1.21.2 代挂载；1.21.2+ 见 src/neoforge-1213 树）。
+ * MinecraftForge.EVENT_BUS → NeoForge.EVENT_BUS、
  * RenderLivingEvent 同名同构造面（20.4.251 javap 实证）；post 返回值语义（是否取消）与 bus 7.2.0 一致。
  */
 public final class RenderLivingBridgeImpl {

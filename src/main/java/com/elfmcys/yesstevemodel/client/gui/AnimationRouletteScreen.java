@@ -734,6 +734,12 @@ public class AnimationRouletteScreen extends Screen {
         //? if <1.17 {
         /*builder.begin(7, DefaultVertexFormat.POSITION_COLOR);
          *///?} else {
+        // 1.21.2 core shader 重构：GameRenderer.getPositionColorShader 删除 →
+        // CoreShaders.POSITION_COLOR 键式绑定（setShader(ShaderProgram) 自动编译，
+        // vanilla-1.21.3 RenderSystem.java:631/CoreShaders.java:18）
+        //? if >=1.21.2
+        /*RenderSystem.setShader(net.minecraft.client.renderer.CoreShaders.POSITION_COLOR);*/
+        //? if <1.21.2
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
         //? if <1.21
         builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);

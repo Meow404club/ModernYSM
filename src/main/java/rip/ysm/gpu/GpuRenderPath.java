@@ -111,6 +111,18 @@ public final class GpuRenderPath {
         GL15.glBufferSubData(GL43.GL_SHADER_STORAGE_BUFFER, 0L, boneBuf);
         GL43.glBindBufferBase(GL43.GL_SHADER_STORAGE_BUFFER, BoneSkinShader.ssbo, mesh.boneSsbo);
 
+        // 1.21.2 fog 状态打包 FogParameters record（getShaderFogStart/End/Color/Shape 删除，
+        // vanilla-1.21.3 RenderSystem.java:348 getShaderFog()）
+        //? if >=1.21.2 {
+        /*
+        net.minecraft.client.renderer.FogParameters ysmFogParams = RenderSystem.getShaderFog();
+        float fogStart = ysmFogParams.start();
+        float fogEnd = ysmFogParams.end();
+        float[] fogColor = new float[] { ysmFogParams.red(), ysmFogParams.green(), ysmFogParams.blue(), ysmFogParams.alpha() };
+        int fogShape = ysmFogParams.shape().getIndex();
+        */
+        //?}
+        //? if <1.21.2 {
         float fogStart = RenderSystem.getShaderFogStart();
         float fogEnd = RenderSystem.getShaderFogEnd();
         float[] fogColor = RenderSystem.getShaderFogColor();
@@ -119,8 +131,9 @@ public final class GpuRenderPath {
         /*int fogShape = RenderSystem.getShaderFogShape().getIndex();*/
         //? if >=1.17 && <1.18.2
         /*int fogShape = 0;*/
-        //? if >=1.18.2
+        //? if >=1.18.2 && <1.21.2
         int fogShape = RenderSystem.getShaderFogShape().getIndex();
+        //?}
 
         GlStateManager._glUseProgram(BoneSkinShader.program());
         if (BoneSkinShader.locProj() >= 0) GL20.glUniformMatrix4fv(BoneSkinShader.locProj(), false, projScratch);

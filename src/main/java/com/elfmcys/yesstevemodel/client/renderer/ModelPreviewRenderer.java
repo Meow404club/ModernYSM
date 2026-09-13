@@ -1,5 +1,6 @@
 package com.elfmcys.yesstevemodel.client.renderer;
 
+import rip.ysm.util.RenderCompat;
 import com.elfmcys.yesstevemodel.capability.VehicleCapability;
 import com.elfmcys.yesstevemodel.capability.PlayerCapability;
 import rip.ysm.compat.firstperson.FirstPersonCompat;
@@ -161,7 +162,7 @@ public final class ModelPreviewRenderer {
         //? if >=1.20.5
         /*modelViewStack.scale(1.0f, 1.0f, -1.0f);*/
         //? if >=1.17
-        // RenderSystem.applyModelViewMatrix();
+        // RenderCompat.applyModelViewMatrix();
 
         PoseStack poseStack = new PoseStack();
         poseStack.translate(0.0d, 0.0d, 1000.0d);
@@ -232,7 +233,7 @@ public final class ModelPreviewRenderer {
         entityRenderDispatcher.setRenderShadow(false);
         MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
 
-        RenderSystem.runAsFancy(() -> {
+        RenderCompat.runAsFancy(() -> {
             AnimationTracker animationTracker = ((IPreviewAnimatable) animatableEntity).getAnimationStateMachine();
             if (animationTracker.isCurrentAnimation("sleep")) {
                 //? if <1.17
@@ -302,7 +303,7 @@ public final class ModelPreviewRenderer {
         //? if >=1.20.5
         /*modelViewStack.popMatrix();*/
         //? if >=1.17
-        // RenderSystem.applyModelViewMatrix();
+        // RenderCompat.applyModelViewMatrix();
         Lighting.setupFor3DItems();
         setPreviewMode(false);
     }
@@ -387,22 +388,33 @@ public final class ModelPreviewRenderer {
             // renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.HORSE), () -> EntityType.HORSE.create(entity.level)), partialTick);
             //? if >=1.18.2 && <1.20
             /*renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.HORSE), () -> EntityType.HORSE.create(entity.getLevel())), partialTick);*/
-            //? if >=1.20
+            //? if >=1.20 && <1.21.2
             renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.HORSE), () -> EntityType.HORSE.create(entity.level())), partialTick);
+            // 1.21.2 EntityType.create(Level) 删除（EntitySpawnReason 重构，仅剩
+            // ServerLevel 全参形）→ 预览实体走公有 (EntityType, Level) 构造
+            //（vanilla-1.21.3 Horse.java:42/Pig.java:55 实证）
+            //? if >=1.21.2
+            /*renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.HORSE), () -> new net.minecraft.world.entity.animal.horse.Horse(EntityType.HORSE, entity.level())), partialTick);*/
         } else if (animationTracker.isCurrentAnimation("ride_pig")) {
             //? if <1.18.2
             // renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.PIG), () -> EntityType.PIG.create(entity.level)), partialTick);
             //? if >=1.18.2 && <1.20
             /*renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.PIG), () -> EntityType.PIG.create(entity.getLevel())), partialTick);*/
-            //? if >=1.20
+            //? if >=1.20 && <1.21.2
             renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.PIG), () -> EntityType.PIG.create(entity.level())), partialTick);
+            //? if >=1.21.2
+            /*renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.PIG), () -> new net.minecraft.world.entity.animal.Pig(EntityType.PIG, entity.level())), partialTick);*/
         } else if (animationTracker.isCurrentAnimation("boat")) {
             //? if <1.18.2
             // renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.BOAT), () -> EntityType.BOAT.create(entity.level)), partialTick);
             //? if >=1.18.2 && <1.20
             /*renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.BOAT), () -> EntityType.BOAT.create(entity.getLevel())), partialTick);*/
-            //? if >=1.20
+            //? if >=1.20 && <1.21.2
             renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.BOAT), () -> EntityType.BOAT.create(entity.level())), partialTick);
+            // 1.21.2 船分树种（BOAT 删 → OAK_BOAT 等，vanilla-1.21.3 EntityType.java:679）+
+            // Boat 构造三参（木种掉落物 Supplier，Boat.java:10）
+            //? if >=1.21.2
+            /*renderVehicleEntity(yaw, entity, poseStack, entityRenderDispatcher, bufferSource, AnimatableCacheUtil.ENTITIES_CACHE.get(EntityType.getKey(EntityType.OAK_BOAT), () -> new net.minecraft.world.entity.vehicle.Boat(EntityType.OAK_BOAT, entity.level(), () -> net.minecraft.world.item.Items.OAK_BOAT)), partialTick);*/
         }
     }
 
@@ -416,8 +428,12 @@ public final class ModelPreviewRenderer {
         poseStack.mulPose(Axis.YP.rotationDegrees(yaw));
         //? if neoforge && >=1.19.4 && <1.20.5
         /*entityRenderDispatcher.render(vehicleEntity, 0.0d, (-vehicleEntity.getMyRidingOffset(riderEntity) - riderEntity.getMyRidingOffset(vehicleEntity)), 0.0d, 0.0f, partialTick, poseStack, bufferSource, 15728880);*/
-        //? if neoforge && >=1.20.5
+        //? if neoforge && >=1.20.5 && <1.21.2
         /*entityRenderDispatcher.render(vehicleEntity, 0.0d, (-vehicleEntity.getVehicleAttachmentPoint(riderEntity).y - riderEntity.getVehicleAttachmentPoint(vehicleEntity).y), 0.0d, 0.0f, partialTick, poseStack, bufferSource, 15728880);*/
+        // 1.21.2 dispatcher.render 去头浮点（yaw 进 render state；单浮点=partialTick，
+        // vanilla-1.21.3 EntityRenderDispatcher.java:148 公有 render 八参）
+        //? if neoforge && >=1.21.2
+        /*entityRenderDispatcher.render(vehicleEntity, 0.0d, (-vehicleEntity.getVehicleAttachmentPoint(riderEntity).y - riderEntity.getVehicleAttachmentPoint(vehicleEntity).y), 0.0d, partialTick, poseStack, bufferSource, 15728880);*/
         // forge<1.19.4 分支（基线=无条件行；4e0a2d9 分支化时漏掉 <1.19.4 段导致
         // 1.16.5~1.19.2 载具预览 render 丢失——1.16.5 产物 javap 对比实证，此处补回）
         //? if forge && <1.19.4
@@ -455,7 +471,7 @@ public final class ModelPreviewRenderer {
         //? if >=1.20.5
         /*modelViewStack.scale(1.0f, 1.0f, -1.0f);*/
         //? if >=1.17
-        // RenderSystem.applyModelViewMatrix();
+        // RenderCompat.applyModelViewMatrix();
 
         PoseStack poseStack = new PoseStack();
         poseStack.translate(0.0d, disablePreviewRotation ? 5.5d : 0.0d, 1000.0d);
@@ -576,7 +592,7 @@ public final class ModelPreviewRenderer {
         entityRenderDispatcher.setRenderShadow(false);
         MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
 
-        RenderSystem.runAsFancy(() -> {
+        RenderCompat.runAsFancy(() -> {
             renderer.renderEntity(animatable, 0.0f, partialTick, poseStack, bufferSource, 15728880);
         });
 
@@ -631,7 +647,7 @@ public final class ModelPreviewRenderer {
         //? if >=1.20.5
         /*modelViewStack.popMatrix();*/
         //? if >=1.17
-        // RenderSystem.applyModelViewMatrix();
+        // RenderCompat.applyModelViewMatrix();
         Lighting.setupFor3DItems();
         setPreviewMode(false);
     }
@@ -657,7 +673,7 @@ public final class ModelPreviewRenderer {
     //     rotationY.conj();
     //     entityRenderDispatcher.overrideCameraOrientation(rotationY);
     //     entityRenderDispatcher.setRenderShadow(false);
-    //     RenderSystem.runAsFancy(() -> {
+    //     RenderCompat.runAsFancy(() -> {
     //         entityRenderDispatcher.render(localPlayer, 0.0d, 0.0d, 0.0f, 0.0f, partialTick, poseStack, Minecraft.getInstance().renderBuffers().bufferSource(), 15728880);
     //     });
     //     Minecraft.getInstance().renderBuffers().bufferSource().endBatch();
@@ -677,7 +693,7 @@ public final class ModelPreviewRenderer {
         modelViewStack.pushPose();
         modelViewStack.translate(x + (scale * 0.5d), y + (scale * 2.0f), 0.0d);
         modelViewStack.scale(1.0f, 1.0f, -1.0f);
-        RenderSystem.applyModelViewMatrix();
+        RenderCompat.applyModelViewMatrix();
         poseStack.pushPose();
         poseStack.translate(0.0f, 0.0f, -zDepth);
         poseStack.scale(scale, scale, scale);
@@ -690,14 +706,14 @@ public final class ModelPreviewRenderer {
         rotationY.conj();
         entityRenderDispatcher.overrideCameraOrientation(rotationY);
         entityRenderDispatcher.setRenderShadow(false);
-        RenderSystem.runAsFancy(() -> {
+        RenderCompat.runAsFancy(() -> {
             entityRenderDispatcher.render(localPlayer, 0.0d, 0.0d, 0.0f, 0.0f, partialTick, poseStack, Minecraft.getInstance().renderBuffers().bufferSource(), 15728880);
         });
         Minecraft.getInstance().renderBuffers().bufferSource().endBatch();
         entityRenderDispatcher.setRenderShadow(true);
         poseStack.popPose();
         modelViewStack.popPose();
-        RenderSystem.applyModelViewMatrix();
+        RenderCompat.applyModelViewMatrix();
         Lighting.setupFor3DItems();
         setExtraPlayerMode(false);
     }
@@ -711,7 +727,7 @@ public final class ModelPreviewRenderer {
         modelViewStack.pushPose();
         modelViewStack.translate(x + (scale * 0.5d), y + (scale * 2.0f), 0.0d);
         modelViewStack.scale(1.0f, 1.0f, -1.0f);
-        RenderSystem.applyModelViewMatrix();
+        RenderCompat.applyModelViewMatrix();
         poseStack.pushPose();
         poseStack.translate(0.0f, 0.0f, -zDepth);
         poseStack.scale(scale, scale, scale);
@@ -724,14 +740,14 @@ public final class ModelPreviewRenderer {
         rotationY.conjugate();
         entityRenderDispatcher.overrideCameraOrientation(rotationY);
         entityRenderDispatcher.setRenderShadow(false);
-        RenderSystem.runAsFancy(() -> {
+        RenderCompat.runAsFancy(() -> {
             entityRenderDispatcher.render(localPlayer, 0.0d, 0.0d, 0.0f, 0.0f, partialTick, poseStack, Minecraft.getInstance().renderBuffers().bufferSource(), 15728880);
         });
         Minecraft.getInstance().renderBuffers().bufferSource().endBatch();
         entityRenderDispatcher.setRenderShadow(true);
         poseStack.popPose();
         modelViewStack.popPose();
-        RenderSystem.applyModelViewMatrix();
+        RenderCompat.applyModelViewMatrix();
         Lighting.setupFor3DItems();
         setExtraPlayerMode(false);
     }
@@ -755,7 +771,7 @@ public final class ModelPreviewRenderer {
         modelViewStack.translate(x + (scale * 0.5d), y + (scale * 2.0f), 0.0d);
         //? if >=1.20 && <1.20.5
         modelViewStack.scale(1.0f, 1.0f, -1.0f);
-        RenderSystem.applyModelViewMatrix();
+        RenderCompat.applyModelViewMatrix();
 
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(0.0f, 0.0f, -zDepth);
@@ -776,18 +792,27 @@ public final class ModelPreviewRenderer {
         entityRenderDispatcher.overrideCameraOrientation(rotationY);
         entityRenderDispatcher.setRenderShadow(false);
 
-        RenderSystem.runAsFancy(() -> {
+        // 1.21.2 GuiGraphics.bufferSource() 删除（bufferSource 私有化，vanilla-1.21.3
+        // GuiGraphics.java:62）+ dispatcher.render 八参化 → drawSpecial（:1100，自带 endBatch）
+        //? if <1.21.2 {
+        RenderCompat.runAsFancy(() -> {
             entityRenderDispatcher.render(localPlayer, 0.0d, 0.0d, 0.0f, 0.0f, partialTick, guiGraphics.pose(), guiGraphics.bufferSource(), 15728880);
         });
 
         guiGraphics.flush();
+        //?}
+        //? if >=1.21.2 {
+        /*guiGraphics.drawSpecial(buffer -> {
+            entityRenderDispatcher.render(localPlayer, 0.0d, 0.0d, 0.0d, partialTick, guiGraphics.pose(), buffer, 15728880);
+        });*/
+        //?}
         entityRenderDispatcher.setRenderShadow(true);
         guiGraphics.pose().popPose();
         //? if >=1.20.5
         /*modelViewStack.popMatrix();*/
         //? if >=1.20 && <1.20.5
         modelViewStack.popPose();
-        RenderSystem.applyModelViewMatrix();
+        RenderCompat.applyModelViewMatrix();
         Lighting.setupFor3DItems();
         setExtraPlayerMode(false);
     }

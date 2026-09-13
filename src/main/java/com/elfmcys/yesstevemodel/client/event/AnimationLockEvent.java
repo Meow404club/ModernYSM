@@ -6,7 +6,14 @@ import com.elfmcys.yesstevemodel.client.input.AnimationRouletteKey;
 import com.elfmcys.yesstevemodel.network.NetworkHandler;
 import com.elfmcys.yesstevemodel.network.message.C2SPlayAnimationPacket;
 import net.minecraft.client.Minecraft;
+// 1.21.2 输入重构：Input 变 common record（world.entity.player），客户端实际类型=
+// ClientInput（impulse 字段挂 ClientInput，vanilla-1.21.3 ClientInput.java:9-12/
+// LocalPlayer.java:121 实证）
+//? if <1.21.2
 import net.minecraft.client.player.Input;
+//? if >=1.21.2 {
+/*import net.minecraft.client.player.ClientInput;
+ *///?}
 import net.minecraft.client.player.LocalPlayer;
 //? if neoforge
 /*import net.neoforged.neoforge.client.event.InputEvent;*/
@@ -87,7 +94,14 @@ public class AnimationLockEvent {
     }
 
     public static boolean isPlayerMoving(LocalPlayer localPlayer) {
+        //? if >=1.21.2 {
+        /*ClientInput input = localPlayer.input;
+        return input != null && (isSignificantImpulse(input.leftImpulse) || isSignificantImpulse(input.forwardImpulse)
+                || input.keyPresses.jump() || input.keyPresses.shift());*/
+        //?}
+        //? if <1.21.2
         Input input = localPlayer.input;
+        //? if <1.21.2
         return input != null && (isSignificantImpulse(input.leftImpulse) || isSignificantImpulse(input.forwardImpulse) || input.jumping || input.shiftKeyDown);
     }
 

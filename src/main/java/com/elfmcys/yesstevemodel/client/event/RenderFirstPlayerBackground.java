@@ -85,6 +85,13 @@ public class RenderFirstPlayerBackground {
     }
 
     private static void applyHandTransform(PoseStack poseStack, float partialTick, Player player) {
+        // 1.21.2 Entity.walkDist/walkDistO 删除（LivingEntity.walkAnimation WalkAnimationState
+        // 接管，vanilla-1.21.3 LivingEntity.java:213/WalkAnimationState 实证）：
+        // walkDist ≈ walkAnimation.position()（含 positionScale，平地=1）、
+        // walkDist-walkDistO ≈ walkAnimation.speed()（update(): position+=speed 同源）
+        //? if >=1.21.2
+        /*float walkPhase = -(player.walkAnimation.position() + (player.walkAnimation.speed() * partialTick));*/
+        //? if <1.21.2
         float walkPhase = -(player.walkDist + ((player.walkDist - player.walkDistO) * partialTick));
         float fLerp = Mth.lerp(partialTick, player.oBob, player.bob);
         poseStack.translate((-Mth.sin(walkPhase * 3.1415927f)) * fLerp * 0.5f, Math.abs(Mth.cos(walkPhase * 3.1415927f) * fLerp), 0.0d);

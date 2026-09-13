@@ -27,6 +27,11 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
+//? if >=1.21.2 {
+/*import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
+import net.minecraft.client.renderer.entity.state.PlayerRenderState;
+import net.minecraft.resources.ResourceLocation;
+ *///?}
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -44,9 +49,47 @@ import rip.ysm.api.client.RenderLivingBridge;
 import java.util.List;
 import java.util.Optional;
 
+//? if <1.21.2
 public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T extends LivingAnimatable<TEntity>> extends LivingEntityRenderer<TEntity, PlayerModel<TEntity>> implements IGeoRenderer<T> {
+//? if >=1.21.2 {
+/*public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T extends LivingAnimatable<TEntity>> extends LivingEntityRenderer<TEntity, PlayerRenderState, PlayerModel> implements IGeoRenderer<T> {
 
+    // render-state 化（1.21.2+）：vanilla dispatch 链 createRenderState(entity,partialTick)→
+    // render(state) 丢失实体引用，本类经 extractRenderState 暂存三元组供 renderEntityWithTexture/
+    // setupRotations/事件桥使用（复用单 state 实例，EntityRenderer.reusedState 同款生命周期）
+    protected TEntity ysmEntity;
+
+    protected PlayerRenderState ysmState;
+
+    protected float ysmPartialTick;
+
+    @Override
+    public PlayerRenderState createRenderState() {
+        return new PlayerRenderState();
+    }
+
+    @Override
+    public void extractRenderState(TEntity entity, PlayerRenderState state, float partialTick) {
+        super.extractRenderState(entity, state, partialTick);
+        this.ysmEntity = entity;
+        this.ysmState = state;
+        this.ysmPartialTick = partialTick;
+    }
+
+    @Override
+    public ResourceLocation getTextureLocation(PlayerRenderState state) {
+        // vanilla dispatch 永不触发（Static 驱动路径，CustomPlayerRenderer.render 直调）；
+        // 纹理由 capability/t.getTextureLocation() 提供
+        return net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.getLocation();
+    }*/
+//?}
+//? if >=1.21.2 {
+/*    public final List<GeoLayerRenderer<T>> layerRenderers = new ObjectArrayList<>();
+*/
+//?}
+//? if <1.21.2 {
     public final List<GeoLayerRenderer<T>> layerRenderers = new ObjectArrayList<>();
+//?}
 
     public Matrix4f dispatchedMat = new Matrix4f();
 
@@ -62,10 +105,18 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
     //     this.rtb = null;
     // }
     //? } else {
+    //? if <1.21.2 {
     public GeoReplacedEntityRenderer(EntityRendererProvider.Context context) {
         super(context, new PlayerModel(context.bakeLayer(ModelLayers.PLAYER_SLIM), true), 0.5f);
         this.rtb = null;
     }
+    //?}
+    //? if >=1.21.2 {
+    /*public GeoReplacedEntityRenderer(EntityRendererProvider.Context context) {
+        super(context, new PlayerModel(context.bakeLayer(ModelLayers.PLAYER_SLIM), true), 0.5f);
+        this.rtb = null;
+    }*/
+    //?}
     //? }
 
     public static int packOverlayCoords(LivingEntity entity, float u) {
@@ -97,9 +148,24 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
     public void renderEntityWithTexture(T t, @Nullable ResourceLocation resourceLocation, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource multiBufferSource, int packedLight) {
         Direction bedOrientation;
         boolean fireRenderEvents = !ModelPreviewRenderer.isPreview();
+        // 1.21.2+ 本类为 Static 驱动路径（不走 vanilla dispatcher），state 自建：
+        // createRenderState(entity,partialTick) 抽取+暂存，供 firePre/super.render(桥内)/
+        // setupRotations 事件链使用
+        //? if >=1.21.2 {
+        /*this.ysmEntity = t.getEntity();
+        this.ysmState = this.createRenderState(this.ysmEntity, partialTick);
+        this.ysmPartialTick = partialTick;*/
+        //?}
+        //? if <1.21.2 {
         if (fireRenderEvents && RenderLivingBridge.firePre(t.getEntity(), this, partialTick, poseStack, multiBufferSource, packedLight)) {
             return;
         }
+        //?}
+        //? if >=1.21.2 {
+        /*if (fireRenderEvents && RenderLivingBridge.firePre(t.getEntity(), this.ysmState, this, partialTick, poseStack, multiBufferSource, packedLight)) {
+            return;
+        }*/
+        //?}
         AnimationEvent<?> event = t.processAnimation(partialTick);
         TEntity entity = t.getEntity();
         Minecraft minecraft = Minecraft.getInstance();
@@ -141,7 +207,12 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
             poseStack.translate(0.0f, 0.01f, 0.0f);
             AnimatedGeoModel animatedGeoModel = t.getCurrentModel();
             int textureIndex = resourceLocation == null ? t.getTextureIndex() : 0;
+            // 1.21.2+ isBodyVisible(S)=!state.isInvisible（vanilla-1.21.3
+            // LivingEntityRenderer.java:137-139）→ 实体面等价 !entity.isInvisible()
+            //? if <1.21.2
             RenderType renderType = getRenderType(resourceLocation == null ? t.getTextureLocation() : resourceLocation, isBodyVisible(entity) && !entity.isInvisibleTo(minecraft.player), minecraft.shouldEntityAppearGlowing(entity), t.getCurrentModel().getGeoModel().isTranslucentTexture(textureIndex));
+            //? if >=1.21.2
+            /*RenderType renderType = getRenderType(resourceLocation == null ? t.getTextureLocation() : resourceLocation, !entity.isInvisible() && !entity.isInvisibleTo(minecraft.player), minecraft.shouldEntityAppearGlowing(entity), t.getCurrentModel().getGeoModel().isTranslucentTexture(textureIndex));*/
             boolean useExtraPlayer = t.isRenderLayersFirst();
             Color color = getRenderColor(t, partialTick, poseStack, multiBufferSource, null, packedLight);
             renderWithBone(animatedGeoModel, t, partialTick, poseStack, multiBufferSource, null, packedLight, packOverlayCoords(entity, getHurtOverlayProgress(entity, partialTick)), color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, color.getAlpha() / 255.0f);
@@ -156,9 +227,17 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
             }
             poseStack.popPose();
         }
+        //? if <1.21.2
         ((LivingEntityRendererAccessor) this).tlm$renderNameTag(entity, entityYaw, partialTick, poseStack, multiBufferSource, packedLight);
+        //? if >=1.21.2 {
+        /*((LivingEntityRendererAccessor) this).tlm$renderNameTag(this.ysmState, poseStack, multiBufferSource, packedLight);*/
+        //?}
         if (fireRenderEvents) {
+            //? if <1.21.2
             RenderLivingBridge.firePost(entity, this, partialTick, poseStack, multiBufferSource, packedLight);
+            //? if >=1.21.2 {
+            /*RenderLivingBridge.firePost(entity, this.ysmState, this, partialTick, poseStack, multiBufferSource, packedLight);*/
+            //?}
         }
     }
 
@@ -201,11 +280,15 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
             }
         }
         // 1.20.5+ setupRotations 增 scale 尾参（vanilla-1.20.6 LivingEntityRenderer.java:175，
-        // render 内调值 = entity.getScale()，:91-95 实证）
+        // render 内调值 = entity.getScale()，:91-95 实证）；1.21.2 render-state 化改
+        // setupRotations(S, PoseStack, age, rot)（vanilla-1.21.3 LivingEntityRenderer.java:160，
+        // 无 partialTick/scale——scale 进 state.ageScale，partialTick 由 state 暂存面承接）
         //? if <1.20.5
         super.setupRotations(tentity, poseStack, ageInTicks, rotationYaw, partialTicks);
-        //? if >=1.20.5
+        //? if >=1.20.5 && <1.21.2
         /*super.setupRotations(tentity, poseStack, ageInTicks, rotationYaw, partialTicks, tentity.getScale());*/
+        //? if >=1.21.2
+        /*super.setupRotations(this.ysmState, poseStack, ageInTicks, rotationYaw);*/
         if (t > 0) {
             tentity.deathTime = t;
         }
@@ -214,11 +297,20 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
         }
     }
 
+    // 1.21.2 shouldShowName 增相机距离尾参（vanilla-1.21.3 EntityRenderer.java:202）
+    //? if <1.21.2
     @Override
     public boolean shouldShowName(TEntity entity) {
         double d = entity.isDiscrete() ? 32.0d : 64.0d;
         return this.entityRenderDispatcher.distanceToSqr(entity) < d * d && entity == this.entityRenderDispatcher.crosshairPickEntity && entity.hasCustomName() && Minecraft.renderNames();
     }
+    //? if >=1.21.2 {
+    /*@Override
+    public boolean shouldShowName(TEntity entity, double distanceToCameraSq) {
+        double d = entity.isDiscrete() ? 32.0d : 64.0d;
+        return distanceToCameraSq < d * d && entity == this.entityRenderDispatcher.crosshairPickEntity && entity.hasCustomName() && Minecraft.renderNames();
+    }*/
+    //?}
 
     public final boolean addLayerRenderer(GeoLayerRenderer<T> layerRenderer) {
         return this.layerRenderers.add(layerRenderer);

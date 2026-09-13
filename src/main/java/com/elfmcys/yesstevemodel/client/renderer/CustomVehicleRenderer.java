@@ -52,6 +52,7 @@ public class CustomVehicleRenderer {
     }
 
     private static float getMinecartBodyRotation(AbstractMinecart minecart, float partialTick, float defaultYaw) {
+        //? if <1.21.2 {
         double interpX = Mth.lerp(partialTick, minecart.xOld, minecart.getX());
         double interpY = Mth.lerp(partialTick, minecart.yOld, minecart.getY());
         double interpZ = Mth.lerp(partialTick, minecart.zOld, minecart.getZ());
@@ -76,5 +77,16 @@ public class CustomVehicleRenderer {
             }
         }
         return calculatedYaw;
+        //?}
+        // 1.21.2 矿车物理重写：getPos/getPosOffs 删除（NewMinecartBehavior 接管）→
+        // 方向近似取 deltaMovement 水平面（弯道朝向精度降级，差异入接续账）
+        //? if >=1.21.2 {
+        /*float calculatedYaw = defaultYaw;
+        Vec3 movement = minecart.getDeltaMovement();
+        if (movement.horizontalDistanceSqr() > 1.0E-4d) {
+            calculatedYaw = (float) ((Math.atan2(movement.z, movement.x) * 180.0d) / Math.PI);
+        }
+        return calculatedYaw;*/
+        //?}
     }
 }

@@ -9,7 +9,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.UseAnim;
+import rip.ysm.util.UseAction;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Locale;
@@ -36,7 +36,7 @@ public class ConditionUse {
 
     private final ReferenceArrayList<YsmTag.ItemTag> tagTest = new ReferenceArrayList<>();
 
-    private final ObjectOpenHashSet<UseAnim> extraTes = new ObjectOpenHashSet<>();
+    private final ObjectOpenHashSet<UseAction> extraTes = new ObjectOpenHashSet<>();
 
     private final ObjectOpenHashSet<String> innerTest = new ObjectOpenHashSet<>();
 
@@ -77,10 +77,10 @@ public class ConditionUse {
             //? if <1.21
             this.tagTest.add(YsmTag.itemTag(new ResourceLocation(strSubstring)));
         }
-        if (!name.startsWith(this.extraPre) || strSubstring.equals(UseAnim.NONE.name().toLowerCase(Locale.US))) {
+        if (!name.startsWith(this.extraPre) || strSubstring.equals(UseAction.NONE.name().toLowerCase(Locale.US))) {
             return;
         }
-        Optional<UseAnim> optional = EquipmentUtil.getUseAnimByName(strSubstring);
+        Optional<UseAction> optional = EquipmentUtil.getUseAnimByName(strSubstring);
         Objects.requireNonNull(this.extraTes);
         optional.ifPresent(extraTes::add);
         this.innerTest.add(name);
@@ -130,7 +130,7 @@ public class ConditionUse {
         if (StringUtils.isNotBlank(innerName) && this.innerTest.contains(innerName)) {
             return innerName;
         }
-        UseAnim anim = entity.getItemInHand(hand).getUseAnimation();
+        UseAction anim = rip.ysm.util.UseAction.of(entity.getItemInHand(hand));
         if (this.extraTes.contains(anim)) {
             return this.extraPre + anim.name().toLowerCase(Locale.US);
         }

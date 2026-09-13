@@ -12,6 +12,9 @@ import net.minecraft.client.model.ElytraModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 //? }
+//? if >=1.21.2 {
+/*import net.minecraft.client.renderer.entity.state.HumanoidRenderState;
+ *///?}
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -32,16 +35,29 @@ public class CustomPlayerElytraLayer extends GeoLayerRenderer<CustomPlayerEntity
     //? if <1.21
     private static final ResourceLocation WINGS_LOCATION = new ResourceLocation("textures/entity/elytra.png");
 
+    // 1.21.2 ElytraModel 去泛型（EntityModel<HumanoidRenderState>，setupAnim 改状态制）
+    //? if <1.21.2
     private final ElytraModel<LivingEntity> elytraModel;
+    //? if >=1.21.2 {
+    /*private final ElytraModel elytraModel;
+    */
+    //?}
 
     //? if <1.17 {
     // public CustomPlayerElytraLayer(net.minecraft.client.renderer.entity.EntityRenderDispatcher context) {
     //     this.elytraModel = new ElytraModel<>();
     // }
     //? } else {
+    //? if <1.21.2 {
     public CustomPlayerElytraLayer(EntityRendererProvider.Context context) {
         this.elytraModel = new ElytraModel<>(context.getModelSet().bakeLayer(ModelLayers.ELYTRA));
     }
+    //?}
+    //? if >=1.21.2 {
+    /*public CustomPlayerElytraLayer(EntityRendererProvider.Context context) {
+        this.elytraModel = new ElytraModel(context.getModelSet().bakeLayer(ModelLayers.ELYTRA));
+    }*/
+    //?}
     //? }
 
     @Override
@@ -82,7 +98,19 @@ public class CustomPlayerElytraLayer extends GeoLayerRenderer<CustomPlayerEntity
             //? if >=1.19.4
             poseStack.mulPose(Axis.ZP.rotationDegrees(180.0f));
             poseStack.scale(2.0f, 2.0f, 2.0f);
+            // 1.21.2 setupAnim(HumanoidRenderState) 状态制：elytra 旋转由
+            // ElytraAnimationState.getRotX/Y/Z(partialTick) 抽取（vanilla-1.21.3
+            // PlayerRenderer.java:62-64/ElytraModel.java:44 实证）
+            //? if <1.21.2
             this.elytraModel.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+            //? if >=1.21.2 {
+            /*HumanoidRenderState elytraState = new HumanoidRenderState();
+            elytraState.isCrouching = entity.isCrouching();
+            elytraState.elytraRotX = entity.elytraAnimationState.getRotX(partialTick);
+            elytraState.elytraRotY = entity.elytraAnimationState.getRotY(partialTick);
+            elytraState.elytraRotZ = entity.elytraAnimationState.getRotZ(partialTick);
+            this.elytraModel.setupAnim(elytraState);*/
+            //?}
             // 1.21 getArmorFoilBuffer 去 hasFoil 尾参（vanilla-1.21.1 ItemRenderer.java:167）、
             // renderToBuffer 颜色改 int 打包（vanilla-1.21.1 Model.java:23）
             //? if >=1.21

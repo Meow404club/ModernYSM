@@ -4,6 +4,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.world.entity.LivingEntity;
+//? if neoforge
+/*import rip.ysm.api.client.platform.neoforge.RenderLivingBridgeImpl;*/
+//? if forge
 import rip.ysm.api.client.platform.forge.RenderLivingBridgeImpl;
 
 public final class RenderLivingBridge {

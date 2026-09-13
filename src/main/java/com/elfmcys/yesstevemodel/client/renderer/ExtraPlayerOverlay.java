@@ -10,6 +10,9 @@ import net.minecraft.client.gui.GuiGraphics;
 //?}
 import net.minecraft.client.player.LocalPlayer;
 import rip.ysm.api.client.HudOverlay;
+//? if >=1.21 {
+/*import com.elfmcys.yesstevemodel.util.YsmFrame;*/
+//?}
 
 public class ExtraPlayerOverlay implements HudOverlay {
     // 1.16.5 降级：不渲染（实现委托 ModelPreviewRenderer.renderPlayerOverlay，其 modelViewStack/
@@ -30,6 +33,9 @@ public class ExtraPlayerOverlay implements HudOverlay {
         if (ExtraPlayerRenderConfig.DISABLE_PLAYER_RENDER_THIRD_PERSON.get() && minecraft.options != null && !minecraft.options.getCameraType().isFirstPerson()) {
             return;
         }
+        //? if >=1.21
+        /*ModelPreviewRenderer.renderPlayerOverlay(guiGraphics, localPlayer, ExtraPlayerRenderConfig.PLAYER_POS_X.get(), ExtraPlayerRenderConfig.PLAYER_POS_Y.get(), ExtraPlayerRenderConfig.PLAYER_SCALE.get().floatValue(), ExtraPlayerRenderConfig.PLAYER_YAW_OFFSET.get().floatValue(), -500, YsmFrame.partialTick(minecraft));*/
+        //? if <1.21
         ModelPreviewRenderer.renderPlayerOverlay(guiGraphics, localPlayer, ExtraPlayerRenderConfig.PLAYER_POS_X.get(), ExtraPlayerRenderConfig.PLAYER_POS_Y.get(), ExtraPlayerRenderConfig.PLAYER_SCALE.get().floatValue(), ExtraPlayerRenderConfig.PLAYER_YAW_OFFSET.get().floatValue(), -500, minecraft.getFrameTime());
     }
      //?}

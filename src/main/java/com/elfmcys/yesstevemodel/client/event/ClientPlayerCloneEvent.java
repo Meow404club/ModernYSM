@@ -4,7 +4,13 @@ import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.capability.PlayerCapability;
 import com.elfmcys.yesstevemodel.network.NetworkHandler;
 import net.minecraft.client.player.LocalPlayer;
+//? if neoforge
+/*import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;*/
+//? if forge
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
+//? if neoforge
+/*import net.neoforged.neoforge.common.NeoForge;*/
+//? if forge
 import net.minecraftforge.common.MinecraftForge;
 
 public final class ClientPlayerCloneEvent {
@@ -17,6 +23,9 @@ public final class ClientPlayerCloneEvent {
         //? if <1.19.2 {
         /*MinecraftForge.EVENT_BUS.addListener(ClientPlayerCloneEvent::onClientPlayerRespawnEvent);
          *///?} else {
+        //? if neoforge
+        /*NeoForge.EVENT_BUS.addListener(ClientPlayerCloneEvent::onClientPlayerClone);*/
+        //? if forge
         MinecraftForge.EVENT_BUS.addListener(ClientPlayerCloneEvent::onClientPlayerClone);
         //?}
     }
@@ -40,11 +49,11 @@ public final class ClientPlayerCloneEvent {
         //（Clone 读旧 caps 时序与 server 侧 CapabilityEvent.onPlayerCloned 一致：revive -> copy -> invalidate）
         // 1.16.x reviveCaps/invalidateCaps 为 protected 且 clone 事件期旧 caps 保持有效
         //（forge-1.16.x PlayerList patch 实证，thinlayer 卡结论）→ <1.17 不调 revive/invalidate
-        //? if >=1.17 {
+        //? if forge && >=1.17 {
         oldPlayer.reviveCaps();
         //?}
         PlayerCapability.get(oldPlayer).ifPresent(cap -> PlayerCapability.get(newPlayer).ifPresent(cap2 -> cap2.copyFrom(cap)));
-        //? if >=1.17 {
+        //? if forge && >=1.17 {
         oldPlayer.invalidateCaps();
         //?}
     }

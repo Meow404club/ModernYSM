@@ -34,10 +34,22 @@ public class SimplePlanesCompat {
             Object entity = event.getAnimatable().getEntity();
             if (entity instanceof PlaneEntity) {
                 PlaneEntity planeEntity = (PlaneEntity) entity;
+                //? if >=1.21
+                /*Quaternionf quaternionfLerpQ = xyz.przemyk.simpleplanes.misc.MathUtil.lerpQ(event.getFrameTime(), planeEntity.getQ_Prev(), planeEntity.getQ_Client());*/
+                //? if <1.21
                 Quaternionf quaternionfLerpQ = xyz.przemyk.simpleplanes.misc.MathUtil.lerpQ(event.getFrameTime(), planeEntity.getQ_Prev(), planeEntity.getQ_Client());
+                //? if >=1.21
+                /*quaternionfLerpQ.premul(Axis.YP.rotation(-MathUtil.degreesToRadians(planeEntity.getViewYRot(event.getFrameTime()))));*/
+                //? if <1.21
                 quaternionfLerpQ.premul(Axis.YP.rotation(-MathUtil.degreesToRadians(planeEntity.getViewYRot(event.getFrameTime()))));
+                //? if >=1.21
+                /*float timeSinceHit = planeEntity.getTimeSinceHit() - event.getFrameTime();*/
+                //? if <1.21
                 float timeSinceHit = planeEntity.getTimeSinceHit() - event.getFrameTime();
                 if (timeSinceHit > 0.0f) {
+                    //? if >=1.21
+                    /*quaternionfLerpQ.rotateZ(Math.sin(planeEntity.tickCount + event.getFrameTime()) * Math.clamp(timeSinceHit / 10.0f, -30.0f, 30.0f));*/
+                    //? if <1.21
                     quaternionfLerpQ.rotateZ(Math.sin(planeEntity.tickCount + event.getFrameTime()) * Math.clamp(timeSinceHit / 10.0f, -30.0f, 30.0f));
                 }
                 Vector3f vector3f = new Vector3f();

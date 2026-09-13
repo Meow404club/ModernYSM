@@ -725,11 +725,17 @@ public class AnimationRouletteScreen extends Screen {
         RenderSystem.defaultBlendFunc();
 // 1.17+ shader 管线绑定 + VertexFormat.Mode.QUADS ↔ 1.16.5 固定管线（POSITION_COLOR 走固定管线，GL_QUADS=7）
         Tesselator tesselator = Tesselator.getInstance();
+        // 1.21 Tesselator.getBuilder/end 删除 → begin(Mode,Format) 直接返回 BufferBuilder，
+        // 收尾走 buildOrThrow()+BufferUploader（vanilla-1.21.1 Tesselator.java:38 实证）
+        //? if <1.21
         BufferBuilder builder = tesselator.getBuilder();
+        //? if >=1.21
+        /*BufferBuilder builder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);*/
         //? if <1.17 {
         /*builder.begin(7, DefaultVertexFormat.POSITION_COLOR);
          *///?} else {
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        //? if <1.21
         builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         //?}
         Matrix4f matrix4fPose = poseStack.last().pose();
@@ -763,7 +769,10 @@ public class AnimationRouletteScreen extends Screen {
         if (!hoveredConfig) {
             this.hoveredConfigIndex = -1;
         }
+        //? if <1.21
         tesselator.end();
+        //? if >=1.21
+        /*com.mojang.blaze3d.vertex.BufferUploader.drawWithShader(builder.buildOrThrow());*/
         RenderSystem.disableBlend();
     }
 
@@ -791,9 +800,19 @@ public class AnimationRouletteScreen extends Screen {
         float red = ((color >> 16) & 255) / 255.0f;
         float green = ((color >> 8) & 255) / 255.0f;
         float blue = (color & 255) / 255.0f;
+        // 1.21 vertex/color/endVertex → addVertex/setColor（无 endVertex）
+        //? if >=1.21
+        /*bufferBuilder.addVertex(matrix4f, this.centerX + (outerRadius * Mth.cos(startAngle)), this.centerY + (outerRadius * Mth.sin(startAngle)), 0.0f).setColor(red, green, blue, alpha);
+        bufferBuilder.addVertex(matrix4f, this.centerX + (innerRadius * Mth.cos(startAngle)), this.centerY + (innerRadius * Mth.sin(startAngle)), 0.0f).setColor(red, green, blue, alpha);
+        bufferBuilder.addVertex(matrix4f, this.centerX + (innerRadius * Mth.cos(endAngle)), this.centerY + (innerRadius * Mth.sin(endAngle)), 0.0f).setColor(red, green, blue, alpha);
+        bufferBuilder.addVertex(matrix4f, this.centerX + (outerRadius * Mth.cos(endAngle)), this.centerY + (outerRadius * Mth.sin(endAngle)), 0.0f).setColor(red, green, blue, alpha);*/
+        //? if <1.21
         bufferBuilder.vertex(matrix4f, this.centerX + (outerRadius * Mth.cos(startAngle)), this.centerY + (outerRadius * Mth.sin(startAngle)), 0.0f).color(red, green, blue, alpha).endVertex();
+        //? if <1.21
         bufferBuilder.vertex(matrix4f, this.centerX + (innerRadius * Mth.cos(startAngle)), this.centerY + (innerRadius * Mth.sin(startAngle)), 0.0f).color(red, green, blue, alpha).endVertex();
+        //? if <1.21
         bufferBuilder.vertex(matrix4f, this.centerX + (innerRadius * Mth.cos(endAngle)), this.centerY + (innerRadius * Mth.sin(endAngle)), 0.0f).color(red, green, blue, alpha).endVertex();
+        //? if <1.21
         bufferBuilder.vertex(matrix4f, this.centerX + (outerRadius * Mth.cos(endAngle)), this.centerY + (outerRadius * Mth.sin(endAngle)), 0.0f).color(red, green, blue, alpha).endVertex();
     }
     // addRenderableWidget/addWidget 均为 protected 实例方法（JLS 6.6.2 子类内才可调）→ 桥方法；

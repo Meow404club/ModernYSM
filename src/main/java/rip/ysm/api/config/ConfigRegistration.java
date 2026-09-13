@@ -1,7 +1,16 @@
 package rip.ysm.api.config;
 
+//? if neoforge
+/*import net.neoforged.neoforge.common.ModConfigSpec;*/
+//? if forge
 import net.minecraftforge.common.ForgeConfigSpec;
+//? if neoforge
+/*import net.neoforged.fml.ModLoadingContext;*/
+//? if forge
 import net.minecraftforge.fml.ModLoadingContext;
+//? if neoforge
+/*import net.neoforged.fml.config.ModConfig;*/
+//? if forge
 import net.minecraftforge.fml.config.ModConfig;
 
 /**
@@ -18,7 +27,22 @@ public final class ConfigRegistration {
     private ConfigRegistration() {
     }
 
+    // 1.21 ModLoadingContext 删除（docs version-1.20.6 config.md:105 起改名
+    // "registered in the mod constructor via ModContainer#registerConfig"）→ >=1.21 委托主类孪生
+    // 构造期捕获的 ModContainer；1.20.4/1.20.6 ModLoadingContext 仍在（deprecated）
+    //? if neoforge && >=1.21 {
+    /*public static void register(String modId, ModConfig.Type type, ModConfigSpec spec) {
+        com.elfmcys.yesstevemodel.platform.neoforge.YesSteveModelForge.modContainer().registerConfig(type, spec);
+    }*/
+    //?}
+    //? if neoforge && <1.21 {
+    /*public static void register(String modId, ModConfig.Type type, ModConfigSpec spec) {
+        ModLoadingContext.get().registerConfig(type, spec);
+    }*/
+    //?}
+    //? if forge {
     public static void register(String modId, ModConfig.Type type, ForgeConfigSpec spec) {
         ModLoadingContext.get().registerConfig(type, spec);
     }
+    //? }
 }

@@ -188,6 +188,14 @@ dependencies {
 // 1.16.5 线同包同名 no-op shim（mod-absent 语义，version-neutral API）保持符号可解析。
 // shim 复用 versions/1.16.5-forge/src/shim/rip/ysm/compat（仅用 Player/CtrlBinding 等全谱
 // 存在的 API，grep 验证零 TextComponent/GuiGraphics 触点，1.16.5~1.20.1 通用）。
+// neoforge 三线专属跨版本工厂（Rl/isValid/YsmFrame.partialTick 仅 >=1.20.5、>=1.21 分支被
+// 引用，forge 六线零引用）——不编译不打包，维持批一"1.16.5/1.20.1 产物条目集合与 ebc4427
+// 基线全同"的语义零变化口径（neoforge 三线由 build.moddev 自行编译这两个类）
+sourceSets.main {
+    java {
+        exclude("rip/ysm/util/Rl.java", "com/elfmcys/yesstevemodel/util/YsmFrame.java")
+    }
+}
 if (pre120) {
     sourceSets.main {
         java {

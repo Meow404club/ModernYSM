@@ -3,7 +3,11 @@ package com.elfmcys.yesstevemodel.event;
 import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.model.ServerModelManager;
 import com.elfmcys.yesstevemodel.network.NetworkHandler;
+//? if neoforge
+/*import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;*/
+//? if forge
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+//? if forge
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import rip.ysm.compat.touhoulittlemaid.TouhouMaidCompat;
 
@@ -24,6 +28,11 @@ public final class CommonEvent {
     }
 
     public static void register() {
+        // neoforge 三线统一走主类孪生构造期注入的 mod 事件总线（FMLJavaModLoadingContext
+        // 1.21 已删除，net.neoforged.fml.javafmlmod 包不复存在）；forge 线保持原口
+        //? if neoforge
+        /*com.elfmcys.yesstevemodel.platform.neoforge.YesSteveModelForge.getModEventBus().addListener(CommonEvent::onCommonSetup);*/
+        //? if forge
         FMLJavaModLoadingContext.get().getModEventBus().addListener(CommonEvent::onCommonSetup);
     }
 

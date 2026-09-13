@@ -1,11 +1,20 @@
 package com.elfmcys.yesstevemodel.config;
 
+//? if neoforge
+/*import net.neoforged.neoforge.common.ModConfigSpec;*/
+//? if forge
 import net.minecraftforge.common.ForgeConfigSpec;
 
 public class LoadingStateConfig {
 
+    //? if neoforge
+    /*public static ModConfigSpec.BooleanValue DISABLE_LOADING_STATE_SCREEN;*/
+    //? if forge
     public static ForgeConfigSpec.BooleanValue DISABLE_LOADING_STATE_SCREEN;
 
+    //? if neoforge
+    /*public static ModConfigSpec.EnumValue<Position> LOADING_STATE_POSITION;*/
+    //? if forge
     public static ForgeConfigSpec.EnumValue<Position> LOADING_STATE_POSITION;
 
     public enum Position {
@@ -17,6 +26,9 @@ public class LoadingStateConfig {
         BOTTOM_RIGHT
     }
 
+    //? if neoforge
+    /*public static void define(ModConfigSpec.Builder builder) {*/
+    //? if forge
     public static void define(ForgeConfigSpec.Builder builder) {
         builder.push("loading_state_screen");
         builder.comment("Whether to disable loading state screen");

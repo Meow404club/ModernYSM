@@ -9,8 +9,17 @@ import com.elfmcys.yesstevemodel.network.NetworkHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
+//? if neoforge
+/*import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;*/
+//? if forge
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
+//? if neoforge
+/*import net.neoforged.neoforge.common.NeoForge;*/
+//? if forge
 import net.minecraftforge.common.MinecraftForge;
+//? if neoforge && <1.20.5
+/*import net.neoforged.neoforge.event.TickEvent;*/
+//? if forge
 import net.minecraftforge.event.TickEvent;
 
 public final class ClientPlayerJoinNotification {
@@ -39,9 +48,18 @@ public final class ClientPlayerJoinNotification {
 
     public static void register() {
         // ClientPlayerEvent.CLIENT_PLAYER_JOIN/QUIT → ClientPlayerNetworkEvent.LoggingIn/LoggingOut（均不可取消）
+        //? if neoforge
+        /*NeoForge.EVENT_BUS.addListener(ClientPlayerJoinNotification::onLoggingIn);*/
+        //? if forge
         MinecraftForge.EVENT_BUS.addListener(ClientPlayerJoinNotification::onLoggingIn);
+        //? if neoforge
+        /*NeoForge.EVENT_BUS.addListener(ClientPlayerJoinNotification::onLoggingOut);*/
+        //? if forge
         MinecraftForge.EVENT_BUS.addListener(ClientPlayerJoinNotification::onLoggingOut);
         // ClientTickEvent.CLIENT_PRE → TickEvent.ClientTickEvent phase START
+        //? if neoforge
+        /*NeoForge.EVENT_BUS.addListener(ClientPlayerJoinNotification::onClientTickEvent);*/
+        //? if forge
         MinecraftForge.EVENT_BUS.addListener(ClientPlayerJoinNotification::onClientTickEvent);
     }
 
@@ -63,12 +81,27 @@ public final class ClientPlayerJoinNotification {
         onPlayerQuit(event.getPlayer());
     }
 
+    // ClientTickEvent.CLIENT_PRE：neoforge 1.20.5+ = ClientTickEvent.Pre（TickEvent.Phase 拆分）
+    //? if neoforge && >=1.20.5 {
+    /*private static void onClientTickEvent(net.neoforged.neoforge.client.event.ClientTickEvent.Pre event) {
+        onClientTick(Minecraft.getInstance());
+    }*/
+    //? }
+    //? if neoforge && <1.20.5
+    /*private static void onClientTickEvent(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.START) {
+            return;
+        }
+        onClientTick(Minecraft.getInstance());
+    }*/
+    //? if forge {
     private static void onClientTickEvent(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.START) {
             return;
         }
         onClientTick(Minecraft.getInstance());
     }
+    //? }
 
     private static void onPlayerJoin(LocalPlayer player) {
         if (notified) {

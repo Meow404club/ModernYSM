@@ -12,6 +12,9 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.player.Player;
+//? if >=1.21 {
+/*import com.elfmcys.yesstevemodel.util.YsmFrame;*/
+//?}
 
 public class ReplacePlayerHandRenderEvent {
 
@@ -35,6 +38,9 @@ public class ReplacePlayerHandRenderEvent {
             if (context == null || !hasArmBone(arm, context.getAnimationBundle().getArmModel())) {
                 return;
             }
+            //? if >=1.21
+            /*RendererManager.getHandRenderer().renderHandItem(localPlayer, context, cap, arm, poseStack, bufferSource, packedLight, YsmFrame.partialTick(Minecraft.getInstance()));*/
+            //? if <1.21
             RendererManager.getHandRenderer().renderHandItem(localPlayer, context, cap, arm, poseStack, bufferSource, packedLight, Minecraft.getInstance().getFrameTime());
             cancelled[0] = true;
         });

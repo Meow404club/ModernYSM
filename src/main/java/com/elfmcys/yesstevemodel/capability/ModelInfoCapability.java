@@ -6,6 +6,9 @@ import com.elfmcys.yesstevemodel.network.sync.PlayerStateSynchronizer;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.util.StringPool;
 import com.elfmcys.yesstevemodel.network.message.S2CSetModelAndTexturePacket;
 import com.elfmcys.yesstevemodel.network.message.FeedbackData;
+//? if neoforge
+/*import com.elfmcys.yesstevemodel.platform.neoforge.capability.ModelInfoCapabilityProvider;*/
+//? if forge
 import com.elfmcys.yesstevemodel.platform.forge.capability.ModelInfoCapabilityProvider;
 import com.google.common.collect.Queues;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceMap;
@@ -26,6 +29,9 @@ import java.util.function.Consumer;
 public class ModelInfoCapability {
 
     public static Optional<ModelInfoCapability> get(Player player) {
+        //? if neoforge
+        /*return java.util.Optional.ofNullable(player.getCapability(ModelInfoCapabilityProvider.MODEL_INFO_CAP));*/
+        //? if forge
         return player.getCapability(ModelInfoCapabilityProvider.MODEL_INFO_CAP).resolve();
     }
 

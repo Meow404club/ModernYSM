@@ -66,6 +66,9 @@ public final class FileTypeUtil {
     }
 
     public static ResourceLocation getPackIconLocation(String str) {
+        //? if >=1.21
+        /*return ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "model_pack_icon/" + str.hashCode());*/
+        //? if <1.21
         return new ResourceLocation(YesSteveModel.MOD_ID, "model_pack_icon/" + str.hashCode());
     }
 

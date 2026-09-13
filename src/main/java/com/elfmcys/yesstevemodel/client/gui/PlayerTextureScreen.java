@@ -34,6 +34,9 @@ import net.minecraft.util.Mth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+//? if >=1.21 {
+/*import com.elfmcys.yesstevemodel.util.YsmFrame;*/
+//?}
 
 public class PlayerTextureScreen extends Screen {
 
@@ -242,6 +245,9 @@ public class PlayerTextureScreen extends Screen {
         if (!this.modelHolder.getAnimationStateMachine().isCurrentAnimation(this.currentAnimation)) {
             this.modelHolder.getAnimationStateMachine().setCurrentAnimation(this.currentAnimation);
         }
+        //? if >=1.21
+        /*renderTexturePreview(guiGraphics, scissorX, height, scissorWidth, scissorHeight, YsmFrame.partialTick(this.minecraft));*/
+        //? if <1.21
         renderTexturePreview(guiGraphics, scissorX, height, scissorWidth, scissorHeight, this.minecraft.getFrameTime());
         String str = String.format("%d/%d", this.textureCurrentPage + 1, this.textureMaxPage + 1);
         Font font = this.font;
@@ -289,7 +295,10 @@ public class PlayerTextureScreen extends Screen {
         return true;
     }
 
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    //? if neoforge
+/*public boolean mouseScrolled(double mouseX, double mouseY, double delta, double scrollY) {*/
+//? if forge
+public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         if (this.minecraft == null) {
             return false;
         }
@@ -305,7 +314,10 @@ public class PlayerTextureScreen extends Screen {
                 return scrollTexturePage(delta);
             }
         }
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        //? if neoforge
+/*return super.mouseScrolled(mouseX, mouseY, delta, delta);*/
+//? if forge
+return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
     private boolean scrollTexturePage(double delta) {

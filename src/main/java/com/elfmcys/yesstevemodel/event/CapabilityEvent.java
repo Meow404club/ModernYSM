@@ -15,28 +15,70 @@ import com.elfmcys.yesstevemodel.network.message.S2CSyncProjectileModelPacket;
 import com.elfmcys.yesstevemodel.network.message.S2CSyncStarModelsPacket;
 import com.elfmcys.yesstevemodel.network.message.S2CSyncVehicleModelPacket;
 import com.elfmcys.yesstevemodel.network.message.S2CVersionCheckPacket;
+//? if neoforge
+/*import com.elfmcys.yesstevemodel.platform.neoforge.capability.AuthModelsCapabilityProvider;*/
+//? if forge
 import com.elfmcys.yesstevemodel.platform.forge.capability.AuthModelsCapabilityProvider;
+//? if neoforge
+/*import com.elfmcys.yesstevemodel.platform.neoforge.capability.ModelInfoCapabilityProvider;*/
+//? if forge
 import com.elfmcys.yesstevemodel.platform.forge.capability.ModelInfoCapabilityProvider;
+//? if neoforge
+/*import com.elfmcys.yesstevemodel.platform.neoforge.capability.PlayerCapabilityProvider;*/
+//? if forge
 import com.elfmcys.yesstevemodel.platform.forge.capability.PlayerCapabilityProvider;
+//? if neoforge
+/*import com.elfmcys.yesstevemodel.platform.neoforge.capability.ProjectileCapabilityProvider;*/
+//? if forge
 import com.elfmcys.yesstevemodel.platform.forge.capability.ProjectileCapabilityProvider;
+//? if neoforge
+/*import com.elfmcys.yesstevemodel.platform.neoforge.capability.ProjectileModelCapabilityProvider;*/
+//? if forge
 import com.elfmcys.yesstevemodel.platform.forge.capability.ProjectileModelCapabilityProvider;
+//? if neoforge
+/*import com.elfmcys.yesstevemodel.platform.neoforge.capability.StarModelsCapabilityProvider;*/
+//? if forge
 import com.elfmcys.yesstevemodel.platform.forge.capability.StarModelsCapabilityProvider;
+//? if neoforge
+/*import com.elfmcys.yesstevemodel.platform.neoforge.capability.VehicleCapabilityProvider;*/
+//? if forge
 import com.elfmcys.yesstevemodel.platform.forge.capability.VehicleCapabilityProvider;
+//? if neoforge
+/*import com.elfmcys.yesstevemodel.platform.neoforge.capability.VehicleModelCapabilityProvider;*/
+//? if forge
 import com.elfmcys.yesstevemodel.platform.forge.capability.VehicleModelCapabilityProvider;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
+//? if neoforge && >=1.20.5
+/*import net.neoforged.fml.common.EventBusSubscriber;*/
+//? if neoforge && >=1.20.5
+/*import net.neoforged.neoforge.event.tick.ServerTickEvent;*/
+//? if neoforge && <1.20.5
+/*import net.neoforged.neoforge.event.TickEvent;*/
+//? if forge
 import net.minecraftforge.event.TickEvent;
-//? if >=1.19.2 {
+//? if >=1.19.2 && neoforge
+/*import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;*/
+//? if >=1.19.2 && forge
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
-//?} else {
+//? if <1.19.2 {
 /*// 事件名反向差：1.16.x 为 EntityJoinWorldEvent（1.19+ 才改名 JoinLevel），javap 实证
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;*/
 //?}
+//? if neoforge
+/*import net.neoforged.neoforge.event.entity.player.PlayerEvent;*/
+//? if forge
 import net.minecraftforge.event.entity.player.PlayerEvent;
+//? if neoforge
+/*import net.neoforged.bus.api.SubscribeEvent;*/
+//? if forge
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+//? if neoforge
+/*import net.neoforged.fml.common.Mod;*/
+//? if forge
 import net.minecraftforge.fml.common.Mod;
 //? if <1.17 {
 /*// 1.16.5 ServerTickEvent 无 getServer()（1.18.2+ 才加），走 ServerLifecycleHooks
@@ -59,6 +101,13 @@ import java.util.function.Consumer;
  * </ul>
  * capability attach 不在本类：由 platform/forge/ForgeCapabilityHooks 的 AttachCapabilitiesEvent 注解式处理。
  */
+// 事件总线注解：1.20.5+ neoforge 换代为 fml.common.EventBusSubscriber（默认 game bus）；
+// <1.20.5 neoforge 与 forge 全线 = Mod.EventBusSubscriber.Bus.FORGE（game bus 同义）
+//? if neoforge && >=1.20.5
+/*@EventBusSubscriber(modid = YesSteveModel.MOD_ID, bus = EventBusSubscriber.Bus.GAME)*/
+//? if neoforge && <1.20.5
+/*@Mod.EventBusSubscriber(modid = YesSteveModel.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)*/
+//? if forge
 @Mod.EventBusSubscriber(modid = YesSteveModel.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class CapabilityEvent {
 
@@ -76,13 +125,13 @@ public final class CapabilityEvent {
         // PlayerList.recreatePlayerEntity 以 removePlayer(level,true) 保数据直到 copyFrom、clone 事件后
         // 才 remove(false) 使 caps 失效（forge-1.16.x PlayerList.java.patch 注释实证）——
         // 事件分发时旧玩家 caps 仍有效，无需 revive/invalidate，两侧语义等价。
-        //? if >=1.17 {
+        //? if forge && >=1.17 {
         oldPlayer.reviveCaps();
         //?}
         Optional<ModelInfoCapability> oldModelInfoCap = getModelInfoCap(oldPlayer);
         Optional<AuthModelsCapability> oldAuthModelsCap = getAuthModelsCap(oldPlayer);
         Optional<StarModelsCapability> oldStarModelsCap = getStarModelsCap(oldPlayer);
-        //? if >=1.17 {
+        //? if forge && >=1.17 {
         oldPlayer.invalidateCaps();
         //?}
         Optional<ModelInfoCapability> modelInfoCap = getModelInfoCap(newPlayer);
@@ -145,6 +194,14 @@ public final class CapabilityEvent {
         }
     }
 
+    // TickEvent.SERVER_POST：neoforge 1.20.5+ = ServerTickEvent.Post（自带 getServer）
+    //? if neoforge && >=1.20.5 {
+    /*@SubscribeEvent
+    public static void onServerTick(ServerTickEvent.Post event) {
+        onServerTickEnd(event.getServer());
+    }*/
+    //? }
+    //? if forge || neoforge && <1.20.5 {
     @SubscribeEvent
     public static void onServerTick(TickEvent.ServerTickEvent event) {
         if (event.phase != TickEvent.Phase.END) {
@@ -161,6 +218,7 @@ public final class CapabilityEvent {
         //? if >=1.19.2
         onServerTickEnd(event.getServer());
     }
+    //? }
 
     private static void onServerTickEnd(MinecraftServer server) {
         if (!YesSteveModel.isAvailable()) {

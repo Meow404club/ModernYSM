@@ -1,6 +1,12 @@
 package com.elfmcys.yesstevemodel.client.event;
 
+//? if neoforge
+/*import net.neoforged.api.distmarker.Dist;*/
+//? if forge
 import net.minecraftforge.api.distmarker.Dist;
+//? if neoforge
+/*import net.neoforged.api.distmarker.OnlyIn;*/
+//? if forge
 import net.minecraftforge.api.distmarker.OnlyIn;
 import com.elfmcys.yesstevemodel.client.gui.DownloadScreen;
 import com.elfmcys.yesstevemodel.client.gui.PlayerModelScreen;

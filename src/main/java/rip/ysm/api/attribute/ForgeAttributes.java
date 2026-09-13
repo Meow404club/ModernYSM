@@ -3,6 +3,9 @@ package rip.ysm.api.attribute;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import org.jetbrains.annotations.Nullable;
+//? if neoforge
+/*import rip.ysm.api.attribute.platform.neoforge.ForgeAttributesImpl;*/
+//? if forge
 import rip.ysm.api.attribute.platform.forge.ForgeAttributesImpl;
 
 public final class ForgeAttributes {
@@ -44,6 +47,11 @@ public final class ForgeAttributes {
         if (attribute == null) {
             return defaultValue;
         }
+        // 1.20.5+ vanilla getAttributeValue 收 Holder<Attribute>（vanilla-1.20.6 LivingEntity.java:1897）
+        // → neoforge >=1.20.5 委托分代孪生 wrapAsHolder 包裹；其余线 Attribute 直取
+        //? if neoforge && >=1.20.5
+        /*return ForgeAttributesImpl.getValue(entity, attribute, defaultValue);*/
+        //? if forge || neoforge && <1.20.5
         return entity.getAttributeValue(attribute);
     }
 }

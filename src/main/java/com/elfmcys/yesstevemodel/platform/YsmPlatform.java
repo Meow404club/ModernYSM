@@ -1,10 +1,17 @@
 package com.elfmcys.yesstevemodel.platform;
 
 import net.minecraft.server.MinecraftServer;
+//? if neoforge
+/*import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.ModList;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.fml.loading.FMLPaths;*/
+//? if forge {
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
+//?}
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -59,7 +66,9 @@ public final class YsmPlatform {
         /*return net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
         //? if >=1.17 && <1.18.2
         /*return net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();*/
-        //? if >=1.18.2
+        //? if neoforge
+        /*return net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer();*/
+        //? if forge && >=1.18.2
         return net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
     }
 

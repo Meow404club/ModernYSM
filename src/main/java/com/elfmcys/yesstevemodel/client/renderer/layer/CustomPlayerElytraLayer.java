@@ -27,6 +27,9 @@ import com.mojang.math.Axis;
 
 public class CustomPlayerElytraLayer extends GeoLayerRenderer<CustomPlayerEntity> {
 
+    //? if >=1.21
+    /*private static final ResourceLocation WINGS_LOCATION = ResourceLocation.parse("textures/entity/elytra.png");*/
+    //? if <1.21
     private static final ResourceLocation WINGS_LOCATION = new ResourceLocation("textures/entity/elytra.png");
 
     private final ElytraModel<LivingEntity> elytraModel;
@@ -49,9 +52,21 @@ public class CustomPlayerElytraLayer extends GeoLayerRenderer<CustomPlayerEntity
         AnimatedGeoModel animatedGeoModel = entityLivingBaseIn.getCurrentModel();
         if (!stack.isEmpty() && animatedGeoModel != null && !animatedGeoModel.elytraBones().isEmpty() && (entity instanceof AbstractClientPlayer)) {
             AbstractClientPlayer abstractClientPlayer = (AbstractClientPlayer) entity;
+            //? if neoforge
+            /*if (abstractClientPlayer.getSkin().elytraTexture() != null) {*/
+            //? if forge
             if (abstractClientPlayer.isElytraLoaded() && abstractClientPlayer.getElytraTextureLocation() != null) {
+                //? if neoforge
+                /*cloakTextureLocation = abstractClientPlayer.getSkin().elytraTexture();*/
+                //? if forge
                 cloakTextureLocation = abstractClientPlayer.getElytraTextureLocation();
+            //? if neoforge
+            /*} else if (abstractClientPlayer.getSkin().capeTexture() != null && abstractClientPlayer.isModelPartShown(PlayerModelPart.CAPE)) {*/
+            //? if forge
             } else if (abstractClientPlayer.isCapeLoaded() && abstractClientPlayer.getCloakTextureLocation() != null && abstractClientPlayer.isModelPartShown(PlayerModelPart.CAPE)) {
+                //? if neoforge
+                /*cloakTextureLocation = abstractClientPlayer.getSkin().capeTexture();*/
+                //? if forge
                 cloakTextureLocation = abstractClientPlayer.getCloakTextureLocation();
             } else {
                 cloakTextureLocation = WINGS_LOCATION;
@@ -68,6 +83,11 @@ public class CustomPlayerElytraLayer extends GeoLayerRenderer<CustomPlayerEntity
             poseStack.mulPose(Axis.ZP.rotationDegrees(180.0f));
             poseStack.scale(2.0f, 2.0f, 2.0f);
             this.elytraModel.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+            // 1.21 getArmorFoilBuffer 去 hasFoil 尾参（vanilla-1.21.1 ItemRenderer.java:167）、
+            // renderToBuffer 颜色改 int 打包（vanilla-1.21.1 Model.java:23）
+            //? if >=1.21
+            /*this.elytraModel.renderToBuffer(poseStack, ItemRenderer.getArmorFoilBuffer(bufferSource, RenderType.armorCutoutNoCull(cloakTextureLocation), stack.hasFoil()), packedLightIn, OverlayTexture.NO_OVERLAY, -1);*/
+            //? if <1.21
             this.elytraModel.renderToBuffer(poseStack, ItemRenderer.getArmorFoilBuffer(bufferSource, RenderType.armorCutoutNoCull(cloakTextureLocation), false, stack.hasFoil()), packedLightIn, OverlayTexture.NO_OVERLAY, 1.0f, 1.0f, 1.0f, 1.0f);
             poseStack.popPose();
         }

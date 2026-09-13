@@ -1,21 +1,45 @@
 package com.elfmcys.yesstevemodel.config;
 
+//? if neoforge
+/*import net.neoforged.neoforge.common.ModConfigSpec;*/
+//? if forge
 import net.minecraftforge.common.ForgeConfigSpec;
 
 public class ExtraPlayerRenderConfig {
 
+    //? if neoforge
+    /*public static ModConfigSpec.BooleanValue DISABLE_PLAYER_RENDER;*/
+    //? if forge
     public static ForgeConfigSpec.BooleanValue DISABLE_PLAYER_RENDER;
 
+    //? if neoforge
+    /*public static ModConfigSpec.BooleanValue DISABLE_PLAYER_RENDER_THIRD_PERSON;*/
+    //? if forge
     public static ForgeConfigSpec.BooleanValue DISABLE_PLAYER_RENDER_THIRD_PERSON;
 
+    //? if neoforge
+    /*public static ModConfigSpec.IntValue PLAYER_POS_X;*/
+    //? if forge
     public static ForgeConfigSpec.IntValue PLAYER_POS_X;
 
+    //? if neoforge
+    /*public static ModConfigSpec.IntValue PLAYER_POS_Y;*/
+    //? if forge
     public static ForgeConfigSpec.IntValue PLAYER_POS_Y;
 
+    //? if neoforge
+    /*public static ModConfigSpec.DoubleValue PLAYER_SCALE;*/
+    //? if forge
     public static ForgeConfigSpec.DoubleValue PLAYER_SCALE;
 
+    //? if neoforge
+    /*public static ModConfigSpec.DoubleValue PLAYER_YAW_OFFSET;*/
+    //? if forge
     public static ForgeConfigSpec.DoubleValue PLAYER_YAW_OFFSET;
 
+    //? if neoforge
+    /*public static void define(ModConfigSpec.Builder builder) {*/
+    //? if forge
     public static void define(ForgeConfigSpec.Builder builder) {
         builder.push("extra_player_render");
         builder.comment("Whether to display player");

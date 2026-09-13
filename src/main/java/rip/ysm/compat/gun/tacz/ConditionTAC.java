@@ -5,6 +5,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import org.apache.commons.lang3.StringUtils;
 import rip.ysm.compat.gun.swarfare.SWarfareCompat;
+//? if >=1.21 {
+/*import rip.ysm.util.Rl;*/
+//?}
 
 public class ConditionTAC {
 
@@ -23,8 +26,14 @@ public class ConditionTAC {
             return;
         }
         String str2 = strArrSplit[1];
+        //? if >=1.21
+        /*if (Rl.isValid(str2)) {*/
+        //? if <1.21
         if (ResourceLocation.isValidResourceLocation(str2)) {
             this.nameTest.add(name);
+            //? if >=1.21
+            /*this.idTest.add(ResourceLocation.parse(str2));*/
+            //? if <1.21
             this.idTest.add(new ResourceLocation(str2));
         }
     }

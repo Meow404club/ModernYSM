@@ -34,6 +34,9 @@ import net.minecraft.world.entity.player.Player;
 
 import java.util.Objects;
 import java.util.function.Predicate;
+//? if >=1.21 {
+/*import com.elfmcys.yesstevemodel.util.YsmFrame;*/
+//?}
 
 public class CtrlBinding extends ContextBinding {
 
@@ -149,6 +152,9 @@ public class CtrlBinding extends ContextBinding {
 
     private static boolean isWalking(LivingEntity livingEntity) {
         // 1.20.1 walkAnimation.speed(pt) ↔ 1.16.5 animationSpeed 插值（LivingEntity 公有字段，javap 实证）
+        //? if >=1.21
+        /*return Math.abs(YsmEntity.limbSwingAmount(livingEntity, YsmFrame.partialTick(Minecraft.getInstance()))) > 0.05f;*/
+        //? if <1.21
         return Math.abs(YsmEntity.limbSwingAmount(livingEntity, Minecraft.getInstance().getFrameTime())) > 0.05f;
     }
 

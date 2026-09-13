@@ -176,12 +176,20 @@ public class PlayerStateSynchronizer {
             message.setEffects(Object2ByteMaps.emptyMap());
         } else if (activeEffects.size() == 1) {
             MobEffectInstance instance = activeEffects.iterator().next();
+            // 1.20.5+ MobEffectInstance.getEffect 返回 Holder<MobEffect>（vanilla-1.20.6:193）→ .value()；
+            // 门面/网络面维持 MobEffect 键（wire format 不变，YsmTag.networkId 编码同前）
+            //? if neoforge && >=1.20.5
+            /*message.setEffects(Object2ByteMaps.singleton(instance.getEffect().value(), (byte) (instance.getAmplifier() + 1)));*/
+            //? if forge || neoforge && <1.20.5
             message.setEffects(Object2ByteMaps.singleton(instance.getEffect(), (byte) (instance.getAmplifier() + 1)));
         } else {
             MobEffect[] effectIds = new MobEffect[activeEffects.size()];
             byte[] amplifiers = new byte[activeEffects.size()];
             int i = 0;
             for (MobEffectInstance instance : activeEffects) {
+                //? if neoforge && >=1.20.5
+                /*effectIds[i] = instance.getEffect().value();*/
+                //? if forge || neoforge && <1.20.5
                 effectIds[i] = instance.getEffect();
                 amplifiers[i] = (byte) (instance.getAmplifier() + 1);
                 i++;

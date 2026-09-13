@@ -19,6 +19,9 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+//? if >=1.21 {
+/*import rip.ysm.util.Rl;*/
+//?}
 
 public class ConditionArmor {
 
@@ -39,9 +42,15 @@ public class ConditionArmor {
                 return;
             }
             String strGroup = matcher.group(2);
+            //? if >=1.21
+            /*if (!Rl.isValid(strGroup)) {*/
+            //? if <1.21
             if (!ResourceLocation.isValidResourceLocation(strGroup)) {
                 return;
             } else {
+                //? if >=1.21
+                /*this.idTest.computeIfAbsent(slot2, obj -> new ObjectOpenHashSet<>()).add(ResourceLocation.parse(strGroup));*/
+                //? if <1.21
                 this.idTest.computeIfAbsent(slot2, obj -> new ObjectOpenHashSet<>()).add(new ResourceLocation(strGroup));
             }
         }
@@ -50,9 +59,15 @@ public class ConditionArmor {
             return;
         }
         String strGroup2 = matcher2.group(2);
+        //? if >=1.21
+        /*if (!Rl.isValid(strGroup2)) {*/
+        //? if <1.21
         if (!ResourceLocation.isValidResourceLocation(strGroup2)) {
             return;
         }
+        //? if >=1.21
+        /*this.tagTest.computeIfAbsent(slot, obj2 -> new ReferenceArrayList<>()).add(YsmTag.itemTag(ResourceLocation.parse(strGroup2)));*/
+        //? if <1.21
         this.tagTest.computeIfAbsent(slot, obj2 -> new ReferenceArrayList<>()).add(YsmTag.itemTag(new ResourceLocation(strGroup2)));
     }
 

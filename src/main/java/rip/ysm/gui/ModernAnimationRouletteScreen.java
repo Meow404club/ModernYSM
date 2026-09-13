@@ -48,8 +48,17 @@ import java.util.Map;
 
 public class ModernAnimationRouletteScreen extends Screen {
 
+    //? if >=1.21
+    /*private static final ResourceLocation settingsIcon = ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "texture/settings.png");*/
+    //? if <1.21
     private static final ResourceLocation settingsIcon = new ResourceLocation(YesSteveModel.MOD_ID, "texture/settings.png");
+    //? if >=1.21
+    /*private static final ResourceLocation lockIcon = ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "texture/lock.png");*/
+    //? if <1.21
     private static final ResourceLocation lockIcon = new ResourceLocation(YesSteveModel.MOD_ID, "texture/lock.png");
+    //? if >=1.21
+    /*private static final ResourceLocation unlockIcon = ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "texture/unlock.png");*/
+    //? if <1.21
     private static final ResourceLocation unlockIcon = new ResourceLocation(YesSteveModel.MOD_ID, "texture/unlock.png");
 
     private static final LinkedList<Pair<String, Integer>> navigationStack = Lists.newLinkedList();
@@ -406,7 +415,10 @@ public class ModernAnimationRouletteScreen extends Screen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    //? if neoforge
+/*public boolean mouseScrolled(double mouseX, double mouseY, double delta, double scrollY) {*/
+//? if forge
+public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         if (delta < 0.0) nextPage(); else previousPage();
         return true;
     }

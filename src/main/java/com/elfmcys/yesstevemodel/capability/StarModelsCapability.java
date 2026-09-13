@@ -1,5 +1,8 @@
 package com.elfmcys.yesstevemodel.capability;
 
+//? if neoforge
+/*import com.elfmcys.yesstevemodel.platform.neoforge.capability.StarModelsCapabilityProvider;*/
+//? if forge
 import com.elfmcys.yesstevemodel.platform.forge.capability.StarModelsCapabilityProvider;
 import com.google.common.collect.Sets;
 import net.minecraft.nbt.ListTag;
@@ -16,6 +19,9 @@ public class StarModelsCapability {
     private Set<String> starModels = Sets.newHashSet();
 
     public static Optional<StarModelsCapability> get(Player player) {
+        //? if neoforge
+        /*return java.util.Optional.ofNullable(player.getCapability(StarModelsCapabilityProvider.STAR_MODELS_CAP));*/
+        //? if forge
         return player.getCapability(StarModelsCapabilityProvider.STAR_MODELS_CAP).resolve();
     }
 

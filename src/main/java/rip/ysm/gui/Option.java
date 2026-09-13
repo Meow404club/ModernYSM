@@ -1,6 +1,9 @@
 package rip.ysm.gui;
 
 import net.minecraft.network.chat.Component;
+//? if neoforge
+/*import net.neoforged.neoforge.common.ModConfigSpec;*/
+//? if forge
 import net.minecraftforge.common.ForgeConfigSpec;
 
 import java.util.Objects;
@@ -21,14 +24,23 @@ public class Option<T> {
         this.pending = getter.get();
     }
 
+    //? if neoforge
+    /*public static Option<Boolean> ofBoolean(String key, ModConfigSpec.BooleanValue cfg) {*/
+    //? if forge
     public static Option<Boolean> ofBoolean(String key, ForgeConfigSpec.BooleanValue cfg) {
         return new Option<>(key, cfg::get, cfg::set);
     }
 
+    //? if neoforge
+    /*public static Option<Double> ofDouble(String key, ModConfigSpec.DoubleValue cfg) {*/
+    //? if forge
     public static Option<Double> ofDouble(String key, ForgeConfigSpec.DoubleValue cfg) {
         return new Option<>(key, cfg::get, cfg::set);
     }
 
+    //? if neoforge
+    /*public static <E extends Enum<E>> Option<E> ofEnum(String key, ModConfigSpec.EnumValue<E> cfg) {*/
+    //? if forge
     public static <E extends Enum<E>> Option<E> ofEnum(String key, ForgeConfigSpec.EnumValue<E> cfg) {
         return new Option<>(key, cfg::get, cfg::set);
     }

@@ -547,6 +547,9 @@ public final class YsmGui {
 
     /** Screen.renderBackground(GuiGraphics) 的版本中性入口。 */
     public void renderScreenBackground(net.minecraft.client.gui.screens.Screen screen) {
+        //? if neoforge
+        /*screen.renderBackground(this.graphics, 0, 0, 0);*/
+        //? if forge
         screen.renderBackground(this.graphics);
     }
 

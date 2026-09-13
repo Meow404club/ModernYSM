@@ -18,7 +18,13 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.synchronization.SuggestionProviders;
 import net.minecraft.resources.ResourceLocation;
+//? if neoforge
+/*import net.neoforged.neoforge.common.NeoForge;*/
+//? if forge
 import net.minecraftforge.common.MinecraftForge;
+//? if neoforge
+/*import net.neoforged.neoforge.event.RegisterCommandsEvent;*/
+//? if forge
 import net.minecraftforge.event.RegisterCommandsEvent;
 import rip.ysm.api.PlatformAPI;
 
@@ -32,6 +38,9 @@ public final class CommandRegistry {
     private CommandRegistry() {
     }
 
+    //? if >=1.21
+    /*public static final SuggestionProvider<CommandSourceStack> MODEL_IDS = SuggestionProviders.register(ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "models"), (commandContext, suggestionsBuilder) -> {*/
+    //? if <1.21
     public static final SuggestionProvider<CommandSourceStack> MODEL_IDS = SuggestionProviders.register(new ResourceLocation(YesSteveModel.MOD_ID, "models"), (commandContext, suggestionsBuilder) -> {
         if (commandContext.getSource() instanceof SharedSuggestionProvider) {
             if (PlatformAPI.isServer()) {
@@ -44,6 +53,9 @@ public final class CommandRegistry {
         return Suggestions.empty();
     });
 
+    //? if >=1.21
+    /*public static final SuggestionProvider<CommandSourceStack> ANIMATION_NAMES = SuggestionProviders.register(ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "animations"), (commandContext, suggestionsBuilder) -> {*/
+    //? if <1.21
     public static final SuggestionProvider<CommandSourceStack> ANIMATION_NAMES = SuggestionProviders.register(new ResourceLocation(YesSteveModel.MOD_ID, "animations"), (commandContext, suggestionsBuilder) -> {
         if (commandContext.getSource() instanceof SharedSuggestionProvider) {
             if (PlatformAPI.isServer()) {
@@ -58,6 +70,9 @@ public final class CommandRegistry {
         return Suggestions.empty();
     });
 
+    //? if >=1.21
+    /*public static final SuggestionProvider<CommandSourceStack> TEXTURE_IDS = SuggestionProviders.register(ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "textures"), (commandContext, suggestionsBuilder) -> {*/
+    //? if <1.21
     public static final SuggestionProvider<CommandSourceStack> TEXTURE_IDS = SuggestionProviders.register(new ResourceLocation(YesSteveModel.MOD_ID, "textures"), (commandContext, suggestionsBuilder) -> {
         if (commandContext.getSource() instanceof SharedSuggestionProvider) {
             String str = commandContext.getArgument("model_id", String.class);
@@ -81,7 +96,7 @@ public final class CommandRegistry {
     // 功能差：远程服务器对局时 1.20.1 客户端侧 /openysm 仍可用，1.16.5 不可用（无客户端调度器）→ 记债务清单
     public static void register() {
         // RegisterClientCommandsEvent 1.18.2+（1171 forge 无此事件）→ 1.17.1 跳过（功能差：客户端 /openysm）
-        //? if >=1.18.2 {
+        //? if >=1.18.2 && forge {
         MinecraftForge.EVENT_BUS.addListener((net.minecraftforge.client.event.RegisterClientCommandsEvent event) -> {
             if (!YesSteveModel.isAvailable()) {
                 return;
@@ -89,6 +104,17 @@ public final class CommandRegistry {
             OpenYSMClientCommand.registerClientCommands(event.getDispatcher());
         });
         //?}
+        //? if >=1.18.2 && neoforge {
+        /*NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.client.event.RegisterClientCommandsEvent event) -> {
+            if (!YesSteveModel.isAvailable()) {
+                return;
+            }
+            OpenYSMClientCommand.registerClientCommands(event.getDispatcher());
+        });
+         *///?}
+        //? if neoforge
+        /*NeoForge.EVENT_BUS.addListener((RegisterCommandsEvent event) -> {*/
+        //? if forge
         MinecraftForge.EVENT_BUS.addListener((RegisterCommandsEvent event) -> {
             CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
             if (!YesSteveModel.isAvailable()) {

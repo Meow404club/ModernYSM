@@ -1,0 +1,34 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+#issueTrackerURL = ""
+license = "MIT"
+
+# NeoForge 20.2+ 不自动扫描 mod jar 内 mixin 配置（FML 2.0 ModFileParser
+# getConfigList("mixins") 实证），必须经 [[mixins]] 表显式声明；
+# 第三方 accessor 配置（yes_steve_model_forge.mixins.json）在 neoforge 线被闸门排除，不声明
+[[mixins]]
+config = "yes_steve_model.mixins.json"
+
+[[mods]]
+modId = "yes_steve_model"
+version = "${mod_version}"
+displayName = "Yes Steve Model"
+authors = "Tianjin Accessible Care Innovation Development Co., Ltd."
+description = '''
+
+'''
+logoFile = "yesstevemodel.png"
+
+[[dependencies.yes_steve_model]]
+modId = "neoforge"
+type = "required"
+versionRange = "[20.6,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.yes_steve_model]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.20.6,)"
+ordering = "NONE"
+side = "BOTH"

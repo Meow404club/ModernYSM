@@ -1,7 +1,13 @@
 package rip.ysm.harness;
 
 import net.minecraft.client.Minecraft;
+//? if neoforge
+/*import net.neoforged.neoforge.common.NeoForge;*/
+//? if forge
 import net.minecraftforge.common.MinecraftForge;
+//? if neoforge && <1.20.5
+/*import net.neoforged.neoforge.event.TickEvent;*/
+//? if forge
 import net.minecraftforge.event.TickEvent;
 
 import java.nio.file.Files;
@@ -49,6 +55,9 @@ public final class GuiTourDriver {
 
     /** 初始化调用点：YsmEventBootstrap.register() 的 client 分支（1 行）。 */
     public static void register() {
+        //? if neoforge
+        /*NeoForge.EVENT_BUS.addListener(GuiTourDriver::onClientTick);*/
+        //? if forge
         MinecraftForge.EVENT_BUS.addListener(GuiTourDriver::onClientTick);
     }
 
@@ -63,13 +72,40 @@ public final class GuiTourDriver {
     }
 
     private static Path gameDir() {
+        //? if neoforge
+        /*return net.neoforged.fml.loading.FMLPaths.GAMEDIR.get();*/
+        //? if forge
         return net.minecraftforge.fml.loading.FMLPaths.GAMEDIR.get();
     }
 
+    // ClientTickEvent phase END：neoforge 1.20.5+ = ClientTickEvent.Post（TickEvent.Phase 拆分）。
+    // 三代分发器各自完整，走查主体抽 onClientTickBody 共享（harness 代码，生产行为零差）
+    //? if neoforge && >=1.20.5 {
+    /*private static void onClientTick(net.neoforged.neoforge.client.event.ClientTickEvent.Post event) {
+        if (!armed()) {
+            return;
+        }
+        onClientTickBody();
+    }*/
+    //? }
+    //? if neoforge && <1.20.5 {
+    /*private static void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END || !armed()) {
+            return;
+        }
+        onClientTickBody();
+    }*/
+    //? }
+    //? if forge {
     private static void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END || !armed()) {
             return;
         }
+        onClientTickBody();
+    }
+    //? }
+
+    private static void onClientTickBody() {
         Minecraft mc = Minecraft.getInstance();
         if (beat++ % 40 == 0) {
             // 走查心跳（armed 门控，生产零输出）：证明 listener 已挂上且 tick 在跑
@@ -161,10 +197,19 @@ public final class GuiTourDriver {
                 net.minecraft.client.multiplayer.resolver.ServerAddress.parseString("localhost:25565"),
                 new net.minecraft.client.multiplayer.ServerData("harness", "localhost:25565", false));
          *///?}
-        //? if >=1.20 {
+        //? if >=1.20 && <1.20.5 {
         net.minecraft.client.gui.screens.ConnectScreen.startConnecting(null, mc,
                 net.minecraft.client.multiplayer.resolver.ServerAddress.parseString("localhost:25565"),
+                //? if neoforge
+                /*new net.minecraft.client.multiplayer.ServerData("harness", "localhost:25565", net.minecraft.client.multiplayer.ServerData.Type.OTHER), false);*/
+                //? if forge
                 new net.minecraft.client.multiplayer.ServerData("harness", "localhost:25565", false), false);
+        //?}
+        //? if >=1.20.5 {
+        /*// 1.20.5+ 增第 6 参 @Nullable TransferState（vanilla-1.20.6 ConnectScreen.java:55），走查传 null
+        net.minecraft.client.gui.screens.ConnectScreen.startConnecting(null, mc,
+                net.minecraft.client.multiplayer.resolver.ServerAddress.parseString("localhost:25565"),
+                new net.minecraft.client.multiplayer.ServerData("harness", "localhost:25565", net.minecraft.client.multiplayer.ServerData.Type.OTHER), false, null);*/
         //?}
     }
 

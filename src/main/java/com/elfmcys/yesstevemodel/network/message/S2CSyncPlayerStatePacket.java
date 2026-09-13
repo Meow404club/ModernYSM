@@ -1,7 +1,13 @@
 package com.elfmcys.yesstevemodel.network.message;
 
+//? if neoforge
+/*import net.neoforged.api.distmarker.Dist;*/
+//? if forge
 import net.minecraftforge.api.distmarker.Dist;
 import com.elfmcys.yesstevemodel.util.YsmTag;
+//? if neoforge
+/*import net.neoforged.api.distmarker.OnlyIn;*/
+//? if forge
 import net.minecraftforge.api.distmarker.OnlyIn;
 import com.elfmcys.yesstevemodel.capability.PlayerCapability;
 import com.elfmcys.yesstevemodel.event.EntityJoinCallbackEvent;

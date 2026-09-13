@@ -13,9 +13,10 @@ import org.jetbrains.annotations.Nullable;
 //? if >=1.17 && <1.18.2 {
 /*import net.minecraftforge.fmllegacy.server.ServerLifecycleHooks;
  *///?}
-//? if >=1.18.2 {
+//? if forge && >=1.18.2
 import net.minecraftforge.server.ServerLifecycleHooks;
-//?}
+//? if neoforge
+/*import net.neoforged.neoforge.server.ServerLifecycleHooks;*/
 import rip.ysm.api.PlatformAPI;
 
 public class YSMMessageFormatter {
@@ -27,6 +28,9 @@ public class YSMMessageFormatter {
     }
 
     public static boolean isCurrentClientPlayer(Entity entity) {
+        //? if neoforge
+        /*return entity != null && !PlatformAPI.isServer() && entity.getUUID().equals(Minecraft.getInstance().getGameProfile().getId());*/
+        //? if forge
         return entity != null && !PlatformAPI.isServer() && entity.getUUID().equals(Minecraft.getInstance().getUser().getGameProfile().getId());
     }
 
@@ -53,9 +57,10 @@ public class YSMMessageFormatter {
         //? if >=1.17 && <1.18.2 {
         /*MinecraftServer currentServer = net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();
          *///?}
-        //? if >=1.18.2 {
+        //? if forge && >=1.18.2
         MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
-        //?}
+        //? if neoforge
+        /*MinecraftServer currentServer = net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer();*/
         if (currentServer == null) {
             return;
         }

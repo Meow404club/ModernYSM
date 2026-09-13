@@ -26,6 +26,9 @@ import com.mojang.math.Vector3f;
 import com.mojang.math.Axis;
 import org.joml.Quaternionf;
 //?}
+//? if >=1.20.5 {
+/*import org.joml.Matrix4fStack;*/
+//?}
 import net.minecraft.client.Minecraft;
 //? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
@@ -231,12 +234,22 @@ public class ModelSettingsScreen extends OptionScreen {
         /*RenderSystem.pushMatrix();
         RenderSystem.translatef(x, y, 1250.0f);
         RenderSystem.scalef(1.0f, 1.0f, -1.0f);
-         *///?} else {
+         *///?}
+        // 1.20.5+ RenderSystem.getModelViewStack 返回 Matrix4fStack（JOML，pushMatrix/translate(float)），
+        // 与 <1.20.5 PoseStack（pushPose/translate(double)）平铺互斥
+        //? if >=1.17 && <1.20.5 {
         PoseStack modelViewStack = RenderSystem.getModelViewStack();
         modelViewStack.pushPose();
         modelViewStack.translate(x, y, 1250.0d);
         modelViewStack.scale(1.0f, 1.0f, -1.0f);
         RenderSystem.applyModelViewMatrix();
+        //?}
+        //? if >=1.20.5 {
+        /*Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();
+        modelViewStack.pushMatrix();
+        modelViewStack.translate((float) x, (float) y, 1250.0f);
+        modelViewStack.scale(1.0f, 1.0f, -1.0f);
+        RenderSystem.applyModelViewMatrix();*/
         //?}
 
         PoseStack poseStack = new PoseStack();
@@ -334,10 +347,16 @@ public class ModelSettingsScreen extends OptionScreen {
             //? if <1.17 {
             /*RenderSystem.popMatrix();
             Lighting.turnBackOn();
-             *///?} else {
+             *///?}
+            //? if >=1.17 && <1.20.5 {
             modelViewStack.popPose();
             RenderSystem.applyModelViewMatrix();
             Lighting.setupFor3DItems();
+            //?}
+            //? if >=1.20.5 {
+            /*modelViewStack.popMatrix();
+            RenderSystem.applyModelViewMatrix();
+            Lighting.setupFor3DItems();*/
             //?}
             ModelPreviewRenderer.setPreviewMode(false);
         }
@@ -379,12 +398,18 @@ public class ModelSettingsScreen extends OptionScreen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    //? if neoforge
+/*public boolean mouseScrolled(double mouseX, double mouseY, double delta, double scrollY) {*/
+//? if forge
+public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         if (isInPreview(mouseX, mouseY)) {
             zoom = Mth.clamp((float) (zoom * (1.0 + delta * 0.1)), 30.0f, 400.0f);
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        //? if neoforge
+/*return super.mouseScrolled(mouseX, mouseY, delta, delta);*/
+//? if forge
+return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
     private boolean isInPreview(double mouseX, double mouseY) {

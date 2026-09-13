@@ -126,7 +126,10 @@ public class AuthorButton extends YsmButton {
         }
     }
 
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    //? if neoforge
+/*public boolean mouseScrolled(double mouseX, double mouseY, double delta, double scrollY) {*/
+//? if forge
+public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         if (delta > 0.0d) {
             if (this.selectedContactIndex > 0) {
                 this.selectedContactIndex--;
@@ -143,7 +146,10 @@ public class AuthorButton extends YsmButton {
             }
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        //? if neoforge
+/*return super.mouseScrolled(mouseX, mouseY, delta, delta);*/
+//? if forge
+return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
     private void renderTooltip(boolean copied) {

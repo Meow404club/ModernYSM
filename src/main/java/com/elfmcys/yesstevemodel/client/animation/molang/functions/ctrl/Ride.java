@@ -58,6 +58,9 @@ public class Ride extends LivingEntityFunction {
             return strSubstring.equals(key.toString()) ? 1 : 0;
         }
         if (id.startsWith(PREFIX_ITEM_TAG)) {
+            //? if >=1.21
+            /*return YsmTag.entityTypeTag(ResourceLocation.parse(strSubstring)).matches(entityType) ? 1 : 0;*/
+            //? if <1.21
             return YsmTag.entityTypeTag(new ResourceLocation(strSubstring)).matches(entityType) ? 1 : 0;
         }
         return 0;

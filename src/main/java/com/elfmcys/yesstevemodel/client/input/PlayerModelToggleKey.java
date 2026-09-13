@@ -11,7 +11,13 @@ import com.elfmcys.yesstevemodel.util.InputUtil;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+//? if neoforge
+/*import net.neoforged.neoforge.client.event.InputEvent;*/
+//? if forge
 import net.minecraftforge.client.event.InputEvent;
+//? if neoforge
+/*import net.neoforged.neoforge.common.NeoForge;*/
+//? if forge
 import net.minecraftforge.common.MinecraftForge;
 import rip.ysm.api.PlatformAPI;
 import rip.ysm.api.client.KeyMappingFactory;
@@ -28,6 +34,9 @@ public final class PlayerModelToggleKey {
             return;
         }
         // architectury ClientRawInputEvent.KEY_PRESSED 在 forge 端即 InputEvent.Key（不可取消，原 EventResult 被丢弃）
+        //? if neoforge
+        /*NeoForge.EVENT_BUS.addListener(PlayerModelToggleKey::onKeyEvent);*/
+        //? if forge
         MinecraftForge.EVENT_BUS.addListener(PlayerModelToggleKey::onKeyEvent);
     }
 

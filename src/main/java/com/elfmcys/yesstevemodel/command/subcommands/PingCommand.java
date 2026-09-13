@@ -12,6 +12,9 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+//? if neoforge
+/*import net.neoforged.fml.ModList;*/
+//? if forge
 import net.minecraftforge.fml.ModList;
 
 public class PingCommand {

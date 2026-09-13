@@ -51,6 +51,10 @@ public class ArmorSlotProcessor<T extends GeoEntity<?>> implements ModelProcesso
                 matchingSlots.add(Pair.of(slotKey, slot));
             } else if (resourceBundle.getEvents().containsKey(String.format("%s_ctrl_%s_%s", this.prefix, this.category, slot.getName()))) {
                 matchingSlots.add(Pair.of(slotKey, slot));
+            // 1.21 EquipmentSlot.Type.ARMOR 拆分为 HUMANOID_ARMOR/ANIMAL_ARMOR（vanilla-1.21.1:77-80）
+            //? if >=1.21
+            /*} else if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR && (armorCondition.hasFilter(slot) || animations.containsKey(slot.getName() + ":default"))) {*/
+            //? if <1.21
             } else if (slot.getType() == EquipmentSlot.Type.ARMOR && (armorCondition.hasFilter(slot) || animations.containsKey(slot.getName() + ":default"))) {
                 matchingSlots.add(Pair.of(slotKey, slot));
             }

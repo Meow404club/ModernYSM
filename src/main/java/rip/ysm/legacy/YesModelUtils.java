@@ -20,6 +20,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.*;
 import java.util.zip.DataFormatException;
+//? if >=1.21 {
+/*import rip.ysm.util.Rl;*/
+//?}
 
 public final class YesModelUtils {
     public static final int HEAD = 0x59_53_47_50;
@@ -60,6 +63,9 @@ public final class YesModelUtils {
 
     public static Map<String, byte[]> input(File ysmFile) throws IOException {
         String fileName = removeExtension(ysmFile.getName());
+        //? if >=1.21
+        /*if (!Rl.isValid(fileName)) {*/
+        //? if <1.21
         if (!ResourceLocation.isValidResourceLocation(fileName)) {
             return Collections.emptyMap();
         }

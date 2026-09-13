@@ -47,9 +47,15 @@ import rip.ysm.gpu.Pie;
 
 import java.util.List;
 import java.util.Objects;
+//? if >=1.21 {
+/*import com.elfmcys.yesstevemodel.util.YsmFrame;*/
+//?}
 
 public class ModelButton extends YsmButton {
 
+    //? if >=1.21
+    /*private static final ResourceLocation ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "texture/icon.png");*/
+    //? if <1.21
     private static final ResourceLocation ICON_TEXTURE = new ResourceLocation(YesSteveModel.MOD_ID, "texture/icon.png");
 
     public final boolean isStarred;
@@ -251,6 +257,9 @@ public class ModelButton extends YsmButton {
         } else {
             double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
             RenderSystem.enableScissor((int) (x * guiScale), (int) (Minecraft.getInstance().getWindow().getHeight() - (((y + this.height) - 20) * guiScale)), (int) (this.width * guiScale), (int) ((this.height - 20) * guiScale));
+            //? if >=1.21
+            /*ModelPreviewRenderer.renderLivingEntityPreview(x + (this.width / 2.0f), y + (this.height / 2.0f) + 20.0f, 30.0f, YsmFrame.partialTick(minecraft), this.modelIdHolder, RendererManager.getPlayerRenderer(), this.disablePreviewRotation, true);*/
+            //? if <1.21
             ModelPreviewRenderer.renderLivingEntityPreview(x + (this.width / 2.0f), y + (this.height / 2.0f) + 20.0f, 30.0f, minecraft.getFrameTime(), this.modelIdHolder, RendererManager.getPlayerRenderer(), this.disablePreviewRotation, true);
             RenderSystem.disableScissor();
         }

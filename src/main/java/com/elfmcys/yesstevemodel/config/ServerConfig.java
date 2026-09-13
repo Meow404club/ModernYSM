@@ -1,36 +1,75 @@
 package com.elfmcys.yesstevemodel.config;
 
 import com.google.common.collect.Lists;
+//? if neoforge
+/*import net.neoforged.neoforge.common.ModConfigSpec;*/
+//? if forge
 import net.minecraftforge.common.ForgeConfigSpec;
 
 import java.util.List;
 
 public class ServerConfig {
 
+    //? if neoforge
+    /*public static ModConfigSpec.IntValue THREAD_COUNT;*/
+    //? if forge
     public static ForgeConfigSpec.IntValue THREAD_COUNT;
 
+    //? if neoforge
+    /*public static ModConfigSpec.IntValue BANDWIDTH_LIMIT;*/
+    //? if forge
     public static ForgeConfigSpec.IntValue BANDWIDTH_LIMIT;
 
+    //? if neoforge
+    /*public static ModConfigSpec.IntValue PLAYER_SYNC_TIMEOUT;*/
+    //? if forge
     public static ForgeConfigSpec.IntValue PLAYER_SYNC_TIMEOUT;
 
+    //? if neoforge
+    /*public static ModConfigSpec.BooleanValue LOW_BANDWIDTH_USAGE;*/
+    //? if forge
     public static ForgeConfigSpec.BooleanValue LOW_BANDWIDTH_USAGE;
 
+    //? if neoforge
+    /*public static ModConfigSpec.BooleanValue CAN_SWITCH_MODEL;*/
+    //? if forge
     public static ForgeConfigSpec.BooleanValue CAN_SWITCH_MODEL;
 
+    //? if neoforge
+    /*public static ModConfigSpec.ConfigValue<String> DEFAULT_MODEL_ID;*/
+    //? if forge
     public static ForgeConfigSpec.ConfigValue<String> DEFAULT_MODEL_ID;
 
+    //? if neoforge
+    /*public static ModConfigSpec.ConfigValue<String> DEFAULT_MODEL_TEXTURE;*/
+    //? if forge
     public static ForgeConfigSpec.ConfigValue<String> DEFAULT_MODEL_TEXTURE;
 
+    //? if neoforge
+    /*public static ModConfigSpec.IntValue ACCEPT_SOUND_FX;*/
+    //? if forge
     public static ForgeConfigSpec.IntValue ACCEPT_SOUND_FX;
 
+    //? if neoforge
+    /*public static ModConfigSpec.ConfigValue<List<String>> CLIENT_NOT_DISPLAY_MODELS;*/
+    //? if forge
     public static ForgeConfigSpec.ConfigValue<List<String>> CLIENT_NOT_DISPLAY_MODELS;
 
+    //? if neoforge
+    /*public static ModConfigSpec buildSpec() {*/
+    //? if forge
     public static ForgeConfigSpec buildSpec() {
+        //? if neoforge
+        /*ModConfigSpec.Builder builder = new ModConfigSpec.Builder();*/
+        //? if forge
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
         defineOptions(builder);
         return builder.build();
     }
 
+    //? if neoforge
+    /*private static void defineOptions(ModConfigSpec.Builder builder) {*/
+    //? if forge
     private static void defineOptions(ForgeConfigSpec.Builder builder) {
         builder.comment("The default model ID when a player first enters the game");
         DEFAULT_MODEL_ID = builder.define("DefaultModelId", "default");

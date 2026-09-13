@@ -33,6 +33,9 @@ import java.util.*;
 
 public class ModelInfoScreen extends Screen {
 
+    //? if >=1.21
+    /*private static final ResourceLocation DEFAULT_AVATAR = ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "texture/default_avatar.png");*/
+    //? if <1.21
     private static final ResourceLocation DEFAULT_AVATAR = new ResourceLocation(YesSteveModel.MOD_ID, "texture/default_avatar.png");
 
     private static final Map<String, Component> URL_LABELS = YsmCollections.immutableMapOf("home", YsmText.translatable("gui.yes_steve_model.url.home"), "donate", YsmText.translatable("gui.yes_steve_model.url.donate"));
@@ -69,6 +72,9 @@ public class ModelInfoScreen extends Screen {
         for (int i = 0; i < authorInfo.size(); i++) {
             OuterFileTexture avatar = avatars.get(authorInfo.get(i).getName());
             if (avatar != null) {
+                //? if >=1.21
+                /*textureManager.register(ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "avatars/" + i), avatar);*/
+                //? if <1.21
                 textureManager.register(new ResourceLocation(YesSteveModel.MOD_ID, "avatars/" + i), avatar);
                 this.textureList.add(UploadManager.getOrCreateLocatable(avatar, true));
             } else {

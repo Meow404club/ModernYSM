@@ -14,8 +14,14 @@ import java.util.Map;
 
 public class PlayerSkinTextureManager {
 
+    //? if >=1.21
+    /*private static final ResourceLocation STEVE_SKIN = ResourceLocation.parse("textures/entity/player/wide/steve.png");*/
+    //? if <1.21
     private static final ResourceLocation STEVE_SKIN = new ResourceLocation("textures/entity/player/wide/steve.png");
 
+    //? if >=1.21
+    /*private static final ResourceLocation ALEX_SKIN = ResourceLocation.parse("textures/entity/player/slim/alex.png");*/
+    //? if <1.21
     private static final ResourceLocation ALEX_SKIN = new ResourceLocation("textures/entity/player/slim/alex.png");
 
     private static final String STEVE_TEXTURE_ID = "misc/2_steve";
@@ -41,10 +47,16 @@ public class PlayerSkinTextureManager {
         if (isDefaultSkin(event.getModelId()) && (player instanceof AbstractClientPlayer)) {
             AbstractClientPlayer abstractClientPlayer = (AbstractClientPlayer) player;
             Minecraft minecraft = Minecraft.getInstance();
+            //? if neoforge {
+            /*net.minecraft.client.resources.PlayerSkin insecureSkin = minecraft.getSkinManager().getInsecureSkin(abstractClientPlayer.getGameProfile());
+            location = insecureSkin.texture();
+            if (false) {
+             *///?} else {
             Map insecureSkinInformation = minecraft.getSkinManager().getInsecureSkinInformation(abstractClientPlayer.getGameProfile());
             if (insecureSkinInformation.containsKey(MinecraftProfileTexture.Type.SKIN)) {
                 location = minecraft.getSkinManager().registerTexture((MinecraftProfileTexture) insecureSkinInformation.get(MinecraftProfileTexture.Type.SKIN), MinecraftProfileTexture.Type.SKIN);
             } else {
+            //?}
                 location = getSkinTexture(event.getModelId());
             }
             event.setTextureLocation(location);

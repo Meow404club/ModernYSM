@@ -1,6 +1,13 @@
 package com.elfmcys.yesstevemodel.audio;
 
+// 1.20.5+ OggAudioStream(blaze3d) 删除 → JOrbisAudioStream（FloatSampleSource，read(int) 默认方法
+// ChunkedSampleByteBuf 同款 float→PCM16 clamp 公式，构造器/getFormat/read/close 同形）。
+// 注释态包裹（说明文字置块外：活跃分支内裸 // 会被剥前缀变代码）
+//? if <1.20.5 {
 import com.mojang.blaze3d.audio.OggAudioStream;
+//?} else {
+/*import net.minecraft.client.sounds.JOrbisAudioStream;*/
+//?}
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.Unpooled;
 import org.jetbrains.annotations.NotNull;
@@ -17,7 +24,10 @@ public class OggVorbisAudioStream implements IAudioStreamSupport {
 
     private static final ByteBuffer EMPTY_BUFFER = BufferUtils.createByteBuffer(0);
 
+//? if <1.20.5
     private final OggAudioStream oggStream;
+//? if >=1.20.5
+/*    private final JOrbisAudioStream oggStream;*/
 
     private final AudioFormat audioFormat;
 
@@ -29,7 +39,10 @@ public class OggVorbisAudioStream implements IAudioStreamSupport {
     private boolean isEndOfStream;
 
     public OggVorbisAudioStream(ByteBuffer byteBuffer, @Nullable AudioCacheBuilder cacheBuilder) throws UnsupportedAudioFileException, IOException {
+//? if <1.20.5
         this.oggStream = new OggAudioStream(new ByteBufInputStream(Unpooled.wrappedBuffer(byteBuffer)));
+//? if >=1.20.5
+/*        this.oggStream = new JOrbisAudioStream(new ByteBufInputStream(Unpooled.wrappedBuffer(byteBuffer)));*/
         if (this.oggStream.getFormat().getChannels() != 1 && this.oggStream.getFormat().getChannels() != 2) {
             throw new UnsupportedAudioFileException();
         }

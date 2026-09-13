@@ -19,6 +19,9 @@ public class JadeWailaPlugin implements IWailaPlugin {
 
     private static class ModelInfoComponentProvider implements IEntityComponentProvider {
 
+        //? if >=1.21
+        /*private static final ResourceLocation RESOURCE_ID = ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "model_info");*/
+        //? if <1.21
         private static final ResourceLocation RESOURCE_ID = new ResourceLocation(YesSteveModel.MOD_ID, "model_info");
 
         private ModelInfoComponentProvider() {

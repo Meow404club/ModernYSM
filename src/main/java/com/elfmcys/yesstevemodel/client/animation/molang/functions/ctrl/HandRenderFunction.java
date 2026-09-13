@@ -82,6 +82,9 @@ public class HandRenderFunction extends LivingEntityFunction {
             return strSubstring.equals(key.toString()) ? 1 : 0;
         }
         if (id.startsWith(PREFIX_ITEM_TAG)) {
+            //? if >=1.21
+            /*YsmTag.ItemTag tag = YsmTag.itemTag(ResourceLocation.parse(strSubstring));*/
+            //? if <1.21
             YsmTag.ItemTag tag = YsmTag.itemTag(new ResourceLocation(strSubstring));
             return tag.matches(itemBySlot) ? 1 : 0;
         }

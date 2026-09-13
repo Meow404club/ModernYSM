@@ -49,6 +49,9 @@ public class DumpEquippedItem extends LivingEntityFunction {
         stack.getTags().forEach(tagKey -> {
             context.entity().logWarningComponent(YsmText.literal("Tag ").append(copyOnClickTextCompat(tagKey.location().toString())));
         });
+        // 1.20.5+ enchantments 数据组件化：getEnchantmentTags 删除（vanilla-1.20.6 ItemStack 无此方法）
+        // → getEnchantments()=ItemEnchantments（keySet Holder<Enchantment>/getLevel，1.20.6:72/116）
+        //? if >=1.18.2 && <1.20.5 {
         for (Tag tag : stack.getEnchantmentTags()) {
             if (tag instanceof CompoundTag) {
                 CompoundTag compoundTag = (CompoundTag) tag;
@@ -58,6 +61,21 @@ public class DumpEquippedItem extends LivingEntityFunction {
                 }
             }
         }
+        //?}
+        //? if >=1.20.5 && <1.21 {
+        /*stack.getEnchantments().keySet().forEach(enchHolder -> {
+            int enchLevel = stack.getEnchantments().getLevel(enchHolder.value());
+            context.entity().logWarningComponent(YsmText.literal("Enchantment: display ").append(copyOnClickTextCompat(enchHolder.value().getFullname(enchLevel).getString(99))).append(YsmText.literal("  name ").append(copyOnClickTextCompat(net.minecraft.core.registries.BuiltInRegistries.ENCHANTMENT.getKey(enchHolder.value()).toString()))));
+        });*/
+        //?}
+        // 1.21 Enchantment 变 record+静态 getFullname(Holder,int)、ItemEnchantments.getLevel 收 Holder
+        //（vanilla-1.21.1 Enchantment.java:190 / ItemEnchantments.java:66）
+        //? if >=1.21 {
+        /*stack.getEnchantments().keySet().forEach(enchHolder -> {
+            int enchLevel = stack.getEnchantments().getLevel(enchHolder);
+            context.entity().logWarningComponent(YsmText.literal("Enchantment: display ").append(copyOnClickTextCompat(net.minecraft.world.item.enchantment.Enchantment.getFullname(enchHolder, enchLevel).getString(99))).append(YsmText.literal("  name ").append(copyOnClickTextCompat(enchHolder.getRegisteredName()))));
+        });*/
+        //?}
         //?}
         return null;
     }

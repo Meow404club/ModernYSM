@@ -9,7 +9,7 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import com.mojang.blaze3d.vertex.PoseStack;
-//? if >1.17 {
+//? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import com.elfmcys.yesstevemodel.util.YsmText;
@@ -60,12 +60,19 @@ public class AuthorButton extends YsmButton {
         return new AuthorButton(x, y, null, null, null, -1, screen);
     }
 
-    //? if >1.17 {
+    //? if >=1.20 {
     @Override
     public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
-    //?} else {
+    //?}
+    //? if >=1.19.4 && <1.20 {
+    /*@Override
+    public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
+    }
+     *///?}
+    //? if <1.19.4 {
     /*@Override
     public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
@@ -91,7 +98,9 @@ public class AuthorButton extends YsmButton {
         String str3 = ModelMetadataPresenter.getLocalizedModelString(this.modelAssembly, String.format("metadata.authors.%d.comment", this.authorIndex), this.authorInfo.getComment());
         //? if <1.17
         /*guiGraphics.drawString(font, YsmText.literal(str), getX() + 2, getY() + 72, ChatFormatting.GOLD.getColor().intValue(), false);*/
-        //? if >=1.17
+        //? if >=1.17 && <1.20
+        /*guiGraphics.renderScrollingString(font, YsmText.literal(str), getX() + 2, getY() + 72, (getX() + this.width) - 2, getY() + 82, ChatFormatting.GOLD.getColor().intValue());*/
+        //? if >=1.20
         renderScrollingString(guiGraphics.graphics(), font, YsmText.literal(str), getX() + 2, getY() + 72, (getX() + this.width) - 2, getY() + 82, ChatFormatting.GOLD.getColor().intValue());
         guiGraphics.drawCenteredString(font, str2, getX() + 35, getY() + 82, ChatFormatting.GREEN.getColor().intValue());
         drawWrappedText(guiGraphics, YsmText.literal(str3), getX() + 3, getY() + 95, 64, -1);

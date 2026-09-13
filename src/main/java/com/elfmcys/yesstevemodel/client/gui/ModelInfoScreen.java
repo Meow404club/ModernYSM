@@ -15,7 +15,7 @@ import com.elfmcys.yesstevemodel.mixin.client.ScreenAccessor;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.vertex.PoseStack;
-//? if >1.17 {
+//? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import rip.ysm.gui.YsmGui;
@@ -78,11 +78,11 @@ public class ModelInfoScreen extends Screen {
     }
 
     public void init() {
-//? if <1.17 {
-        /*this.init(Minecraft.getInstance(), this.width, this.height);
-        return;*/
-        //? if >=1.17
+// 1.16.5 无 Screen.clearWidgets（死注释形态的 init(mc,w,h)+return 从未生效，1.16.5 字段
+// 由 setScreen→init(Minecraft,w,h) 先行赋值，无参 init() 直接可用，m2.6 实测语义）
+//? if >=1.17 {
         clearWidgets();
+//?}
         this.guiLeft = (this.width - 420) / 2;
         this.guiTop = (this.height - 235) / 2;
         Metadata metadata = this.modelData.getExtraInfo();
@@ -142,7 +142,7 @@ public class ModelInfoScreen extends Screen {
         }
     }
 
-    //? if >1.17 {
+    //? if >=1.20 {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.render(new YsmGui(graphics), mouseX, mouseY, partialTick);
@@ -173,7 +173,9 @@ public class ModelInfoScreen extends Screen {
         }
         //? if <1.17
         /*super.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
-        //? if >=1.17
+        //? if >=1.17 && <1.20
+        /*super.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
+        //? if >=1.20
         super.render(guiGraphics.graphics(), mouseX, mouseY, partialTick);
         ((ScreenAccessor) this).ysm$getRenderables().stream().filter(renderable -> {
             return renderable instanceof AuthorButton;

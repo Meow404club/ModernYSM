@@ -74,7 +74,12 @@ public class RendererManager {
         // handRenderer = new HandItemRenderer();
         // vehicleRenderer = new VehicleRenderer(entityRenderDispatcher);
         //? } else {
+        // EntityRendererProvider.Context 构造：1.19.2 = 7 参（含 blockRenderer/itemInHandRenderer）；
+        // 1.17~1.18.2 = 5 参（1182 EntityRendererProvider.java:21），itemInHand 手工补
+        //? if >=1.19.2
         EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemRenderer(), Minecraft.getInstance().getBlockRenderer(), entityRenderDispatcher.getItemInHandRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), Minecraft.getInstance().font);
+        //? if <1.19.2
+        /*EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), Minecraft.getInstance().font);*/
         playerRenderer = new CustomPlayerRenderer(context);
         projectileRenderer = new ProjectileRenderer(context);
         handRenderer = new HandItemRenderer();

@@ -26,9 +26,9 @@ public class AnimationLockEvent {
         MinecraftForge.EVENT_BUS.addListener(AnimationLockEvent::onClientTickEvent);
     }
 
-    //? if <1.17
+    //? if <1.19.2
     /*private static void onKeyEvent(InputEvent.KeyInputEvent event) {*/
-    //? if >=1.17
+    //? if >=1.19.2
     private static void onKeyEvent(InputEvent.Key event) {
         if (YesSteveModel.isAvailable() && event.getAction() == 1 && AnimationRouletteKey.KEY_LOCK.matches(event.getKey(), event.getScanCode())) {
             animationLocked = !animationLocked;

@@ -25,7 +25,9 @@ public class AudioStreamCache {
         CachedAudioStreamProvider existingProvider;
         //? if <1.17
         /*RenderSystem.assertThread(RenderSystem::isOnRenderThread);*/
-        //? if >=1.17
+        //? if >=1.17 && <1.18.2
+        /*RenderSystem.assertThread(RenderSystem::isOnRenderThread);*/
+        //? if >=1.18.2
         RenderSystem.assertOnRenderThread();
         WeakReference<CachedAudioStreamProvider> weakReference = providerCache.get(renderContext);
         if (weakReference != null && (existingProvider = weakReference.get()) != null) {

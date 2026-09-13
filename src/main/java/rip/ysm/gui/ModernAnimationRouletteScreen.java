@@ -21,7 +21,7 @@ import rip.ysm.gui.YsmGui;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-//? if >1.17 {
+//? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import net.minecraft.client.gui.screens.Screen;
@@ -114,17 +114,18 @@ public class ModernAnimationRouletteScreen extends Screen {
     }
 
     // Screen.render 签名双轴：1.16.5 render(PoseStack,int,int,float)（1.16.5 Screen.java:73）
-    //? if <1.17 {
+    //? if <1.20 {
     /*@Override
     public void render(PoseStack pose, int mouseX, int mouseY, float partialTick) {
         this.renderRoot(new YsmGui(pose), mouseX, mouseY, partialTick);
     }
-     *///?} else {
+     *///?}
+     //? if >=1.20 {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderRoot(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
-    //?}
+     //?}
 
     private void renderRoot(YsmGui g, int mouseX, int mouseY, float partialTick) {
         if (GeneralConfig.BLUR_GUI != null && GeneralConfig.BLUR_GUI.get()) collectAndFlushBlur(g);
@@ -138,7 +139,11 @@ public class ModernAnimationRouletteScreen extends Screen {
 
         //? if <1.17 {
         /*super.render(g.pose(), mouseX, mouseY, partialTick);
-         *///?} else {
+         *///?}
+        //? if >=1.17 && <1.20 {
+        /*super.render(g.pose(), mouseX, mouseY, partialTick);
+         *///?}
+        //? if >=1.20 {
         super.render(g.graphics(), mouseX, mouseY, partialTick);
         //?}
     }

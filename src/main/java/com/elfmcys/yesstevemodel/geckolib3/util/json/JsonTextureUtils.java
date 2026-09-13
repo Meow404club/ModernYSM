@@ -5,7 +5,9 @@ import com.elfmcys.yesstevemodel.client.texture.OuterFileTexture;
 import com.elfmcys.yesstevemodel.util.data.OrderedStringMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-//? if >=1.17 {
+//? if <1.19.2 {
+/*import com.google.common.collect.Lists;*/
+//? } else {
 import org.apache.commons.compress.utils.Lists;
 //? }
 import org.apache.commons.lang3.tuple.Pair;

@@ -55,7 +55,10 @@ public final class C2SCompleteFeedbackPacket {
             ServerPlayer sender = ctx.getSender();
             //? if <1.17
             /*ctx.enqueueWork(() -> handleOnServer(message, sender.getLevel()));*/
-            //? if >=1.17
+            // ServerPlayer.serverLevel() 1.19.4 起；1.17~1.19.2 getLevel() 强转等价
+            //? if >=1.17 && <1.20
+            /*ctx.enqueueWork(() -> handleOnServer(message, (net.minecraft.server.level.ServerLevel) sender.getLevel()));*/
+            //? if >=1.20
             ctx.enqueueWork(() -> handleOnServer(message, sender.serverLevel()));
         }
     }

@@ -42,7 +42,10 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
         // 1.16.5 dispatcher 无 getItemInHandRenderer，自建（仅用于 renderItem 委托）
         //? if <1.17
         // addLayerRenderer(new CustomPlayerItemInHandLayer(new net.minecraft.client.renderer.ItemInHandRenderer(net.minecraft.client.Minecraft.getInstance())));
-        //? if >=1.17
+        // EntityRendererProvider.Context.getItemInHandRenderer 1.19.2 起（1182 Context 无该字段）
+        //? if >=1.17 && <1.19.2
+        /*addLayerRenderer(new CustomPlayerItemInHandLayer(new net.minecraft.client.renderer.ItemInHandRenderer(Minecraft.getInstance())));*/
+        //? if >=1.19.2
         addLayerRenderer(new CustomPlayerItemInHandLayer(context.getItemInHandRenderer()));
         addLayerRenderer(new CustomPlayerElytraLayer(context));
         addLayerRenderer(new CustomPlayerParrotLayer(context));
@@ -109,9 +112,9 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
         poseStack.pushPose();
         if (dDistanceToSqr < 100.0d && (displayObjective = (scoreboard = player.getScoreboard()).getDisplayObjective(2)) != null) {
             // Component.literal（1.19+）→ 1.16.5 new TextComponent；append 双版同名
-            //? if <1.17
+            //? if <1.19.2
             // super.renderNameTag(player, new net.minecraft.network.chat.TextComponent(Integer.toString(scoreboard.getOrCreatePlayerScore(player.getScoreboardName(), displayObjective).getScore())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i);
-            //? if >=1.17
+            //? if >=1.19.2
             super.renderNameTag(player, Component.literal(Integer.toString(scoreboard.getOrCreatePlayerScore(player.getScoreboardName(), displayObjective).getScore())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i);
             poseStack.translate(0.0d, 0.25875d, 0.0d);
         }

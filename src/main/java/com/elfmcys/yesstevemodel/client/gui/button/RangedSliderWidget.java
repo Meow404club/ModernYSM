@@ -1,12 +1,12 @@
 package com.elfmcys.yesstevemodel.client.gui.button;
 
 import com.elfmcys.yesstevemodel.util.YsmText;
-//? if >1.17 {
+//? if >=1.19.4 {
 import net.minecraft.client.InputType;
 //?}
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.vertex.PoseStack;
-//? if >1.17 {
+//? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import rip.ysm.gui.YsmGui;
@@ -93,8 +93,9 @@ public class RangedSliderWidget extends YsmSliderButton {
         if (!focused) {
             this.canChangeValue = false;
         } else {
-            // InputType/getLastInputType 1.17+：<1.17 无键盘导航输入类型判定 → 恒可改值
-            //? if <1.17 {
+            // InputType/getLastInputType 1.19.4 引入（1182/1192 sources jar 零命中，1194 有）；
+            // 1.16.5~1.19.2 无输入类型判定 → 恒可改值
+            //? if <1.19.4 {
             /*this.canChangeValue = true;*/
             //?} else {
             InputType inputType = Minecraft.getInstance().getLastInputType();
@@ -156,17 +157,32 @@ public class RangedSliderWidget extends YsmSliderButton {
     }
 
     protected int getHandleTextureY() {
+        // isHovered 1.16.5~1.18.2（1165/1171/1194/1201 基线原文）/ isHoveredOrFocused 仅 1182/1192（isHovered 缺）
+        //? if >=1.18.2 && <1.19.4
+        /*int i = !this.isHoveredOrFocused() && !this.canChangeValue ? 2 : 3;*/
+        //? if <1.18.2
+        // int i = !this.isHovered() && !this.canChangeValue ? 2 : 3;
+        //? if >=1.19.4
         int i = !this.isHovered() && !this.canChangeValue ? 2 : 3;
         return i * 20;
     }
 
-    //? if >1.17 {
+    //? if >=1.20 {
     @Override
     public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
-    //?} else {
-    /*@Override
+    //?}
+    //? if >=1.19.4 && <1.20 {
+    /*
+    @Override
+    public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
+    }
+     *///?}
+    //? if <1.19.4 {
+    /*
+    @Override
     public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
     }
@@ -184,7 +200,9 @@ public class RangedSliderWidget extends YsmSliderButton {
         int color = this.active ? 16777215 : 10526880;
         //? if <1.17
         /*guiGraphics.drawString(mc.font, this.getMessage(), this.getX() + 2, this.getY() + (this.height - 8) / 2, color | Mth.ceil(this.alpha * 255.0F) << 24, false);*/
-        //? if >=1.17
+        //? if >=1.17 && <1.20
+        /*guiGraphics.renderScrollingString(mc.font, this.getMessage(), this.getX() + 2, this.getY(), (this.getX() + this.width) - 2, this.getY() + this.height, color | Mth.ceil(this.alpha * 255.0F) << 24);*/
+        //? if >=1.20
         renderScrollingString(guiGraphics.graphics(), mc.font, 2, color | Mth.ceil(this.alpha * 255.0F) << 24);
     }
 

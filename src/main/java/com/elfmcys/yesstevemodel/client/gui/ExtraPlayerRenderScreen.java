@@ -5,7 +5,7 @@ import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.config.ExtraPlayerRenderConfig;
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.vertex.PoseStack;
-//? if >1.17 {
+//? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import rip.ysm.gui.YsmGui;
@@ -54,11 +54,11 @@ public class ExtraPlayerRenderScreen extends Screen {
     }
 
     public void init() {
-//? if <1.17 {
-        /*this.init(Minecraft.getInstance(), this.width, this.height);
-        return;*/
-        //? if >=1.17
+// 1.16.5 无 Screen.clearWidgets（死注释形态的 init(mc,w,h)+return 从未生效，1.16.5 字段
+// 由 setScreen→init(Minecraft,w,h) 先行赋值，无参 init() 直接可用，m2.6 实测语义）
+//? if >=1.17 {
         clearWidgets();
+//?}
         int i = -30;
         if (PauseScreenButtonBuilder.isAndroid()) {
             ysmAddWidget(YsmGui.button((this.width / 2) - 50, this.height - 35, 100, 30, YsmText.translatable("controls.reset"), button -> {
@@ -76,7 +76,7 @@ public class ExtraPlayerRenderScreen extends Screen {
         });
     }
 
-    //? if >1.17 {
+    //? if >=1.20 {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.render(new YsmGui(graphics), mouseX, mouseY, partialTick);
@@ -115,12 +115,16 @@ public class ExtraPlayerRenderScreen extends Screen {
         }
         guiGraphics.pose().popPose();
         if (Minecraft.getInstance().player != null && !ExtraPlayerRenderConfig.DISABLE_PLAYER_RENDER.get().booleanValue()) {
-            //? if >=1.17
+            //? if >=1.17 && <1.20
+            /*ModelPreviewRenderer.renderPlayerOverlay(guiGraphics.pose(), Minecraft.getInstance().player, this.mouseStartX, this.mouseStartY, this.rotationX, this.rotationY, -500, this.minecraft.getFrameTime());*/
+            //? if >=1.20
             ModelPreviewRenderer.renderPlayerOverlay(guiGraphics.graphics(), Minecraft.getInstance().player, this.mouseStartX, this.mouseStartY, this.rotationX, this.rotationY, -500, this.minecraft.getFrameTime());
         }
         //? if <1.17
         /*super.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
-        //? if >=1.17
+        //? if >=1.17 && <1.20
+        /*super.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
+        //? if >=1.20
         super.render(guiGraphics.graphics(), mouseX, mouseY, partialTick);
     }
 

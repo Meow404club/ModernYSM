@@ -9,13 +9,44 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+// @At 注入点随版本分叉：
+// 1.19.4 起 ServerPlayer 不再覆写 startRiding（vanilla-mc-1194 ServerPlayer.java 无该方法，
+// javap 1194 merged jar 实证）→ ServerPlayer 目标失效；1165~1192 覆写体无 positionRider
+// 调用（1171/1182 merged jar javap：体=瞬移分支 + invokespecial Player.startRiding）→
+// <1.19.4 注入 super 调用返回后（挂载完成、乘客已入列，语义等价）；1194 段改注
+// Entity.startRiding TAIL（this=乘客，isPassenger 守卫过滤失败分支）；1.20.1 恢复基线
+// ServerPlayer + positionRider 形（在产线产物零变化）。
+//? if <1.19.4 {
+/*
 @Mixin({ServerPlayer.class})
 public abstract class ServerPlayerMixin {
-    // @At 注入点随版本分叉（m2 实测）：1.20.1 ServerPlayer.startRiding 覆写体内直调
-    // positionRider；1.16.5 的覆写体只有「已骑乘瞬移」分支 + super.startRiding 转发
-    //（javap -c 实证，addPassenger/positionRider 均不在本方法体）→ 注入点改 super 调用
-    // 返回后（挂载完成、乘客已入列，语义等价；super 返回 false 时守卫条件自然不成立）。
-    //? if >=1.17 {
+    @Inject(method = {"startRiding(Lnet/minecraft/world/entity/Entity;Z)Z"}, at = {@At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;startRiding(Lnet/minecraft/world/entity/Entity;Z)Z", shift = At.Shift.AFTER)})
+    private void onStartRiding(Entity entity, boolean force, CallbackInfoReturnable<Boolean> ci) {
+        Entity entity2;
+        if (YesSteveModel.isAvailable() && !entity.getPassengers().isEmpty() && entity.getPassengers().get(0) == (entity2 = (ServerPlayer) (Object) this)) {
+            CapabilityEvent.syncVehicleModel(entity, (ServerPlayer) entity2);
+        }
+    }
+}
+ *///?}
+//? if >=1.19.4 && <1.20 {
+/*
+@Mixin({Entity.class})
+public abstract class ServerPlayerMixin {
+    @Inject(method = {"startRiding(Lnet/minecraft/world/entity/Entity;Z)Z"}, at = {@At("TAIL")})
+    private void onStartRiding(Entity entity, boolean force, CallbackInfoReturnable<Boolean> ci) {
+        if (YesSteveModel.isAvailable() && (Object) this instanceof ServerPlayer) {
+            ServerPlayer player = (ServerPlayer) (Object) this;
+            if (player.getVehicle() != null) {
+                CapabilityEvent.syncVehicleModel(entity, player);
+            }
+        }
+    }
+}
+ *///?}
+//? if >=1.20 {
+@Mixin({ServerPlayer.class})
+public abstract class ServerPlayerMixin {
     @Inject(method = {"startRiding(Lnet/minecraft/world/entity/Entity;Z)Z"}, at = {@At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;positionRider(Lnet/minecraft/world/entity/Entity;)V", shift = At.Shift.AFTER)})
     private void onStartRiding(Entity entity, boolean force, CallbackInfoReturnable<Boolean> ci) {
         Entity entity2;
@@ -23,13 +54,5 @@ public abstract class ServerPlayerMixin {
             CapabilityEvent.syncVehicleModel(entity, (ServerPlayer) entity2);
         }
     }
-    //?} else {
-    /*@Inject(method = {"startRiding(Lnet/minecraft/world/entity/Entity;Z)Z"}, at = {@At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;startRiding(Lnet/minecraft/world/entity/Entity;Z)Z", shift = At.Shift.AFTER)})
-    private void onStartRiding(Entity entity, boolean force, CallbackInfoReturnable<Boolean> ci) {
-        Entity entity2;
-        if (YesSteveModel.isAvailable() && !entity.getPassengers().isEmpty() && entity.getPassengers().get(0) == (entity2 = (ServerPlayer) (Object) this)) {
-            CapabilityEvent.syncVehicleModel(entity, (ServerPlayer) entity2);
-        }
-    }
-    *///?}
 }
+//?}

@@ -18,7 +18,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Parrot;
 import net.minecraft.world.entity.player.Player;
-//? if >=1.17 {
+//? if >=1.19.4 {
 import com.mojang.math.Axis;
 //? }
 
@@ -63,13 +63,19 @@ public class CustomPlayerParrotLayer extends GeoLayerRenderer<CustomPlayerEntity
             poseStack.translate(0.0d, 1.5d, 0.0d);
             //? if <1.17
             // poseStack.mulPose(com.mojang.math.Vector3f.ZP.rotationDegrees(180.0f));
-            //? if >=1.17
+            // 1.19.3 起 Axis 枚举替换 Vector3f 常量旋转（1194 Axis.java；1192 sources 无此类）
+            //? if >=1.17 && <1.19.4
+            /*poseStack.mulPose(com.mojang.math.Vector3f.ZP.rotationDegrees(180.0f));*/
+            //? if >=1.19.4
             poseStack.mulPose(Axis.ZP.rotationDegrees(180.0f));
-            // 1.16.5 无 Parrot.Variant/ParrotRenderer.getVariantTexture：variant 为 int，
-            // 贴图查 ParrotRenderer.PARROT_LOCATIONS[variant]（vanilla 1.16.5 同款索引，越界防护取模）
-            //? if <1.17
+            // <1.19.4 无 Parrot.Variant 枚举（getVariant 仍为 int，1192 Parrot.java:413；1.19.4 起才
+            // Parrot.Variant + getVariantTexture，1194 Parrot.java:497）：贴图查
+            // ParrotRenderer.PARROT_LOCATIONS[variant]（vanilla 1192 ParrotRenderer.java:23 同款索引，越界防护取模）
+            //? if <1.19.4
             // this.parrotModel.renderOnShoulder(poseStack, bufferSource.getBuffer(this.parrotModel.renderType(ParrotRenderer.PARROT_LOCATIONS[Math.floorMod(shoulderEntityLeft.getInt(TAG_VARIANT), ParrotRenderer.PARROT_LOCATIONS.length)])), packedLightIn, OverlayTexture.NO_OVERLAY, limbSwing, limbSwingAmount, netHeadYaw, headPitch, player.tickCount);
-            //? if >=1.17
+            //? if >=1.17 && <1.19.4
+            /*this.parrotModel.renderOnShoulder(poseStack, bufferSource.getBuffer(this.parrotModel.renderType(ParrotRenderer.PARROT_LOCATIONS[Math.floorMod(shoulderEntityLeft.getInt(TAG_VARIANT), ParrotRenderer.PARROT_LOCATIONS.length)])), packedLightIn, OverlayTexture.NO_OVERLAY, limbSwing, limbSwingAmount, netHeadYaw, headPitch, player.tickCount);*/
+            //? if >=1.19.4
             this.parrotModel.renderOnShoulder(poseStack, bufferSource.getBuffer(this.parrotModel.renderType(ParrotRenderer.getVariantTexture(Parrot.Variant.byId(shoulderEntityLeft.getInt(TAG_VARIANT))))), packedLightIn, OverlayTexture.NO_OVERLAY, limbSwing, limbSwingAmount, netHeadYaw, headPitch, player.tickCount);
             poseStack.popPose();
         });

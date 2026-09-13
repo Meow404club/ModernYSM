@@ -32,9 +32,10 @@ public class GeckoProjectileEntity extends GeoEntity<Projectile> {
     @Nullable
     public GeoEntity.ModelWrapper buildRenderShape(ModelAssembly modelAssembly, boolean isDefault) {
         ProjectileModelBundle modelBundle;
-        //? if <1.17
+        // 1171 EntityType 无 builtInRegistryHolder（merged jar 实证）→ EntityType.getKey 静态（1165/1171 同款）
+        //? if <1.18.2
         // if (!isDefault && (modelBundle = modelAssembly.getProjectileModels().get(net.minecraft.world.entity.EntityType.getKey(this.entity.getType()))) != null) {
-        //? if >=1.17
+        //? if >=1.18.2
         if (!isDefault && (modelBundle = modelAssembly.getProjectileModels().get(this.entity.getType().builtInRegistryHolder().key().location())) != null) {
             return new ProjectileModelWrapper(modelAssembly, false, modelBundle);
         }
@@ -44,9 +45,9 @@ public class GeckoProjectileEntity extends GeoEntity<Projectile> {
     @Override
     public void onModelLoaded(ModelAssembly modelAssembly) {
         super.onModelLoaded(modelAssembly);
-        //? if <1.17
+        //? if <1.18.2
         // this.projectileModelContext = modelAssembly.getProjectileModels().get(net.minecraft.world.entity.EntityType.getKey(this.entity.getType()));
-        //? if >=1.17
+        //? if >=1.18.2
         // this.projectileModelContext = modelAssembly.getProjectileModels().get(this.entity.getType().builtInRegistryHolder().key().location());
     }
 

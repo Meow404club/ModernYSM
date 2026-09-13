@@ -33,8 +33,10 @@ import com.google.gson.JsonParser;
 import io.netty.buffer.Unpooled;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import net.minecraft.network.Connection;
-//? if >=1.17 {
+//? if >=1.18.2 {
 import it.unimi.dsi.fastutil.floats.FloatReferencePair;
+//?}
+//? if >=1.19.2 {
 import net.minecraft.network.PacketSendListener;
 //?}
 import net.minecraft.network.chat.Component;
@@ -1206,7 +1208,9 @@ public final class ServerModelManager {
             try {
                 //? if <1.17
                 /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
-                //? if >=1.17
+                //? if >=1.17 && <1.18.2
+                /*MinecraftServer currentServer = net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();*/
+                //? if >=1.18.2
                 MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
                 if (currentServer == null) return;
 
@@ -1523,13 +1527,15 @@ public final class ServerModelManager {
     public static void requestPlayerAuth(ServerPlayer serverPlayer, @Nullable Consumer<UUIDComponentData> consumer) {
         //? if <1.17
                 /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
-                //? if >=1.17
+                //? if >=1.17 && <1.18.2
+                /*MinecraftServer currentServer = net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();*/
+                //? if >=1.18.2
                 MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
         currentServer.execute(() -> {
             List<ServerPlayer> players = currentServer.getPlayerList().getPlayers();
             // FloatReferencePair/Pair 接口 fastutil 8.3.0 才有（1.16.5=8.2.1，jar 实证）：
             // <1.17 直接按距离稳定排序玩家列表（Comparator.comparingDouble，结果与 pair 排序一致）
-            //? if <1.17 {
+            //? if <1.18.2 {
             /*List<ServerPlayer> sorted = new ArrayList<>(players);
             sorted.removeIf(p2 -> p2.level.dimensionType() != serverPlayer.level.dimensionType());
             sorted.sort(java.util.Comparator.comparingDouble(p2 -> p2.distanceTo(serverPlayer)));
@@ -1537,6 +1543,9 @@ public final class ServerModelManager {
              *///?} else {
             ArrayList<FloatReferencePair<ServerPlayer>> arrayList = new ArrayList<>();
             for (ServerPlayer serverPlayer2 : players) {
+                //? if <1.20
+                /*if (serverPlayer2.getLevel().dimensionType() == serverPlayer.getLevel().dimensionType()) {*/
+//? if >=1.20
                 if (serverPlayer2.level().dimensionType() == serverPlayer.level().dimensionType()) {
                     arrayList.add(it.unimi.dsi.fastutil.floats.FloatReferencePair.of(serverPlayer2.distanceTo(serverPlayer), serverPlayer2));
                 }
@@ -1554,7 +1563,9 @@ public final class ServerModelManager {
             }
             //? if <1.17
                 /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
-                //? if >=1.17
+                //? if >=1.17 && <1.18.2
+                /*MinecraftServer currentServer = net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();*/
+                //? if >=1.18.2
                 MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
             if (currentServer == null) {
                 return;
@@ -1578,7 +1589,9 @@ public final class ServerModelManager {
         Consumer<ModelLoadResult> consumer = (Consumer<ModelLoadResult>) obj;
         //? if <1.17
                 /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
-                //? if >=1.17
+                //? if >=1.17 && <1.18.2
+                /*MinecraftServer currentServer = net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();*/
+                //? if >=1.18.2
                 MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
         if (modelLoadResult.isSuccess()) {
             IntOpenHashSet hashes = new IntOpenHashSet(modelLoadResult.getModelDefinitions().size());
@@ -1618,7 +1631,9 @@ public final class ServerModelManager {
         ServerPlayer player;
 //? if <1.17
         /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
-        //? if >=1.17
+        //? if >=1.17 && <1.18.2
+        /*MinecraftServer currentServer = net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();*/
+        //? if >=1.18.2
         MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
         if (currentServer == null || (player = currentServer.getPlayerList().getPlayer(uuid)) == null) {
             return null;
@@ -1627,11 +1642,22 @@ public final class ServerModelManager {
         // isAcceptingMessages/ServerCommonPacketListenerImpl 为 1.20 API（1.16.5 无）：
         // <1.17 对位 Connection.isConnected + connection 字段直取
         //? if <1.17 {
-        /*if (!serverGamePacketListenerImpl.connection.isConnected() || !serverGamePacketListenerImpl.getClass().equals(ServerGamePacketListenerImpl.class)) {
+        /*
+        // isAcceptingMessages 1.19.4 起；1.16.5~1.19.2 connection 为 public final 字段（1192:190）
+        // 直连 isConnected 等价
+        if (!serverGamePacketListenerImpl.connection.isConnected() || !serverGamePacketListenerImpl.getClass().equals(ServerGamePacketListenerImpl.class)) {
             return null;
         }
         return serverGamePacketListenerImpl.connection;
-         *///?} else {
+         *///?}
+        //? if >=1.17 && <1.19.4 {
+        /*
+        if (!serverGamePacketListenerImpl.connection.isConnected() || !serverGamePacketListenerImpl.getClass().equals(ServerGamePacketListenerImpl.class)) {
+            return null;
+        }
+        return serverGamePacketListenerImpl.connection;
+         *///?}
+        //? if >=1.19.4 {
         if (!serverGamePacketListenerImpl.isAcceptingMessages() || !serverGamePacketListenerImpl.getClass().equals(ServerGamePacketListenerImpl.class)) {
             return null;
         }
@@ -1686,7 +1712,7 @@ public final class ServerModelManager {
                 try {
                     // PacketSendListener 1.19.4+：<1.17 用 GenericFutureListener（发送即视为成功，
                     // 失败探测由后续 deadline 轮询 isConnected 兜底，语义等价）
-                    //? if <1.17 {
+                    //? if <1.19.2 {
                     /*connection.send((Packet<?>) obj, future -> atomicInteger.set(1));
                      *///?} else {
                     connection.send((Packet<?>) obj, new PacketSendListener() {

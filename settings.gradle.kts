@@ -15,7 +15,7 @@ pluginManagement {
 }
 
 plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
     id("dev.kikugie.stonecutter") version "0.7"
 }
 
@@ -27,6 +27,13 @@ stonecutter {
             .forEach { vers("$version-$it", version).buildscript = "build.$it.gradle.kts" }
 
         match("1.20.1", "forge")
+        // M3 平铺第一批：forge 中段四线同走 legacyforge（MDG 官方支持域 1.17~1.20.1，
+        // tmp/harvest/m3-matrix-mdg/LEGACY.md:3）；forge 版本号取 maven promotions：
+        // 1.17.1=37.1.1（该线唯一构建）/1.18.2=40.3.0、1.19.2=43.5.0、1.19.4=45.4.0（recommended）
+        vers("1.17.1-forge", "1.17.1").buildscript = "build.forge.gradle.kts"
+        vers("1.18.2-forge", "1.18.2").buildscript = "build.forge.gradle.kts"
+        vers("1.19.2-forge", "1.19.2").buildscript = "build.forge.gradle.kts"
+        vers("1.19.4-forge", "1.19.4").buildscript = "build.forge.gradle.kts"
         // <1.17 的 forge 走 unimined 线（MDG/NFRT 拒绝 pre-1.17，实证 tmp/poc-1165/RUN-REPORT.md 实测 4）；
         // Celeritas 生产先例：forge <1.17 → unimined，>=1.17 → legacyforge
         vers("1.16.5-forge", "1.16.5").buildscript = "build.unimined.gradle.kts"

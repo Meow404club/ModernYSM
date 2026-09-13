@@ -33,7 +33,7 @@ public class DumpEquippedItem extends LivingEntityFunction {
         context.entity().logWarningComponent(YsmText.literal("Display ").append(copyOnClickTextCompat(stack.getItem().getName(stack).getString(99))));
         context.entity().logWarningComponent(YsmText.literal("Name ").append(copyOnClickTextCompat(key.toString())));
         // getTags()（1.17+）↔ 1.16.5 TagCollection.getMatchingTags(item)；getEnchantmentTags()（1.17+）↔ 1.16.5 NBT 清单
-        //? if <1.17 {
+        //? if <1.18.2 {
         /*net.minecraft.tags.ItemTags.getAllTags().getMatchingTags(stack.getItem()).forEach(tagRl ->
             context.entity().logWarningComponent(YsmText.literal("Tag ").append(copyOnClickTextCompat(tagRl.toString()))));
         net.minecraft.nbt.ListTag enchantmentList = stack.getTag() != null ? stack.getTag().getList("Enchantments", 10) : new net.minecraft.nbt.ListTag();
@@ -44,7 +44,8 @@ public class DumpEquippedItem extends LivingEntityFunction {
                 context.entity().logWarningComponent(YsmText.literal("Enchantment: display ").append(copyOnClickTextCompat(enchantment.getFullname(compoundTag.getInt("lvl")).getString(99))).append(YsmText.literal("  name ").append(copyOnClickTextCompat(resourceLocationTryParse.toString()))));
             }
         }
-         *///?} else {
+         *///?}
+        //? if >=1.18.2 {
         stack.getTags().forEach(tagKey -> {
             context.entity().logWarningComponent(YsmText.literal("Tag ").append(copyOnClickTextCompat(tagKey.location().toString())));
         });
@@ -63,7 +64,8 @@ public class DumpEquippedItem extends LivingEntityFunction {
 
     /** ComponentUtils.copyOnClickText（1.19.2+）↔ 1.16.5 无 → 原串直返。 */
     private static net.minecraft.network.chat.Component copyOnClickTextCompat(String str) {
-        //? if <1.17 {
+        // ComponentUtils.copyOnClickText 1.19.4+：中段+1.16.5 原串直返
+        //? if <1.19.4 {
         /*return YsmText.literal(str);
          *///?} else {
         return net.minecraft.network.chat.ComponentUtils.copyOnClickText(str);

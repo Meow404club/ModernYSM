@@ -1,12 +1,17 @@
 package com.elfmcys.yesstevemodel.geckolib3.core.molang.builtin.query;
 
-//? if <1.17 {
-// import net.minecraft.tags.ItemTags;
-// import net.minecraft.tags.Tag;
-//? } else {
+//? if <1.18.2 {
+/*import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.Tag;
+ *///?}
+//? if >=1.18.2 && <1.19.4 {
+/*import net.minecraft.tags.TagKey;
+import net.minecraft.core.Registry;
+ *///?}
+//? if >=1.19.4 {
 import net.minecraft.tags.TagKey;
 import net.minecraft.core.registries.Registries;
-//? }
+//?}
 import rip.ysm.compat.cosmeticarmorreworked.CosmeticArmorHelper;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.context.IContext;
 import com.elfmcys.yesstevemodel.geckolib3.util.MolangUtils;
@@ -39,12 +44,21 @@ public class EquipmentItemAnyTag extends LivingEntityFunction {
                 // return true;
             //? if <1.17
             // }
-            //? if >=1.17
-            if (stack.is(TagKey.create(Registries.ITEM, key))) {
-            //? if >=1.17
+            //? if >=1.17 && <1.18.2 {
+            /*if (net.minecraft.tags.ItemTags.getAllTags().getTagOrEmpty(key).contains(stack.getItem())) {
                 return true;
-            //? if >=1.17
             }
+             *///?}
+            //? if >=1.18.2 && <1.19.4 {
+            /*if (stack.is(TagKey.create(net.minecraft.core.Registry.ITEM_REGISTRY, key))) {
+                return true;
+            }
+             *///?}
+            //? if >=1.19.4 {
+            if (stack.is(TagKey.create(Registries.ITEM, key))) {
+                return true;
+            }
+            //?}
         }
         return false;
     }

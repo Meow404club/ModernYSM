@@ -22,8 +22,19 @@ public final class ReplacePlayerRenderForgeHook {
         // if (ReplacePlayerRenderEvent.onRenderPlayerPre(event.getPlayer(), event.getPartialRenderTick(), event.getMatrixStack(), event.getBuffers(), event.getLight())) {
         //     event.setCanceled(true);
         // }
-        //? } else {
+        //? }
+        //? if >=1.17 && <1.18.2 {
+        /*if (ReplacePlayerRenderEvent.onRenderPlayerPre((net.minecraft.world.entity.player.Player) event.getEntity(), event.getPartialRenderTick(), event.getMatrixStack(), event.getBuffers(), event.getLight())) {
+            event.setCanceled(true);
+        }
+         *///? }
+        //? if >=1.18.2 {
+        // RenderPlayerEvent.Pre.getEntity() 协变 Player 覆写 1.19.2 起（1182 返回 Entity）；
+        // getPartialTick 名称 1182/1192/1194+ 一致（8820f35 双绿实证），勿改 getPartialTicks
+        //? if >=1.19.2
         if (ReplacePlayerRenderEvent.onRenderPlayerPre(event.getEntity(), event.getPartialTick(), event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight())) {
+        //? if <1.19.2
+        /*if (ReplacePlayerRenderEvent.onRenderPlayerPre((net.minecraft.world.entity.player.Player) event.getEntity(), event.getPartialTick(), event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight())) {*/
             event.setCanceled(true);
         }
         //? }

@@ -18,15 +18,16 @@ import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import rip.ysm.gui.YsmGui;
 import com.mojang.blaze3d.vertex.PoseStack;
-//? if <1.17 {
+//? if <1.19.4 {
 /*import com.mojang.math.Quaternion;
 import com.mojang.math.Vector3f;
- *///?} else {
+ *///?}
+//? if >=1.19.4 {
 import com.mojang.math.Axis;
 import org.joml.Quaternionf;
 //?}
 import net.minecraft.client.Minecraft;
-//? if >1.17 {
+//? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import net.minecraft.client.gui.screens.Screen;
@@ -243,7 +244,9 @@ public class ModelSettingsScreen extends OptionScreen {
         poseStack.scale(scale, scale, scale);
         poseStack.translate(0.0d, 0.8d, 0.0d);
 
-        //? if <1.17 {
+        // 旋转四元数：1.16.5~1.19.2 = mojang Quaternion/Vector3f.rotationDegrees（1192:193）；
+        // 1.19.3+ = Axis 枚举 + JOML Quaternionf
+        //? if <1.19.4 {
         /*Quaternion rotationZ = Vector3f.ZP.rotationDegrees(180.0f);
         Quaternion rotationX = Vector3f.XP.rotationDegrees(-10.0f + pitch);
         rotationZ.mul(rotationX);
@@ -297,7 +300,11 @@ public class ModelSettingsScreen extends OptionScreen {
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         //? if <1.17 {
         /*rotationX.conj();
-         *///?} else {
+         *///?}
+        //? if >=1.17 && <1.19.4 {
+        /*rotationX.conj();
+         *///?}
+        //? if >=1.19.4 {
         rotationX.conjugate();
         //?}
         dispatcher.overrideCameraOrientation(rotationX);

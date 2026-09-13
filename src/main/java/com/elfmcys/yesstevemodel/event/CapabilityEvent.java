@@ -29,7 +29,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraftforge.event.TickEvent;
-//? if >=1.17 {
+//? if >=1.19.2 {
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 //?} else {
 /*// 事件名反向差：1.16.x 为 EntityJoinWorldEvent（1.19+ 才改名 JoinLevel），javap 实证
@@ -102,7 +102,7 @@ public final class CapabilityEvent {
         });
     }
 
-    //? if >=1.17 {
+    //? if >=1.19.2 {
     @SubscribeEvent
     public static void onEntityJoinLevel(EntityJoinLevelEvent event) {
         onEntityJoin(event.getEntity());
@@ -150,10 +150,16 @@ public final class CapabilityEvent {
         if (event.phase != TickEvent.Phase.END) {
             return;
         }
-        //? if >=1.17
-        onServerTickEnd(event.getServer());
+        // TickEvent.ServerTickEvent.getServer 1.19.3+；1.16.5 fml.server 包 / 1.17~1.18.2
+        // net.minecraftforge.server 包 / 1.19.3+ 事件自带
         //? if <1.17
-        /*onServerTickEnd(ServerLifecycleHooks.getCurrentServer());*/
+        /*onServerTickEnd(net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer());*/
+        //? if >=1.17 && <1.18.2
+        /*onServerTickEnd(net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer());*/
+        //? if >=1.18.2 && <1.19.2
+        /*onServerTickEnd(net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer());*/
+        //? if >=1.19.2
+        onServerTickEnd(event.getServer());
     }
 
     private static void onServerTickEnd(MinecraftServer server) {

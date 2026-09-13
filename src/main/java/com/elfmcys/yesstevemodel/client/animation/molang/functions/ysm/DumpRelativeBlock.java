@@ -25,7 +25,8 @@ public class DumpRelativeBlock extends EntityFunction {
         //? if <1.17 {
         /*net.minecraft.tags.BlockTags.getAllTags().getMatchingTags(blockState.getBlock()).forEach(tagRl ->
             context.entity().logWarningComponent(YsmText.literal("Tag ").append(copyOnClickTextCompat(tagRl.toString()))));*/
-        //?} else {
+        //?}
+        //? if >=1.18.2 {
         blockState.getTags().forEach(tagKey -> {
             context.entity().logWarningComponent(YsmText.literal("Tag ").append(copyOnClickTextCompat(tagKey.location().toString())));
         });
@@ -35,7 +36,8 @@ public class DumpRelativeBlock extends EntityFunction {
 
     /** ComponentUtils.copyOnClickText（1.19.2+）↔ 1.16.5 无 → 原串直返。 */
     private static net.minecraft.network.chat.Component copyOnClickTextCompat(String str) {
-        //? if <1.17 {
+        // ComponentUtils.copyOnClickText 1.19.4+：中段+1.16.5 原串直返
+        //? if <1.19.4 {
         /*return YsmText.literal(str);
          *///?} else {
         return net.minecraft.network.chat.ComponentUtils.copyOnClickText(str);

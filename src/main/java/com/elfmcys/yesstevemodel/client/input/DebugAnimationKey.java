@@ -25,7 +25,7 @@ public final class DebugAnimationKey {
         MinecraftForge.EVENT_BUS.addListener(DebugAnimationKey::onKeyInput);
     }
 
-    //? if >=1.17 {
+    //? if >=1.19.2 {
     private static void onKeyInput(InputEvent.Key event) {
         handleKeyInput(event.getKey(), event.getScanCode(), event.getAction());
     }

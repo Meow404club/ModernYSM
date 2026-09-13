@@ -25,6 +25,9 @@ public final class BoneSkinShader {
         if (program != 0) return true;
         if (failed) return false;
         //? if >1.17 {
+        //? if <1.18.2
+        /*RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);*/
+        //? if >=1.18.2
         RenderSystem.assertOnRenderThreadOrInit();
         //?}
 

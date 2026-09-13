@@ -233,7 +233,8 @@ public abstract class AnimatableEntity<TEntity extends Entity> {
             // animationSpeed/animationPosition 手工展开逐项等价：
             // speed(p)=lerp(p, speedOld, speed)；position(p)=position - speed*(1-p)
             // （vanilla-mc-1201 WalkAnimationState / vanilla-mc-1165 LivingEntityRenderer:94）
-            //? if <1.17 {
+            // WalkAnimationState 1.19.4+（1192 merged jar 无此类）：中段+1.16.5 走 animationSpeed 字段组
+            //? if <1.19.4 {
             // limbSwingAmount = Mth.lerp(partialTick, livingEntity.animationSpeedOld, livingEntity.animationSpeed);
             // limbSwing = livingEntity.animationPosition - livingEntity.animationSpeed * (1.0f - partialTick);
             //? } else {
@@ -399,7 +400,20 @@ public abstract class AnimatableEntity<TEntity extends Entity> {
     public boolean isDebugMode() {
         //? if <1.17 {
         // return Minecraft.getInstance().level == this.entity.level && !this.entity.removed;
-        //? } else {
+        //? }
+        //? if >=1.17 && <1.18.2 {
+        /*
+        return Minecraft.getInstance().level == this.entity.level && !this.entity.isRemoved();
+         *///?}
+        //? if >=1.18.2 && <1.19.4 {
+        /*
+        return Minecraft.getInstance().level == this.entity.getLevel() && !this.entity.isRemoved();
+         *///?}
+        //? if >=1.19.4 && <1.20 {
+        /*
+        return Minecraft.getInstance().level == this.entity.getLevel() && !this.entity.isRemoved();
+         *///?}
+        //? if >=1.20 {
         return Minecraft.getInstance().level == this.entity.level() && !this.entity.isRemoved();
         //? }
     }

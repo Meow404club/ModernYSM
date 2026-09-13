@@ -15,11 +15,12 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
-//? if <1.17 {
-// import net.minecraft.client.renderer.block.model.ItemTransforms;
-//? } else {
+//? if <1.19.4 {
+import net.minecraft.client.renderer.block.model.ItemTransforms;
+//?}
+//? if >=1.19.4 {
 import net.minecraft.world.item.ItemDisplayContext;
-//? }
+//?}
 import net.minecraft.world.item.ItemStack;
 
 public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity> {
@@ -32,6 +33,9 @@ public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity>
     // }
     //? } else {
     public CustomPlayerArmorLayer(EntityRendererProvider.Context context) {
+        //? if <1.19.2
+        /*this.itemRenderer = new ItemInHandRenderer(net.minecraft.client.Minecraft.getInstance());*/
+        //? if >=1.19.2
         this.itemRenderer = context.getItemInHandRenderer();
     }
     //? }
@@ -54,10 +58,13 @@ public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity>
 
     private boolean isArmorItem(ItemStack stack) {
         Item item = stack.getItem();
-        // 1.16.5 无 IForgeItem.getEquipmentSlot()（1.17+），用 vanilla ArmorItem.getSlot()
+        // ArmorItem 取槽位：1.16.5~1.19.2 getSlot()（1165/1182:91/1192:91）；1.19.4 起
+        // getEquipmentSlot()（1194 ArmorItem.java:128）
         //? if <1.17
         // return (item instanceof ArmorItem) && ((ArmorItem) item).getSlot() == EquipmentSlot.HEAD;
-        //? if >=1.17
+        //? if >=1.17 && <1.19.4
+        /*return (item instanceof ArmorItem) && ((ArmorItem) item).getSlot() == EquipmentSlot.HEAD;*/
+        //? if >=1.19.4
         return (item instanceof ArmorItem) && ((ArmorItem) item).getEquipmentSlot() == EquipmentSlot.HEAD;
     }
 
@@ -66,9 +73,9 @@ public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity>
         RenderUtils.prepMatrixForLocator(poseStack, model.headBones());
         poseStack.scale(0.625f, 0.625f, 0.625f);
         poseStack.translate(0.0f, 0.25f, 0.0f);
-        //? if <1.17
+        //? if <1.19.4
         // this.itemRenderer.renderItem(player, stack, ItemTransforms.TransformType.HEAD, false, poseStack, bufferSource, i);
-        //? if >=1.17
+        //? if >=1.19.4
         this.itemRenderer.renderItem(player, stack, ItemDisplayContext.HEAD, false, poseStack, bufferSource, i);
         poseStack.popPose();
     }

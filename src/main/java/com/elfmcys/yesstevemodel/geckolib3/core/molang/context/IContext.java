@@ -13,12 +13,17 @@ import com.elfmcys.yesstevemodel.molang.runtime.Function;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.Component;
-// RandomSource 为 1.17+ 类；1.16.5 用 java.util.Random（消费面仅 nextFloat/nextInt）
+// RandomSource 包位：1.17~1.18.2 = world.level.levelgen（1182 实证）；1.19.2+ = util（1192 实证）；
+// 1.16.5 无此类（java.util.Random；IContext.random() 在 <1.17 轴剔除，消费面仅 nextFloat/nextInt）
 //? if <1.17 {
-// import java.util.Random;
-//? } else {
+import java.util.Random;
+//?}
+//? if >=1.17 && <1.19.2 {
+/*import net.minecraft.world.level.levelgen.RandomSource;
+ *///?}
+//? if >=1.19.2 {
 import net.minecraft.util.RandomSource;
-//? }
+//?}
 // ^ RandomSource 为 1.17+ 类；1.16.5 用 java.util.Random（消费面仅 nextFloat/nextInt）
 import org.jetbrains.annotations.Nullable;
 

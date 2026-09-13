@@ -43,11 +43,19 @@ public final class Pie {
         float rectW = (outerRadius + pad) * 2.0f;
         float rectH = (outerRadius + pad) * 2.0f;
 
-        //? if >1.17 {
+        //? if >=1.19.4 {
         RenderSystem.getProjectionMatrix().mul(RenderSystem.getModelViewMatrix(), mvpScratch);
         mvpScratch.mul(pose.last().pose());
         mvpScratch.get(mvpFloats);
-        //?} else {
+        //?}
+        //? if >=1.17 && <1.19.4 {
+        /*
+        // 1.17~1.19.2 矩阵源为 mojang → MatrixBridge 转 JOML（proj×mv×pose 数学不变）
+        com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.projectionMatrix().mul(com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.modelViewMatrix(), mvpScratch);
+        mvpScratch.mul(com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.pose(pose.last()));
+        mvpScratch.get(mvpFloats);
+         *///?}
+        //? if <1.17 {
         /*// glGetFloatv/store 会推进 buffer position：不清零则第二次调用 remaining=0
         // → LWJGL Checks.checkBuffer 抛 IAE（一帧画多个扇形必现）
         projBuf.clear();
@@ -97,7 +105,10 @@ public final class Pie {
 
         GlStateManager._glUseProgram(0);
         //? if >1.17 {
+        //? if >=1.19.2
         BufferUploader.invalidate();
+        //? if <1.19.2
+        /*BufferUploader.reset();*/
         //?}
         //? if <1.17 {
         /*GL30.glBindVertexArray(0);

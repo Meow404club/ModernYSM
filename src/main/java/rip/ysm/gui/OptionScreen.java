@@ -2,7 +2,7 @@ package rip.ysm.gui;
 
 import com.elfmcys.yesstevemodel.config.GeneralConfig;
 import net.minecraft.client.Minecraft;
-//? if >1.17 {
+//? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -289,17 +289,18 @@ public abstract class OptionScreen extends Screen {
 
     // Screen.render 签名双轴：1.20.1 render(GuiGraphics,...) ↔ 1.16.5 render(PoseStack,...)
     //（1.16.5 Screen.java:73），主体收敛进版本中性 renderScreen(YsmGui,...)
-    //? if <1.17 {
+    //? if <1.20 {
     /*@Override
     public void render(PoseStack pose, int mouseX, int mouseY, float partialTick) {
         this.renderScreen(new YsmGui(pose), mouseX, mouseY, partialTick);
     }
-     *///?} else {
+     *///?}
+     //? if >=1.20 {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderScreen(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
-    //?}
+     //?}
 
     protected void renderScreen(YsmGui g, int mouseX, int mouseY, float partialTick) {
         g.renderScreenBackground(this);
@@ -340,7 +341,11 @@ public abstract class OptionScreen extends Screen {
 
         //? if <1.17 {
         /*super.render(g.pose(), mouseX, mouseY, partialTick);
-         *///?} else {
+         *///?}
+        //? if >=1.17 && <1.20 {
+        /*super.render(g.pose(), mouseX, mouseY, partialTick);
+         *///?}
+        //? if >=1.20 {
         super.render(g.graphics(), mouseX, mouseY, partialTick);
         //?}
 

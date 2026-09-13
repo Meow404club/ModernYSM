@@ -153,13 +153,12 @@ public class PlayerEntityFrameState extends LivingEntityFrameState<Player> {
     }
 
     private static void updateHeadYaw(Player player, int currentTick, int previousTick) {
-        //? if <1.17
+        // yRot 字段仅 1.16.5 public（1165 Entity.java:196 直接赋值形态）；1.17 起私有化 +
+        // getYRot()（1182/1192 已私有，1192 Entity.java:423 即走 getYRot）
         //? if <1.17
         // float yRot = player.yRot;
         //? if >=1.17
         float yRot = player.getYRot();
-        //? if >=1.17
-        // float yRot = player.getYRot();
         if (previousTick > 0) {
             headYawDelta = ((yRot - lastYRot) * 20.0f) / (currentTick - previousTick);
         }

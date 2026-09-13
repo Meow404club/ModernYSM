@@ -7,7 +7,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.vertex.PoseStack;
-//? if >1.17 {
+//? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import rip.ysm.gui.YsmGui;
@@ -41,11 +41,11 @@ public class ModelUploadScreen extends Screen implements ModelUploadSession.List
 
     @Override
     public void init() {
-//? if <1.17 {
-        /*this.init(Minecraft.getInstance(), this.width, this.height);
-        return;*/
-        //? if >=1.17
+// 1.16.5 无 Screen.clearWidgets（死注释形态的 init(mc,w,h)+return 从未生效，1.16.5 字段
+// 由 setScreen→init(Minecraft,w,h) 先行赋值，无参 init() 直接可用，m2.6 实测语义）
+//? if >=1.17 {
         clearWidgets();
+//?}
         ModelUploadSession.addListener(this);
         ysmAddWidget(new FlatColorButton(this.width - 70, 10, 60, 18, YsmText.literal("Back"), button -> Minecraft.getInstance().setScreen(this.parentScreen)));
     }
@@ -97,7 +97,7 @@ public class ModelUploadScreen extends Screen implements ModelUploadSession.List
         }
     }
 
-    //? if >1.17 {
+    //? if >=1.20 {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.render(new YsmGui(graphics), mouseX, mouseY, partialTick);
@@ -141,7 +141,9 @@ public class ModelUploadScreen extends Screen implements ModelUploadSession.List
 
 //? if <1.17
         /*super.render(g.pose(), mouseX, mouseY, partialTick);*/
-        //? if >=1.17
+        //? if >=1.17 && <1.20
+        /*super.render(g.pose(), mouseX, mouseY, partialTick);*/
+        //? if >=1.20
         super.render(g.graphics(), mouseX, mouseY, partialTick);
     }
 

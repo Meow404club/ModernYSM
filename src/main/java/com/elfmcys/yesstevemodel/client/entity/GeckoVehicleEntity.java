@@ -45,7 +45,8 @@ public class GeckoVehicleEntity extends GeoEntity<Entity> {
     @Override
     @Nullable
     public GeoEntity.ModelWrapper buildRenderShape(ModelAssembly modelAssembly, boolean isDefault) {
-        //? if <1.17 {
+        // 1171 EntityType 无 builtInRegistryHolder（merged jar 实证）→ EntityType.getKey 静态（1165/1171 同款）
+        //? if <1.18.2 {
         // VehicleModelBundle modelBundle = modelAssembly.getVehicleModels().get(net.minecraft.world.entity.EntityType.getKey(this.entity.getType()));
         //? } else {
         VehicleModelBundle modelBundle = modelAssembly.getVehicleModels().get(this.entity.getType().builtInRegistryHolder().key().location());
@@ -59,9 +60,9 @@ public class GeckoVehicleEntity extends GeoEntity<Entity> {
     @Override
     public void onModelLoaded(ModelAssembly modelAssembly) {
         super.onModelLoaded(modelAssembly);
-        //? if <1.17
+        //? if <1.18.2
         // this.vehicleModel = modelAssembly.getVehicleModels().get(net.minecraft.world.entity.EntityType.getKey(this.entity.getType()));
-        //? if >=1.17
+        //? if >=1.18.2
         // this.vehicleModel = modelAssembly.getVehicleModels().get(this.entity.getType().builtInRegistryHolder().key().location());
     }
 

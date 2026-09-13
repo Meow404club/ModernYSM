@@ -5,7 +5,7 @@ import com.elfmcys.yesstevemodel.config.LoadingStateConfig;
 import net.minecraft.ChatFormatting;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.Font;
-//? if >1.17 {
+//? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import net.minecraft.network.chat.Component;
@@ -24,17 +24,18 @@ public class ModelSyncStateOverlay implements HudOverlay {
     private static float shimmerPhase = 0.0f;
 
     // HudOverlay 首参双轴（GuiGraphics↔PoseStack），主体收敛进版本中性 render(YsmGui,...)
-    //? if <1.17 {
+    //? if <1.20 {
     /*@Override
     public void render(PoseStack poseStack, Font font, float partialTick, int screenWidth, int screenHeight) {
         this.render(new YsmGui(poseStack), font, screenWidth, screenHeight);
     }
-     *///?} else {
+     *///?}
+     //? if >=1.20 {
     @Override
     public void render(GuiGraphics guiGraphics, Font font, float partialTick, int screenWidth, int screenHeight) {
         this.render(new YsmGui(guiGraphics), font, screenWidth, screenHeight);
     }
-    //?}
+     //?}
 
     private void render(YsmGui guiGraphics, Font font, int screenWidth, int screenHeight) {
         int textX;

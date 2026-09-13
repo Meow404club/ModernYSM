@@ -45,9 +45,9 @@ public final class ClientPlayerJoinNotification {
         MinecraftForge.EVENT_BUS.addListener(ClientPlayerJoinNotification::onClientTickEvent);
     }
 
-    //? if <1.17
+    //? if <1.19.2
     /*private static void onLoggingIn(ClientPlayerNetworkEvent.LoggedInEvent event) {*/
-    //? if >=1.17
+    //? if >=1.19.2
     private static void onLoggingIn(ClientPlayerNetworkEvent.LoggingIn event) {
         onPlayerJoin(event.getPlayer());
     }
@@ -56,9 +56,9 @@ public final class ClientPlayerJoinNotification {
      * LoggingOut 的 getPlayer() 可为 null（新建集成服/连接远程服时也会触发，
      * forge-api 1.20.1 ClientPlayerNetworkEvent.java:85-125），原逻辑本就不读该参数。
      */
-    //? if <1.17
+    //? if <1.19.2
     /*private static void onLoggingOut(ClientPlayerNetworkEvent.LoggedOutEvent event) {*/
-    //? if >=1.17
+    //? if >=1.19.2
     private static void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         onPlayerQuit(event.getPlayer());
     }
@@ -99,9 +99,13 @@ public final class ClientPlayerJoinNotification {
                         return;
                     }
                     LocalPlayer localPlayer = Minecraft.getInstance().player;
+                    // isAcceptingMessages 1.19.4 起（1194 ClientPacketListener.java:2413 = connection.isConnected()），
+                    // 1.16.5~1.19.2 直调 Connection.isConnected（等价展开）
                     //? if <1.17
                     /*if (localPlayer != null && localPlayer.connection.getConnection().isConnected() && !NetworkHandler.isConnectionValid(localPlayer.connection.getConnection())) {*/
-                    //? if >=1.17
+                    //? if >=1.17 && <1.19.4
+                    /*if (localPlayer != null && localPlayer.connection.getConnection().isConnected() && !NetworkHandler.isConnectionValid(localPlayer.connection.getConnection())) {*/
+                    //? if >=1.19.4
                     if (localPlayer != null && localPlayer.connection.isAcceptingMessages() && !NetworkHandler.isConnectionValid(localPlayer.connection.getConnection())) {
                         YsmText.sendSystemMessage(localPlayer, YsmText.translatable("message.yes_steve_model.client.server_not_found"));
                     }
@@ -121,7 +125,9 @@ public final class ClientPlayerJoinNotification {
         LocalPlayer player = client.player;
 //? if <1.17
         /*if (player == null || !player.connection.getConnection().isConnected()) {*/
-        //? if >=1.17
+//? if >=1.17 && <1.19.4
+        /*if (player == null || !player.connection.getConnection().isConnected()) {*/
+//? if >=1.19.4
         if (player == null || !player.connection.isAcceptingMessages()) {
             return;
         }

@@ -4,9 +4,13 @@ import net.minecraft.network.Connection;
 import net.minecraft.server.level.ServerPlayer;
 // 1.16.x NetworkEvent 在 fml.network 包（Context 的 getDirection/getSender/getNetworkManager/
 // enqueueWork/setPacketHandled 方法面与 1.20.1 同签名，javap 实证）——仅包移动条件化
-//? if >=1.17 {
+//? if >=1.18.2 {
 import net.minecraftforge.network.NetworkEvent;
-//?} else {
+//?}
+//? if >=1.17 && <1.18.2 {
+/*import net.minecraftforge.fmllegacy.network.NetworkEvent;
+ *///?}
+//? if <1.17 {
 /*import net.minecraftforge.fml.network.NetworkEvent;*/
 //?}
 import org.jetbrains.annotations.Nullable;

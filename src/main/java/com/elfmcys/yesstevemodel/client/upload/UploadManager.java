@@ -6,7 +6,7 @@ import com.elfmcys.yesstevemodel.util.ResourceCleanupHelper;
 import com.google.common.collect.Queues;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
-//? if >=1.17 {
+//? if >=1.18.2 {
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.objects.ReferenceIntMutablePair;
 //?}
@@ -27,14 +27,14 @@ public class UploadManager {
 
     private static final IdentityHashMap<AbstractTexture, WeakReference<TextureLocatable>> textureCache = new IdentityHashMap<>();
 
-    //? if <1.17
+    //? if <1.18.2
     /*private static final java.util.ArrayDeque<TexPair> pendingUploads = new java.util.ArrayDeque<>();*/
-    //? if >=1.17
+    //? if >=1.18.2
     private static final Queue<Pair<TextureLocatable, AbstractTexture>> pendingUploads = Queues.newArrayDeque();
 
-    //? if <1.17
+    //? if <1.18.2
     /*private static final ConcurrentHashMap<AbstractTexture, RlInt> expiredTextures = new ConcurrentHashMap<>();*/
-    //? if >=1.17
+    //? if >=1.18.2
     private static final ConcurrentHashMap<AbstractTexture, ReferenceIntMutablePair<ResourceLocation>> expiredTextures = new ConcurrentHashMap<>();
 
     private static final Queue<ResourceLocation> pendingReleases = Queues.newArrayDeque();
@@ -44,9 +44,12 @@ public class UploadManager {
     }
 
     public static IResourceLocatable getOrCreateLocatableWithSize(AbstractTexture texture, boolean register, int sizeHint) {
-        //? if <1.17
+        //? if <1.18.2
         /*RenderSystem.assertThread(RenderSystem::isOnRenderThread);*/
-        //? if >=1.17
+        //? if >=1.17 && <1.18.2
+        /*RenderSystem.assertThread(RenderSystem::isOnRenderThread);*/
+        // 1171 无 assertOnRenderThread（RenderSystem.java:120 仅 assertThread(Supplier)）
+        //? if >=1.18.2
         RenderSystem.assertOnRenderThread();
         WeakReference<TextureLocatable> weakReference = textureCache.get(texture);
         if (weakReference != null) {
@@ -59,13 +62,13 @@ public class UploadManager {
             }
             textureCache.remove(texture);
         }
-        //? if <1.17
+        //? if <1.18.2
         /*RlInt removed = expiredTextures.remove(texture);*/
-        //? if >=1.17
+        //? if >=1.18.2
         ReferenceIntMutablePair<ResourceLocation> removed = expiredTextures.remove(texture);
         TextureLocatable locatable;
         if (removed != null) {
-//? if <1.17 {
+//? if <1.18.2 {
             /*locatable = new TextureLocatable(removed.first, sizeHint);*/
             //?} else {
             locatable = new TextureLocatable(removed.first(), sizeHint);
@@ -85,35 +88,41 @@ public class UploadManager {
         if (register) {
             registerTexture(texture, locatable);
         } else {
-            //? if <1.17
+            //? if <1.18.2
             /*pendingUploads.add(new TexPair(locatable, texture));*/
-            //? if >=1.17
+            //? if >=1.18.2
             pendingUploads.add(Pair.of(locatable, texture));
         }
         return locatable;
     }
 
     public static void removeTexture(AbstractTexture abstractTexture) {
-        //? if <1.17
+        //? if <1.18.2
         /*RenderSystem.assertThread(RenderSystem::isOnRenderThread);*/
-        //? if >=1.17
+        //? if >=1.17 && <1.18.2
+        /*RenderSystem.assertThread(RenderSystem::isOnRenderThread);*/
+        // 1171 无 assertOnRenderThread（RenderSystem.java:120 仅 assertThread(Supplier)）
+        //? if >=1.18.2
         RenderSystem.assertOnRenderThread();
         textureCache.remove(abstractTexture);
     }
 
     public static void processPendingUploads() {
-        //? if <1.17
+        //? if <1.18.2
         /*RenderSystem.assertThread(RenderSystem::isOnRenderThread);*/
-        //? if >=1.17
+        //? if >=1.17 && <1.18.2
+        /*RenderSystem.assertThread(RenderSystem::isOnRenderThread);*/
+        // 1171 无 assertOnRenderThread（RenderSystem.java:120 仅 assertThread(Supplier)）
+        //? if >=1.18.2
         RenderSystem.assertOnRenderThread();
         if (!expiredTextures.isEmpty()) {
-            //? if <1.17
+            //? if <1.18.2
             /*Iterator<Map.Entry<AbstractTexture, RlInt>> it = expiredTextures.entrySet().iterator();*/
-            //? if >=1.17
+            //? if >=1.18.2
             Iterator<Map.Entry<AbstractTexture, ReferenceIntMutablePair<ResourceLocation>>> it = expiredTextures.entrySet().iterator();
             while (it.hasNext()) {
                 Map.Entry<AbstractTexture, ?> next = it.next();
-                //? if <1.17 {
+                //? if <1.18.2 {
                 /*RlInt rlInt = (RlInt) next.getValue();
                 if (rlInt.second <= 0) {
                     pendingReleases.add(rlInt.first);
@@ -134,12 +143,12 @@ public class UploadManager {
         }
         StopWatch stopWatchCreateStarted = StopWatch.createStarted();
         do {
-            //? if <1.17
+            //? if <1.18.2
             /*TexPair pairPoll = pendingUploads.poll();*/
-            //? if >=1.17
+            //? if >=1.18.2
             Pair<TextureLocatable, AbstractTexture> pairPoll = pendingUploads.poll();
             if (pairPoll != null) {
-//? if <1.17 {
+//? if <1.18.2 {
                 /*registerTexture(pairPoll.right, pairPoll.left);*/
                 //?} else {
                 registerTexture(pairPoll.right(), pairPoll.left());
@@ -163,7 +172,7 @@ public class UploadManager {
         if (!locatable.registered) {
             Minecraft.getInstance().getTextureManager().register(locatable.resourceLocation, texture);
             ResourceCleanupHelper.registerBiCleanup(locatable, locatable.resourceLocation, locatable.resolution, (resourceLocation, rlcNum) -> {
-                //? if <1.17 {
+                //? if <1.18.2 {
                 /*expiredTextures.put(texture, new RlInt(resourceLocation, rlcNum));
                  *///?} else {
                 expiredTextures.put(texture, ReferenceIntMutablePair.of(resourceLocation, rlcNum));
@@ -206,7 +215,7 @@ public class UploadManager {
 
     // fastutil Pair/ReferenceIntMutablePair 为 8.3.0+ API（1.16.5 打包 8.2.1）：
     // <1.17 轴用文件内私有 holder 同构替代（字段语义/时序一致）
-    //? if <1.17 {
+    //? if <1.18.2 {
     /*private static final class TexPair {
         final TextureLocatable left;
         final AbstractTexture right;

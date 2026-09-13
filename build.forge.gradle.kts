@@ -6,6 +6,19 @@ version = "${property("mod_version")}-${property("deps.minecraft")}-forge"
 base.archivesName = property("archives_name") as String
 group = property("maven_group") as String
 
+// ===== M3 平铺第一批 per-version 轴（1.17.1/1.18.2/1.19.2/1.19.4 与 1.20.1 共用本脚本；
+// 1.16.5 走 build.unimined.gradle.kts 不进本脚本）=====
+// 分段依据（本机 vanilla 反编译 + M3 矩阵调研 state:tasks.m3-matrix-research）：
+//  - <1.19.3：MC 不内置 JOML（1.19.3 才内置）→ 编译期 implementation + 产物内嵌
+//  - <1.20  ：共享源第三方 compat 树按 1.20.1 口径编写且零条件 → 整体闸门（同 1.16.5 先例）
+//  - <1.18  ：1.17.1 运行时是 Java 16 → JitPack ImageStream（major 61）不可内嵌，改源码 vendor
+val pre120 = stonecutter.eval(stonecutter.current.version, "<1.20")
+val pre1193 = stonecutter.eval(stonecutter.current.version, "<1.19.3")
+val pre118 = stonecutter.eval(stonecutter.current.version, "<1.18")
+// mods.toml 装载区间用 forge 大版本号（37.1.1→37 / 47.4.20→47）
+val forgeMajor = (property("deps.forge") as String).substringBefore('.')
+val mcVersion = property("deps.minecraft") as String
+
 repositories {
     mavenCentral()
     maven("https://maven.minecraftforge.net/") { name = "MinecraftForge" }
@@ -26,21 +39,35 @@ repositories {
 // 纯 Java 库（无 mods.toml/FMLModType/module-info，仅 javax.imageio SPI 两个
 // services 文件，主 jar 无同名冲突），并入主 jar 后随 reobfJar 一起发布，
 // 对 SRG 重映射不可知，语义与 JIJ 内嵌一致。
-val imageStreamEmbed: Configuration by configurations.creating {
+// ⚠ 1.17.1 例外（pre118）：JitPack 产物字节码 major 61（javap 实测），Java 16 运行时
+// 载入即 UnsupportedClassVersionError（同 1.16.5 线 runServer 实测的 1.16.5 版问题）→
+// 改用 1.16.5 线已语法下沉的源码 vendor（versions/1.16.5-forge/src/imagestream，8 文件，
+// 语义逐行等价），由本线工具链（Java 21 + release 16）编译进主 jar；SPI services 文件
+// 随 src/imagestream-resources 一并入包。
+val imageStreamEmbed: Configuration? = if (pre118) null
+else configurations.create("imageStreamEmbed").apply {
     isCanBeResolved = true
     isTransitive = false
 }
 dependencies {
-    imageStreamEmbed("com.github.TartaricAlkaline:ImageStream:-SNAPSHOT")
+    if (imageStreamEmbed != null) add("imageStreamEmbed", "com.github.TartaricAlkaline:ImageStream:-SNAPSHOT")
 }
 // 配置期显式解析为 File（configuration cache 安全，勿把 Configuration 持进任务）
-val imageStreamEmbedJars: Set<File> = imageStreamEmbed.files
+val imageStreamEmbedJars: Set<File> = imageStreamEmbed?.files ?: emptySet()
 
 dependencies {
 
     // avif/webp/jpeg 解码库（rip.ysm.imagestream 包名）：编译 + dev 运行时（下方
-    // additionalRuntimeClasspath）；生产 jar 内嵌见上方 imageStreamEmbed
-    implementation("com.github.TartaricAlkaline:ImageStream:-SNAPSHOT")
+    // additionalRuntimeClasspath）；生产 jar 内嵌见上方 imageStreamEmbed。
+    // 1.17.1（pre118）不声明：符号由源码 vendor 源集直接提供（上方注释）
+    if (imageStreamEmbed != null) implementation("com.github.TartaricAlkaline:ImageStream:-SNAPSHOT")
+    // 1.17.1 userdev 类路径无 org.jetbrains:annotations（1.16.5 mojmap userdev /
+    // 1.18.2+ MC 库自带）→ compileOnly 补齐（不进产物）
+    if (pre118) compileOnly("org.jetbrains:annotations:24.0.1")
+    // JOML：共享源 geckolib3 渲染/动画栈 49 文件 import org.joml，MC 1.19.3 才内置
+    //（<1.19.3 三线编译期缺失即红）；1.10.5 = MC 1.20.1 自带版本，字节码 major 46
+    //（Java 1.2），1.17.1 的 Java 16 运行时可载。产物内嵌见 jar 任务（运行时同因缺失）。
+    if (pre1193) implementation("org.joml:joml:1.10.5")
     // ImageStream 进 dev 运行时游戏类路径（m0 P2 NCDFE 修复）：
     // MDG legacyforge 的 dev run 由 NFRT 生成 *LegacyClasspath.txt（仅 userdev 内置库），
     // BootstrapLauncher.loadLegacyClassPath 优先按 -DlegacyClassPath.file 重建游戏类路径，
@@ -63,10 +90,41 @@ dependencies {
 }
 
 // Mixin 配置注册：refmap 生成 + dev run 加载（生产 jar 另见 jar.manifest.MixinConfigs）
+// 第三方 accessor 配置（yes_steve_model_forge.mixins.json，目标全为 Create/ParCool 类）
+// 仅 1.20.1 注册——中段四线 compat 树整体闸门（见下方 sourceSets 块），配置随之不注册不打包
 mixin {
     add(sourceSets.getByName("main"), "yes_steve_model.refmap.json")
     config("yes_steve_model.mixins.json")
-    config("yes_steve_model_forge.mixins.json")
+    if (!pre120) {
+        config("yes_steve_model_forge.mixins.json")
+    }
+}
+
+// 1.17.1（pre118）工具链固定本地 21：MDG 依 MC 版本请求 Java 16 工具链 → 本机无 16 需
+// foojay 下载，而 foojay-resolver-convention 0.9.0 在 Gradle 9.2 上初始化即
+// NoSuchFieldError: IBM_SEMERU（JvmVendor 枚举跨版本不兼容，stacktrace 实证）→
+// 编译目标以 javac --release 16 下发（Java 16 语义/字节码 major 60），运行期工具链 21。
+if (pre118) {
+    java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+    tasks.withType<JavaCompile>().configureEach {
+        options.release = 16
+    }
+    // ASM force 升级（机制与三重先例见 state:tasks.m3-asm-problem-research）：dev run JVM=21
+    // 时 1.17.1 内置 mixin 0.8.4 依赖的 asm 9.1（上限 major 61）解析 JDK 自身类
+    // （java/lang/String major 65）→ ClassMetadataNotFoundException 拒启。asm 条目是
+    // forge userdev 变体的 Gradle 模块依赖，同 GAV 坐标强升 9.8（V25，覆盖 Java 25 dev run）
+    // 无排序问题；MDG 已用 NonStrictDependencyTransform 放宽 strict（先例：Celeritas
+    // unimined asm 9.6 强升 + run JVM21、GTNH lwjgl3ify、forge 官方 1.17.x 分支自升 asm 9.6）
+    configurations.all {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "org.ow2.asm") useVersion("9.8")
+        }
+    }
+    // 保底 A（注释态；若 asm force 验证受阻按此处启用——MDG 的 launcher set 在 register
+    // 动作里，后置 configureEach 必赢）：
+    // tasks.matching { it.name in listOf("runClient", "runServer") }.configureEach {
+    //     javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(17) }
+    // }
 }
 
 legacyForge {
@@ -102,8 +160,56 @@ legacyForge {
 
 // additionalRuntimeClasspath configuration 由 MDG runs 装配期（上方 legacyForge 块求值时）
 // 创建，故依赖声明必须置于其后（Kotlin DSL 无类型安全访问器，按名引用，cache 安全）
+// 1.17.1（pre118）不注入：ImageStream 类已由源码 vendor 进 main 源集产物，随 mods 注册进 dev 类路径
 dependencies {
-    "additionalRuntimeClasspath"("com.github.TartaricAlkaline:ImageStream:-SNAPSHOT")
+    if (imageStreamEmbed != null) {
+        "additionalRuntimeClasspath"("com.github.TartaricAlkaline:ImageStream:-SNAPSHOT")
+    }
+    // MixinExtras dev 运行时：implementation 的 mixinextras-forge 会被 MDG 当 mod 装载
+    //（module 层 mixinextras@0.3.6），其 MixinExtrasConfigPlugin.onLoad 引用
+    // MixinExtrasBootstrap（API 体在 mixinextras-common）→ 缺 common 即 NCDFE 拒启。
+    // 仅 1.17.1 需要：Forge 40.3.0 起自带 MixinExtras 模块，再注入 common 会
+    // split-package 冲突（Modules mixinextras.common and MixinExtras export ... 实测）。
+    // 生产 jar 内嵌归发布卡（同 1165 线 embedMixinExtras 先例）。
+    if (pre118) {
+        "additionalRuntimeClasspath"("io.github.llamalad7:mixinextras-common:${property("deps.mixinextras")}")
+    }
+    // JOML dev 运行时（pre1193 三线）：implementation 对 MDG dev 不可见（同上），mixin
+    // 后插桩/渲染栈 org/joml/Matrix4fc NCDFE 实测；1194+ MC 自带 JOML 不需要
+    if (pre1193) {
+        "additionalRuntimeClasspath"("org.joml:joml:1.10.5")
+    }
+}
+
+// ===== 中段四线第三方 compat 闸门（pre120；机制同 1.16.5 线 build.unimined.gradle.kts）=====
+// 第三方触点源码（rip/ysm/compat 60 文件 + client/compat 76 文件 + forge 第三方 accessor
+// mixin 8 条 + 7 个边界文件）按 1.20.1 口径编写且零 stonecutter 条件，对 1.17~1.19 编译必炸
+//（1.20.1-only 符号：GuiGraphics/RegisterGuiOverlaysEvent 等）→ 整树不进中段编译，core 代码经
+// 1.16.5 线同包同名 no-op shim（mod-absent 语义，version-neutral API）保持符号可解析。
+// shim 复用 versions/1.16.5-forge/src/shim/rip/ysm/compat（仅用 Player/CtrlBinding 等全谱
+// 存在的 API，grep 验证零 TextComponent/GuiGraphics 触点，1.16.5~1.20.1 通用）。
+if (pre120) {
+    sourceSets.main {
+        java {
+            srcDir(rootProject.file("versions/1.16.5-forge/src/shim/rip/ysm/compat"))
+            // 1.17.1（pre118）：ImageStream 源码 vendor（JitPack 产物 major 61 不可入 Java 16 产物，
+            // 同 1.16.5 线 src/imagestream 8 文件，语义逐行等价）——见上方 dependencies 注释
+            if (pre118) srcDir(rootProject.file("versions/1.16.5-forge/src/imagestream"))
+            exclude(
+                "rip/ysm/compat/**",
+                "com/elfmcys/yesstevemodel/client/compat/**",
+                "com/elfmcys/yesstevemodel/platform/forge/mixin/client/create/**",
+                "com/elfmcys/yesstevemodel/platform/forge/mixin/client/parcool/**",
+                "com/elfmcys/yesstevemodel/platform/forge/ForgeClientSetupHooks.java",
+                "com/elfmcys/yesstevemodel/platform/forge/client/animation/predicate/TouhouMaidAnimationPredicate.java",
+                "com/elfmcys/yesstevemodel/platform/forge/client/gui/TouhouMaidModelScreen.java",
+                "com/elfmcys/yesstevemodel/platform/forge/client/gui/TouhouMaidTextureScreen.java",
+                "com/elfmcys/yesstevemodel/platform/forge/client/gui/button/TouhouMaidModelButton.java",
+                "com/elfmcys/yesstevemodel/platform/forge/client/gui/button/TouhouMaidTextureButton.java",
+                "com/elfmcys/yesstevemodel/platform/forge/client/renderer/layer/SophisticatedBackpackLayer.java",
+            )
+        }
+    }
 }
 
 // runServer 控制台 stdin（harness/tour.sh 和平启动注入通道）：JavaExec 默认
@@ -115,6 +221,10 @@ tasks.named<org.gradle.api.tasks.JavaExec>("runServer") {
 tasks {
     processResources {
         exclude("**/fabric.mod.json", "**/neoforge.mods.toml", "**/*.accesswidener")
+        // 中段四线：第三方 accessor mixin 目标类不存在且类已闸出编译 → 配置不进 jar
+        if (pre120) {
+            exclude("yes_steve_model_forge.mixins.json")
+        }
     }
 
     named("createMinecraftArtifacts") {
@@ -135,13 +245,29 @@ tasks {
         // for the jar task），exclude 后 reobf 输出天然无 harness。
         exclude("rip/ysm/harness/**")
         // ImageStream 生产内嵌：类文件 + javax.imageio SPI services 并入主 jar
-        //（剥 manifest/签名，见上方 imageStreamEmbed 注释）
-        from(imageStreamEmbedJars.map { zipTree(it) }) {
-            include("rip/**", "META-INF/services/**")
+        //（剥 manifest/签名，见上方 imageStreamEmbed 注释）；1.17.1 走源码 vendor 无此项
+        if (!pre118) {
+            from(imageStreamEmbedJars.map { zipTree(it) }) {
+                include("rip/**", "META-INF/services/**")
+            }
         }
-        // 生产环境 Mixin 配置发现（MDG 文档：MixinConfigs 需写入 jar manifest）
+        // JOML 生产内嵌（<1.19.3 三线，MC 类路径缺失；unimined embedJoml 同款语义）
+        if (pre1193) {
+            from(files(
+                configurations.compileClasspath.get().files
+                    .filter { it.name.startsWith("joml-") }
+            ).map { zipTree(it) }) {
+                include("org/joml/**")
+            }
+        }
+        // 生产环境 Mixin 配置发现（MDG 文档：MixinConfigs 需写入 jar manifest）；
+        // 中段四线不打包 forge accessor 配置 → manifest 同步只列主配置
         manifest {
-            attributes("MixinConfigs" to "yes_steve_model.mixins.json,yes_steve_model_forge.mixins.json")
+            if (pre120) {
+                attributes("MixinConfigs" to "yes_steve_model.mixins.json")
+            } else {
+                attributes("MixinConfigs" to "yes_steve_model.mixins.json,yes_steve_model_forge.mixins.json")
+            }
         }
         finalizedBy("reobfJar")
     }
@@ -179,6 +305,35 @@ tasks.named<ProcessResources>("processResources") {
             if (line.contains("\"required\": true"))
                 line.replace("\"required\": true", "\"required\": true,\n  \"refmap\": \"yes_steve_model.refmap.json\"")
             else line
+        }
+    }
+    // ===== 中段四线资源口径替换（1.20.1 跳过：不进 filter 链，保证在产线产物零字节变化；
+    // 替换串与共享源 1.20.1 字面量逐字对照，机制同 1.16.5 线 build.unimined.gradle.kts）=====
+    if (pre120) {
+        // mods.toml 装载区间：loaderVersion/forge=各线 forge 大版本、minecraft=本版本
+        // （共享源写 1.20.1 口径 [47,)/[47,)/[1.20.1,)；mandatory=true 三处声明不替换必拒载）
+        filesMatching("META-INF/mods.toml") {
+            filter { line: String ->
+                line.replace("loaderVersion = \"[47,)\"", "loaderVersion = \"[$forgeMajor,)\"")
+                    .replace("versionRange = \"[47,)\"", "versionRange = \"[$forgeMajor,)\"")
+                    .replace("versionRange = \"[1.20.1,)\"", "versionRange = \"[$mcVersion,)\"")
+            }
+        }
+        // pack.mcmeta：资源包格式 1.17.1=7 / 1.18.2=8 / 1.19.2=9（共享源为 1.20.1 口径 15）
+        val packFormat = if (stonecutter.eval(stonecutter.current.version, ">=1.19.3")) 15
+        else if (stonecutter.eval(stonecutter.current.version, ">=1.19")) 9
+        else if (stonecutter.eval(stonecutter.current.version, ">=1.18")) 8
+        else 7
+        filesMatching("pack.mcmeta") {
+            filter { line: String -> line.replace("\"pack_format\": 15", "\"pack_format\": $packFormat") }
+        }
+        // mixins.json compatibilityLevel：1.17.1 产物为 Java 16 字节码（pre118 javac --release 16），
+        // 且 1.17.1 运行时 JVM=16 → JAVA_17 级别声明与产物/运行时双双不符（机制同 1.16.5 线
+        // build.unimined.gradle.kts 的 JAVA_17→JAVA_8 替换）；1.18.2+ 运行时 JVM=17 保持 JAVA_17
+        if (pre118) {
+            filesMatching("*.mixins.json") {
+                filter { line: String -> line.replace("\"JAVA_17\"", "\"JAVA_16\"") }
+            }
         }
     }
 }

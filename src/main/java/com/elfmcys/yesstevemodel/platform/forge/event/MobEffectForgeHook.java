@@ -5,11 +5,12 @@ import com.elfmcys.yesstevemodel.client.event.MobEffectEvent;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 // MobEffectEvent 为 1.18+ 事件族（1.16.5 jar 无此包）：1.16.5 对位 PotionEvent
-//? if <1.17 {
+//? if <1.19.2 {
 /*import net.minecraftforge.event.entity.living.PotionEvent.PotionAddedEvent;
 import net.minecraftforge.event.entity.living.PotionEvent.PotionExpiryEvent;
 import net.minecraftforge.event.entity.living.PotionEvent.PotionRemoveEvent;
- *///?} else {
+ *///?}
+//? if >=1.19.2 {
 import net.minecraftforge.event.entity.living.MobEffectEvent.Added;
 import net.minecraftforge.event.entity.living.MobEffectEvent.Expired;
 import net.minecraftforge.event.entity.living.MobEffectEvent.Remove;
@@ -25,7 +26,7 @@ public final class MobEffectForgeHook {
 
     // 1.16.5 取值差：PotionAddedEvent.getPotionEffect()/PotionRemoveEvent.getPotion()（1.20.1 MobEffectEvent 为
     // getEffectInstance()/getEffect()）
-    //? if <1.17 {
+    //? if <1.19.2 {
     /*@SubscribeEvent
     public static void onEffectAdded(PotionAddedEvent event) {
         MobEffectInstance instance = event.getPotionEffect();
@@ -46,7 +47,8 @@ public final class MobEffectForgeHook {
             MobEffectEvent.onEffectRemoved((LivingEntity) event.getEntity(), instance.getEffect());
         }
     }
-     *///?} else {
+     *///?}
+//? if >=1.19.2 {
     @SubscribeEvent
     public static void onEffectAdded(Added event) {
         MobEffectInstance instance = event.getEffectInstance();

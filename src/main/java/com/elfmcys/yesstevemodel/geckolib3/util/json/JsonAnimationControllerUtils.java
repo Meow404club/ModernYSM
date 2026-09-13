@@ -35,17 +35,20 @@ public class JsonAnimationControllerUtils {
 
     public static List<JsonElement> getAnimations(JsonObject json) {
         JsonArray animations = json.getAsJsonArray("animations");
-        // gson 2.8.0（1.16.5）无 JsonArray.asList()（2.8.1+），手工拷贝
-        //? if <1.17 {
-        // if (animations == null) {
-            // return Collections.emptyList();
-        // }
-        // List<JsonElement> list = new ArrayList<>(animations.size());
-        // for (JsonElement element : animations) {
-            // list.add(element);
-        // }
-        // return list;
-        //? } else {
+        // gson JsonArray.asList() 需 gson 2.9+；legacyforge 中段 classpath gson 无该方法
+        //（1192 编译实测"找不到 asList"）→ <1.20 手工拷贝，语义与 asList 同（null → 空列表）
+        //? if <1.20 {
+        /*
+        if (animations == null) {
+            return Collections.emptyList();
+        }
+        List<JsonElement> list = new ArrayList<>(animations.size());
+        for (JsonElement element : animations) {
+            list.add(element);
+        }
+        return list;
+         *///? }
+        //? if >=1.20 {
         return animations == null ? Collections.emptyList() : animations.asList();
         //? }
     }

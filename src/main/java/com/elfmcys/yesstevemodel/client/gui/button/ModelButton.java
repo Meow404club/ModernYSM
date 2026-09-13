@@ -29,7 +29,7 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import com.mojang.blaze3d.vertex.PoseStack;
-//? if >1.17 {
+//? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import rip.ysm.gui.YsmButton;
@@ -200,12 +200,19 @@ public class ModelButton extends YsmButton {
         }
     }
 
-    //? if >1.17 {
+    //? if >=1.20 {
     @Override
     public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
-    //?} else {
+    //?}
+    //? if >=1.19.4 && <1.20 {
+    /*@Override
+    public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
+    }
+     *///?}
+    //? if <1.19.4 {
     /*@Override
     public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
@@ -215,7 +222,7 @@ public class ModelButton extends YsmButton {
     @Override
     public void renderWidget(YsmGui guiGraphics, int mouseX, int mouseY, float partialTick) {
         AnimationTracker c0117x8455a741Mo1262xaffeef43 = this.modelIdHolder.getAnimationStateMachine();
-        if (isHovered()) {
+        if (/*? if >=1.18.2 && <1.19.4 {*/ /*isHoveredOrFocused()*//*?} else {*/ isHovered() /*?}*/) {
             this.lastHoverTime = Util.getMillis();
             c0117x8455a741Mo1262xaffeef43.setPreviousAnimation(this.modelId);
         } else if (Util.getMillis() - this.lastHoverTime < this.animationDuration) {
@@ -295,12 +302,15 @@ public class ModelButton extends YsmButton {
     }
 
     public void renderTooltip(YsmGui guiGraphics, Screen screen, int mouseX, int mouseY) {
-        if (isHovered()) {
+        if (/*? if >=1.18.2 && <1.19.4 {*/ /*isHoveredOrFocused()*//*?} else {*/ isHovered() /*?}*/) {
             guiGraphics.pose().pushPose();
             guiGraphics.pose().translate(0.0f, 0.0f, 4000.0f);
             //? if <1.17
         /*String selected = Minecraft.getInstance().getLanguageManager().getSelected().getCode();*/
-        //? if >=1.17
+        // LanguageManager.getSelected() 1.19.4 起返回 String（1194:70），1.17~1.19.2 为 LanguageInfo → getCode()
+        //? if >=1.17 && <1.19.4
+        /*String selected = Minecraft.getInstance().getLanguageManager().getSelected().getCode();*/
+        //? if >=1.19.4
         String selected = Minecraft.getInstance().getLanguageManager().getSelected();
             if (!Objects.equals(this.cachedLanguage, selected)) {
                 this.cachedLanguage = selected;

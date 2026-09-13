@@ -60,10 +60,19 @@ public final class GpuRenderPath {
         GpuMesh mesh = decodeMeshRef(model.gpuMeshHandle);
         if (mesh == null) return false;
 
+        //? if >=1.17 && <1.19.4 {
+        /*
+        Matrix4f rootPose = com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.pose(pose);
+        Matrix3f rootNormal = com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.normal(pose);
+        Matrix4f projMat = com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.projectionMatrix();
+        Matrix4f mvMat = com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.modelViewMatrix();
+         *///?}
+        //? if >=1.19.4 {
         Matrix4f rootPose = pose.pose();
         Matrix3f rootNormal = pose.normal();
         Matrix4f projMat = RenderSystem.getProjectionMatrix();
         Matrix4f mvMat = RenderSystem.getModelViewMatrix();
+        //?}
 
         rootPose.get(rootPoseScratch);
         rootNormal.get(rootNormalScratch);
@@ -105,6 +114,12 @@ public final class GpuRenderPath {
         float fogStart = RenderSystem.getShaderFogStart();
         float fogEnd = RenderSystem.getShaderFogEnd();
         float[] fogColor = RenderSystem.getShaderFogColor();
+        // 1171 无 RenderSystem.getShaderFogShape（1171 编译实证）→ 常量 0=FogShape.SPHERE（pre-1.18 恒球 fog 语义）
+        //? if <1.17
+        /*int fogShape = RenderSystem.getShaderFogShape().getIndex();*/
+        //? if >=1.17 && <1.18.2
+        /*int fogShape = 0;*/
+        //? if >=1.18.2
         int fogShape = RenderSystem.getShaderFogShape().getIndex();
 
         GlStateManager._glUseProgram(BoneSkinShader.program());
@@ -147,7 +162,10 @@ public final class GpuRenderPath {
         GL15.glBindBuffer(GL43.GL_SHADER_STORAGE_BUFFER, 0);
         GlStateManager._glUseProgram(0);
 
+        //? if >=1.19.2
         com.mojang.blaze3d.vertex.BufferUploader.invalidate();
+        //? if <1.19.2
+        /*com.mojang.blaze3d.vertex.BufferUploader.reset();*/
         GlStateManager._glBindVertexArray(0);
 
         mc.gameRenderer.lightTexture().turnOffLightLayer();
@@ -157,7 +175,16 @@ public final class GpuRenderPath {
     }
 
     private static void refreshLights() {
+        //? if <1.17 {
+        /*Vector3f[] arr = RenderSystemAccessor.ysm$getShaderLightDirections();
+         *///?}
+        // 1.17~1.19.2 accessor 为 mojang Vector3f 签名（JOML 前夜）不可读，恒 null → 兜底默认平行光
+        //? if >=1.17 && <1.19.4 {
+        /*Vector3f[] arr = null;
+         *///?}
+        //? if >=1.19.4 {
         Vector3f[] arr = RenderSystemAccessor.ysm$getShaderLightDirections();
+        //?}
         currentLights[0] = (arr != null && arr.length > 0 && arr[0] != null) ? arr[0] : new Vector3f(0.2f, 1.0f, -0.7f).normalize();
         currentLights[1] = (arr != null && arr.length > 1 && arr[1] != null) ? arr[1] : new Vector3f(-0.2f, 1.0f, 0.7f).normalize();
     }

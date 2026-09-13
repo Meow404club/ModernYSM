@@ -4,7 +4,7 @@ import com.elfmcys.yesstevemodel.config.LoadingStateConfig;
 import com.elfmcys.yesstevemodel.util.YsmText;
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.vertex.PoseStack;
-//? if >1.17 {
+//? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import rip.ysm.gui.YsmButton;
@@ -13,7 +13,7 @@ import net.minecraft.network.chat.Component;
 
 public class LoadingStateButton extends YsmButton {
     public LoadingStateButton(int x, int y) {
-        //? if <1.17 {
+        //? if <1.19.2 {
         /*super(x, y, 100, 20, YsmText.literal(""), button -> {*/
         //?} else {
         super(x, y, 100, 20, Component.empty(), button -> {
@@ -21,12 +21,19 @@ public class LoadingStateButton extends YsmButton {
         });
     }
 
-    //? if >1.17 {
+    //? if >=1.20 {
     @Override
     public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
-    //?} else {
+    //?}
+    //? if >=1.19.4 && <1.20 {
+    /*@Override
+    public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
+    }
+     *///?}
+    //? if <1.19.4 {
     /*@Override
     public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);

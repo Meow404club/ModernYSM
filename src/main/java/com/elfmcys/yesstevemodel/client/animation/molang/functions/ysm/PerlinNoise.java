@@ -20,6 +20,13 @@ public class PerlinNoise extends EntityFunction {
         if (size > 3) {
             z = arguments.getAsFloat(context, 3);
         }
+        // stb_perlin_noise3_seed 需 lwjgl-stb 3.2.2+：1165 打包 3.2.2 有 seed（基线 jar 实证），
+        // 1.17.1/1.18.2 打包 3.2.1 无此方法（noise3 为 6 参 x,y,z,i,j,k），1.19.2 起 3.3.x 恢复 seed
+        //? if <1.17
+        /*return STBPerlin.stb_perlin_noise3_seed(x, y, z, 0, 0, 0, seed);*/
+        //? if >=1.17 && <1.19.2
+        /*return STBPerlin.stb_perlin_noise3(x, y, z, 0, 0, 0);*/
+        //? if >=1.19.2
         return STBPerlin.stb_perlin_noise3_seed(x, y, z, 0, 0, 0, seed);
     }
 

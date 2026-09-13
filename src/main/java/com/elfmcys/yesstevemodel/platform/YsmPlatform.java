@@ -57,7 +57,9 @@ public final class YsmPlatform {
     public static MinecraftServer getServer() {
         //? if <1.17
         /*return net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
-        //? if >=1.17
+        //? if >=1.17 && <1.18.2
+        /*return net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();*/
+        //? if >=1.18.2
         return net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
     }
 

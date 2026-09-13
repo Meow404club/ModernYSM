@@ -17,7 +17,7 @@ public class FooterButton extends YsmWidget {
 
     @Override
     protected void renderWidget(YsmGui g, int mouseX, int mouseY, float partialTick) {
-        int bg = !active ? 0x90282828 : (isHovered() ? new Color(0x90171717, true).getRGB() : 0x90000000);
+        int bg = !active ? 0x90282828 : (/*? if >=1.18.2 && <1.19.4 {*/ /*isHoveredOrFocused()*//*?} else {*/ isHovered() /*?}*/ ? new Color(0x90171717, true).getRGB() : 0x90000000);
         g.fill(getX(), getY(), getX() + width, getY() + height, bg);
         int tw = Minecraft.getInstance().font.width(getMessage());
         int color = active ? 0xFFFFFFFF : 0xFF888888;

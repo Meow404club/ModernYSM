@@ -10,11 +10,24 @@ import com.elfmcys.yesstevemodel.client.input.PlayerModelToggleKey;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
-//? if >=1.17 {
+//? if >=1.19.2 {
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 //?} else {
 /*import net.minecraft.network.chat.TextComponent;
+ *///?}
+//? if <1.17 {
+/*import net.minecraft.network.chat.TextComponent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;*/
+//?}
+//? if >=1.17 && <1.18.2 {
+/*import net.minecraft.network.chat.TextComponent;
+import net.minecraftforge.fmlclient.registry.ClientRegistry;
+ *///?}
+//? if >=1.18.2 && <1.19.2 {
+/*import net.minecraft.network.chat.TextComponent;
+import net.minecraftforge.client.ClientRegistry;
+ *///?}
+//? if >=1.19.2 {
 //?}
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -46,7 +59,7 @@ public final class ClientSetupEvent {
         }
     }
 
-    //? if >=1.17 {
+    //? if >=1.19.2 {
     @SubscribeEvent
     public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
         event.register(PlayerModelToggleKey.KEY_MAPPING);
@@ -85,7 +98,7 @@ public final class ClientSetupEvent {
      */
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onClientSetup(FMLClientSetupEvent event) {
-        //? if <1.17 {
+        //? if <1.19.2 {
         /*event.enqueueWork(ClientSetupEvent::registerKeyBindings);*/
 //?}
         if (!YesSteveModel.isAvailable()) {
@@ -99,9 +112,9 @@ public final class ClientSetupEvent {
             int maxTexSize = GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE);
             if (maxTexSize <= 0) {
                 // Component.literal 为 1.19.4+ 工厂方法，1.16.5 用 new TextComponent
-                //? if >=1.17
+                //? if >=1.19.2
                 return Component.literal("YSM: OpenGL context not available");
-                //? if <1.17
+                //? if <1.19.2
                 /*return new TextComponent("YSM: OpenGL context not available");*/
             }
             // 原始C++碼檢查了GL20（著色器）和 GL30（VAO）的可用性
@@ -111,9 +124,9 @@ public final class ClientSetupEvent {
                     GL20.glDeleteShader(testShader);
                 }
             } catch (Exception e) {
-                //? if >=1.17
+                //? if >=1.19.2
                 return Component.literal("YSM: GL20 (shaders) not available");
-                //? if <1.17
+                //? if <1.19.2
                 /*return new TextComponent("YSM: GL20 (shaders) not available");*/
             }
 
@@ -122,9 +135,9 @@ public final class ClientSetupEvent {
             //ClientModelManager.schedulePreloadDefaultModel();
             return null; // 成功
         } catch (Exception e) {
-            //? if >=1.17
+            //? if >=1.19.2
             return Component.literal("YSM Client Init Failed: " + e.getMessage());
-            //? if <1.17
+            //? if <1.19.2
             /*return new TextComponent("YSM Client Init Failed: " + e.getMessage());*/
         }
     }

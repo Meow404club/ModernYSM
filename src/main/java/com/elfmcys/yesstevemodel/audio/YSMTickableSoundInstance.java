@@ -30,7 +30,8 @@ public class YSMTickableSoundInstance extends AbstractTickableSoundInstance impl
     public float targetVolume;
 
     public YSMTickableSoundInstance(SoundEvent soundEvent, Entity entity) {
-        //? if <1.17 {
+        // AbstractTickableSoundInstance 3 参（带 RandomSource）1.19.2 起（1182:9 = 2 参）
+        //? if <1.19.2 {
         /*super(soundEvent, SoundSource.PLAYERS);
          *///?} else {
         super(soundEvent, SoundSource.PLAYERS, SoundInstance.createUnseededRandom());

@@ -23,7 +23,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.Projectile;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
-//? if >=1.17 {
+//? if >=1.19.4 {
 import com.mojang.math.Axis;
 //? }
 
@@ -65,11 +65,15 @@ public abstract class AbstractProjectileRenderer<TEntity extends Projectile, T e
                 poseStack.pushPose();
                 //? if <1.17
                 // poseStack.mulPose(com.mojang.math.Vector3f.YP.rotationDegrees(Mth.lerp(partialTick, projectile.yRotO, projectile.yRot) - 90.0f));
-                //? if >=1.17
+                //? if >=1.17 && <1.19.4
+                /*poseStack.mulPose(com.mojang.math.Vector3f.YP.rotationDegrees(Mth.lerp(partialTick, projectile.yRotO, projectile.getYRot()) - 90.0f));*/
+                //? if >=1.19.4
                 poseStack.mulPose(Axis.YP.rotationDegrees(Mth.lerp(partialTick, projectile.yRotO, projectile.getYRot()) - 90.0f));
                 //? if <1.17
                 // poseStack.mulPose(com.mojang.math.Vector3f.ZP.rotationDegrees(Mth.lerp(partialTick, projectile.xRotO, projectile.xRot)));
-                //? if >=1.17
+                //? if >=1.17 && <1.19.4
+                /*poseStack.mulPose(com.mojang.math.Vector3f.ZP.rotationDegrees(Mth.lerp(partialTick, projectile.xRotO, projectile.getXRot())));*/
+                //? if >=1.19.4
                 poseStack.mulPose(Axis.ZP.rotationDegrees(Mth.lerp(partialTick, projectile.xRotO, projectile.getXRot())));
                 renderWithBoneAndRenderType(model, animatable, partialTick, renderType, poseStack, bufferSource, 0, null, packedLight, getPackedLight(projectile, 0.0f), color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, color.getAlpha() / 255.0f);
                 poseStack.popPose();

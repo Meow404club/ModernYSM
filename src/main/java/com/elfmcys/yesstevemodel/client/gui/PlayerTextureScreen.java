@@ -18,7 +18,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import com.mojang.blaze3d.vertex.PoseStack;
-//? if >1.17 {
+//? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import rip.ysm.gui.YsmGui;
@@ -132,11 +132,11 @@ public class PlayerTextureScreen extends Screen {
         int texIndex;
         int animIndex;
         MutableComponent mutableComponentLiteral;
-//? if <1.17 {
-        /*this.init(Minecraft.getInstance(), this.width, this.height);
-        return;*/
-        //? if >=1.17
+// 1.16.5 无 Screen.clearWidgets（死注释形态的 init(mc,w,h)+return 从未生效，1.16.5 字段
+// 由 setScreen→init(Minecraft,w,h) 先行赋值，无参 init() 直接可用，m2.6 实测语义）
+//? if >=1.17 {
         clearWidgets();
+//?}
         this.guiLeft = (this.width - 420) / 2;
         this.guiTop = (this.height - 235) / 2;
         this.textureMaxPage = (this.textureMap.size() - 1) / 4;
@@ -214,7 +214,7 @@ public class PlayerTextureScreen extends Screen {
         }
     }
 
-    //? if >1.17 {
+    //? if >=1.20 {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.render(new YsmGui(graphics), mouseX, mouseY, partialTick);
@@ -253,7 +253,9 @@ public class PlayerTextureScreen extends Screen {
         guiGraphics.drawString(this.font, str2, this.guiLeft + 5 + ((80 - this.font.width(str2)) / 2), this.guiTop + 218, 15986656);
         //? if <1.17
         /*super.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
-        //? if >=1.17
+        //? if >=1.17 && <1.20
+        /*super.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
+        //? if >=1.20
         super.render(guiGraphics.graphics(), mouseX, mouseY, partialTick);
         ((ScreenAccessor) this).ysm$getRenderables().stream().filter(renderable -> {
             return renderable instanceof FlatColorButton;

@@ -22,12 +22,12 @@ import com.elfmcys.yesstevemodel.client.model.processor.ArmorSlotProcessor;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
 import net.minecraft.world.entity.EquipmentSlot;
 // 1.16.5 自带 commons-lang3 3.9 缺 3.12 的 TriFunction，走同名 shim（geckolib3/core/util）
-//? if <1.17 {
+//? if <1.18.2 {
 // import com.elfmcys.yesstevemodel.geckolib3.core.util.TriFunction;
 //? } else {
 // commons-lang3 TriFunction 3.12+（1.16.5 classpath=3.5 缺）：照 geckolib3/core/util/TriFunction
 // shim 先例，import 分支选类（lambda 目标类型兼容，两版消费面不变）
-//? if <1.17 {
+//? if <1.18.2 {
 /*import com.elfmcys.yesstevemodel.geckolib3.core.util.TriFunction;
  *///?} else {
 import org.apache.commons.lang3.function.TriFunction;

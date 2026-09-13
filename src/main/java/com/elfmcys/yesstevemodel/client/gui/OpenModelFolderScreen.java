@@ -5,7 +5,7 @@ import com.elfmcys.yesstevemodel.util.YsmText;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.vertex.PoseStack;
-//? if >1.17 {
+//? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import rip.ysm.gui.YsmGui;
@@ -26,11 +26,11 @@ public class OpenModelFolderScreen extends Screen {
     public void init() {
         int x = (this.width - 310) / 2;
         int y = (this.height / 2) + 60;
-//? if <1.17 {
-        /*this.init(Minecraft.getInstance(), this.width, this.height);
-        return;*/
-        //? if >=1.17
+// 1.16.5 无 Screen.clearWidgets（死注释形态的 init(mc,w,h)+return 从未生效，1.16.5 字段
+// 由 setScreen→init(Minecraft,w,h) 先行赋值，无参 init() 直接可用，m2.6 实测语义）
+//? if >=1.17 {
         clearWidgets();
+//?}
         ysmAddWidget(YsmGui.button(x, y, 150, 20, YsmText.translatable("gui.yes_steve_model.open_model_folder.open"), button -> {
             Util.getPlatform().openFile(ServerModelManager.CUSTOM.toFile());
         }));
@@ -39,7 +39,7 @@ public class OpenModelFolderScreen extends Screen {
         }));
     }
 
-    //? if >1.17 {
+    //? if >=1.20 {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.render(new YsmGui(graphics), mouseX, mouseY, partialTick);
@@ -56,7 +56,9 @@ public class OpenModelFolderScreen extends Screen {
         guiGraphics.drawWordWrap(this.font, YsmText.translatable("gui.yes_steve_model.open_model_folder.tips"), (this.width - 400) / 2, (this.height / 2) - 80, 400, 16777215);
         //? if <1.17
         /*super.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
-        //? if >=1.17
+        //? if >=1.17 && <1.20
+        /*super.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
+        //? if >=1.20
         super.render(guiGraphics.graphics(), mouseX, mouseY, partialTick);
     }
     // addRenderableWidget/addWidget 均为 protected 实例方法（JLS 6.6.2 子类内才可调）→ 桥方法；

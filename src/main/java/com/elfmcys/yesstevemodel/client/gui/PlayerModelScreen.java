@@ -2,7 +2,7 @@ package com.elfmcys.yesstevemodel.client.gui;
 
 import com.elfmcys.yesstevemodel.NativeLibLoader;
 import com.elfmcys.yesstevemodel.util.YsmPair;
-//? if >=1.17 {
+//? if >=1.18.2 {
 import it.unimi.dsi.fastutil.Pair;
 //?}
 import com.elfmcys.yesstevemodel.util.YsmText;
@@ -38,7 +38,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import com.mojang.blaze3d.vertex.PoseStack;
-//? if >1.17 {
+//? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import rip.ysm.gui.YsmGui;
@@ -235,9 +235,9 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
         }
         if (StringUtils.isBlank(lowerCase)) {
             this.filteredModels.entrySet().removeIf(entry -> {
-                //? if <1.17
+                //? if <1.18.2
             /*YsmPair.StrPair pair = FileTypeUtil.splitFileNameAndParentDir(entry.getKey());*/
-            //? if >=1.17
+            //? if >=1.18.2
             Pair<String, String> pair = FileTypeUtil.splitFileNameAndParentDir(entry.getKey());
                 return this.hiddenModels.contains(pair.left()) || !pair.right().equals(currentPath);
             });
@@ -361,11 +361,15 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
         // （vanilla-mc-1165 Screen.java:302-305 buttons.clear+children.clear+setFocused(null)）。
         // 必须用块形式条件：经生成树验证块形式活跃分支 /* */ 包裹会被解包为真代码
         // （对照 PlayerModelScreen.render 的双轴写法，1.16.5 生成物 492-503 行实证）。
+        // rebase 裁决（m3-batch1 审查）：clearWidgets 边界按 c85ec7c 实证收窄为 >=1.18.2
+        // （1.17.1 无 Screen.clearWidgets，1.17 起 buttons 列表并入 children）→ 1171 空档段
+        // 无清场，属该线上游 init 重入已知债，归后续卡；1165/1201 展开与 s1/s3 版逐字一致。
         //? if <1.17 {
         /*this.buttons.clear();
         this.children.clear();
         this.setFocused(null);
-         *///?} else {
+         *///?}
+        //? if >=1.18.2 {
         clearWidgets();
         //?}
         Arrays.fill(this.slotButtons, null);
@@ -384,9 +388,13 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
         this.searchBox = new EditBox(Minecraft.getInstance().font, this.guiLeft + 144, this.guiTop + 6, 140, 16, YsmText.literal("YSM Search Box"));
         this.searchBox.setValue(value);
         this.searchBox.setTextColor(15986656);
-        //? if <1.17
+        // 1.17~1.19.2 AbstractWidget.setFocused(boolean) 为 protected（1192 AbstractWidget.java:217），
+        // 外类不可调 → 走 Screen.setFocused(GuiEventListener)（1192 AbstractContainerEventHandler.java:28 public）
+        //? if <1.18.2
         /*this.setFocused(zIsFocused ? this.searchBox : null);*/
-        //? if >=1.17
+        //? if >=1.17 && <1.19.4
+        /*this.setFocused(zIsFocused ? this.searchBox : null);*/
+        //? if >=1.19.4
         this.searchBox.setFocused(zIsFocused);
         this.searchBox.moveCursorToEnd();
         this.suggestions = new SearchSuggestions(this.font, this.searchBox, this.modelPackMap, this.suggestions);
@@ -512,7 +520,7 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
         this.renderedModelKeys = new ArrayList<>(this.sortedModelKeys);
     }
 
-    //? if >1.17 {
+    //? if >=1.20 {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.render(new YsmGui(graphics), mouseX, mouseY, partialTick);
@@ -529,9 +537,11 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
         guiGraphics.fillGradient(this.guiLeft, this.guiTop, this.guiLeft + 135, this.guiTop + 235, -14540254, -14540254);
         guiGraphics.fillGradient(this.guiLeft + 138, this.guiTop, this.guiLeft + 420, this.guiTop + 235, -14540254, -14540254);
         guiGraphics.fillGradient(this.guiLeft + 351, this.guiTop + 7, this.guiLeft + 352, this.guiTop + 21, -790560, -790560);
-//? if <1.17
+//? if <1.18.2
         /*this.searchBox.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
-        //? if >=1.17
+        //? if >=1.17 && <1.20
+        /*this.searchBox.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
+        //? if >=1.20
         this.searchBox.render(guiGraphics.graphics(), mouseX, mouseY, partialTick);
         renderModelPreview(guiGraphics, mouseX, mouseY, this.minecraft.getFrameTime());
         if (this.searchBox.getValue().isEmpty() && !this.searchBox.isFocused()) {
@@ -557,9 +567,11 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
         boolean occluded = this.suggestions != null && this.suggestions.isOccluding(mouseX, mouseY);
         int hoverX = occluded ? -1000 : mouseX;
         int hoverY = occluded ? -1000 : mouseY;
-//? if <1.17
+//? if <1.18.2
         /*super.render(guiGraphics.pose(), hoverX, hoverY, partialTick);*/
-        //? if >=1.17
+        //? if >=1.17 && <1.20
+        /*super.render(guiGraphics.pose(), hoverX, hoverY, partialTick);*/
+        //? if >=1.20
         super.render(guiGraphics.graphics(), hoverX, hoverY, partialTick);
         ((ScreenAccessor) this).ysm$getRenderables().stream().filter(renderable -> {
             return renderable instanceof IconButton;
@@ -577,12 +589,22 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
             ((PackIconButton) renderable6).renderDescription(guiGraphics, this, hoverX, hoverY);
         });
         if (this.suggestions != null) {
-//? if <1.17
+//? if <1.18.2
             /*this.suggestions.render(guiGraphics.pose());*/
-            //? if >=1.17
+            //? if >=1.17 && <1.20
+            /*this.suggestions.render(guiGraphics.pose());*/
+            //? if >=1.20
             this.suggestions.render(guiGraphics.graphics());
         }
+        // isHovered() public 1.19.4 起（1194:266）；1.16.5~1.19.2 无 → 1165 同名 isHovered
+        //（1165 Widget.java:177）/ 1.17~1.19.2 用 isMouseOver(mouseX, mouseY)（1192:172 等价）
+        //? if <1.17
+        /*if (this.searchBox.isHovered() && (this.suggestions == null || !this.suggestions.isVisible())) {*/
+        //? if >=1.17 && <1.19.4
+        /*if (this.searchBox.isMouseOver(mouseX, mouseY) && (this.suggestions == null || !this.suggestions.isVisible())) {*/
+        //? if >=1.19.4
         if (this.searchBox.isHovered() && (this.suggestions == null || !this.suggestions.isVisible())) {
+
             MutableComponent mutableComponentWithStyle = YsmText.translatable("gui.yes_steve_model.search.tip").withStyle(ChatFormatting.GRAY);
             guiGraphics.pose().pushPose();
             guiGraphics.pose().translate(0.0f, 0.0f, 4000.0f);
@@ -632,9 +654,11 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
     private void clearSearch() {
         if (this.searchBox != null) {
             this.searchBox.setValue(StringPool.EMPTY);
-            //? if <1.17
+            //? if <1.18.2
         /*this.setFocused(null);*/
-        //? if >=1.17
+        //? if >=1.17 && <1.19.4
+        /*this.setFocused(null);*/
+        //? if >=1.19.4
         this.searchBox.setFocused(false);
         }
         if (this.suggestions != null) {
@@ -728,9 +752,15 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
             RenderSystem.enableScissor((int) ((this.guiLeft + 5) * guiScale), (int) (Minecraft.getInstance().getWindow().getHeight() - ((this.guiTop + 200) * guiScale)), (int) (125.0d * guiScale), (int) (171.0d * guiScale));
             guiGraphics.pose().pushPose();
             guiGraphics.pose().translate(0.0f, 0.0f, 100.0f);
-//? if <1.17
+//? if <1.18.2
             /*InventoryScreen.renderEntityInInventory(this.guiLeft + 67, this.guiTop + 190, 70, (this.guiLeft + 67) - mouseX, ((this.guiTop + 180) - 95) - mouseY, localPlayer);*/
-            //? if >=1.17
+            // 1.17~1.19.2 仅 6 参 renderEntityInInventory（1182/1192:102，无 PoseStack）；renderEntityInInventoryFollowsMouse
+            // 1.19.4 起（1194:112，PoseStack）；GuiGraphics 版 1.20 起
+            //? if >=1.17 && <1.19.4
+            /*InventoryScreen.renderEntityInInventory(this.guiLeft + 67, this.guiTop + 190, 70, (this.guiLeft + 67) - mouseX, ((this.guiTop + 180) - 95) - mouseY, localPlayer);*/
+            //? if >=1.19.4 && <1.20
+            /*InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics.pose(), this.guiLeft + 67, this.guiTop + 190, 70, (this.guiLeft + 67) - mouseX, ((this.guiTop + 180) - 95) - mouseY, localPlayer);*/
+            //? if >=1.20
             InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics.graphics(), this.guiLeft + 67, this.guiTop + 190, 70, (this.guiLeft + 67) - mouseX, ((this.guiTop + 180) - 95) - mouseY, localPlayer);
             guiGraphics.pose().popPose();
             RenderSystem.disableScissor();
@@ -778,9 +808,11 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
             return true;
         }
         if (this.searchBox.isFocused()) {
-            //? if <1.17
+            //? if <1.18.2
         /*this.setFocused(null);*/
-        //? if >=1.17
+        //? if >=1.17 && <1.19.4
+        /*this.setFocused(null);*/
+        //? if >=1.19.4
         this.searchBox.setFocused(false);
             if (this.suggestions != null) {
                 this.suggestions.suppress();
@@ -815,9 +847,9 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
         if (handleToggleKey(keyCode, scanCode, modifiers)) {
             return true;
         }
-        //? if <1.17
+        //? if <1.18.2
         /*if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_F && Screen.hasControlDown()) {*/
-        //? if >=1.17
+        //? if >=1.18.2
         if (keyCode == InputConstants.KEY_F && Screen.hasControlDown()) {
             toggleSearchFocus();
             return true;
@@ -853,9 +885,11 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
             return;
         }
         setFocused(this.searchBox);
-        //? if <1.17
+        //? if <1.18.2
         /*this.setFocused(this.searchBox);*/
-        //? if >=1.17
+        //? if >=1.17 && <1.19.4
+        /*this.setFocused(this.searchBox);*/
+        //? if >=1.19.4
         this.searchBox.setFocused(true);
         this.searchBox.moveCursorToEnd();
     }

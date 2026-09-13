@@ -27,13 +27,24 @@ import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 // （new Random() 无参构造自带唯一种子，语义对应 RandomSupport.generateUniqueSeed()）
 //? if <1.17 {
 // import java.util.Random;
-//? } else {
+//? }
+//? if >=1.17 && <1.18.2 {
+// import net.minecraft.world.level.levelgen.RandomSource;
+// import net.minecraft.world.level.levelgen.WorldgenRandom;
+//? }
+//? if >=1.18.2 && <1.19.2 {
+// import net.minecraft.world.level.levelgen.RandomSource;
+// import net.minecraft.world.level.levelgen.RandomSupport;
+// import net.minecraft.world.level.levelgen.XoroshiroRandomSource;
+//? }
+//? if >=1.19.2 {
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.levelgen.RandomSupport;
 import net.minecraft.world.level.levelgen.XoroshiroRandomSource;
 //? }
-// ^ RandomSource/Xoroshiro/RandomSupport 均为 1.17/1.18+ 类；1.16.5 用 java.util.Random
-//   （new Random() 无参构造自带唯一种子，语义对应 RandomSupport.generateUniqueSeed()）
+// ^ RandomSource 为 1.17+ 类（1171 实证有 levelgen.RandomSource 但无 XoroshiroRandomSource/
+//   RandomSupport，merged jar javap；WorldgenRandom(long) implements RandomSource 承接 1171 段）；
+//   1.16.5 用 java.util.Random（new Random() 无参构造自带唯一种子，语义对应 generateUniqueSeed）
 import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
@@ -63,10 +74,20 @@ public class AnimationProcessor<TEntity extends Entity> {
 
     private final AudioPlayerManager audioPlayerManager = new AudioPlayerManager();
 
-    //? if <1.17
-    // private final Random random = new Random();
-    //? if >=1.17
+    // 1171 无 XoroshiroRandomSource/RandomSupport（merged jar 实证）→ WorldgenRandom(long) 实现 RandomSource；
+    // 1182 RandomSupport 无 generateUniqueSeed（1.19.2+ 才有）→ nanoTime 种子，语义同唯一种子
+    //? if <1.17 {
+    /*private final Random random = new Random();
+     *///?}
+    //? if >=1.17 && <1.18.2 {
+    /*private final RandomSource random = new WorldgenRandom(System.nanoTime());*/
+    //? }
+    //? if >=1.18.2 && <1.19.2 {
+    /*private final RandomSource random = new XoroshiroRandomSource(System.nanoTime());*/
+    //? }
+    //? if >=1.19.2 {
     private final RandomSource random = new XoroshiroRandomSource(RandomSupport.generateUniqueSeed());
+    //?}
 
     private final ConcurrentLinkedQueue<PendingExpression> pendingExpressions = new ConcurrentLinkedQueue<>();
 

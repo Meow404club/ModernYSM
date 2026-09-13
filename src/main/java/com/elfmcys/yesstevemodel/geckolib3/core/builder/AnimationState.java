@@ -3,8 +3,9 @@ package com.elfmcys.yesstevemodel.geckolib3.core.builder;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.util.StringPool;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.value.IValue;
 import com.elfmcys.yesstevemodel.geckolib3.util.IInterpolable;
-// 1.16.5 自带 fastutil 8.3.1 缺 8.5.0 的 IntReferenceImmutablePair，走同名 shim（geckolib3/core/util）
-//? if <1.17 {
+// fastutil IntReferenceImmutablePair 为 8.5.0+：1.16.5（8.3.1）/1.17.1（8.2.1）缺，
+// 走同名 shim（geckolib3/core/util）；1.17+ 自带
+//? if <1.18.2 {
 // import com.elfmcys.yesstevemodel.geckolib3.core.util.IntReferenceImmutablePair;
 //? } else {
 import it.unimi.dsi.fastutil.ints.IntReferenceImmutablePair;

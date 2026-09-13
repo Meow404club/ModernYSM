@@ -240,9 +240,20 @@ tasks.named<ProcessResources>("processResources") {
     // Arrow 效果 accessor 版本化：1.20.5+ Arrow.effects 字段删除（数据组件化），换成
     // PotionContents Invoker（src/neoforge-{1205,1211}/java .../mixin/client/ArrowPotionAccessor）
     if (!pre1205) {
+        // 配置缓存铁律：lambda 内只引任务配置块局部 val（stonecutter 是脚本对象引用）
+        val dropBufferBuilderMixin = stonecutter.eval(stonecutter.current.version, ">=1.21")
         filesMatching("*.mixins.json") {
-            filter { line: String -> line.replace("\"JAVA_17\"", "\"JAVA_21\"")
-                .replace("\"client.ArrowEntityAccessor\"", "\"client.ArrowPotionAccessor\"") }
+            filter { line: String ->
+                var out = line.replace("\"JAVA_17\"", "\"JAVA_21\"")
+                    .replace("\"client.ArrowEntityAccessor\"", "\"client.ArrowPotionAccessor\"")
+                if (dropBufferBuilderMixin) {
+                    // 1.21 BufferBuilder 原生内存重构（无 buffer/nextElementByte/ensureCapacity，
+                    // vanilla-1.21.1 BufferBuilder.java:18-31）——JNI SIMD 直传面不存在，
+                    // mixin 条目移除（原生渲染按 m2 ADR 降级为 vanilla 路径，归 native 卡验收）
+                    out = out.replace(", \"client.BufferBuilderMixin\"", "")
+                }
+                out
+            }
         }
     }
 }

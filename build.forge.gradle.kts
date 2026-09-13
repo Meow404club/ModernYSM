@@ -105,14 +105,26 @@ mixin {
 // NoSuchFieldError: IBM_SEMERU（JvmVendor 枚举跨版本不兼容，stacktrace 实证）→
 // 编译目标以 javac --release 16 下发（Java 16 语义/字节码 major 60），运行期工具链 21。
 if (pre118) {
-    // TODO(asm-upgrade): 见 tasks.m3-asm-problem 描述卡
-    // 工具链 17（原 21）：MDG dev run 继承工具链 JVM，1.17.1 内置 mixin 的旧 ASM
-    // 解析不了 JDK21 自身类（java/lang/String major 65 → ClassMetadataNotFoundException
-    // 拒启实测）；Java 17 javac --release 16 产物不变（major 60）
-    java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+    java.toolchain.languageVersion = JavaLanguageVersion.of(21)
     tasks.withType<JavaCompile>().configureEach {
         options.release = 16
     }
+    // ASM force 升级（机制与三重先例见 state:tasks.m3-asm-problem-research）：dev run JVM=21
+    // 时 1.17.1 内置 mixin 0.8.4 依赖的 asm 9.1（上限 major 61）解析 JDK 自身类
+    // （java/lang/String major 65）→ ClassMetadataNotFoundException 拒启。asm 条目是
+    // forge userdev 变体的 Gradle 模块依赖，同 GAV 坐标强升 9.8（V25，覆盖 Java 25 dev run）
+    // 无排序问题；MDG 已用 NonStrictDependencyTransform 放宽 strict（先例：Celeritas
+    // unimined asm 9.6 强升 + run JVM21、GTNH lwjgl3ify、forge 官方 1.17.x 分支自升 asm 9.6）
+    configurations.all {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "org.ow2.asm") useVersion("9.8")
+        }
+    }
+    // 保底 A（注释态；若 asm force 验证受阻按此处启用——MDG 的 launcher set 在 register
+    // 动作里，后置 configureEach 必赢）：
+    // tasks.matching { it.name in listOf("runClient", "runServer") }.configureEach {
+    //     javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(17) }
+    // }
 }
 
 legacyForge {

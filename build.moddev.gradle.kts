@@ -145,15 +145,26 @@ val imageStreamEmbedJars: Set<File> = imageStreamEmbed.files
 sourceSets.main {
     java {
         // 基础树按代分挂（见下方链尾注记）：21.5 线挂 1215（= neoforge ∪ neoforge-1205 的
-        // 1.21.5 代副本）、21.8+ 线挂 1218（= 1215 ∪ 1213 的 1.21.8 代副本），防同 FQCN 双份类定义
+        // 1.21.5 代副本）、21.8 线挂 1218（= 1215 ∪ 1213 的 1.21.8 代副本）、21.10 线挂 2110、
+        // 21.11+/26.x 线挂 2111，防同 FQCN 双份类定义
         if (stonecutter.eval(stonecutter.current.version, "<21.8")) {
             if (stonecutter.eval(stonecutter.current.version, "<21.5")) {
                 srcDir(rootProject.file("src/neoforge/java"))
             } else {
                 srcDir(rootProject.file("src/neoforge-1215/java"))
             }
-        } else {
+        } else if (stonecutter.eval(stonecutter.current.version, "<21.10")) {
             srcDir(rootProject.file("src/neoforge-1218/java"))
+        } else if (stonecutter.eval(stonecutter.current.version, "<21.11")) {
+            // 2110 树 = 1218 的 1.21.10 代副本。分裂动因（neoforge-21.10.64-sources 实证）：
+            // RenderLevelStageEvent 删 AfterBlockEntities 子事件类（RenderFirstPlayerForgeHook）、
+            // PlayerRenderer → AvatarRenderer 改名（PlayerRenderStateEntityCache）
+            srcDir(rootProject.file("src/neoforge-2110/java"))
+        } else {
+            // 2111 树 = 2110 的 1.21.11 代副本：net.minecraft.resources.ResourceLocation →
+            // Identifier 全树改名（同包同 API，neoforge-21.11.45-sources 实证）+ Arrow 族
+            // 移 projectile.arrow 子包（ArrowPotionAccessor 目标）
+            srcDir(rootProject.file("src/neoforge-2111/java"))
         }
         if (pre1205) {
             srcDir(rootProject.file("src/neoforge-1204/java"))
@@ -188,18 +199,21 @@ sourceSets.main {
             // 两代共存（同 FQCN 二选一挂载防双份类定义）；1213 树 21.5 编译零残差，继续共用。
             srcDir(rootProject.file("src/neoforge-1213/java"))
         } else {
-            // 21.8+（21.8/21.10/21.11/26.x）：1218 树 = (1215 ∪ 1213) 1.21.8 代副本。
+            // 21.8+：1218/2110/2111 基础树 = (1215 ∪ 1213) 的各代副本，上方基础挂载已含本段
+            // 平台树全部类，不再重复挂载（21.8 同目录二次挂载会触发 sourcesJar 重复条目）
             // 分裂动因：EventBusSubscriber 删 bus 属性（PlayerRenderStateEntityCache）、
             // RenderLevelStageEvent 拆子事件类（RenderFirstPlayerForgeHook）、
             // PacketDistributor.sendToServer→ClientPacketDistributor（YSMChannelImpl）
-            srcDir(rootProject.file("src/neoforge-1218/java"))
         }
         // shim：<1.21 挂原件；1.21+ 挂整树副本（ResourceLocation 私有构造 /
-        // isValidResourceLocation 删除 → Rl/parse，2 文件已修，RAW 无条件化能力）
+        // isValidResourceLocation 删除 → Rl/parse，2 文件已修，RAW 无条件化能力）；
+        // >=21.11 挂 2111 副本（ResourceLocation→Identifier 同步改名）
         if (stonecutter.eval(stonecutter.current.version, "<1.21")) {
             srcDir(rootProject.file("versions/1.16.5-forge/src/shim/rip/ysm/compat"))
-        } else {
+        } else if (stonecutter.eval(stonecutter.current.version, "<21.11")) {
             srcDir(rootProject.file("src/neoforge-1211/shim/rip/ysm/compat"))
+        } else {
+            srcDir(rootProject.file("src/neoforge-2111/shim/rip/ysm/compat"))
         }
         // 第三方触点源码闸门 + platform/forge 树整体排除（清单与 build.forge.gradle.kts pre120
         // 块同源）。孪生走异包策略：src/neoforge/java 下 platform/neoforge 包（类名不变），
@@ -229,6 +243,52 @@ tasks {
 
     named("createMinecraftArtifacts") {
         dependsOn("stonecutterGenerate")
+    }
+
+    // ===== 1.21.11 Identifier 改名（stonecutter 生成树后处理，>=21.11 含 26.x）=====
+    // 1.21.11 vanilla net.minecraft.resources.ResourceLocation 改名 Identifier：同包同 API 面
+    //（neoforge-21.11.45-sources net/minecraft/resources/Identifier.java:16 实证——parse/
+    // fromNamespaceAndPath/withDefaultNamespace/tryParse/withPrefix/withSuffix/getPath/getNamespace
+    // 全数保留，仅 isAllowedInResourceLocation→isAllowedInIdentifier，共享源零调用），共享树 104 文件
+    // 的类型名引用不值得逐行条件化 → 生成树一次性语义等价改写，共享源零搅动、在产线零接触
+    //（任务只在 >=21.11 线注册）。生成树由 stonecutterGenerate 重刷时恢复 RL 名，本任务幂等重写；
+    // RAW 源集（平台/compat shim 树）绕开 stonecutter，走 2111 分代副本（见 sourceSets 挂载注）。
+    if (stonecutter.eval(stonecutter.current.version, ">=21.11")) {
+        val genJavaDir = layout.buildDirectory.dir("generated/stonecutter/main/java")
+        // 配置缓存铁律：doLast 只可捕获局部 String/Provider，stonecutter 脚本对象引用不可序列化
+        val curVersion = stonecutter.current.version
+        val rlToIdentifier = register<org.gradle.api.DefaultTask>("rlToIdentifier") {
+            dependsOn("stonecutterGenerate")
+            mustRunAfter("stonecutterGenerate")
+            doLast {
+                val root = genJavaDir.get().asFile
+                if (root.isDirectory) {
+                    var count = 0
+                    // 1.21.11 同波改名/移家三条规则（全部基于 neoforge-21.11.45-sources 实证）：
+                    //  a) ResourceLocation → Identifier（同包纯改名）
+                    //  b) （撤销）location()→identifier() 仅 ResourceKey 系成立，TagKey/自有
+                    //     ItemTag 保留 location() → 改为共享源位点级双行（见各文件注）
+                    //  c) RenderType 静态工厂（entityCutoutNoCull/entityTranslucent/lineStrip/outline/
+                    //     entityCutoutNoCullZOffset）→ RenderTypes 同名工厂（rendertype 包）
+                    val rules = listOf(
+                        Regex("\\bResourceLocation\\b") to "Identifier",
+                        Regex("\\bRenderType\\.(armorCutoutNoCull|entityCutoutNoCullZOffset|entityCutoutNoCull|entitySolid|entityTranslucentEmissive|entityTranslucent|lineStrip|outline)\\(")
+                            to "net.minecraft.client.renderer.rendertype.RenderTypes.$1("
+                    )
+                    root.walkTopDown().filter { it.isFile && it.extension == "java" }.forEach { f ->
+                        val text = f.readText()
+                        if (rules.any { (re, _) -> re.containsMatchIn(text) }) {
+                            var next = text
+                            for ((re, rep) in rules) next = re.replace(next, rep)
+                            f.writeText(next)
+                            count++
+                        }
+                    }
+                    println("[ysm] rlToIdentifier: ${count} files rewritten for ${curVersion}")
+                }
+            }
+        }
+        named<org.gradle.api.tasks.compile.JavaCompile>("compileJava") { dependsOn(rlToIdentifier) }
     }
 
     register<Copy>("buildAndCollect") {

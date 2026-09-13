@@ -1,7 +1,13 @@
 package rip.ysm.harness;
 
 import net.minecraft.client.Minecraft;
+//? if neoforge
+/*import net.neoforged.neoforge.common.NeoForge;*/
+//? if forge
 import net.minecraftforge.common.MinecraftForge;
+//? if neoforge
+/*import net.neoforged.neoforge.event.TickEvent;*/
+//? if forge
 import net.minecraftforge.event.TickEvent;
 
 import java.nio.file.Files;
@@ -49,6 +55,9 @@ public final class GuiTourDriver {
 
     /** 初始化调用点：YsmEventBootstrap.register() 的 client 分支（1 行）。 */
     public static void register() {
+        //? if neoforge
+        /*NeoForge.EVENT_BUS.addListener(GuiTourDriver::onClientTick);*/
+        //? if forge
         MinecraftForge.EVENT_BUS.addListener(GuiTourDriver::onClientTick);
     }
 
@@ -63,6 +72,9 @@ public final class GuiTourDriver {
     }
 
     private static Path gameDir() {
+        //? if neoforge
+        /*return net.neoforged.fml.loading.FMLPaths.GAMEDIR.get();*/
+        //? if forge
         return net.minecraftforge.fml.loading.FMLPaths.GAMEDIR.get();
     }
 
@@ -164,6 +176,9 @@ public final class GuiTourDriver {
         //? if >=1.20 {
         net.minecraft.client.gui.screens.ConnectScreen.startConnecting(null, mc,
                 net.minecraft.client.multiplayer.resolver.ServerAddress.parseString("localhost:25565"),
+                //? if neoforge
+                /*new net.minecraft.client.multiplayer.ServerData("harness", "localhost:25565", net.minecraft.client.multiplayer.ServerData.Type.OTHER), false);*/
+                //? if forge
                 new net.minecraft.client.multiplayer.ServerData("harness", "localhost:25565", false), false);
         //?}
     }

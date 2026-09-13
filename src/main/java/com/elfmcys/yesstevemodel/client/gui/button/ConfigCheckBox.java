@@ -1,6 +1,12 @@
 package com.elfmcys.yesstevemodel.client.gui.button;
 
+//? if neoforge
+/*import net.neoforged.api.distmarker.Dist;*/
+//? if forge
 import net.minecraftforge.api.distmarker.Dist;
+//? if neoforge
+/*import net.neoforged.api.distmarker.OnlyIn;*/
+//? if forge
 import net.minecraftforge.api.distmarker.OnlyIn;
 import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.client.gui.ISpecialWidget;
@@ -30,6 +36,9 @@ public class ConfigCheckBox extends StateSwitchingButton implements ISpecialWidg
         super(x, y, width, 12, false);
         this.component2 = component;
         this.consumer2 = consumer;
+        //? if neoforge
+        /*initTextureValues(new net.minecraft.client.gui.components.WidgetSprites(location, location, location, location));*/
+        //? if forge
         initTextureValues(0, 0, 128, 12, location);
     }
 

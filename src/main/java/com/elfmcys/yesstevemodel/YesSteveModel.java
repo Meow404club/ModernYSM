@@ -6,13 +6,25 @@ import com.elfmcys.yesstevemodel.config.ModSoundEvents;
 import com.elfmcys.yesstevemodel.config.ServerConfig;
 import com.elfmcys.yesstevemodel.event.YsmEventBootstrap;
 import com.elfmcys.yesstevemodel.platform.YsmPlatform;
+//? if neoforge
+/*import com.elfmcys.yesstevemodel.platform.neoforge.YesSteveModelForge;*/
+//? if forge
 import com.elfmcys.yesstevemodel.platform.forge.YesSteveModelForge;
 import com.elfmcys.yesstevemodel.util.obfuscate.Keep;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
+//? if neoforge
+/*import net.neoforged.api.distmarker.Dist;*/
+//? if forge
 import net.minecraftforge.api.distmarker.Dist;
+//? if neoforge
+/*import net.neoforged.api.distmarker.OnlyIn;*/
+//? if forge
 import net.minecraftforge.api.distmarker.OnlyIn;
+//? if neoforge
+/*import net.neoforged.fml.config.ModConfig;*/
+//? if forge
 import net.minecraftforge.fml.config.ModConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

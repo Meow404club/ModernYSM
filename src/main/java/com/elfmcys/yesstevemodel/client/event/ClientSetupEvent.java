@@ -9,10 +9,15 @@ import com.elfmcys.yesstevemodel.client.input.ExtraPlayerRenderKey;
 import com.elfmcys.yesstevemodel.client.input.PlayerModelToggleKey;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.network.chat.Component;
+//? if neoforge
+/*import net.neoforged.api.distmarker.Dist;*/
+//? if forge
 import net.minecraftforge.api.distmarker.Dist;
-//? if >=1.19.2 {
+//? if >=1.19.2 && neoforge
+/*import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;*/
+//? if >=1.19.2 && forge
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
-//?} else {
+//? if <1.19.2 {
 /*import net.minecraft.network.chat.TextComponent;
  *///?}
 //? if <1.17 {
@@ -29,9 +34,21 @@ import net.minecraftforge.client.ClientRegistry;
  *///?}
 //? if >=1.19.2 {
 //?}
+//? if neoforge
+/*import net.neoforged.bus.api.EventPriority;*/
+//? if forge
 import net.minecraftforge.eventbus.api.EventPriority;
+//? if neoforge
+/*import net.neoforged.bus.api.SubscribeEvent;*/
+//? if forge
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+//? if neoforge
+/*import net.neoforged.fml.common.Mod;*/
+//? if forge
 import net.minecraftforge.fml.common.Mod;
+//? if neoforge
+/*import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;*/
+//? if forge
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;

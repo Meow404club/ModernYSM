@@ -1,6 +1,9 @@
 package rip.ysm.api;
 
 import com.elfmcys.yesstevemodel.platform.YsmPlatform;
+//? if neoforge
+/*import net.neoforged.api.distmarker.Dist;*/
+//? if forge
 import net.minecraftforge.api.distmarker.Dist;
 
 /**
@@ -18,6 +21,10 @@ public final class PlatformAPI {
     }
 
     public static String getPlatformName() {
+        //? if neoforge {
+        /*return "NeoForge";
+         *///?} else {
         return "Forge";
+        //?}
     }
 }

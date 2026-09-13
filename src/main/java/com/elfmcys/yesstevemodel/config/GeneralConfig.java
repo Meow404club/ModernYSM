@@ -1,53 +1,125 @@
 package com.elfmcys.yesstevemodel.config;
 
+//? if neoforge
+/*import net.neoforged.neoforge.common.ModConfigSpec;*/
+//? if forge
 import net.minecraftforge.common.ForgeConfigSpec;
 
 public class GeneralConfig {
 
+    //? if neoforge
+    /*public static ModConfigSpec.BooleanValue DISCLAIMER_SHOW;*/
+    //? if forge
     public static ForgeConfigSpec.BooleanValue DISCLAIMER_SHOW;
 
+    //? if neoforge
+    /*public static ModConfigSpec.BooleanValue PRINT_ANIMATION_ROULETTE_MSG;*/
+    //? if forge
     public static ForgeConfigSpec.BooleanValue PRINT_ANIMATION_ROULETTE_MSG;
 
+    //? if neoforge
+    /*public static ModConfigSpec.BooleanValue DISABLE_SELF_MODEL;*/
+    //? if forge
     public static ForgeConfigSpec.BooleanValue DISABLE_SELF_MODEL;
 
+    //? if neoforge
+    /*public static ModConfigSpec.BooleanValue DISABLE_OTHER_MODEL;*/
+    //? if forge
     public static ForgeConfigSpec.BooleanValue DISABLE_OTHER_MODEL;
 
+    //? if neoforge
+    /*public static ModConfigSpec.BooleanValue DISABLE_SELF_HANDS;*/
+    //? if forge
     public static ForgeConfigSpec.BooleanValue DISABLE_SELF_HANDS;
 
+    //? if neoforge
+    /*public static ModConfigSpec.BooleanValue DISABLE_PROJECTILE_MODEL;*/
+    //? if forge
     public static ForgeConfigSpec.BooleanValue DISABLE_PROJECTILE_MODEL;
 
+    //? if neoforge
+    /*public static ModConfigSpec.BooleanValue DISABLE_VEHICLE_MODEL;*/
+    //? if forge
     public static ForgeConfigSpec.BooleanValue DISABLE_VEHICLE_MODEL;
 
+    //? if neoforge
+    /*public static ModConfigSpec.BooleanValue DISABLE_EXTERNAL_FP_ANIM;*/
+    //? if forge
     public static ForgeConfigSpec.BooleanValue DISABLE_EXTERNAL_FP_ANIM;
 
+    //? if neoforge
+    /*public static ModConfigSpec.BooleanValue USE_COMPATIBILITY_RENDERER;*/
+    //? if forge
     public static ForgeConfigSpec.BooleanValue USE_COMPATIBILITY_RENDERER;
 
+    //? if neoforge
+    /*public static ModConfigSpec.DoubleValue SOUND_VOLUME;*/
+    //? if forge
     public static ForgeConfigSpec.DoubleValue SOUND_VOLUME;
 
+    //? if neoforge
+    /*public static ModConfigSpec.BooleanValue SHOW_MODEL_ID_FIRST;*/
+    //? if forge
     public static ForgeConfigSpec.BooleanValue SHOW_MODEL_ID_FIRST;
 
+    //? if neoforge
+    /*public static ModConfigSpec.BooleanValue SOPHISTICATEDBACKPACK;*/
+    //? if forge
     public static ForgeConfigSpec.BooleanValue SOPHISTICATEDBACKPACK;
 
+    //? if neoforge
+    /*public static ModConfigSpec.BooleanValue PARCOOL;*/
+    //? if forge
     public static ForgeConfigSpec.BooleanValue PARCOOL;
 
+    //? if neoforge
+    /*public static ModConfigSpec.BooleanValue USE_GPU_RENDERER;*/
+    //? if forge
     public static ForgeConfigSpec.BooleanValue USE_GPU_RENDERER;
 
+    //? if neoforge
+    /*public static ModConfigSpec.BooleanValue LAZY_MODEL_LOADING;*/
+    //? if forge
     public static ForgeConfigSpec.BooleanValue LAZY_MODEL_LOADING;
 
+    //? if neoforge
+    /*public static ModConfigSpec.BooleanValue FORCE_CLIENT_MODE;*/
+    //? if forge
     public static ForgeConfigSpec.BooleanValue FORCE_CLIENT_MODE;
 
+    //? if neoforge
+    /*public static ModConfigSpec.DoubleValue HANDSHAKE_TIMEOUT;*/
+    //? if forge
     public static ForgeConfigSpec.DoubleValue HANDSHAKE_TIMEOUT;
 
+    //? if neoforge
+    /*public static ModConfigSpec.DoubleValue SEARCH_SUGGESTION_COUNT;*/
+    //? if forge
     public static ForgeConfigSpec.DoubleValue SEARCH_SUGGESTION_COUNT;
 
+    //? if neoforge
+    /*public static ModConfigSpec.EnumValue<RouletteSettingsMode> ROULETTE_SETTINGS_MODE;*/
+    //? if forge
     public static ForgeConfigSpec.EnumValue<RouletteSettingsMode> ROULETTE_SETTINGS_MODE;
 
+    //? if neoforge
+    /*public static ModConfigSpec.EnumValue<RouletteMode> ROULETTE_MODE;*/
+    //? if forge
     public static ForgeConfigSpec.EnumValue<RouletteMode> ROULETTE_MODE;
 
+    //? if neoforge
+    /*public static ModConfigSpec.BooleanValue BLUR_GUI;*/
+    //? if forge
     public static ForgeConfigSpec.BooleanValue BLUR_GUI;
 
+    //? if neoforge
+    /*public static ModConfigSpec.EnumValue<TextureScreenMode> TEXTURE_SCREEN_MODE;*/
+    //? if forge
     public static ForgeConfigSpec.EnumValue<TextureScreenMode> TEXTURE_SCREEN_MODE;
 
+    //? if neoforge
+    /*public static ModConfigSpec.EnumValue<ModelInfoScreenMode> MODEL_INFO_SCREEN_MODE;*/
+    //? if forge
     public static ForgeConfigSpec.EnumValue<ModelInfoScreenMode> MODEL_INFO_SCREEN_MODE;
 
     public enum RouletteSettingsMode {
@@ -75,7 +147,13 @@ public class GeneralConfig {
         return ROULETTE_MODE.get() == RouletteMode.MODERN && ROULETTE_SETTINGS_MODE.get() == RouletteSettingsMode.MODERN;
     }
 
+    //? if neoforge
+    /*public static ModConfigSpec buildSpec() {*/
+    //? if forge
     public static ForgeConfigSpec buildSpec() {
+        //? if neoforge
+        /*ModConfigSpec.Builder builder = new ModConfigSpec.Builder();*/
+        //? if forge
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
         defineGeneral(builder);
         ExtraPlayerRenderConfig.define(builder);
@@ -83,6 +161,9 @@ public class GeneralConfig {
         return builder.build();
     }
 
+    //? if neoforge
+    /*public static void defineGeneral(ModConfigSpec.Builder builder) {*/
+    //? if forge
     public static void defineGeneral(ForgeConfigSpec.Builder builder) {
         builder.push("general");
         builder.comment("Whether to display disclaimer GUI");

@@ -2,7 +2,13 @@ package com.elfmcys.yesstevemodel.client.input;
 
 import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.util.InputUtil;
+//? if neoforge
+/*import net.neoforged.neoforge.client.event.InputEvent;*/
+//? if forge
 import net.minecraftforge.client.event.InputEvent;
+//? if neoforge
+/*import net.neoforged.neoforge.common.NeoForge;*/
+//? if forge
 import net.minecraftforge.common.MinecraftForge;
 import rip.ysm.api.PlatformAPI;
 
@@ -20,7 +26,13 @@ public class InputStateKey {
             return;
         }
         // KEY_PRESSED → InputEvent.Key（不可取消）；MOUSE_CLICKED_PRE → InputEvent.MouseButton.Pre（可取消，原 handler 恒 pass，故不 setCanceled）
+        //? if neoforge
+        /*NeoForge.EVENT_BUS.addListener(InputStateKey::onKeyEvent);*/
+        //? if forge
         MinecraftForge.EVENT_BUS.addListener(InputStateKey::onKeyEvent);
+        //? if neoforge
+        /*NeoForge.EVENT_BUS.addListener(InputStateKey::onMouseEvent);*/
+        //? if forge
         MinecraftForge.EVENT_BUS.addListener(InputStateKey::onMouseEvent);
     }
 

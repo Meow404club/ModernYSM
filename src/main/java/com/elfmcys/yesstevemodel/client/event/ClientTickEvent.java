@@ -8,7 +8,13 @@ import com.elfmcys.yesstevemodel.client.upload.ModelUploadSession;
 import com.elfmcys.yesstevemodel.client.upload.UploadManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+//? if neoforge
+/*import net.neoforged.neoforge.common.NeoForge;*/
+//? if forge
 import net.minecraftforge.common.MinecraftForge;
+//? if neoforge
+/*import net.neoforged.neoforge.event.TickEvent;*/
+//? if forge
 import net.minecraftforge.event.TickEvent;
 
 public final class ClientTickEvent {
@@ -22,6 +28,9 @@ public final class ClientTickEvent {
 
     public static void register() {
         // architectury ClientTickEvent.CLIENT_PRE 在 forge 端 = TickEvent.ClientTickEvent phase START
+        //? if neoforge
+        /*NeoForge.EVENT_BUS.addListener(ClientTickEvent::onClientTick);*/
+        //? if forge
         MinecraftForge.EVENT_BUS.addListener(ClientTickEvent::onClientTick);
     }
 

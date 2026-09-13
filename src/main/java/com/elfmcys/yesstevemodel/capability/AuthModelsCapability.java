@@ -1,5 +1,8 @@
 package com.elfmcys.yesstevemodel.capability;
 
+//? if neoforge
+/*import com.elfmcys.yesstevemodel.platform.neoforge.capability.AuthModelsCapabilityProvider;*/
+//? if forge
 import com.elfmcys.yesstevemodel.platform.forge.capability.AuthModelsCapabilityProvider;
 import com.google.common.collect.Sets;
 import net.minecraft.nbt.ListTag;
@@ -16,6 +19,9 @@ public class AuthModelsCapability {
     private Set<String> authModels = Sets.newHashSet();
 
     public static Optional<AuthModelsCapability> get(Player player) {
+        //? if neoforge
+        /*return java.util.Optional.ofNullable(player.getCapability(AuthModelsCapabilityProvider.AUTH_MODELS_CAP));*/
+        //? if forge
         return player.getCapability(AuthModelsCapabilityProvider.AUTH_MODELS_CAP).resolve();
     }
 

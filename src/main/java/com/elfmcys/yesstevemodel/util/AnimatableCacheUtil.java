@@ -1,6 +1,12 @@
 package com.elfmcys.yesstevemodel.util;
 
+//? if neoforge
+/*import net.neoforged.api.distmarker.Dist;*/
+//? if forge
 import net.minecraftforge.api.distmarker.Dist;
+//? if neoforge
+/*import net.neoforged.api.distmarker.OnlyIn;*/
+//? if forge
 import net.minecraftforge.api.distmarker.OnlyIn;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;

@@ -1,9 +1,18 @@
 package com.elfmcys.yesstevemodel.capability;
 
+//? if neoforge
+/*import net.neoforged.api.distmarker.Dist;*/
+//? if forge
 import net.minecraftforge.api.distmarker.Dist;
+//? if neoforge
+/*import net.neoforged.api.distmarker.OnlyIn;*/
+//? if forge
 import net.minecraftforge.api.distmarker.OnlyIn;
 import com.elfmcys.yesstevemodel.client.entity.GeckoVehicleEntity;
 import com.elfmcys.yesstevemodel.molang.runtime.Int2FloatOpenHashMapStruct;
+//? if neoforge
+/*import com.elfmcys.yesstevemodel.platform.neoforge.capability.VehicleCapabilityProvider;*/
+//? if forge
 import com.elfmcys.yesstevemodel.platform.forge.capability.VehicleCapabilityProvider;
 import it.unimi.dsi.fastutil.ints.Int2FloatMap;
 import it.unimi.dsi.fastutil.ints.Int2FloatOpenHashMap;
@@ -18,6 +27,9 @@ import java.util.Optional;
 public class VehicleCapability extends GeckoVehicleEntity {
 
     public static Optional<VehicleCapability> get(Entity entity) {
+        //? if neoforge
+        /*return java.util.Optional.ofNullable(entity.getCapability(VehicleCapabilityProvider.VEHICLE_CAP));*/
+        //? if forge
         return entity.getCapability(VehicleCapabilityProvider.VEHICLE_CAP).resolve();
     }
 

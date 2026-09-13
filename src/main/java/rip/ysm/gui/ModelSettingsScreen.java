@@ -379,12 +379,18 @@ public class ModelSettingsScreen extends OptionScreen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    //? if neoforge
+/*public boolean mouseScrolled(double mouseX, double mouseY, double delta, double scrollY) {*/
+//? if forge
+public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         if (isInPreview(mouseX, mouseY)) {
             zoom = Mth.clamp((float) (zoom * (1.0 + delta * 0.1)), 30.0f, 400.0f);
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        //? if neoforge
+/*return super.mouseScrolled(mouseX, mouseY, delta, delta);*/
+//? if forge
+return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
     private boolean isInPreview(double mouseX, double mouseY) {

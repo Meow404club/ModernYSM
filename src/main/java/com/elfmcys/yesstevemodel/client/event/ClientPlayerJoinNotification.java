@@ -9,8 +9,17 @@ import com.elfmcys.yesstevemodel.network.NetworkHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
+//? if neoforge
+/*import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;*/
+//? if forge
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
+//? if neoforge
+/*import net.neoforged.neoforge.common.NeoForge;*/
+//? if forge
 import net.minecraftforge.common.MinecraftForge;
+//? if neoforge
+/*import net.neoforged.neoforge.event.TickEvent;*/
+//? if forge
 import net.minecraftforge.event.TickEvent;
 
 public final class ClientPlayerJoinNotification {
@@ -39,9 +48,18 @@ public final class ClientPlayerJoinNotification {
 
     public static void register() {
         // ClientPlayerEvent.CLIENT_PLAYER_JOIN/QUIT → ClientPlayerNetworkEvent.LoggingIn/LoggingOut（均不可取消）
+        //? if neoforge
+        /*NeoForge.EVENT_BUS.addListener(ClientPlayerJoinNotification::onLoggingIn);*/
+        //? if forge
         MinecraftForge.EVENT_BUS.addListener(ClientPlayerJoinNotification::onLoggingIn);
+        //? if neoforge
+        /*NeoForge.EVENT_BUS.addListener(ClientPlayerJoinNotification::onLoggingOut);*/
+        //? if forge
         MinecraftForge.EVENT_BUS.addListener(ClientPlayerJoinNotification::onLoggingOut);
         // ClientTickEvent.CLIENT_PRE → TickEvent.ClientTickEvent phase START
+        //? if neoforge
+        /*NeoForge.EVENT_BUS.addListener(ClientPlayerJoinNotification::onClientTickEvent);*/
+        //? if forge
         MinecraftForge.EVENT_BUS.addListener(ClientPlayerJoinNotification::onClientTickEvent);
     }
 

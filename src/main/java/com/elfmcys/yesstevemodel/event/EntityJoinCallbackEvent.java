@@ -6,10 +6,15 @@ import com.google.common.cache.CacheBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.entity.Entity;
+//? if neoforge
+/*import net.neoforged.neoforge.common.NeoForge;*/
+//? if forge
 import net.minecraftforge.common.MinecraftForge;
-//? if >=1.19.2 {
+//? if >=1.19.2 && neoforge
+/*import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;*/
+//? if >=1.19.2 && forge
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
-//?} else {
+//? if <1.19.2 {
 /*import net.minecraftforge.event.entity.EntityJoinWorldEvent;*/
 //?}
 import rip.ysm.api.PlatformAPI;
@@ -30,6 +35,9 @@ public class EntityJoinCallbackEvent {
         if (PlatformAPI.isServer()) {
             return;
         }
+        //? if neoforge
+        /*NeoForge.EVENT_BUS.addListener(EntityJoinCallbackEvent::onEntityJoinLevel);*/
+        //? if forge
         MinecraftForge.EVENT_BUS.addListener(EntityJoinCallbackEvent::onEntityJoinLevel);
     }
 

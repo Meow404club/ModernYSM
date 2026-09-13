@@ -8,7 +8,13 @@ import com.elfmcys.yesstevemodel.network.message.S2CSyncAuthModelsPacket;
 import com.elfmcys.yesstevemodel.network.message.S2CSyncStarModelsPacket;
 import com.elfmcys.yesstevemodel.network.message.S2CVersionCheckPacket;
 import net.minecraft.server.level.ServerPlayer;
+//? if neoforge
+/*import net.neoforged.neoforge.common.NeoForge;*/
+//? if forge
 import net.minecraftforge.common.MinecraftForge;
+//? if neoforge
+/*import net.neoforged.neoforge.event.entity.player.PlayerEvent;*/
+//? if forge
 import net.minecraftforge.event.entity.player.PlayerEvent;
 
 import java.util.Objects;
@@ -21,6 +27,9 @@ public final class EnterServerEvent {
     }
 
     public static void register() {
+        //? if neoforge
+        /*NeoForge.EVENT_BUS.addListener(EnterServerEvent::onPlayerLoggedIn);*/
+        //? if forge
         MinecraftForge.EVENT_BUS.addListener(EnterServerEvent::onPlayerLoggedIn);
     }
 

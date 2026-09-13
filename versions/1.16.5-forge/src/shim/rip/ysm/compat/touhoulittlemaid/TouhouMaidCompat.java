@@ -4,9 +4,6 @@ package rip.ysm.compat.touhoulittlemaid;
 import com.elfmcys.yesstevemodel.network.message.FeedbackData;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-
 public final class TouhouMaidCompat {
 
     private TouhouMaidCompat() {
@@ -32,7 +29,6 @@ public final class TouhouMaidCompat {
     public static void applyFeedback(Entity entity, FeedbackData message) {
     }
 
-    @OnlyIn(Dist.CLIENT)
     public static void playMaidAnimation(Entity entity, String str) {
     }
 }

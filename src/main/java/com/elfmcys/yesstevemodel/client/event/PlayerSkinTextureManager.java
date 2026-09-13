@@ -41,10 +41,16 @@ public class PlayerSkinTextureManager {
         if (isDefaultSkin(event.getModelId()) && (player instanceof AbstractClientPlayer)) {
             AbstractClientPlayer abstractClientPlayer = (AbstractClientPlayer) player;
             Minecraft minecraft = Minecraft.getInstance();
+            //? if neoforge {
+            /*net.minecraft.client.resources.PlayerSkin insecureSkin = minecraft.getSkinManager().getInsecureSkin(abstractClientPlayer.getGameProfile());
+            location = insecureSkin.texture();
+            if (false) {
+             *///?} else {
             Map insecureSkinInformation = minecraft.getSkinManager().getInsecureSkinInformation(abstractClientPlayer.getGameProfile());
             if (insecureSkinInformation.containsKey(MinecraftProfileTexture.Type.SKIN)) {
                 location = minecraft.getSkinManager().registerTexture((MinecraftProfileTexture) insecureSkinInformation.get(MinecraftProfileTexture.Type.SKIN), MinecraftProfileTexture.Type.SKIN);
             } else {
+            //?}
                 location = getSkinTexture(event.getModelId());
             }
             event.setTextureLocation(location);

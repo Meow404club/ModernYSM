@@ -1,7 +1,16 @@
 package com.elfmcys.yesstevemodel.platform;
 
+//? if neoforge
+/*import net.neoforged.neoforgespi.language.IModFileInfo;*/
+//? if forge
 import net.minecraftforge.forgespi.language.IModFileInfo;
+//? if neoforge
+/*import net.neoforged.neoforgespi.language.IModInfo;*/
+//? if forge
 import net.minecraftforge.forgespi.language.IModInfo;
+//? if neoforge
+/*import net.neoforged.fml.ModList;*/
+//? if forge
 import net.minecraftforge.fml.ModList;
 
 import java.nio.file.Files;

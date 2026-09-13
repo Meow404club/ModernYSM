@@ -49,9 +49,21 @@ public class CustomPlayerElytraLayer extends GeoLayerRenderer<CustomPlayerEntity
         AnimatedGeoModel animatedGeoModel = entityLivingBaseIn.getCurrentModel();
         if (!stack.isEmpty() && animatedGeoModel != null && !animatedGeoModel.elytraBones().isEmpty() && (entity instanceof AbstractClientPlayer)) {
             AbstractClientPlayer abstractClientPlayer = (AbstractClientPlayer) entity;
+            //? if neoforge
+            /*if (abstractClientPlayer.getSkin().elytraTexture() != null) {*/
+            //? if forge
             if (abstractClientPlayer.isElytraLoaded() && abstractClientPlayer.getElytraTextureLocation() != null) {
+                //? if neoforge
+                /*cloakTextureLocation = abstractClientPlayer.getSkin().elytraTexture();*/
+                //? if forge
                 cloakTextureLocation = abstractClientPlayer.getElytraTextureLocation();
+            //? if neoforge
+            /*} else if (abstractClientPlayer.getSkin().capeTexture() != null && abstractClientPlayer.isModelPartShown(PlayerModelPart.CAPE)) {*/
+            //? if forge
             } else if (abstractClientPlayer.isCapeLoaded() && abstractClientPlayer.getCloakTextureLocation() != null && abstractClientPlayer.isModelPartShown(PlayerModelPart.CAPE)) {
+                //? if neoforge
+                /*cloakTextureLocation = abstractClientPlayer.getSkin().capeTexture();*/
+                //? if forge
                 cloakTextureLocation = abstractClientPlayer.getCloakTextureLocation();
             } else {
                 cloakTextureLocation = WINGS_LOCATION;

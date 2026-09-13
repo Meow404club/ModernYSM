@@ -18,7 +18,13 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.synchronization.SuggestionProviders;
 import net.minecraft.resources.ResourceLocation;
+//? if neoforge
+/*import net.neoforged.neoforge.common.NeoForge;*/
+//? if forge
 import net.minecraftforge.common.MinecraftForge;
+//? if neoforge
+/*import net.neoforged.neoforge.event.RegisterCommandsEvent;*/
+//? if forge
 import net.minecraftforge.event.RegisterCommandsEvent;
 import rip.ysm.api.PlatformAPI;
 
@@ -81,7 +87,7 @@ public final class CommandRegistry {
     // 功能差：远程服务器对局时 1.20.1 客户端侧 /openysm 仍可用，1.16.5 不可用（无客户端调度器）→ 记债务清单
     public static void register() {
         // RegisterClientCommandsEvent 1.18.2+（1171 forge 无此事件）→ 1.17.1 跳过（功能差：客户端 /openysm）
-        //? if >=1.18.2 {
+        //? if >=1.18.2 && forge {
         MinecraftForge.EVENT_BUS.addListener((net.minecraftforge.client.event.RegisterClientCommandsEvent event) -> {
             if (!YesSteveModel.isAvailable()) {
                 return;
@@ -89,6 +95,17 @@ public final class CommandRegistry {
             OpenYSMClientCommand.registerClientCommands(event.getDispatcher());
         });
         //?}
+        //? if >=1.18.2 && neoforge {
+        /*NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.client.event.RegisterClientCommandsEvent event) -> {
+            if (!YesSteveModel.isAvailable()) {
+                return;
+            }
+            OpenYSMClientCommand.registerClientCommands(event.getDispatcher());
+        });
+         *///?}
+        //? if neoforge
+        /*NeoForge.EVENT_BUS.addListener((RegisterCommandsEvent event) -> {*/
+        //? if forge
         MinecraftForge.EVENT_BUS.addListener((RegisterCommandsEvent event) -> {
             CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
             if (!YesSteveModel.isAvailable()) {

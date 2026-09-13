@@ -396,7 +396,10 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
         /*this.setFocused(zIsFocused ? this.searchBox : null);*/
         //? if >=1.19.4
         this.searchBox.setFocused(zIsFocused);
-        this.searchBox.moveCursorToEnd();
+        this.searchBox.//? if neoforge
+/*moveCursorToEnd(false);*/
+//? if forge
+moveCursorToEnd();;
         this.suggestions = new SearchSuggestions(this.font, this.searchBox, this.modelPackMap, this.suggestions);
         this.suggestions.refresh();
         addWidget(this.searchBox);
@@ -423,6 +426,13 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
                 navigateUp();
             }).setTooltipText("gui.back"));
         }
+        //? if neoforge {
+        /*ysmAddWidget(Checkbox.builder(YsmText.translatable("gui.yes_steve_model.show_model_id_first"), this.font)
+                .pos(this.guiLeft + 5, this.guiTop - 22)
+                .selected(GeneralConfig.SHOW_MODEL_ID_FIRST.get())
+                .onValueChange((checkbox, newValue) -> GeneralConfig.SHOW_MODEL_ID_FIRST.set(newValue))
+                .build());
+         *///?} else {
         ysmAddWidget(new Checkbox(this.guiLeft + 5, this.guiTop - 22, 20, 20, YsmText.translatable("gui.yes_steve_model.show_model_id_first"), GeneralConfig.SHOW_MODEL_ID_FIRST.get(), true) {
             public void onPress() {
                 super.onPress();
@@ -430,6 +440,7 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
                 GeneralConfig.SHOW_MODEL_ID_FIRST.save();
             }
         });
+        //?}
         ysmAddWidget(new IconButton(this.guiLeft + 328, this.guiTop + 5, 18, 18, 32, 0, button4 -> {
             if (this.category != Category.ALL) {
                 this.category = Category.ALL;
@@ -760,8 +771,12 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
             /*InventoryScreen.renderEntityInInventory(this.guiLeft + 67, this.guiTop + 190, 70, (this.guiLeft + 67) - mouseX, ((this.guiTop + 180) - 95) - mouseY, localPlayer);*/
             //? if >=1.19.4 && <1.20
             /*InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics.pose(), this.guiLeft + 67, this.guiTop + 190, 70, (this.guiLeft + 67) - mouseX, ((this.guiTop + 180) - 95) - mouseY, localPlayer);*/
-            //? if >=1.20
+            //? if >=1.20 && forge
             InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics.graphics(), this.guiLeft + 67, this.guiTop + 190, 70, (this.guiLeft + 67) - mouseX, ((this.guiTop + 180) - 95) - mouseY, localPlayer);
+            //? if >=1.20 && neoforge {
+            /*InventoryScreen.renderEntityInInventoryFollowsAngle(guiGraphics.graphics(), this.guiLeft + 67, this.guiTop + 190, (this.guiLeft + 67) + 70, (this.guiTop + 190) + 70, 70, 0.0625F,
+                    (float) Math.atan(((this.guiLeft + 67) - mouseX) / 40.0F), (float) Math.atan((((this.guiTop + 180) - 95) - mouseY) / 40.0F), localPlayer);
+             *///?}
             guiGraphics.pose().popPose();
             RenderSystem.disableScissor();
             PlayerCapability.get(localPlayer).ifPresent(cap -> {
@@ -790,6 +805,7 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
     }
 
     public void tick() {
+        //? if forge
         this.searchBox.tick();
     }
 
@@ -891,7 +907,10 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
         /*this.setFocused(this.searchBox);*/
         //? if >=1.19.4
         this.searchBox.setFocused(true);
-        this.searchBox.moveCursorToEnd();
+        this.searchBox.//? if neoforge
+/*moveCursorToEnd(false);*/
+//? if forge
+moveCursorToEnd();;
     }
 
     private boolean handleToggleKey(int keyCode, int scanCode, int modifiers) {
@@ -910,17 +929,26 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
         }
     }
 
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    //? if neoforge
+/*public boolean mouseScrolled(double mouseX, double mouseY, double delta, double scrollY) {*/
+//? if forge
+public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         if (this.minecraft == null) {
             return false;
         }
-        if (this.suggestions != null && this.suggestions.mouseScrolled(mouseX, mouseY, delta)) {
+        //? if neoforge
+/*if (this.suggestions != null && this.suggestions.mouseScrolled(mouseX, mouseY, delta, delta)) {*/
+//? if forge
+if (this.suggestions != null && this.suggestions.mouseScrolled(mouseX, mouseY, delta)) {
             return true;
         }
         if (delta != 0.0d && isInModelArea(mouseX, mouseY)) {
             return handleScrollPage(delta);
         }
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        //? if neoforge
+/*return super.mouseScrolled(mouseX, mouseY, delta, delta);*/
+//? if forge
+return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
     private boolean isInModelArea(double mouseX, double mouseY) {

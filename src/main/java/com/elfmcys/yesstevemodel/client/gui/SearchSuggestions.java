@@ -241,7 +241,10 @@ public class SearchSuggestions {
         return path;
     }
 
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    //? if neoforge
+/*public boolean mouseScrolled(double mouseX, double mouseY, double delta, double scrollY) {*/
+//? if forge
+public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         if (!isVisible() || indexAt(mouseX, mouseY) < 0) {
             return false;
         }
@@ -282,7 +285,10 @@ public class SearchSuggestions {
     //?}
         } else {
             searchBox.setValue(entry.insertion);
-            searchBox.moveCursorToEnd();
+            searchBox.//? if neoforge
+/*moveCursorToEnd(false);*/
+//? if forge
+moveCursorToEnd();;
         }
         suppress();
         lastInput = searchBox.getValue();

@@ -114,6 +114,9 @@ public final class ModelPreviewRenderer {
                 /*poseStack.mulPose(com.mojang.math.Vector3f.YN.rotationDegrees(180.0f - bodyRotation));*/
                 //? if >=1.19.4
                 poseStack.mulPose(Axis.YN.rotationDegrees(180.0f - bodyRotation));
+                //? if neoforge && >=1.19.4
+                /*double myRidingOffset = (-vehicle.getMyRidingOffset(entity)) - entity.getMyRidingOffset(vehicle);*/
+                //? if forge
                 double myRidingOffset = (-vehicle.getPassengersRidingOffset()) - entity.getMyRidingOffset();
                 if (((entity instanceof Player) && PlayerCapability.get(entity).isPresent()) || TouhouLittleMaidCompat.isMaidRideable(entity)) {
                     myRidingOffset -= 0.5d;
@@ -350,6 +353,9 @@ public final class ModelPreviewRenderer {
         }
 
         poseStack.translate(-1.0f, 1.0f, 1.0f);
+        //? if neoforge
+        /*Minecraft.getInstance().getBlockRenderer().renderSingleBlock(Blocks.SHORT_GRASS.defaultBlockState(), poseStack, bufferSource, 15728880, OverlayTexture.NO_OVERLAY);*/
+        //? if forge
         Minecraft.getInstance().getBlockRenderer().renderSingleBlock(Blocks.GRASS.defaultBlockState(), poseStack, bufferSource, 15728880, OverlayTexture.NO_OVERLAY);
         poseStack.translate(0.0f, 0.0f, 1.0f);
         Minecraft.getInstance().getBlockRenderer().renderSingleBlock(Blocks.RED_TULIP.defaultBlockState(), poseStack, bufferSource, 15728880, OverlayTexture.NO_OVERLAY);
@@ -391,6 +397,9 @@ public final class ModelPreviewRenderer {
         /*poseStack.mulPose(com.mojang.math.Vector3f.YP.rotationDegrees(yaw));*/
         //? if >=1.19.4
         poseStack.mulPose(Axis.YP.rotationDegrees(yaw));
+        //? if neoforge && >=1.19.4
+        /*entityRenderDispatcher.render(vehicleEntity, 0.0d, (-vehicleEntity.getMyRidingOffset(riderEntity) - riderEntity.getMyRidingOffset(vehicleEntity)), 0.0d, 0.0f, partialTick, poseStack, bufferSource, 15728880);*/
+        //? if forge && >=1.19.4
         entityRenderDispatcher.render(vehicleEntity, 0.0d, (-vehicleEntity.getPassengersRidingOffset()) - riderEntity.getMyRidingOffset(), 0.0d, 0.0f, partialTick, poseStack, bufferSource, 15728880);
         poseStack.popPose();
     }

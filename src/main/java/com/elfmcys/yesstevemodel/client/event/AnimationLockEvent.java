@@ -8,8 +8,17 @@ import com.elfmcys.yesstevemodel.network.message.C2SPlayAnimationPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.Input;
 import net.minecraft.client.player.LocalPlayer;
+//? if neoforge
+/*import net.neoforged.neoforge.client.event.InputEvent;*/
+//? if forge
 import net.minecraftforge.client.event.InputEvent;
+//? if neoforge
+/*import net.neoforged.neoforge.common.NeoForge;*/
+//? if forge
 import net.minecraftforge.common.MinecraftForge;
+//? if neoforge
+/*import net.neoforged.neoforge.event.TickEvent;*/
+//? if forge
 import net.minecraftforge.event.TickEvent;
 
 public class AnimationLockEvent {
@@ -21,8 +30,14 @@ public class AnimationLockEvent {
 
     public static void register() {
         // ClientRawInputEvent.KEY_PRESSED → InputEvent.Key（不可取消，原恒 pass）
+        //? if neoforge
+        /*NeoForge.EVENT_BUS.addListener(AnimationLockEvent::onKeyEvent);*/
+        //? if forge
         MinecraftForge.EVENT_BUS.addListener(AnimationLockEvent::onKeyEvent);
         // ClientTickEvent.CLIENT_POST → TickEvent.ClientTickEvent phase END
+        //? if neoforge
+        /*NeoForge.EVENT_BUS.addListener(AnimationLockEvent::onClientTickEvent);*/
+        //? if forge
         MinecraftForge.EVENT_BUS.addListener(AnimationLockEvent::onClientTickEvent);
     }
 

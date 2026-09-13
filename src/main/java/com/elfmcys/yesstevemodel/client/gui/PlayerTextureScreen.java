@@ -289,7 +289,10 @@ public class PlayerTextureScreen extends Screen {
         return true;
     }
 
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    //? if neoforge
+/*public boolean mouseScrolled(double mouseX, double mouseY, double delta, double scrollY) {*/
+//? if forge
+public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         if (this.minecraft == null) {
             return false;
         }
@@ -305,7 +308,10 @@ public class PlayerTextureScreen extends Screen {
                 return scrollTexturePage(delta);
             }
         }
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        //? if neoforge
+/*return super.mouseScrolled(mouseX, mouseY, delta, delta);*/
+//? if forge
+return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
     private boolean scrollTexturePage(double delta) {

@@ -1,7 +1,13 @@
 package com.elfmcys.yesstevemodel.capability;
 
+//? if neoforge
+/*import net.neoforged.api.distmarker.Dist;*/
+//? if forge
 import net.minecraftforge.api.distmarker.Dist;
 import com.elfmcys.yesstevemodel.util.YsmEntity;
+//? if neoforge
+/*import net.neoforged.api.distmarker.OnlyIn;*/
+//? if forge
 import net.minecraftforge.api.distmarker.OnlyIn;
 import com.elfmcys.yesstevemodel.client.animation.molang.struct.RoamingStruct;
 import com.elfmcys.yesstevemodel.client.animation.molang.struct.RoamingSyncBatch;
@@ -21,6 +27,9 @@ import com.elfmcys.yesstevemodel.molang.runtime.Struct;
 import com.elfmcys.yesstevemodel.network.NetworkHandler;
 import com.elfmcys.yesstevemodel.network.message.C2SCompleteFeedbackPacket;
 import com.elfmcys.yesstevemodel.network.message.FeedbackData;
+//? if neoforge
+/*import com.elfmcys.yesstevemodel.platform.neoforge.capability.PlayerCapabilityProvider;*/
+//? if forge
 import com.elfmcys.yesstevemodel.platform.forge.capability.PlayerCapabilityProvider;
 import it.unimi.dsi.fastutil.ints.Int2FloatMap;
 import it.unimi.dsi.fastutil.ints.Int2FloatMaps;
@@ -42,10 +51,16 @@ import java.util.Optional;
 public final class PlayerCapability extends CustomPlayerEntity {
 
     public static Optional<PlayerCapability> get(Player player) {
+        //? if neoforge
+        /*return java.util.Optional.ofNullable(player.getCapability(PlayerCapabilityProvider.PLAYER_CAP));*/
+        //? if forge
         return player.getCapability(PlayerCapabilityProvider.PLAYER_CAP).resolve();
     }
 
     public static Optional<PlayerCapability> get(Entity entity) {
+        //? if neoforge
+        /*return java.util.Optional.ofNullable(entity.getCapability(PlayerCapabilityProvider.PLAYER_CAP));*/
+        //? if forge
         return entity.getCapability(PlayerCapabilityProvider.PLAYER_CAP).resolve();
     }
 

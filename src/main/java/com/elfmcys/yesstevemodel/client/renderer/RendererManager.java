@@ -8,14 +8,27 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 //? }
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
+//? if neoforge
+/*import net.neoforged.api.distmarker.Dist;*/
+//? if forge
 import net.minecraftforge.api.distmarker.Dist;
-//? if >=1.17 {
+//? if >=1.17 && neoforge
+/*import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;*/
+//? if >=1.17 && forge
 import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
-//? }
 // RegisterClientReloadListenersEvent 为 1.16.5 所无（1.17+），1.16.5 分支在
 // FMLClientSetupEvent 直接向 ReloadableResourceManager 挂 ResourceManagerReloadListener
+//? if neoforge
+/*import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;*/
+//? if forge
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+//? if neoforge
+/*import net.neoforged.bus.api.SubscribeEvent;*/
+//? if forge
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+//? if neoforge
+/*import net.neoforged.fml.common.Mod;*/
+//? if forge
 import net.minecraftforge.fml.common.Mod;
 import rip.ysm.compat.sbackpack.SBackpackCompat;
 

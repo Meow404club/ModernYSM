@@ -569,21 +569,36 @@ public abstract class OptionScreen extends Screen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    //? if neoforge
+/*public boolean mouseScrolled(double mouseX, double mouseY, double delta, double scrollY) {*/
+//? if forge
+public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         for (OptionRow<?> row : activeRows) {
-            if (row.isOverlayOpen() && row.overlayMouseScrolled(mouseX, mouseY, delta, rowScrollDisplay)) {
+            //? if neoforge
+/*if (row.isOverlayOpen() && row.overlayMouseScrolled(mouseX, mouseY, scrollY, rowScrollDisplay)) {*/
+//? if forge
+if (row.isOverlayOpen() && row.overlayMouseScrolled(mouseX, mouseY, delta, rowScrollDisplay)) {
                 return true;
             }
         }
         if (mouseX >= tabAreaLeft && mouseX < tabAreaRight && mouseY >= tabAreaTop && mouseY < tabAreaBottom) {
-            tabScrollOffset = Mth.clamp((int) (tabScrollOffset - delta * 20), 0, maxTabScroll);
+            //? if neoforge
+/*tabScrollOffset = Mth.clamp((int) (tabScrollOffset - scrollY * 20), 0, maxTabScroll);*/
+//? if forge
+tabScrollOffset = Mth.clamp((int) (tabScrollOffset - delta * 20), 0, maxTabScroll);
             return true;
         }
         if (mouseX >= rowAreaLeft && mouseX < rowAreaRight && mouseY >= rowAreaTop && mouseY < rowAreaBottom) {
-            rowScrollOffset = Mth.clamp((int) (rowScrollOffset - delta * 20), 0, maxRowScroll);
+            //? if neoforge
+/*rowScrollOffset = Mth.clamp((int) (rowScrollOffset - scrollY * 20), 0, maxRowScroll);*/
+//? if forge
+rowScrollOffset = Mth.clamp((int) (rowScrollOffset - delta * 20), 0, maxRowScroll);
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        //? if neoforge
+/*return super.mouseScrolled(mouseX, mouseY, delta, delta);*/
+//? if forge
+return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
     private boolean isOnRowScrollbar(double mouseX, double mouseY) {

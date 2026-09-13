@@ -3,6 +3,9 @@ package rip.ysm.api.attribute;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import org.jetbrains.annotations.Nullable;
+//? if neoforge
+/*import rip.ysm.api.attribute.platform.neoforge.ForgeAttributesImpl;*/
+//? if forge
 import rip.ysm.api.attribute.platform.forge.ForgeAttributesImpl;
 
 public final class ForgeAttributes {

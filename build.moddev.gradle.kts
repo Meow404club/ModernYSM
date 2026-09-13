@@ -94,15 +94,18 @@ sourceSets.main {
     java {
         srcDir(rootProject.file("src/neoforge/java"))
         srcDir(rootProject.file("versions/1.16.5-forge/src/shim/rip/ysm/compat"))
-        // 第三方触点源码整体闸门（清单与 build.forge.gradle.kts pre120 块一致；第三方
-        // 兼容桥目标 jar 为 forge 构建，neoforge 线本就不可用）：
+        // 第三方触点源码闸门 + platform/forge 树整体排除（清单与 build.forge.gradle.kts pre120
+        // 块同源）。孪生走异包策略：src/neoforge/java 下 platform/neoforge 包（类名不变），
+        // 接缝消费方 import 交换（transform_neoforge.py），排除 glob 不会误伤孪生：
         exclude(
             "rip/ysm/compat/**",
             "com/elfmcys/yesstevemodel/client/compat/**",
             "com/elfmcys/yesstevemodel/platform/forge/**",
+            "com/elfmcys/yesstevemodel/client/gui/button/ConfigCheckBoxForge.java",
             "rip/ysm/api/attribute/platform/forge/**",
             "rip/ysm/api/client/platform/forge/**",
-            "com/elfmcys/yesstevemodel/client/gui/button/ConfigCheckBoxForge.java",
+            "rip/ysm/api/entity/platform/forge/**",
+            "rip/ysm/api/item/platform/forge/**",
         )
     }
     resources {

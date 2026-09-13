@@ -1,7 +1,16 @@
 package rip.ysm.api.config;
 
+//? if neoforge
+/*import net.neoforged.neoforge.common.ModConfigSpec;*/
+//? if forge
 import net.minecraftforge.common.ForgeConfigSpec;
+//? if neoforge
+/*import net.neoforged.fml.ModLoadingContext;*/
+//? if forge
 import net.minecraftforge.fml.ModLoadingContext;
+//? if neoforge
+/*import net.neoforged.fml.config.ModConfig;*/
+//? if forge
 import net.minecraftforge.fml.config.ModConfig;
 
 /**
@@ -18,6 +27,9 @@ public final class ConfigRegistration {
     private ConfigRegistration() {
     }
 
+    //? if neoforge
+    /*public static void register(String modId, ModConfig.Type type, ModConfigSpec spec) {*/
+    //? if forge
     public static void register(String modId, ModConfig.Type type, ForgeConfigSpec spec) {
         ModLoadingContext.get().registerConfig(type, spec);
     }

@@ -1,9 +1,18 @@
 package com.elfmcys.yesstevemodel.capability;
 
+//? if neoforge
+/*import net.neoforged.api.distmarker.Dist;*/
+//? if forge
 import net.minecraftforge.api.distmarker.Dist;
+//? if neoforge
+/*import net.neoforged.api.distmarker.OnlyIn;*/
+//? if forge
 import net.minecraftforge.api.distmarker.OnlyIn;
 import com.elfmcys.yesstevemodel.client.entity.GeckoProjectileEntity;
 import com.elfmcys.yesstevemodel.molang.runtime.Int2FloatOpenHashMapStruct;
+//? if neoforge
+/*import com.elfmcys.yesstevemodel.platform.neoforge.capability.ProjectileCapabilityProvider;*/
+//? if forge
 import com.elfmcys.yesstevemodel.platform.forge.capability.ProjectileCapabilityProvider;
 import it.unimi.dsi.fastutil.ints.Int2FloatOpenHashMap;
 import net.minecraft.world.entity.Entity;
@@ -17,10 +26,16 @@ import java.util.Optional;
 public class ProjectileCapability extends GeckoProjectileEntity {
 
     public static Optional<ProjectileCapability> get(Entity entity) {
+        //? if neoforge
+        /*return java.util.Optional.ofNullable(entity.getCapability(ProjectileCapabilityProvider.PROJECTILE_CAP));*/
+        //? if forge
         return entity.getCapability(ProjectileCapabilityProvider.PROJECTILE_CAP).resolve();
     }
 
     public static Optional<ProjectileCapability> get(Projectile projectile) {
+        //? if neoforge
+        /*return java.util.Optional.ofNullable(projectile.getCapability(ProjectileCapabilityProvider.PROJECTILE_CAP));*/
+        //? if forge
         return projectile.getCapability(ProjectileCapabilityProvider.PROJECTILE_CAP).resolve();
     }
 

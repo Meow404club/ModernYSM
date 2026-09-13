@@ -110,11 +110,16 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
         }
         double dDistanceToSqr = this.entityRenderDispatcher.distanceToSqr(player);
         poseStack.pushPose();
+        //? if neoforge
+        /*if (dDistanceToSqr < 100.0d && (displayObjective = (scoreboard = player.getScoreboard()).getDisplayObjective(net.minecraft.world.scores.DisplaySlot.BELOW_NAME)) != null) {*/
+        //? if forge
         if (dDistanceToSqr < 100.0d && (displayObjective = (scoreboard = player.getScoreboard()).getDisplayObjective(2)) != null) {
             // Component.literal（1.19+）→ 1.16.5 new TextComponent；append 双版同名
             //? if <1.19.2
             // super.renderNameTag(player, new net.minecraft.network.chat.TextComponent(Integer.toString(scoreboard.getOrCreatePlayerScore(player.getScoreboardName(), displayObjective).getScore())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i);
-            //? if >=1.19.2
+            //? if neoforge && >=1.19.2
+            /*super.renderNameTag(player, Component.literal(Integer.toString(scoreboard.getOrCreatePlayerScore(player, displayObjective).get())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i);*/
+            //? if forge && >=1.19.2
             super.renderNameTag(player, Component.literal(Integer.toString(scoreboard.getOrCreatePlayerScore(player.getScoreboardName(), displayObjective).getScore())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i);
             poseStack.translate(0.0d, 0.25875d, 0.0d);
         }

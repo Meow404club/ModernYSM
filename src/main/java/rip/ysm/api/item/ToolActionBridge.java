@@ -2,6 +2,9 @@ package rip.ysm.api.item;
 
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
+//? if neoforge
+/*import rip.ysm.api.item.platform.neoforge.ToolActionBridgeImpl;*/
+//? if forge
 import rip.ysm.api.item.platform.forge.ToolActionBridgeImpl;
 
 public final class ToolActionBridge {

@@ -2,6 +2,9 @@ package rip.ysm.api.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
+//? if neoforge
+/*import rip.ysm.api.client.platform.neoforge.KeyMappingFactoryImpl;*/
+//? if forge
 import rip.ysm.api.client.platform.forge.KeyMappingFactoryImpl;
 
 public final class KeyMappingFactory {

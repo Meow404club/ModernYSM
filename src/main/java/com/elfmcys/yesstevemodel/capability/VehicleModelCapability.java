@@ -1,5 +1,8 @@
 package com.elfmcys.yesstevemodel.capability;
 
+//? if neoforge
+/*import com.elfmcys.yesstevemodel.platform.neoforge.capability.VehicleModelCapabilityProvider;*/
+//? if forge
 import com.elfmcys.yesstevemodel.platform.forge.capability.VehicleModelCapabilityProvider;
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import net.minecraft.nbt.CompoundTag;
@@ -10,6 +13,9 @@ import java.util.Optional;
 public class VehicleModelCapability {
 
     public static Optional<VehicleModelCapability> get(Entity entity) {
+        //? if neoforge
+        /*return java.util.Optional.ofNullable(entity.getCapability(VehicleModelCapabilityProvider.VEHICLE_MODEL_CAP));*/
+        //? if forge
         return entity.getCapability(VehicleModelCapabilityProvider.VEHICLE_MODEL_CAP).resolve();
     }
 

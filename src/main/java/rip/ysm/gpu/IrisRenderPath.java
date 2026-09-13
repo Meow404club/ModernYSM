@@ -19,9 +19,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.client.renderer.RenderType;
 //?}
 // 1.21.2 ShaderInstance 删除（ShaderManager/CompiledShaderProgram 重构，vanilla-1.21.3
-// 无该类）→ ShaderInstance 触点全部收进 <1.21.2 分支，1.21.2+ 本路径降级
+// 无该类）→ ShaderInstance 触点全部收进 <1.21.2 分支，1.21.2+ 本路径降级；
+// import 用行条件裸行（1.20.1 活跃节点 shader 段需要，>=1.21.2 生成线条件假自动注释）
 //? if >1.17 && <1.21.2
-/*import net.minecraft.client.renderer.ShaderInstance;*/
+import net.minecraft.client.renderer.ShaderInstance;
 //? if >1.17 {
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
@@ -102,7 +103,9 @@ public final class IrisRenderPath {
         rt.setupRenderState();
 
         //? if <1.21.2 {
-        /*ShaderInstance shader = RenderSystem.getShader();
+        // 裸内层（内容 1.20.1 同在，vcs 直通合规）：存储态包裹会令 1.20.1 活跃节点丢失
+        // shader 段=Iris 路径空绘制仍 return true（双在产线终验实证）
+        ShaderInstance shader = RenderSystem.getShader();
         if (shader == null) {
             rt.clearRenderState();
             return false;
@@ -113,6 +116,9 @@ public final class IrisRenderPath {
         if (shader.MODEL_VIEW_MATRIX != null) shader.MODEL_VIEW_MATRIX.set(pose.pose());
         if (shader.PROJECTION_MATRIX != null) shader.PROJECTION_MATRIX.set(RenderSystem.getProjectionMatrix());
         if (shader.COLOR_MODULATOR != null) shader.COLOR_MODULATOR.set(1.0f, 1.0f, 1.0f, 1.0f);
+        // GLINT_ALPHA 1.19.4 起才有（1192 ShaderInstance 无此字段）；序=基线（apply 前置上传）
+        //? if >=1.19.4
+        if (shader.GLINT_ALPHA != null) shader.GLINT_ALPHA.set(1.0f);
 
         shader.apply();
 
@@ -124,11 +130,8 @@ public final class IrisRenderPath {
             GL11.glDrawElements(GL11.GL_TRIANGLES, drawCount, GL11.GL_UNSIGNED_INT, offsetBytes);
         }
 
-        shader.clear();*/
+        shader.clear();
         //?}
-        // GLINT_ALPHA 1.19.4 起才有（1192 ShaderInstance 无此字段）
-        //? if >=1.19.4 && <1.21.2
-        /*if (shader.GLINT_ALPHA != null) shader.GLINT_ALPHA.set(1.0f);*/
         //? if >=1.19.2 && <21.5
         RenderCompat.invalidate();
         //? if <1.19.2

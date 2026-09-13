@@ -114,6 +114,9 @@ public final class BlurStack {
         /*regions.clear();
         return;*/
         //? if <21.5 {
+        // isEmpty 早退必须保留在 <21.5 路径：丢失则 1.20.1/1.16.5 无毛玻璃区域也每帧
+        // captureScreen 全屏拷贝（双在产线终验实证的性能回归）
+        if (regions.isEmpty()) return;
         if (!BlurShader.ensureCompiled()) {
             regions.clear();
             return;

@@ -98,6 +98,18 @@ public class RangedSliderWidget extends YsmSliderButton {
         this.setValueFromMouse(event.x());
     }
      *///?}
+    //? if <21.9 {
+    @Override
+    public void onClick(double mouseX, double mouseY) {
+        this.setValueFromMouse(mouseX);
+    }
+
+    @Override
+    protected void onDrag(double mouseX, double mouseY, double dragX, double dragY) {
+        super.onDrag(mouseX, mouseY, dragX, dragY);
+        this.setValueFromMouse(mouseX);
+    }
+    //?}
 
     @Override
     public void setFocused(boolean focused) {

@@ -78,10 +78,14 @@ public class QueryBinding extends ContextBinding {
         entityVar("ground_speed", ctx -> getGroundSpeed(ctx.entity()));
         // 1.21.2 Entity.walkDist 删除 → LivingEntity.walkAnimation.position()
         //（vanilla-1.21.3 LivingEntity.java:213/WalkAnimationState 实证）
+        // 铁律：>=1.21.2 门控内容必须存储态——裸行泄入 1.20.1 根活动节点致本键双注册、
+        // 后者胜出把 molang modified_distance_moved 从 walkDist 漂移为 walkAnimation.position()
+        //（双在产线终验实证）
         //? if <1.21.2
         entityVar("modified_distance_moved", ctx -> ctx.entity().walkDist);
-        //? if >=1.21.2
-        entityVar("modified_distance_moved", ctx -> ((net.minecraft.world.entity.LivingEntity) ctx.entity()).walkAnimation.position());
+        //? if >=1.21.2 {
+        /*entityVar("modified_distance_moved", ctx -> ((net.minecraft.world.entity.LivingEntity) ctx.entity()).walkAnimation.position());*/
+        //?}
         entityVar("vertical_speed", QueryBinding::getVerticalSpeed);
         entityVar("walk_distance", ctx -> ctx.entity().moveDist);
         entityVar("has_rider", ctx -> ctx.entity().isVehicle());

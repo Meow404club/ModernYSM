@@ -171,10 +171,12 @@ public class UploadManager {
     private static void registerTexture(AbstractTexture texture, TextureLocatable locatable) {
         if (!locatable.registered) {
             Minecraft.getInstance().getTextureManager().register(locatable.resourceLocation, texture);
+            // 铁律：>=21.4 块内容必须存储态——裸块泄入 1.20.1 根活动节点致包图标 register 后
+            // 重复 load（双在产线终验实证）
             //? if >=21.4 {
-            if (texture instanceof com.elfmcys.yesstevemodel.client.texture.OuterFileTexture outerTexture) {
+            /*if (texture instanceof com.elfmcys.yesstevemodel.client.texture.OuterFileTexture outerTexture) {
                 outerTexture.load(Minecraft.getInstance().getResourceManager());
-            }
+            }*/
             //?}
             ResourceCleanupHelper.registerBiCleanup(locatable, locatable.resourceLocation, locatable.resolution, (resourceLocation, rlcNum) -> {
                 //? if <1.18.2 {

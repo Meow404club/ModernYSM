@@ -1,8 +1,14 @@
 package rip.ysm.gpu;
 
+import rip.ysm.util.RenderCompat;
 import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
 import com.elfmcys.yesstevemodel.mixin.client.RenderSystemAccessor;
+// 1.21.5 GlStateManager 迁移 platform→opengl 包（vcs 直通铁律：非 1.20.1 分支源码态必须注释）
+//? if <21.5
 import com.mojang.blaze3d.platform.GlStateManager;
+//? if >=21.5
+/*import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.opengl.GlTexture;*/
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
@@ -42,6 +48,7 @@ public final class GpuRenderPath {
             ResourceLocation textureLocation
     ) {
         if (!GpuCapability.isAvailable()) return false;
+        // 1.21.8 降级闸门在 GpuCapability.isAvailable（CPU 投影/雾读取删除，见其类内注记）
         //? if <1.17 {
         /*// 1.16.5 恒 false 闸门（照 gui-hud 卡 IrisRenderPath 同款降级）：本方法依赖
         // RenderSystem.getProjectionMatrix/getModelViewMatrix/getShaderTexture/getShaderFog*、
@@ -67,11 +74,17 @@ public final class GpuRenderPath {
         Matrix4f projMat = com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.projectionMatrix();
         Matrix4f mvMat = com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.modelViewMatrix();
          *///?}
-        //? if >=1.19.4 {
+        //? if >=1.19.4 && <21.8 {
         Matrix4f rootPose = pose.pose();
         Matrix3f rootNormal = pose.normal();
         Matrix4f projMat = RenderSystem.getProjectionMatrix();
         Matrix4f mvMat = RenderSystem.getModelViewMatrix();
+        //?}
+        //? if >=21.8 {
+        /*Matrix4f rootPose = new Matrix4f();
+        Matrix3f rootNormal = new Matrix3f();
+        Matrix4f projMat = new Matrix4f();
+        Matrix4f mvMat = new Matrix4f();*/
         //?}
 
         rootPose.get(rootPoseScratch);
@@ -88,21 +101,51 @@ public final class GpuRenderPath {
         boneBuf.position(0);
         boneBuf.limit(mesh.boneCount * 144);
 
+        //? if <21.5 {
         RenderSystem.disableCull();
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(true);
         RenderSystem.disableBlend();
+        //?}
+        // 1.21.5 状态面进 RenderPipeline，RenderSystem 无静态入口 → GlStateManager._*（opengl 包）。
+        // 注意：else+存储态不展开（21.5 生成树实证），一律拆兄弟 if 块
+        //? if >=21.5 {
+        /*GlStateManager._disableCull();
+        GlStateManager._enableDepthTest();
+        GlStateManager._depthMask(true);
+        GlStateManager._disableBlend();*/
+        //?}
 
         Minecraft mc = Minecraft.getInstance();
         AbstractTexture modelTex = mc.getTextureManager().getTexture(textureLocation);
+        //? if <21.5
         int modelTexId = modelTex.getId();
+        // 1.21.5 AbstractTexture.getId 删 → getTexture()(GpuTexture) 具体类 GlTexture.glId()
+        //（neoforge-21.5.98-sources AbstractTexture.java:51 / GlTexture.java:82）
+        //? if >=21.5 && <21.8
+        /*int modelTexId = ((GlTexture) modelTex.getTexture()).glId();*/
+        //? if >=21.8
+        /*int modelTexId = ((GlTexture) modelTex.getTexture()).glId();*/
 
         GlStateManager._activeTexture(GL13.GL_TEXTURE0 + 2);
+        // 1.21.11 LightTexture.turnOnLightLayer 删（2111 LightTexture 方法面实证）→ no-op
+        //? if <21.11
         mc.gameRenderer.lightTexture().turnOnLightLayer();
 
         GlStateManager._activeTexture(GL13.GL_TEXTURE0 + 1);
+        // 1.21.11 OverlayTexture 移 texture 包且 setupOverlayColor 删（2111 方法面实证）→ no-op
+        //? if <21.11
         mc.gameRenderer.overlayTexture().setupOverlayColor();
+        // 1.21.5 getShaderTexture 返回 GpuTexture（RenderSystem.java:306）
+        //? if <21.5
         GlStateManager._bindTexture(RenderSystem.getShaderTexture(1)); // overlayTexture里的texture没getter，固定bind 1
+        //? if >=21.5 && <21.8
+        /*GlStateManager._bindTexture(((GlTexture) RenderSystem.getShaderTexture(1)).glId());*/
+        // 1.21.8 getShaderTexture 返回 GpuTextureView（无 glId）且路径已降级：跳过冗余绑定
+        //? if >=21.8 && <21.11 {
+        /*GlStateManager._activeTexture(GL13.GL_TEXTURE0 + 1);
+        mc.gameRenderer.overlayTexture().setupOverlayColor();*/
+        //?}
 
         GlStateManager._activeTexture(GL13.GL_TEXTURE0);
         GlStateManager._bindTexture(modelTexId);
@@ -111,6 +154,27 @@ public final class GpuRenderPath {
         GL15.glBufferSubData(GL43.GL_SHADER_STORAGE_BUFFER, 0L, boneBuf);
         GL43.glBindBufferBase(GL43.GL_SHADER_STORAGE_BUFFER, BoneSkinShader.ssbo, mesh.boneSsbo);
 
+        // 1.21.2 fog 状态打包 FogParameters record（getShaderFogStart/End/Color/Shape 删除，
+        // vanilla-1.21.3 RenderSystem.java:348 getShaderFog()）
+        //? if >=1.21.2 && <21.8 {
+        /*
+        net.minecraft.client.renderer.FogParameters ysmFogParams = RenderSystem.getShaderFog();
+        float fogStart = ysmFogParams.start();
+        float fogEnd = ysmFogParams.end();
+        float[] fogColor = new float[] { ysmFogParams.red(), ysmFogParams.green(), ysmFogParams.blue(), ysmFogParams.alpha() };
+        int fogShape = ysmFogParams.shape().getIndex();
+        */
+        //?}
+        // 1.21.8 fog 改 GpuBufferSlice（RenderSystem.java:168）且路径已降级：零雾兜底（不可达）
+        //? if >=21.8 {
+        /*
+        float fogStart = 0.0f;
+        float fogEnd = 0.0f;
+        float[] fogColor = new float[] { 0.0f, 0.0f, 0.0f, 0.0f };
+        int fogShape = 0;
+        */
+        //?}
+        //? if <1.21.2 {
         float fogStart = RenderSystem.getShaderFogStart();
         float fogEnd = RenderSystem.getShaderFogEnd();
         float[] fogColor = RenderSystem.getShaderFogColor();
@@ -119,8 +183,9 @@ public final class GpuRenderPath {
         /*int fogShape = RenderSystem.getShaderFogShape().getIndex();*/
         //? if >=1.17 && <1.18.2
         /*int fogShape = 0;*/
-        //? if >=1.18.2
+        //? if >=1.18.2 && <1.21.2
         int fogShape = RenderSystem.getShaderFogShape().getIndex();
+        //?}
 
         GlStateManager._glUseProgram(BoneSkinShader.program());
         if (BoneSkinShader.locProj() >= 0) GL20.glUniformMatrix4fv(BoneSkinShader.locProj(), false, projScratch);
@@ -150,11 +215,20 @@ public final class GpuRenderPath {
             GL11.glDrawElements(GL11.GL_TRIANGLES, drawCount, GL11.GL_UNSIGNED_INT, offsetBytes);
 
             if (model.isTranslucentTexture(textureIndex)) {
+                //? if <21.5 {
                 RenderSystem.enableBlend();
                 RenderSystem.defaultBlendFunc();
+                //?}
+                //? if >=21.5 {
+                /*GlStateManager._enableBlend();
+                GlStateManager._blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);*/
+                //?}
                 if (BoneSkinShader.locAlphaMode() >= 0) GL20.glUniform1i(BoneSkinShader.locAlphaMode(), 2);
                 GL11.glDrawElements(GL11.GL_TRIANGLES, drawCount, GL11.GL_UNSIGNED_INT, offsetBytes);
+                //? if <21.5
                 RenderSystem.disableBlend();
+                //? if >=21.5
+                /*GlStateManager._disableBlend();*/
             }
         }
 
@@ -162,12 +236,15 @@ public final class GpuRenderPath {
         GL15.glBindBuffer(GL43.GL_SHADER_STORAGE_BUFFER, 0);
         GlStateManager._glUseProgram(0);
 
-        //? if >=1.19.2
-        com.mojang.blaze3d.vertex.BufferUploader.invalidate();
+        //? if >=1.19.2 && <21.5
+
+        RenderCompat.invalidate();
         //? if <1.19.2
-        /*com.mojang.blaze3d.vertex.BufferUploader.reset();*/
+        /*RenderCompat.reset();*/
         GlStateManager._glBindVertexArray(0);
 
+        // 1.21.11 turnOffLightLayer removed (same note as turnOnLightLayer) -> no-op
+        //? if <21.11
         mc.gameRenderer.lightTexture().turnOffLightLayer();
 
         return true;
@@ -182,9 +259,14 @@ public final class GpuRenderPath {
         //? if >=1.17 && <1.19.4 {
         /*Vector3f[] arr = null;
          *///?}
-        //? if >=1.19.4 {
+        //? if >=1.19.4 && <21.6 {
         Vector3f[] arr = RenderSystemAccessor.ysm$getShaderLightDirections();
         //?}
+        // 1.21.6+ RenderSystem.shaderLightDirections 改 GpuBufferSlice 类型（2108 RenderSystem.java:78）
+        // → Vector3f[] accessor 不可读，走默认平行光兜底（功能债入账）
+        //? if >=21.6 {
+        /*Vector3f[] arr = null;
+         *///?}
         currentLights[0] = (arr != null && arr.length > 0 && arr[0] != null) ? arr[0] : new Vector3f(0.2f, 1.0f, -0.7f).normalize();
         currentLights[1] = (arr != null && arr.length > 1 && arr[1] != null) ? arr[1] : new Vector3f(-0.2f, 1.0f, 0.7f).normalize();
     }

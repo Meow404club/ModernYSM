@@ -5,6 +5,10 @@ import com.elfmcys.yesstevemodel.client.model.ModelAssembly;
 import com.elfmcys.yesstevemodel.client.gui.ModelMetadataPresenter;
 import com.google.common.collect.Lists;
 import net.minecraft.ChatFormatting;
+// 1.21.11 Util 移 net.minecraft.util 子包
+//? if >=21.11
+/*import net.minecraft.util.Util;*/
+//? if <21.11
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -60,12 +64,20 @@ public class AuthorButton extends YsmButton {
         return new AuthorButton(x, y, null, null, null, -1, screen);
     }
 
-    //? if >=1.20 {
+    //? if >=1.20 && <21.11 {
     @Override
     public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
     //?}
+    // 1.21.11 AbstractButton.renderWidget final 化 → renderContents（2111 AbstractWidget.java 实证）
+    //? if >=21.11 {
+    /*
+    @Override
+    public void renderContents(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+    *///?}
     //? if >=1.19.4 && <1.20 {
     /*@Override
     public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
@@ -100,8 +112,10 @@ public class AuthorButton extends YsmButton {
         /*guiGraphics.drawString(font, YsmText.literal(str), getX() + 2, getY() + 72, ChatFormatting.GOLD.getColor().intValue(), false);*/
         //? if >=1.17 && <1.20
         /*guiGraphics.renderScrollingString(font, YsmText.literal(str), getX() + 2, getY() + 72, (getX() + this.width) - 2, getY() + 82, ChatFormatting.GOLD.getColor().intValue());*/
-        //? if >=1.20
+        //? if >=1.20 && <21.11
         renderScrollingString(guiGraphics.graphics(), font, YsmText.literal(str), getX() + 2, getY() + 72, (getX() + this.width) - 2, getY() + 82, ChatFormatting.GOLD.getColor().intValue());
+        //? if >=21.11
+        /*guiGraphics.drawString(font, YsmText.literal(str), getX() + 2, getY() + 72, ChatFormatting.GOLD.getColor().intValue(), false);*/
         guiGraphics.drawCenteredString(font, str2, getX() + 35, getY() + 82, ChatFormatting.GREEN.getColor().intValue());
         drawWrappedText(guiGraphics, YsmText.literal(str3), getX() + 3, getY() + 95, 64, -1);
     }

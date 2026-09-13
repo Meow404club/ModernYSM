@@ -11,6 +11,10 @@ import com.elfmcys.yesstevemodel.resource.models.AuthorInfo;
 import com.elfmcys.yesstevemodel.resource.models.Metadata;
 import com.elfmcys.yesstevemodel.util.data.OrderedStringMap;
 import com.elfmcys.yesstevemodel.util.data.StringPair;
+// 1.21.11 Util 移 net.minecraft.util 子包
+//? if >=21.11
+/*import net.minecraft.util.Util;*/
+//? if <21.11
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConfirmLinkScreen;

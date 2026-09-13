@@ -129,12 +129,12 @@ public final class TextureGrid extends OptionRow<Object> {
         int sy = (int) (mc.getWindow().getHeight() - (y + previewH) * scale);
         int sw = (int) (TEX_BTN_W * scale);
         int sh = (int) (previewH * scale);
-        YsmGui.enableScissorBox(sx, sy, sw, sh);
+                YsmGui.enableScissorBox(sx, sy, sw, sh);
         //? if >=1.21
         /*ModelPreviewRenderer.renderLivingEntityPreview(x + TEX_BTN_W / 2.0f, y + TEX_BTN_H / 2.0f + 24.0f, 35.0f, YsmFrame.partialTick(mc), holder, RendererManager.getPlayerRenderer(), false, true);*/
         //? if <1.21
         ModelPreviewRenderer.renderLivingEntityPreview(x + TEX_BTN_W / 2.0f, y + TEX_BTN_H / 2.0f + 24.0f, 35.0f, mc.getFrameTime(), holder, RendererManager.getPlayerRenderer(), false, true);
-        YsmGui.disableScissorBox();
+                YsmGui.disableScissorBox();
     }
 
     @Override

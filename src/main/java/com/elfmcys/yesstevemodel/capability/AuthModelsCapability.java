@@ -64,7 +64,11 @@ public class AuthModelsCapability {
     public void deserializeNBT(ListTag listTag) {
         this.authModels.clear();
         for (Tag tag : listTag) {
+            // 1.21.5 Tag.getAsString 删除（neoforge-21.5.98-sources Tag.java:51 asString 返回 Optional<String>）
+            //? if <21.5
             this.authModels.add(tag.getAsString());
+            //? if >=21.5
+            /*this.authModels.add(tag.asString().orElse(""));*/
         }
     }
 }

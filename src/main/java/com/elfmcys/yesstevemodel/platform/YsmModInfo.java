@@ -67,14 +67,30 @@ public final class YsmModInfo {
         } catch (Exception e) {
             return Optional.empty();
         }
-         *///?} else {
+         *///?}
+        //? if >=1.17 && <21.10 {
         IModFileInfo fileInfo = ModList.get().getModFileById(info.getModId());
         if (fileInfo == null || fileInfo.getFile() == null) {
             return Optional.empty();
         }
-        Path resolved = fileInfo.getFile().findResource(path);
+        Path resolved = fileInfo.getFile().findResource(String.join("/", path));
         return Files.exists(resolved) ? Optional.of(resolved) : Optional.empty();
         //?}
+        //? if >=21.10 {
+        /*// 1.21.10 IModFile 瘦身：findResource/getSecureJar 删（TmpProbe 编译实证）→
+        // getFilePath 自解析；dir 形态（dev 运行）全等价，jar 形态因 zipFs 生命周期暂回
+        // empty（功能债入账）
+        IModFileInfo fileInfo = ModList.get().getModFileById(info.getModId());
+        if (fileInfo == null || fileInfo.getFile() == null) {
+            return Optional.empty();
+        }
+        Path modPath = fileInfo.getFile().getFilePath();
+        if (!Files.isDirectory(modPath)) {
+            return Optional.empty();
+        }
+        Path resolved = modPath.resolve(String.join("/", path));
+        return Files.exists(resolved) ? Optional.of(resolved) : Optional.empty();
+        *///?}
     }
 
     @Override

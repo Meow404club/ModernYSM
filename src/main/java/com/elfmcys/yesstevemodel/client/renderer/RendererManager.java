@@ -12,8 +12,11 @@ import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 /*import net.neoforged.api.distmarker.Dist;*/
 //? if forge
 import net.minecraftforge.api.distmarker.Dist;
-//? if >=1.17 && neoforge
+//? if >=1.17 && neoforge && <21.4
 /*import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;*/
+//? if >=1.17 && neoforge && >=21.4 {
+/*import net.neoforged.neoforge.client.event.AddClientReloadListenersEvent;
+ *///?}
 //? if >=1.17 && forge
 import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
 // RegisterClientReloadListenersEvent 为 1.16.5 所无（1.17+），1.16.5 分支在
@@ -34,8 +37,11 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import rip.ysm.compat.sbackpack.SBackpackCompat;
 
-//? if neoforge && >=1.20.5
+// 1.21.6+ EventBusSubscriber 删 bus 属性
+//? if neoforge && >=1.20.5 && <21.6
 /*@EventBusSubscriber(modid = YesSteveModel.MOD_ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)*/
+//? if neoforge && >=21.6
+/*@EventBusSubscriber(modid = YesSteveModel.MOD_ID, value = Dist.CLIENT)*/
 //? if neoforge && <1.20.5
 /*@Mod.EventBusSubscriber(modid = YesSteveModel.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)*/
 //? if forge
@@ -67,11 +73,29 @@ public class RendererManager {
     //     });
     // }
     //? } else {
+    //? if forge {
     @SubscribeEvent
     public static void onRegisterReloadListeners(RegisterClientReloadListenersEvent event) {
         ResourceManagerReloadListener listener = resourceManager -> resetRenderers();
         event.registerReloadListener(listener);
     }
+    //?}
+    // 1.21.4 RegisterClientReloadListenersEvent 删除（neoforge-1.21.4 无此类，
+    // AddClientReloadListenersEvent 接管，addListener 需显式 RL key）
+    //? if neoforge && <21.4 {
+    /*@SubscribeEvent
+    public static void onRegisterReloadListeners(RegisterClientReloadListenersEvent event) {
+        ResourceManagerReloadListener listener = resourceManager -> resetRenderers();
+        event.registerReloadListener(listener);
+    }*/
+    //?}
+    //? if neoforge && >=21.4 {
+    /*@SubscribeEvent
+    public static void onRegisterReloadListeners(net.neoforged.neoforge.client.event.AddClientReloadListenersEvent event) {
+        ResourceManagerReloadListener listener = resourceManager -> resetRenderers();
+        event.addListener(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "renderer_manager_reset"), listener);
+    }*/
+    //?}
     //? }
 
     private static void resetRenderers() {
@@ -96,8 +120,27 @@ public class RendererManager {
         //? } else {
         // EntityRendererProvider.Context 构造：1.19.2 = 7 参（含 blockRenderer/itemInHandRenderer）；
         // 1.17~1.18.2 = 5 参（1182 EntityRendererProvider.java:21），itemInHand 手工补
-        //? if >=1.19.2
+        // 1.21.2 Context 构造 8 参（+MapRenderer/EquipmentModelSet，去 itemInHandRenderer，
+        // vanilla-1.21.3 EntityRendererProvider.java:35 实证）
+        //? if >=1.19.2 && <1.21.2
         EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemRenderer(), Minecraft.getInstance().getBlockRenderer(), entityRenderDispatcher.getItemInHandRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), Minecraft.getInstance().font);
+        //? if >=21.3 && <21.4
+        /*EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemRenderer(), Minecraft.getInstance().getMapRenderer(), Minecraft.getInstance().getBlockRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), Minecraft.getInstance().getEquipmentModels(), Minecraft.getInstance().font);*/
+        // 1.21.4 Context：ItemRenderer→ItemModelResolver、EquipmentModelSet→EquipmentAssetManager
+        //（vanilla-1.21.4 EntityRendererProvider.java:38-48）；EquipmentAssetManager 无
+        // Minecraft getter（vanilla 本地构造+注册重载，:530-531 同款）
+        //? if >=21.4 && <21.9 {
+        /*net.minecraft.client.resources.model.EquipmentAssetManager ysmEquipmentAssets = new net.minecraft.client.resources.model.EquipmentAssetManager();
+        ((net.minecraft.server.packs.resources.ReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener(ysmEquipmentAssets);
+        EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemModelResolver(), Minecraft.getInstance().getMapRenderer(), Minecraft.getInstance().getBlockRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), ysmEquipmentAssets, Minecraft.getInstance().font);*/
+        //?}
+        // 1.21.9 Context 10 参：+AtlasManager（Minecraft.getAtlasManager）+PlayerSkinRenderCache
+        //（Minecraft.playerSkinRenderCache()，2110 EntityRendererProvider.java:42-51 实证）
+        //? if >=21.9 {
+        /*net.minecraft.client.resources.model.EquipmentAssetManager ysmEquipmentAssets = new net.minecraft.client.resources.model.EquipmentAssetManager();
+        ((net.minecraft.server.packs.resources.ReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener(ysmEquipmentAssets);
+        EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemModelResolver(), Minecraft.getInstance().getMapRenderer(), Minecraft.getInstance().getBlockRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), ysmEquipmentAssets, Minecraft.getInstance().getAtlasManager(), Minecraft.getInstance().font, Minecraft.getInstance().playerSkinRenderCache());*/
+        //?}
         //? if <1.19.2
         /*EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), Minecraft.getInstance().font);*/
         playerRenderer = new CustomPlayerRenderer(context);

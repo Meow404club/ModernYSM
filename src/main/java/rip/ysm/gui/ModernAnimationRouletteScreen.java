@@ -17,9 +17,14 @@ import com.elfmcys.yesstevemodel.util.data.OrderedStringMap;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import rip.ysm.util.RenderCompat;
 import rip.ysm.gui.YsmGui;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
+//? if >=21.9 {
+/*import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+ *///?}
 import net.minecraft.client.Minecraft;
 //? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
@@ -170,7 +175,10 @@ public class ModernAnimationRouletteScreen extends Screen {
             BlurStack.pushBlurPie(centerX - 128.0f, centerY, 0.0f, 16.0f, 0.0f, Pie.tau, 20.0f);
             BlurStack.pushBlurPie(centerX + 128.0f, centerY, 0.0f, 16.0f, 0.0f, Pie.tau, 20.0f);
         }
+        //? if <21.6
         BlurStack.flush(g.pose());
+        //? if >=21.6
+        /*BlurStack.flush(g.pose());*/
     }
 
     private void updateHover(int mouseX, int mouseY) {
@@ -225,7 +233,9 @@ public class ModernAnimationRouletteScreen extends Screen {
     private void drawSlice(YsmGui g, int sliceIndex, float sliceSpan, float inner, float outer, int color) {
         float start = sliceStartOffset() + sliceIndex * sliceSpan + 0.02f;
         float end = sliceStartOffset() + (sliceIndex + 1) * sliceSpan - 0.02f;
+        //? if <21.6
         Pie.draw(g.pose(), centerX, centerY, inner, outer, start, end, color, 1.0f);
+        // 1.21.6+ Pie 已降级 no-op（pose 类型变化，调用点一并退役）
     }
 
     private void drawSettingsIcon(YsmGui g, int sliceIndex, float sliceSpan, boolean hover) {
@@ -233,12 +243,12 @@ public class ModernAnimationRouletteScreen extends Screen {
         float r = 34.0f;
         int ix = centerX + (int) (r * Math.cos(mid)) - 8;
         int iy = centerY + (int) (r * Math.sin(mid)) - 8;
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+        RenderCompat.enableBlend();
+        RenderCompat.defaultBlendFunc();
         if (hover) g.setColor(1.0f, 1.0f, 0.6f, 1.0f);
         g.blit(settingsIcon, ix, iy, 16, 16, 0.0f, 0.0f, 32, 32, 32, 32);
         if (hover) g.setColor(1.0f, 1.0f, 1.0f, 1.0f);
-        RenderSystem.disableBlend();
+        RenderCompat.disableBlend();
     }
 
     private void renderLabels(YsmGui g) {
@@ -294,10 +304,10 @@ public class ModernAnimationRouletteScreen extends Screen {
     private void renderCenter(YsmGui g) {
         if (animatableModel.getEntity() instanceof Player) {
             ResourceLocation tex = AnimationLockEvent.isLocked() ? lockIcon : unlockIcon;
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
+            RenderCompat.enableBlend();
+            RenderCompat.defaultBlendFunc();
             g.blit(tex, centerX - 16, centerY - 16, 32, 32, 0.0f, 0.0f, 64, 64, 64, 64);
-            RenderSystem.disableBlend();
+            RenderCompat.disableBlend();
         } else {
             g.drawCenteredString(this.font, YsmGui.trans("gui.yes_steve_model.roulette.stop"), centerX, centerY - 4, 0xFFFFFFFF);
         }
@@ -311,7 +321,9 @@ public class ModernAnimationRouletteScreen extends Screen {
 
     private void drawPageButton(YsmGui g, float cx, float cy, boolean enabled, boolean hover, String arrow) {
         int color = !enabled ? 0x40000000 : (hover ? 0xD0FFFFFF : 0x90000000);
+        //? if <21.6
         Pie.draw(g.pose(), cx, cy, 0.0f, 16.0f, 0.0f, Pie.tau, color, 1.0f);
+        // 1.21.6+ Pie 已降级 no-op（pose 类型变化，调用点一并退役）
         int textColor = enabled ? (hover ? 0xFF000000 : 0xFFFFFFFF) : 0x60FFFFFF;
         g.drawCenteredString(this.font, arrow, (int) cx, (int) cy - 4, textColor);
     }
@@ -359,6 +371,59 @@ public class ModernAnimationRouletteScreen extends Screen {
         }
     }
 
+    // 1.21.9+ 输入事件对象化（GuiEventListener.mouseClicked(MouseButtonEvent,boolean)）
+    //? if >=21.9 {
+    /*@Override
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        if (hoveredPrev) {
+            playClick();
+            previousPage();
+            return true;
+        }
+        if (hoveredNext) {
+            playClick();
+            nextPage();
+            return true;
+        }
+        if (hoveredPathSegment >= 0 && hoveredPathSegment < navigationStack.size() - 1) {
+            playClick();
+            navigateTo(hoveredPathSegment);
+            return true;
+        }
+        if (hoveredGearIndex >= 0) {
+            playClick();
+            String value = currentProperties.getValueAt(hoveredGearIndex);
+            if (value.startsWith("#")) {
+                String sub = value.substring(1);
+                if (renderGroups.containsKey(sub)) {
+                    Minecraft.getInstance().setScreen(new ModelSettingsScreen(renderContext, animatableModel, this, sub));
+                    return true;
+                }
+            }
+        }
+        if (hoveredIndex >= 0) {
+            playClick();
+            String key = currentProperties.getKeyAt(hoveredIndex);
+            if ("#return".equals(key)) navigateBack();
+            else if (key.startsWith("#")) navigateToSubmenu(key);
+            else playAnimation(key);
+            return true;
+        }
+        double cdx = event.x() - centerX;
+        double cdy = event.y() - centerY;
+        if (cdx * cdx + cdy * cdy <= 22.0 * 22.0) {
+            if (animatableModel.getEntity() instanceof Player) {
+                AnimationLockEvent.toggleLock();
+            } else {
+                NetworkHandler.sendToServer(C2SPlayAnimationPacket.createWithIndex(animatableModel.getEntity().getId()));
+                onClose();
+            }
+            return true;
+        }
+        return super.mouseClicked(event, doubleClick);
+    }
+    *///?}
+    //? if <21.9 {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (hoveredPrev) {
@@ -408,6 +473,7 @@ public class ModernAnimationRouletteScreen extends Screen {
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
+    //?}
 
     private void navigateTo(int targetIndex) {
         while (navigationStack.size() > targetIndex + 1) navigationStack.removeLast();
@@ -431,6 +497,18 @@ public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         if ((page() + 1) * 8 < currentProperties.size()) currentNavEntry.setValue(page() + 1);
     }
 
+    // 1.21.9+ 输入事件对象化（GuiEventListener.keyPressed(KeyEvent)）
+    //? if >=21.9 {
+    /*@Override
+    public boolean keyPressed(KeyEvent event) {
+        if (KeyMappingFactory.isActiveAndMatches(AnimationRouletteKey.KEY_ROULETTE, event.key(), event.scancode())) {
+            onClose();
+            return true;
+        }
+        return super.keyPressed(event);
+    }
+    *///?}
+    //? if <21.9 {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (KeyMappingFactory.isActiveAndMatches(AnimationRouletteKey.KEY_ROULETTE, keyCode, scanCode)) {
@@ -439,6 +517,7 @@ public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
+    //?}
 
     private void navigateToSubmenu(String value) {
         if (navigationStack.size() > 5) {

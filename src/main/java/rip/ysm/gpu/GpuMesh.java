@@ -1,7 +1,12 @@
 package rip.ysm.gpu;
 
 import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
+// 1.21.5 GlStateManager 迁移 platform→opengl 包
+//? if <21.5
 import com.mojang.blaze3d.platform.GlStateManager;
+// 1.21.5 GlStateManager 迁移 platform→opengl 包（vcs 直通铁律：非 1.20.1 分支源码态必须注释）
+//? if >=21.5
+/*import com.mojang.blaze3d.opengl.GlStateManager;*/
 import org.lwjgl.opengl.*;
 import org.lwjgl.system.MemoryUtil;
 

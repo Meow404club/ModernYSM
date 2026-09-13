@@ -5,6 +5,10 @@ import com.elfmcys.yesstevemodel.geckolib3.geo.GeoLayerRenderer;
 import com.elfmcys.yesstevemodel.geckolib3.geo.animated.AnimatedGeoModel;
 import com.elfmcys.yesstevemodel.geckolib3.util.RenderUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
+// 1.21.11 ParrotModel 移 client.model.animal.parrot 子包
+//? if >=21.11
+/*import net.minecraft.client.model.animal.parrot.ParrotModel;*/
+//? if <21.11
 import net.minecraft.client.model.ParrotModel;
 // 1.16.5 无 ModelLayers/EntityRendererProvider（1.17 模型重写），ParrotModel 为无参传统构造
 //? if >=1.17 {
@@ -16,6 +20,10 @@ import net.minecraft.client.renderer.entity.ParrotRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.EntityType;
+// 1.21.11 Parrot 移 animal.parrot 子包
+//? if >=21.11
+/*import net.minecraft.world.entity.animal.parrot.Parrot;*/
+//? if <21.11
 import net.minecraft.world.entity.animal.Parrot;
 import net.minecraft.world.entity.player.Player;
 //? if >=1.19.4 {
@@ -56,8 +64,22 @@ public class CustomPlayerParrotLayer extends GeoLayerRenderer<CustomPlayerEntity
     }
 
     private void renderParrot(PoseStack poseStack, MultiBufferSource bufferSource, AnimatedGeoModel model, int packedLightIn, Player player, float limbSwing, float limbSwingAmount, float netHeadYaw, float headPitch, boolean isLeftShoulder) {
+        // 1.21.9 肩膀鹦鹉数据迁移：getShoulderEntityLeft/Right(CompoundTag) 删 →
+        // ClientAvatarEntity#getParrotVariantOnShoulder(boolean left)（AbstractClientPlayer 覆写）。
+        // 旧 CompoundTag 链路用空 Tag 保形（byString→empty→ifPresent 不执行，运行时惰性），
+        // 21.9+ 实渲染走下方 shoulderVariant 分支——避免 <21.9 外层块内嵌行条件（嵌套变异碎生成树）
+        //? if >=21.9 {
+        /*Parrot.Variant shoulderVariant =
+            ((net.minecraft.client.player.AbstractClientPlayer) player).getParrotVariantOnShoulder(isLeftShoulder);
+        CompoundTag shoulderEntityLeft = new CompoundTag();*/
+        //?}
+        //? if <21.9 {
         CompoundTag shoulderEntityLeft = isLeftShoulder ? player.getShoulderEntityLeft() : player.getShoulderEntityRight();
+        // 1.21.5 CompoundTag getString/getInt 返回 Optional（同 YSMBinding 注）
+        //? if <21.5
         EntityType.byString(shoulderEntityLeft.getString(TAG_ID)).filter(entityType -> entityType == EntityType.PARROT).ifPresent(entityType -> {
+        //? if >=21.5
+        /*EntityType.byString(shoulderEntityLeft.getStringOr(TAG_ID, "")).filter(entityType -> entityType == EntityType.PARROT).ifPresent(entityType -> {*/
             poseStack.pushPose();
             applyParrotTransform(poseStack, model, isLeftShoulder);
             poseStack.translate(0.0d, 1.5d, 0.0d);
@@ -75,10 +97,52 @@ public class CustomPlayerParrotLayer extends GeoLayerRenderer<CustomPlayerEntity
             // this.parrotModel.renderOnShoulder(poseStack, bufferSource.getBuffer(this.parrotModel.renderType(ParrotRenderer.PARROT_LOCATIONS[Math.floorMod(shoulderEntityLeft.getInt(TAG_VARIANT), ParrotRenderer.PARROT_LOCATIONS.length)])), packedLightIn, OverlayTexture.NO_OVERLAY, limbSwing, limbSwingAmount, netHeadYaw, headPitch, player.tickCount);
             //? if >=1.17 && <1.19.4
             /*this.parrotModel.renderOnShoulder(poseStack, bufferSource.getBuffer(this.parrotModel.renderType(ParrotRenderer.PARROT_LOCATIONS[Math.floorMod(shoulderEntityLeft.getInt(TAG_VARIANT), ParrotRenderer.PARROT_LOCATIONS.length)])), packedLightIn, OverlayTexture.NO_OVERLAY, limbSwing, limbSwingAmount, netHeadYaw, headPitch, player.tickCount);*/
-            //? if >=1.19.4
+            //? if >=1.19.4 && <1.21.2
             this.parrotModel.renderOnShoulder(poseStack, bufferSource.getBuffer(this.parrotModel.renderType(ParrotRenderer.getVariantTexture(Parrot.Variant.byId(shoulderEntityLeft.getInt(TAG_VARIANT))))), packedLightIn, OverlayTexture.NO_OVERLAY, limbSwing, limbSwingAmount, netHeadYaw, headPitch, player.tickCount);
+            // 1.21.2 ParrotModel.renderOnShoulder(PoseStack,VertexConsumer,...) 九参删除 →
+            // ParrotOnShoulderLayer 同款状态制（ParrotRenderState.pose=ON_SHOULDER +
+            // setupAnim + renderToBuffer，vanilla-1.21.3 ParrotOnShoulderLayer.java:50-68/
+            // ParrotModel.java:83 实证）
+            //? if >=21.3 && <21.5 {
+            /*net.minecraft.client.renderer.entity.state.ParrotRenderState parrotState = new net.minecraft.client.renderer.entity.state.ParrotRenderState();
+            parrotState.pose = ParrotModel.Pose.ON_SHOULDER;
+            parrotState.ageInTicks = player.tickCount;
+            parrotState.yRot = netHeadYaw;
+            parrotState.xRot = headPitch;
+            this.parrotModel.setupAnim(parrotState);
+            this.parrotModel.renderToBuffer(poseStack, bufferSource.getBuffer(this.parrotModel.renderType(ParrotRenderer.getVariantTexture(Parrot.Variant.byId(shoulderEntityLeft.getInt(TAG_VARIANT))))), packedLightIn, OverlayTexture.NO_OVERLAY);*/
+            //?}
+            // 1.21.5 getInt 返回 Optional<Integer>（CompoundTag.java:325）→ getIntOr
+            //? if >=21.5 {
+            /*net.minecraft.client.renderer.entity.state.ParrotRenderState parrotState = new net.minecraft.client.renderer.entity.state.ParrotRenderState();
+            parrotState.pose = ParrotModel.Pose.ON_SHOULDER;
+            parrotState.ageInTicks = player.tickCount;
+            parrotState.yRot = netHeadYaw;
+            parrotState.xRot = headPitch;
+            this.parrotModel.setupAnim(parrotState);
+            this.parrotModel.renderToBuffer(poseStack, bufferSource.getBuffer(this.parrotModel.renderType(ParrotRenderer.getVariantTexture(Parrot.Variant.byId(shoulderEntityLeft.getIntOr(TAG_VARIANT, 0))))), packedLightIn, OverlayTexture.NO_OVERLAY);*/
+            //?}
+
             poseStack.popPose();
         });
+        //?}
+        //? if >=21.9 {
+        /*if (shoulderVariant != null) {
+            poseStack.pushPose();
+            applyParrotTransform(poseStack, model, isLeftShoulder);
+            poseStack.translate(0.0d, 1.5d, 0.0d);
+            poseStack.mulPose(Axis.ZP.rotationDegrees(180.0f));
+            net.minecraft.client.renderer.entity.state.ParrotRenderState parrotState = new net.minecraft.client.renderer.entity.state.ParrotRenderState();
+            parrotState.pose = ParrotModel.Pose.ON_SHOULDER;
+            parrotState.ageInTicks = player.tickCount;
+            parrotState.yRot = netHeadYaw;
+            parrotState.xRot = headPitch;
+            this.parrotModel.setupAnim(parrotState);
+            this.parrotModel.renderToBuffer(poseStack, bufferSource.getBuffer(this.parrotModel.renderType(ParrotRenderer.getVariantTexture(shoulderVariant))), packedLightIn, OverlayTexture.NO_OVERLAY);
+            poseStack.popPose();
+        }
+        */
+        //?}
     }
 
     public void applyParrotTransform(PoseStack poseStack, AnimatedGeoModel model, boolean isLeftShoulder) {

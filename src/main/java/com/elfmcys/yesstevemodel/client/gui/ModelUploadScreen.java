@@ -4,6 +4,10 @@ import com.elfmcys.yesstevemodel.client.gui.button.FlatColorButton;
 import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.client.upload.ModelUploadSession;
 import net.minecraft.ChatFormatting;
+// 1.21.11 Util 移 net.minecraft.util 子包
+//? if >=21.11
+/*import net.minecraft.util.Util;*/
+//? if <21.11
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -152,12 +156,24 @@ public class ModelUploadScreen extends Screen implements ModelUploadSession.List
         MutableComponent sub = YsmText.literal("Require standalone ysm model file.").withStyle(ChatFormatting.GRAY);
         int cx = this.width / 2;
         int cy = this.height / 2;
+        //? if <21.6
         guiGraphics.pose().pushPose();
+        //? if >=21.6
+        /*guiGraphics.pose().pushMatrix();*/
+        //? if <21.6
         guiGraphics.pose().translate(cx, cy - 14, 0);
+        //? if >=21.6
+        /*guiGraphics.pose().translate(cx, cy - 14);*/
+        //? if <21.6
         guiGraphics.pose().scale(2.0f, 2.0f, 1.0f);
+        //? if >=21.6
+        /*guiGraphics.pose().scale(2.0f, 2.0f);*/
         int mw = this.font.width(main);
         guiGraphics.drawString(this.font, main, -mw / 2, 0, 0xFFFFFFFF);
+        //? if <21.6
         guiGraphics.pose().popPose();
+        //? if >=21.6
+        /*guiGraphics.pose().popMatrix();*/
         int sw = this.font.width(sub);
         guiGraphics.drawString(this.font, sub, cx - sw / 2, cy + 22, 0xFFAAAAAA);
         if (ModelUploadSession.hasServerLimits()) {

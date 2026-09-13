@@ -11,7 +11,12 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.config.GeneralConfig;
 
+//? if neoforge && <21.9 {
 @OnlyIn(Dist.CLIENT)
+//?}
+//? if forge {
+/*@OnlyIn(Dist.CLIENT)*/
+//?}
 public final class ClientOnlyMode {
 
     private static volatile boolean standalone = false;

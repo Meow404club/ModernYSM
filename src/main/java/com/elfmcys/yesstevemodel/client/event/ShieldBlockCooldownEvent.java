@@ -16,7 +16,11 @@ public class ShieldBlockCooldownEvent {
 
     public static void onLivingTick(LivingEntity entity) {
         if (EntityDataBridge.getPersistentData(entity).contains(TAG_KEY)) {
+            // 1.21.5 CompoundTag.getInt 返回 Optional<Integer>（CompoundTag.java:325）
+            //? if <21.5
             int i = EntityDataBridge.getPersistentData(entity).getInt(TAG_KEY);
+            //? if >=21.5
+            /*int i = EntityDataBridge.getPersistentData(entity).getIntOr(TAG_KEY, 0);*/
             if (i > 0) {
                 EntityDataBridge.getPersistentData(entity).putInt(TAG_KEY, i - 1);
             } else {

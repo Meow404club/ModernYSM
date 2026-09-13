@@ -6,7 +6,14 @@ import com.elfmcys.yesstevemodel.client.input.AnimationRouletteKey;
 import com.elfmcys.yesstevemodel.network.NetworkHandler;
 import com.elfmcys.yesstevemodel.network.message.C2SPlayAnimationPacket;
 import net.minecraft.client.Minecraft;
+// 1.21.2 输入重构：Input 变 common record（world.entity.player），客户端实际类型=
+// ClientInput（impulse 字段挂 ClientInput，vanilla-1.21.3 ClientInput.java:9-12/
+// LocalPlayer.java:121 实证）
+//? if <1.21.2
 import net.minecraft.client.player.Input;
+//? if >=1.21.2 {
+/*import net.minecraft.client.player.ClientInput;
+ *///?}
 import net.minecraft.client.player.LocalPlayer;
 //? if neoforge
 /*import net.neoforged.neoforge.client.event.InputEvent;*/
@@ -45,6 +52,10 @@ public class AnimationLockEvent {
     /*private static void onKeyEvent(InputEvent.KeyInputEvent event) {*/
     //? if >=1.19.2
     private static void onKeyEvent(InputEvent.Key event) {
+        // 1.21.9 KeyMapping.matches(int,int) → matches(KeyEvent)（2110 KeyMapping.java:255）
+        //? if >=21.9
+        /*if (YesSteveModel.isAvailable() && event.getAction() == 1 && AnimationRouletteKey.KEY_LOCK.matches(new net.minecraft.client.input.KeyEvent(event.getKey(), event.getScanCode(), 0))) {*/
+        //? if <21.9
         if (YesSteveModel.isAvailable() && event.getAction() == 1 && AnimationRouletteKey.KEY_LOCK.matches(event.getKey(), event.getScanCode())) {
             animationLocked = !animationLocked;
         }
@@ -87,7 +98,21 @@ public class AnimationLockEvent {
     }
 
     public static boolean isPlayerMoving(LocalPlayer localPlayer) {
+        //? if >=21.3 && <21.5 {
+        /*ClientInput input = localPlayer.input;
+        return input != null && (isSignificantImpulse(input.leftImpulse) || isSignificantImpulse(input.forwardImpulse)
+                || input.keyPresses.jump() || input.keyPresses.shift());*/
+        //?}
+        // 1.21.5 ClientInput 冲量字段删除（21.5 ClientInput 仅 keyPresses/moveVector，ClientInput.java:9-24）：
+        // leftImpulse/forwardImpulse 语义 = moveVector x/y（ClientInput.getMoveVector），判定阈值同 1.0E-5
+        //? if >=21.5 {
+        /*ClientInput input = localPlayer.input;
+        return input != null && (isSignificantImpulse(input.getMoveVector().x) || isSignificantImpulse(input.getMoveVector().y)
+                || input.keyPresses.jump() || input.keyPresses.shift());*/
+        //?}
+        //? if <1.21.2
         Input input = localPlayer.input;
+        //? if <1.21.2
         return input != null && (isSignificantImpulse(input.leftImpulse) || isSignificantImpulse(input.forwardImpulse) || input.jumping || input.shiftKeyDown);
     }
 

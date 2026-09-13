@@ -66,7 +66,11 @@ public class StarModelsCapability {
         this.starModels.clear();
         Iterator it = listTag.iterator();
         while (it.hasNext()) {
+            // 1.21.5 Tag.getAsString 删除（Tag.java:51 asString 返回 Optional<String>）
+            //? if <21.5
             this.starModels.add(((Tag) it.next()).getAsString());
+            //? if >=21.5
+            /*this.starModels.add(((Tag) it.next()).asString().orElse(""));*/
         }
     }
 }

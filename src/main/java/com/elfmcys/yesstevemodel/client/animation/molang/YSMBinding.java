@@ -35,12 +35,25 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+// 1.21.11 Parrot 移 animal.parrot 子包（>=21.11 版已在上方抛射物块补导）
+//? if <21.11
 import net.minecraft.world.entity.animal.Parrot;
 import net.minecraft.world.entity.player.Player;
+// 1.21.11 抛射物类移子包（neoforge-21.11.45 sources：arrow/Arrow、arrow/SpectralArrow、
+// throwableitemprojectile/ThrowableItemProjectile 实证；21.10 同包未动）
+//? if >=21.11 {
+/*import net.minecraft.world.entity.animal.parrot.Parrot;
+import net.minecraft.world.entity.projectile.arrow.Arrow;
+import net.minecraft.world.entity.projectile.FishingHook;
+import net.minecraft.world.entity.projectile.arrow.SpectralArrow;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrowableItemProjectile;
+ *///?}
+//? if <21.11 {
 import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.entity.projectile.FishingHook;
 import net.minecraft.world.entity.projectile.SpectralArrow;
 import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
+//?}
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -87,6 +100,11 @@ public class YSMBinding extends ContextBinding {
         var("head_pitch", ctx -> ctx.data().headPitch);
 
         var("weather", ctx -> getWeather(ctx.level()));
+        // 1.21.11 ResourceKey.location() → identifier()（2111 ResourceKey.java:57；TagKey.location
+        // 保留为 record 组件不变）
+        //? if >=21.11
+        /*var("dimension_name", ctx -> ctx.level().dimension().identifier().toString());*/
+        //? if <21.11
         var("dimension_name", ctx -> ctx.level().dimension().location().toString());
         // getFps() 1.18+（1.16.5 为 fpsString 字段/无取值器）：帧率不显示数字时 1.16.5 退化 parse fpsString
         // getFps 1.19.4+（1192 merged jar 无此方法，仅 fpsString 字段）：中段+1.16.5 降级 0
@@ -174,8 +192,22 @@ public class YSMBinding extends ContextBinding {
         playerEntityVar("nametag_distance", ctx -> ForgeAttributes.getValue(ctx.entity(), ForgeAttributes.nametagDistance(), 64.0D));
         playerEntityVar("in_shield_block_cooldown", YSMBinding::isInShieldBlockCooldown);
 
+        // 1.21.9 elytraRotX/Y/Z 移 HumanoidRenderState（render state 抽取面），实体无访问器
+        // → 21.9+ molang 恒 0，功能债入账
+        //? if >=21.9 {
+        /*clientPlayerEntityVar("elytra_rot_x", ctx -> 0.0F);
+         *///?}
+        //? if <21.9
         clientPlayerEntityVar("elytra_rot_x", ctx -> Math.toDegrees(ctx.entity().elytraRotX));
+        //? if >=21.9 {
+        /*clientPlayerEntityVar("elytra_rot_y", ctx -> 0.0F);
+         *///?}
+        //? if <21.9
         clientPlayerEntityVar("elytra_rot_y", ctx -> Math.toDegrees(ctx.entity().elytraRotY));
+        //? if >=21.9 {
+        /*clientPlayerEntityVar("elytra_rot_z", ctx -> 0.0F);
+         *///?}
+        //? if <21.9
         clientPlayerEntityVar("elytra_rot_z", ctx -> Math.toDegrees(ctx.entity().elytraRotZ));
 
         localPlayerEntityVar("hit_target_id", YSMBinding::getHitTargetId);
@@ -202,7 +234,12 @@ public class YSMBinding extends ContextBinding {
         fishHookEntityVar("hooked_in", YSMBinding::getHookedEntityType);
         fishHookEntityVar("is_biting", ctx -> ((FishingHookAccessor) ctx.entity()).isBiting());
         abstractArrowEntityVar("on_ground_time", ctx -> ((ProjectileStateAccessor) ctx.entity()).getInGroundTime());
+        // >=21.3 ProjectileStateAccessor.isInGround 被 Mixin 丢弃（与目标 protected 同签名，
+        // AbstractArrowEntityMixin 头注）→ inGroundTime>0 近似（滞后一 tick，功能债）
+        //? if <21.3
         abstractArrowEntityVar("in_ground", ctx -> ((ProjectileStateAccessor) ctx.entity()).isInGround());
+        //? if >=21.3
+        /*abstractArrowEntityVar("in_ground", ctx -> ((ProjectileStateAccessor) ctx.entity()).getInGroundTime() > 0);*/
         abstractArrowEntityVar("is_spectral_arrow", ctx -> ctx.entity() instanceof SpectralArrow);
         abstractArrowEntityVar("shoot_item_id", ctx -> ((ProjectileStateAccessor) ctx.entity()).getOwnerItemId());
         CuriosCompat.registerCuriosItems(this);
@@ -453,7 +490,7 @@ public class YSMBinding extends ContextBinding {
         /*
         Holder<Biome> biome = context.entity().getLevel().getBiome(context.entity().blockPosition());
         biome.unwrapKey().ifPresent(resourceKey -> {
-            context.logWarningComponent(YsmText.literal("Name ").append(copyOnClickTextCompat(resourceKey.location().toString())));
+            context.logWarningComponent(YsmText.literal("Name ").append(copyOnClickTextCompat(ysmKeyString(resourceKey))));
         });
         biome.tags().forEach(tagKey -> {
             context.logWarningComponent(YsmText.literal("Tag ").append(copyOnClickTextCompat(tagKey.location().toString())));
@@ -463,7 +500,7 @@ public class YSMBinding extends ContextBinding {
         /*
         Holder<Biome> biome = context.entity().getLevel().getBiome(context.entity().blockPosition());
         biome.unwrapKey().ifPresent(resourceKey -> {
-            context.logWarningComponent(YsmText.literal("Name ").append(copyOnClickTextCompat(resourceKey.location().toString())));
+            context.logWarningComponent(YsmText.literal("Name ").append(copyOnClickTextCompat(ysmKeyString(resourceKey))));
         });
         biome.tags().forEach(tagKey -> {
             context.logWarningComponent(YsmText.literal("Tag ").append(copyOnClickTextCompat(tagKey.location().toString())));
@@ -472,7 +509,7 @@ public class YSMBinding extends ContextBinding {
         //? if >=1.20 {
         Holder<Biome> biome = context.entity().level().getBiome(context.entity().blockPosition());
         biome.unwrapKey().ifPresent(resourceKey -> {
-            context.logWarningComponent(YsmText.literal("Name ").append(copyOnClickTextCompat(resourceKey.location().toString())));
+            context.logWarningComponent(YsmText.literal("Name ").append(copyOnClickTextCompat(ysmKeyString(resourceKey))));
         });
         biome.tags().forEach(tagKey -> {
             context.logWarningComponent(YsmText.literal("Tag ").append(copyOnClickTextCompat(tagKey.location().toString())));
@@ -500,20 +537,50 @@ public class YSMBinding extends ContextBinding {
         return variant >= 0 && variant < PARROT_VARIANT_NAMES.length ? PARROT_VARIANT_NAMES[variant] : PARROT_VARIANT_NAMES[0];
     }*/
     public static String getShoulderParrotVariant(Player player, boolean leftShoulder) {
+        // 1.21.9 肩膀鹦鹉数据迁移：Player.getShoulderEntityLeft/Right()（CompoundTag）删除 →
+        // ClientAvatarEntity#getParrotVariantOnShoulder(boolean left)（AbstractClientPlayer 覆写，
+        // neoforge-21.10.64 AbstractClientPlayer.java:93 实证，left=true 语义同旧参）；
+        // 调用方为客户端玩家渲染绑定，强转 AbstractClientPlayer 安全
+        //? if >=21.9 {
+        /*Parrot.Variant shoulderVariant = ((net.minecraft.client.player.AbstractClientPlayer) player).getParrotVariantOnShoulder(leftShoulder);
+        return shoulderVariant == null ? "empty" : shoulderVariant.name().toLowerCase(Locale.ENGLISH);
+        *///?}
+        //? if <21.9 {
         CompoundTag shoulderEntityLeft = leftShoulder ? player.getShoulderEntityLeft() : player.getShoulderEntityRight();
+        // 1.21.5 CompoundTag getString/getInt 返回 Optional（CompoundTag.java:357/325）
+        //? if <21.5
         return EntityType.byString(shoulderEntityLeft.getString("id")).filter(entityType -> {
+        //? if >=21.5
+        /*return EntityType.byString(shoulderEntityLeft.getStringOr("id", "")).filter(entityType -> {*/
             return entityType == EntityType.PARROT;
         }).map(entityType2 -> {
             // Parrot.Variant 内枚举 1.18+（1.16.5 javap 无）：变体名序 vanilla 同源，1.16.5 走名字表
         // Parrot.Variant 1.19.4+（1192 merged jar 无 Variant 内类）：中段+1.16.5 走名字表
         //? if <1.19.4
         /*return getParrotVariantName(shoulderEntityLeft.getInt("Variant"));*/
-        //? if >=1.19.4
+        //? if >=1.19.4 && <21.5
         return Parrot.Variant.byId(shoulderEntityLeft.getInt("Variant")).name().toLowerCase(Locale.ENGLISH);
+        //? if >=21.5
+        /*return Parrot.Variant.byId(shoulderEntityLeft.getIntOr("Variant", 0)).name().toLowerCase(Locale.ENGLISH);*/
         }).orElse("empty");
+        //?}
+    }
+
+    // 1.21.11 ResourceKey.location() → identifier()（2111 ResourceKey.java:57）；TagKey/自有
+    // ItemTag 的 location() 为 record 组件/自有方法，保留不变。表达式位不可内嵌条件 → 收编 helper
+    private static String ysmKeyString(net.minecraft.resources.ResourceKey<?> key) {
+        //? if >=21.11
+        /*return key.identifier().toString();*/
+        //? if <21.11
+        return key.location().toString();
     }
 
     private static boolean hasShoulderParrot(Player player, boolean leftShoulder) {
+        //? if >=21.9 {
+        /*return ((net.minecraft.client.player.AbstractClientPlayer) player).getParrotVariantOnShoulder(leftShoulder) != null;
+        *///?}
+        //? if <21.9 {
         return !(leftShoulder ? player.getShoulderEntityLeft() : player.getShoulderEntityRight()).isEmpty();
+        //?}
     }
 }

@@ -3,6 +3,10 @@ package com.elfmcys.yesstevemodel.client.gui;
 import com.elfmcys.yesstevemodel.client.renderer.ModelPreviewRenderer;
 import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.config.ExtraPlayerRenderConfig;
+//? if >=21.9 {
+/*import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+ *///?}
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.vertex.PoseStack;
 //? if >=1.20 {
@@ -104,8 +108,14 @@ public class ExtraPlayerRenderScreen extends Screen {
         int boxTop = this.mouseStartY;
         int boxRight = (int) (boxLeft + (this.rotationX));
         int boxBottom = (int) (boxTop + (this.rotationX * 2.0f));
+        //? if <21.6
         guiGraphics.pose().pushPose();
+        //? if >=21.6
+        /*guiGraphics.pose().pushMatrix();*/
+        //? if <21.6
         guiGraphics.pose().translate(0.0f, 0.0f, (-500.0f) - ((50.0f * this.rotationX) / 40.0f));
+        //? if >=21.6
+        /*guiGraphics.pose().translate(0.0f, 0.0f);*/
         guiGraphics.vLine((this.width / 2) - 1, -2, this.height + 2, -1610612737);
         guiGraphics.hLine(-2, this.width + 2, (this.height / 2) - 1, -1610612737);
         guiGraphics.vLine(10, -2, this.height + 2, -1610612737);
@@ -124,7 +134,10 @@ public class ExtraPlayerRenderScreen extends Screen {
             guiGraphics.drawString(this.font, formattedCharSequence, (this.width - 15) - this.font.width(formattedCharSequence), tipY, 16777215);
             tipY += 10;
         }
+        //? if <21.6
         guiGraphics.pose().popPose();
+        //? if >=21.6
+        /*guiGraphics.pose().popMatrix();*/
         if (Minecraft.getInstance().player != null && !ExtraPlayerRenderConfig.DISABLE_PLAYER_RENDER.get().booleanValue()) {
             //? if >=1.17 && <1.20
             /*ModelPreviewRenderer.renderPlayerOverlay(guiGraphics.pose(), Minecraft.getInstance().player, this.mouseStartX, this.mouseStartY, this.rotationX, this.rotationY, -500, this.minecraft.getFrameTime());*/
@@ -141,6 +154,63 @@ public class ExtraPlayerRenderScreen extends Screen {
         super.render(guiGraphics.graphics(), mouseX, mouseY, partialTick);
     }
 
+    // 1.21.9+ 输入事件对象化（GuiEventListener: mouseClicked(MouseButtonEvent,boolean)/
+    // mouseReleased(MouseButtonEvent)/mouseDragged(MouseButtonEvent,double,double)/
+    // charTyped(CharacterEvent)，neoforge-21.10.64 GuiEventListener.java:20-44 实证）
+    //? if >=21.9 {
+    /*public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+        boolean inLeftHandleX = ((double) (this.mouseStartX - this.offsetX)) < mouseX && mouseX < ((double) (this.mouseStartX + this.offsetX));
+        boolean inLeftHandleY = ((double) (this.mouseStartY - this.offsetX)) < mouseY && mouseY < ((double) (this.mouseStartY + this.offsetX));
+        if (button == 0 && inLeftHandleX && inLeftHandleY) {
+            this.isDragging = true;
+        }
+        int rightHandleX = (int) (this.mouseStartX + (this.rotationX));
+        int rightHandleY = (int) (this.mouseStartY + (this.rotationX * 2.0f));
+        boolean inRightHandleX = ((double) (rightHandleX - this.offsetX)) < mouseX && mouseX < ((double) (rightHandleX + this.offsetX));
+        boolean inRightHandleY = ((double) (rightHandleX - this.offsetX)) < mouseY && mouseY < ((double) (rightHandleX + this.offsetX));
+        if (button == 0 && inRightHandleX && inRightHandleY) {
+            this.isRightDragging = true;
+        }
+        return super.mouseClicked(event, doubleClick);
+    }
+
+    public boolean mouseReleased(MouseButtonEvent event) {
+        this.isDragging = false;
+        this.isRightDragging = false;
+        return super.mouseReleased(event);
+    }
+
+    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+        if (this.isRightDragging) {
+            this.rotationX = (float) Math.min(mouseX - this.mouseStartX, (mouseY - this.mouseStartY) / 2.0d);
+            return true;
+        }
+        if (this.isDragging) {
+            this.mouseStartX = (int) mouseX;
+            this.mouseStartY = (int) mouseY;
+            return true;
+        }
+        if (button == this.offsetY) {
+            this.rotationY += (float) (dragX * 2.0d);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean charTyped(CharacterEvent event) {
+        if (Character.toLowerCase((char) event.codepoint()) == RESET_KEY && Minecraft.getInstance().hasAltDown()) {
+            resetTransform();
+        }
+        return super.charTyped(event);
+    }
+    *///?}
+    //? if <21.9 {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         boolean inLeftHandleX = ((double) (this.mouseStartX - this.offsetX)) < mouseX && mouseX < ((double) (this.mouseStartX + this.offsetX));
         boolean inLeftHandleY = ((double) (this.mouseStartY - this.offsetX)) < mouseY && mouseY < ((double) (this.mouseStartY + this.offsetX));
@@ -186,6 +256,7 @@ public class ExtraPlayerRenderScreen extends Screen {
         }
         return super.charTyped(codePoint, modifiers);
     }
+    //?}
 
     private void resetTransform() {
         this.mouseStartX = 10;

@@ -3,7 +3,12 @@ package rip.ysm.gpu;
 import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.util.log.ChatLogger;
 import com.mojang.blaze3d.pipeline.RenderTarget;
+// 1.21.5 GlStateManager 迁移 platform→opengl 包
+//? if <21.5
 import com.mojang.blaze3d.platform.GlStateManager;
+// 1.21.5 GlStateManager 迁移 platform→opengl 包（vcs 直通铁律：非 1.20.1 分支源码态必须注释）
+//? if >=21.5
+/*import com.mojang.blaze3d.opengl.GlStateManager;*/
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.*;
@@ -43,8 +48,11 @@ public final class BlurShader {
         //? if >1.17 {
         //? if <1.18.2
         /*RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);*/
-        //? if >=1.18.2
+        //? if >=1.18.2 && <21.5
         RenderSystem.assertOnRenderThreadOrInit();
+        // 1.21.5 删 OrInit 形（21.5 RenderSystem 仅 assertOnRenderThread:109）
+        //? if >=21.5
+        /*RenderSystem.assertOnRenderThread();*/
         //?}
         try {
             int vs = ShaderUtil.compileShaderFromResource(GL20.GL_VERTEX_SHADER, "/blur.vsh");
@@ -169,6 +177,9 @@ public final class BlurShader {
     }
 
     public static void captureScreen(long frameKey) {
+        // 1.21.5 RenderTarget 抽象化删 frameBufferId（21.5 RenderTarget 无该字段，fbo 移入
+        // GlTexture.getFbo）→ 21.5+ 本方法不再被调用（flushModern 已降级），framebuffer 段退役
+        //? if <21.5 {
         if (frameKey == lastCaptureFrame && frameKey >= 0) return;
         lastCaptureFrame = frameKey;
         RenderTarget main = Minecraft.getInstance().getMainRenderTarget();
@@ -182,6 +193,7 @@ public final class BlurShader {
         GL11.glCopyTexSubImage2D(GL11.GL_TEXTURE_2D, 0, 0, 0, 0, 0, w, h);
         GL30.glGenerateMipmap(GL11.GL_TEXTURE_2D);
         GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, main.frameBufferId);
+        //?}
     }
 
     private static void ensureCaptureTexture(int w, int h) {

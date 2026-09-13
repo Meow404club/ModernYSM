@@ -12,6 +12,10 @@ import com.elfmcys.yesstevemodel.client.gui.button.FlatColorButton;
 import com.elfmcys.yesstevemodel.model.format.ServerModelInfo;
 import com.elfmcys.yesstevemodel.client.upload.IResourceLocatable;
 import com.elfmcys.yesstevemodel.mixin.client.ScreenAccessor;
+// 1.21.11 Util 移 net.minecraft.util 子包
+//? if >=21.11
+/*import net.minecraft.util.Util;*/
+//? if <21.11
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -72,8 +76,13 @@ public class ModelInfoScreen extends Screen {
         for (int i = 0; i < authorInfo.size(); i++) {
             OuterFileTexture avatar = avatars.get(authorInfo.get(i).getName());
             if (avatar != null) {
-                //? if >=1.21
+                //? if >=1.21 && <21.4
                 /*textureManager.register(ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "avatars/" + i), avatar);*/
+                //? if >=21.4 {
+                /*ResourceLocation ysmAvatarRl = ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "avatars/" + i);
+                textureManager.register(ysmAvatarRl, avatar);
+                avatar.load(Minecraft.getInstance().getResourceManager());*/
+                //?}
                 //? if <1.21
                 textureManager.register(new ResourceLocation(YesSteveModel.MOD_ID, "avatars/" + i), avatar);
                 this.textureList.add(UploadManager.getOrCreateLocatable(avatar, true));

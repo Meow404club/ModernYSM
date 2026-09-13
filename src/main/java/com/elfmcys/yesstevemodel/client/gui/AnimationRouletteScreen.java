@@ -1,5 +1,11 @@
 package com.elfmcys.yesstevemodel.client.gui;
 
+// 1.21.11 RenderType 移 net.minecraft.client.renderer.rendertype 子包
+//? if >=21.11
+/*import net.minecraft.client.renderer.rendertype.RenderType;*/
+//? if <21.11
+import net.minecraft.client.renderer.RenderType;
+import rip.ysm.util.RenderCompat;
 import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.util.YsmText;
 import com.elfmcys.yesstevemodel.capability.PlayerCapability;
@@ -33,6 +39,10 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
+//? if >=21.9 {
+/*import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+ *///?}
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.vertex.PoseStack;
 //? if >=1.20 {
@@ -432,8 +442,12 @@ public class AnimationRouletteScreen extends Screen {
     //? if >=1.20 {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        // 1.21.5+ 扇形绘制需原生 GuiGraphics（drawSpecial）——render 链上游暂存
+        this.ysmRawGuiGraphics = graphics;
         this.render(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
+
+    private GuiGraphics ysmRawGuiGraphics;
     //?} else {
     /*@Override
     public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
@@ -446,7 +460,7 @@ public class AnimationRouletteScreen extends Screen {
         guiGraphics.drawCenteredString(this.font, YsmText.translatable("gui.yes_steve_model.roulette.path", StringUtils.joinWith(" > ", navigationStack.stream().map((v0) -> {
             return v0.getLeft();
         }).toArray())), this.centerX + 195, this.centerY - 100, 16777215);
-        renderRadialBackground(guiGraphics.pose(), mouseX, mouseY);
+        renderRadialBackground(guiGraphics, guiGraphics.pose(), mouseX, mouseY);
         renderRadialButtons(guiGraphics);
         renderPageInfo(guiGraphics);
         for (/*? if <1.19.4 {*/ /*Widget *//*?} else {*/ Renderable /*?}*/ renderable : ((ScreenAccessor) this).ysm$getRenderables()) {
@@ -463,8 +477,14 @@ public class AnimationRouletteScreen extends Screen {
         } else {
             scrolledMouseY = mouseY + this.configScrollOffset;
         }
+        //? if <21.6
         guiGraphics.pose().pushPose();
+        //? if >=21.6
+        /*guiGraphics.pose().pushMatrix();*/
+        //? if <21.6
         guiGraphics.pose().translate(0.0f, -this.configScrollOffset, 0.0f);
+        //? if >=21.6
+        /*guiGraphics.pose().translate(0.0f, -this.configScrollOffset);*/
         for (/*? if <1.19.4 {*/ /*Widget *//*?} else {*/ Renderable /*?}*/ renderable2 : ((ScreenAccessor) this).ysm$getRenderables()) {
             if (renderable2 instanceof ISpecialWidget) {
                 //? if <1.20
@@ -473,7 +493,10 @@ public class AnimationRouletteScreen extends Screen {
                 renderable2.render(guiGraphics.graphics(), mouseX, scrolledMouseY, partialTick);
             }
         }
+        //? if <21.6
         guiGraphics.pose().popPose();
+        //? if >=21.6
+        /*guiGraphics.pose().popMatrix();*/
         guiGraphics.disableScissor();
         renderHoverTooltip(guiGraphics, mouseX, scrolledMouseY);
     }
@@ -538,6 +561,55 @@ public class AnimationRouletteScreen extends Screen {
         this.configScrollOffset = Math.min(this.maxConfigScroll, this.configScrollOffset + i);
     }
 
+    // 1.21.9+ 输入事件对象化（GuiEventListener.mouseClicked(MouseButtonEvent,boolean)）
+    //? if >=21.9 {
+    /*@Override
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+        if (-1 < this.hoveredIndex && this.hoveredIndex < this.currentProperties.size()) {
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+            String str = this.currentProperties.getKeyAt(this.hoveredIndex);
+            if (RETURN_KEY.equals(str)) {
+                navigateBack();
+            } else if (str.startsWith(SUBMENU_PREFIX)) {
+                navigateToSubmenu(str);
+            } else {
+                playAnimation(str);
+            }
+        } else if (-1 < this.hoveredConfigIndex && this.hoveredConfigIndex < this.currentProperties.size()) {
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+            String str2 = this.currentProperties.getValueAt(this.hoveredConfigIndex);
+            if (str2.startsWith(SUBMENU_PREFIX)) {
+                String strSubstring = str2.substring(SUBMENU_PREFIX.length());
+                if (this.renderGroups.containsKey(strSubstring)) {
+                    if (GeneralConfig.ROULETTE_SETTINGS_MODE.get() == GeneralConfig.RouletteSettingsMode.CLASSIC) {
+                        showConfigGroup(strSubstring);
+                    } else {
+                        Minecraft.getInstance().setScreen(new rip.ysm.gui.ModelSettingsScreen(this.renderContext, this.animatableModel, this, strSubstring));
+                    }
+                }
+            }
+        }
+        for (GuiEventListener guiEventListener : children()) {
+            double scrolledMouseY = mouseY;
+            if (guiEventListener instanceof ISpecialWidget) {
+                scrolledMouseY = mouseY + this.configScrollOffset;
+            }
+            if (guiEventListener.mouseClicked(new MouseButtonEvent(mouseX, scrolledMouseY, event.buttonInfo()), doubleClick)) {
+                setFocused(guiEventListener);
+                if (button == 0) {
+                    setDragging(true);
+                    return true;
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+    *///?}
+    //? if <21.9 {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (-1 < this.hoveredIndex && this.hoveredIndex < this.currentProperties.size()) {
             Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0f));
@@ -579,7 +651,20 @@ public class AnimationRouletteScreen extends Screen {
         }
         return false;
     }
+    //?}
 
+    // 1.21.9+ 输入事件对象化（GuiEventListener.keyPressed(KeyEvent)）
+    //? if >=21.9 {
+    /*@Override
+    public boolean keyPressed(KeyEvent event) {
+        if (KeyMappingFactory.isActiveAndMatches(AnimationRouletteKey.KEY_ROULETTE, event.key(), event.scancode())) {
+            onClose();
+            return true;
+        }
+        return super.keyPressed(event);
+    }
+    *///?}
+    //? if <21.9 {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (KeyMappingFactory.isActiveAndMatches(AnimationRouletteKey.KEY_ROULETTE, keyCode, scanCode)) {
             onClose();
@@ -587,6 +672,7 @@ public class AnimationRouletteScreen extends Screen {
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
+    //?}
 
     private void showConfigGroup(String str) {
         this.currentConfigGroup = this.renderGroups.get(str);
@@ -717,13 +803,15 @@ public class AnimationRouletteScreen extends Screen {
         }
     }
 
-    private void renderRadialBackground(PoseStack poseStack, int mouseX, int mouseY) {
+    //? if <21.5 {
+    private void renderRadialBackground(YsmGui guiGraphics, PoseStack poseStack, int mouseX, int mouseY) {
         if (this.currentProperties.isEmpty()) {
             return;
         }
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+        RenderCompat.enableBlend();
+        RenderCompat.defaultBlendFunc();
 // 1.17+ shader 管线绑定 + VertexFormat.Mode.QUADS ↔ 1.16.5 固定管线（POSITION_COLOR 走固定管线，GL_QUADS=7）
+        //? if <21.5 {
         Tesselator tesselator = Tesselator.getInstance();
         // 1.21 Tesselator.getBuilder/end 删除 → begin(Mode,Format) 直接返回 BufferBuilder，
         // 收尾走 buildOrThrow()+BufferUploader（vanilla-1.21.1 Tesselator.java:38 实证）
@@ -734,9 +822,16 @@ public class AnimationRouletteScreen extends Screen {
         //? if <1.17 {
         /*builder.begin(7, DefaultVertexFormat.POSITION_COLOR);
          *///?} else {
+        // 1.21.2 core shader 重构：GameRenderer.getPositionColorShader 删除 →
+        // CoreShaders.POSITION_COLOR 键式绑定（setShader(ShaderProgram) 自动编译，
+        // vanilla-1.21.3 RenderSystem.java:631/CoreShaders.java:18）
+        //? if >=1.21.2
+        /*RenderSystem.setShader(net.minecraft.client.renderer.CoreShaders.POSITION_COLOR);*/
+        //? if <1.21.2
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
         //? if <1.21
         builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        //?}
         //?}
         Matrix4f matrix4fPose = poseStack.last().pose();
         float pointerAngle = (float) Mth.atan2(mouseY - this.centerY, mouseX - this.centerX);
@@ -773,10 +868,102 @@ public class AnimationRouletteScreen extends Screen {
         tesselator.end();
         //? if >=1.21
         /*com.mojang.blaze3d.vertex.BufferUploader.drawWithShader(builder.buildOrThrow());*/
-        RenderSystem.disableBlend();
+        RenderCompat.disableBlend();
     }
+    //?}
 
-    private boolean checkRadialHover(float startAngle, float pointerAngle, float endAngle, float pointerRadius, boolean alreadyHovered, boolean isSubmenu, int index, BufferBuilder bufferBuilder, Matrix4f matrix4f) {
+    // 1.21.5 专用形：BufferUploader/Tesselator.getBuilder 删除（RenderPipeline 化）→
+    // 扇形经 drawSpecial 进入 gui 渲染器集成管线（vanilla-1.21.5 GuiGraphics.java:1087；
+    // 1.21.6 删 drawSpecial → 21.8+ 走 RouletteFanState/submitGuiElementRenderState）
+    //? if >=21.5 && <21.6 {
+    /*private void renderRadialBackground(YsmGui guiGraphics, PoseStack poseStack, int mouseX, int mouseY) {
+        if (this.currentProperties.isEmpty()) {
+            return;
+        }
+        this.ysmRawGuiGraphics.drawSpecial(buffer -> {
+            com.mojang.blaze3d.vertex.VertexConsumer builder = buffer.getBuffer(RenderType.gui());
+            Matrix4f matrix4fPose = poseStack.last().pose();
+            float pointerAngle = (float) Mth.atan2(mouseY - this.centerY, mouseX - this.centerX);
+            if (pointerAngle < 0.0f) {
+                pointerAngle = 6.2831855f + pointerAngle;
+            }
+            float pointerRadius = Mth.sqrt(Mth.square(mouseY - this.centerY) + Mth.square(mouseX - this.centerX));
+            boolean hoveredAny = false;
+            boolean hoveredConfig = false;
+            for (int i = 0; i < Math.min(8, this.currentProperties.size() - (this.currentNavEntry.getRight().intValue() * 8)); i++) {
+                float startAngle = ((6.2831855f / 8) * i) + 0.034906585f;
+                float endAngle = ((6.2831855f / 8) * (i + 1)) - 0.034906585f;
+                int iIntValue = i + (this.currentNavEntry.getRight().intValue() * 8);
+                boolean zStartsWith = this.currentProperties.getValueAt(iIntValue).startsWith(SUBMENU_PREFIX);
+                hoveredAny = checkRadialHover(startAngle, pointerAngle, endAngle, pointerRadius, hoveredAny, zStartsWith, i, builder, matrix4fPose);
+                boolean isConfigSliceHovered = startAngle < pointerAngle && pointerAngle < endAngle && 20.0f < pointerRadius && pointerRadius < 50.0f;
+                if (zStartsWith) {
+                    if (isConfigSliceHovered) {
+                        drawRadialSegment(builder, matrix4fPose, 15.0f, 50.0f, startAngle, endAngle, -268382465);
+                        hoveredConfig = true;
+                        this.hoveredConfigIndex = iIntValue;
+                    } else {
+                        drawRadialSegment(builder, matrix4fPose, 25.0f, 50.0f, startAngle, endAngle, 1879101183);
+                    }
+                }
+            }
+            if (!hoveredAny) {
+                this.hoveredIndex = -1;
+            }
+            if (!hoveredConfig) {
+                this.hoveredConfigIndex = -1;
+            }
+        });
+    }*/
+    //?}
+
+    // 21.6+ 专用形：drawSpecial 删除（1.21.6 GUI 全状态化）→ 自定义 GuiElementRenderState
+    //（RouletteFanState，POSITION_COLOR 顶点收集）经 submitGuiElementRenderState 提交
+    //（1.21.8 GuiGraphics.java:1282），GuiRenderer 按管线通用渲染（GuiRenderer.java:665）
+    //? if >=21.6 {
+    /*private void renderRadialBackground(YsmGui guiGraphics, org.joml.Matrix3x2fStack poseStack, int mouseX, int mouseY) {
+        if (this.currentProperties.isEmpty()) {
+            return;
+        }
+        rip.ysm.gui.RouletteFanState ysmFan = new rip.ysm.gui.RouletteFanState();
+        com.mojang.blaze3d.vertex.VertexConsumer builder = ysmFan.sink();
+        // 1.21.6+ 扇形顶点直接处于 GuiGraphics 坐标系：恒等变换（轮盘不依赖 push 变换）
+        Matrix4f matrix4fPose = new Matrix4f();
+        float pointerAngle = (float) Mth.atan2(mouseY - this.centerY, mouseX - this.centerX);
+        if (pointerAngle < 0.0f) {
+            pointerAngle = 6.2831855f + pointerAngle;
+        }
+        float pointerRadius = Mth.sqrt(Mth.square(mouseY - this.centerY) + Mth.square(mouseX - this.centerX));
+        boolean hoveredAny = false;
+        boolean hoveredConfig = false;
+        for (int i = 0; i < Math.min(8, this.currentProperties.size() - (this.currentNavEntry.getRight().intValue() * 8)); i++) {
+            float startAngle = ((6.2831855f / 8) * i) + 0.034906585f;
+            float endAngle = ((6.2831855f / 8) * (i + 1)) - 0.034906585f;
+            int iIntValue = i + (this.currentNavEntry.getRight().intValue() * 8);
+            boolean zStartsWith = this.currentProperties.getValueAt(iIntValue).startsWith(SUBMENU_PREFIX);
+            hoveredAny = checkRadialHover(startAngle, pointerAngle, endAngle, pointerRadius, hoveredAny, zStartsWith, i, builder, matrix4fPose);
+            boolean isConfigSliceHovered = startAngle < pointerAngle && pointerAngle < endAngle && 20.0f < pointerRadius && pointerRadius < 50.0f;
+            if (zStartsWith) {
+                if (isConfigSliceHovered) {
+                    drawRadialSegment(builder, matrix4fPose, 15.0f, 50.0f, startAngle, endAngle, -268382465);
+                    hoveredConfig = true;
+                    this.hoveredConfigIndex = iIntValue;
+                } else {
+                    drawRadialSegment(builder, matrix4fPose, 25.0f, 50.0f, startAngle, endAngle, 1879101183);
+                }
+            }
+        }
+        if (!hoveredAny) {
+            this.hoveredIndex = -1;
+        }
+        if (!hoveredConfig) {
+            this.hoveredConfigIndex = -1;
+        }
+        this.ysmRawGuiGraphics.submitGuiElementRenderState(ysmFan);
+    }*/
+    //?}
+
+    private boolean checkRadialHover(float startAngle, float pointerAngle, float endAngle, float pointerRadius, boolean alreadyHovered, boolean isSubmenu, int index, com.mojang.blaze3d.vertex.VertexConsumer bufferBuilder, Matrix4f matrix4f) {
         boolean isHovered = startAngle < pointerAngle && pointerAngle < endAngle && 50.0f < pointerRadius && pointerRadius < 100.0f;
         if (isHovered) {
             alreadyHovered = true;
@@ -795,17 +982,29 @@ public class AnimationRouletteScreen extends Screen {
         return alreadyHovered;
     }
 
-    private void drawRadialSegment(BufferBuilder bufferBuilder, Matrix4f matrix4f, float innerRadius, float outerRadius, float startAngle, float endAngle, int color) {
+    private void drawRadialSegment(com.mojang.blaze3d.vertex.VertexConsumer bufferBuilder, Matrix4f matrix4f, float innerRadius, float outerRadius, float startAngle, float endAngle, int color) {
         float alpha = ((color >> 24) & 255) / 255.0f;
         float red = ((color >> 16) & 255) / 255.0f;
         float green = ((color >> 8) & 255) / 255.0f;
         float blue = (color & 255) / 255.0f;
         // 1.21 vertex/color/endVertex → addVertex/setColor（无 endVertex）
-        //? if >=1.21
+        //? if >=1.21 && <21.5
         /*bufferBuilder.addVertex(matrix4f, this.centerX + (outerRadius * Mth.cos(startAngle)), this.centerY + (outerRadius * Mth.sin(startAngle)), 0.0f).setColor(red, green, blue, alpha);
         bufferBuilder.addVertex(matrix4f, this.centerX + (innerRadius * Mth.cos(startAngle)), this.centerY + (innerRadius * Mth.sin(startAngle)), 0.0f).setColor(red, green, blue, alpha);
         bufferBuilder.addVertex(matrix4f, this.centerX + (innerRadius * Mth.cos(endAngle)), this.centerY + (innerRadius * Mth.sin(endAngle)), 0.0f).setColor(red, green, blue, alpha);
         bufferBuilder.addVertex(matrix4f, this.centerX + (outerRadius * Mth.cos(endAngle)), this.centerY + (outerRadius * Mth.sin(endAngle)), 0.0f).setColor(red, green, blue, alpha);*/
+        // 1.21.5 addVertex(Matrix4f,...) 重载删除（Pose 制化）→ Matrix4f 手工变换
+        //? if >=21.5 && <21.6 {
+        /*org.joml.Vector3f ysmV = new org.joml.Vector3f();
+        ysmV.set(this.centerX + (outerRadius * Mth.cos(startAngle)), this.centerY + (outerRadius * Mth.sin(startAngle)), 0.0f).mulPosition(matrix4f);
+        bufferBuilder.addVertex(ysmV.x(), ysmV.y(), ysmV.z()).setColor(red, green, blue, alpha);
+        ysmV.set(this.centerX + (innerRadius * Mth.cos(startAngle)), this.centerY + (innerRadius * Mth.sin(startAngle)), 0.0f).mulPosition(matrix4f);
+        bufferBuilder.addVertex(ysmV.x(), ysmV.y(), ysmV.z()).setColor(red, green, blue, alpha);
+        ysmV.set(this.centerX + (innerRadius * Mth.cos(endAngle)), this.centerY + (innerRadius * Mth.sin(endAngle)), 0.0f).mulPosition(matrix4f);
+        bufferBuilder.addVertex(ysmV.x(), ysmV.y(), ysmV.z()).setColor(red, green, blue, alpha);
+        ysmV.set(this.centerX + (outerRadius * Mth.cos(endAngle)), this.centerY + (outerRadius * Mth.sin(endAngle)), 0.0f).mulPosition(matrix4f);
+        bufferBuilder.addVertex(ysmV.x(), ysmV.y(), ysmV.z()).setColor(red, green, blue, alpha);*/
+        //?}
         //? if <1.21
         bufferBuilder.vertex(matrix4f, this.centerX + (outerRadius * Mth.cos(startAngle)), this.centerY + (outerRadius * Mth.sin(startAngle)), 0.0f).color(red, green, blue, alpha).endVertex();
         //? if <1.21

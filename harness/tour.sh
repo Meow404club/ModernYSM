@@ -51,7 +51,7 @@ case "$VERSION" in
     SERVER_DIR="$ROOT/versions/$VERSION/run/server"
     CLIENT_DIR="$ROOT/versions/$VERSION/run/client"
     ;;
-  1.20.4-neoforge|1.20.6-neoforge|1.21.1-neoforge)
+  1.20.4-neoforge|1.20.6-neoforge|1.21.1-neoforge|21.3-neoforge|21.4-neoforge|21.5-neoforge|21.8-neoforge|21.10-neoforge|21.11-neoforge|26.1.2-neoforge|26.2-neoforge)
     SERVER_DIR="$ROOT/versions/$VERSION/run/server"
     CLIENT_DIR="$ROOT/versions/$VERSION/run/client"
     ;;

@@ -44,7 +44,7 @@ public abstract class ServerPlayerMixin {
     }
 }
  *///?}
-//? if >=1.20 {
+//? if >=1.20 && <21.9 {
 @Mixin({ServerPlayer.class})
 public abstract class ServerPlayerMixin {
     @Inject(method = {"startRiding(Lnet/minecraft/world/entity/Entity;Z)Z"}, at = {@At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;positionRider(Lnet/minecraft/world/entity/Entity;)V", shift = At.Shift.AFTER)})
@@ -56,3 +56,21 @@ public abstract class ServerPlayerMixin {
     }
 }
 //?}
+// 1.21.9 ServerPlayer 不再覆写 startRiding（2110 ServerPlayer 零命中，同 1.19.4 前例）且
+// Entity.startRiding 增第三布尔参（2111 Entity.java:2349 startRiding(Entity,boolean,boolean)）
+// → 目标切 Entity.startRiding TAIL（this=乘客，isPassenger 守卫过滤失败分支，1.19.4 段同款）
+//? if >=21.9 {
+/*
+@Mixin({Entity.class})
+public abstract class ServerPlayerMixin {
+    @Inject(method = {"startRiding(Lnet/minecraft/world/entity/Entity;ZZ)Z"}, at = {@At("TAIL")})
+    private void onStartRiding(Entity entity, boolean force, boolean captureDecoy, CallbackInfoReturnable<Boolean> ci) {
+        if (YesSteveModel.isAvailable() && (Object) this instanceof ServerPlayer) {
+            ServerPlayer player = (ServerPlayer) (Object) this;
+            if (player.getVehicle() != null) {
+                CapabilityEvent.syncVehicleModel(entity, player);
+            }
+        }
+    }
+}
+*///?}

@@ -58,12 +58,20 @@ public class TextureButton extends YsmButton {
         }
     }
 
-    //? if >=1.20 {
+    //? if >=1.20 && <21.11 {
     @Override
     public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
     //?}
+    // 1.21.11 AbstractButton.renderWidget final 化 → renderContents（2111 AbstractWidget.java 实证）
+    //? if >=21.11 {
+    /*
+    @Override
+    public void renderContents(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+    *///?}
     //? if >=1.19.4 && <1.20 {
     /*@Override
     public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
@@ -105,8 +113,15 @@ public class TextureButton extends YsmButton {
 
     public void renderPlayerPreview(YsmGui guiGraphics, float partialTick) {
         double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
+        // 1.21.6+ RenderSystem.enableScissor 删 → GuiGraphics 剪裁（GUI 坐标，内部处理缩放）
+        //? if <21.6
         RenderSystem.enableScissor((int) (getX() * guiScale), (int) (Minecraft.getInstance().getWindow().getHeight() - (((getY() + this.height) - 20) * guiScale)), (int) (this.width * guiScale), (int) ((this.height - 20) * guiScale));
+        //? if >=21.6
+        /*guiGraphics.graphics().enableScissor(getX(), getY(), getX() + this.width, getY() + this.height - 20);*/
         ModelPreviewRenderer.renderLivingEntityPreview(getX() + (this.width / 2.0f), getY() + (this.height / 2.0f) + 24.0f, 35.0f, partialTick, this.previewEntity, RendererManager.getPlayerRenderer(), false, true);
+        //? if <21.6
         RenderSystem.disableScissor();
+        //? if >=21.6
+        /*guiGraphics.graphics().disableScissor();*/
     }
 }

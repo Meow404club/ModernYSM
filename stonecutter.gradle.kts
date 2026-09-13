@@ -1,6 +1,6 @@
 plugins {
     id("dev.kikugie.stonecutter")
-    id("net.neoforged.moddev") version "2.0.141" apply false
+    id("net.neoforged.moddev") version "2.0.147" apply false
 }
 
 stonecutter active "1.20.1-forge"

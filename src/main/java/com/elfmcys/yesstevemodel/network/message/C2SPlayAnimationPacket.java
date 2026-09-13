@@ -68,8 +68,11 @@ public class C2SPlayAnimationPacket {
             /*Entity entity = sender.getLevel().getEntity(message.entityId);*/
             //? if >=1.17 && <1.20
             /*Entity entity = ((net.minecraft.server.level.ServerLevel) sender.getLevel()).getEntity(message.entityId);*/
-            //? if >=1.20
+            //? if >=1.20 && <21.8
             Entity entity = sender.serverLevel().getEntity(message.entityId);
+            // 1.21.8 ServerPlayer.level() 直返 ServerLevel（ServerPlayer.java:1714，serverLevel 删）
+            //? if >=21.8
+            /*Entity entity = sender.level().getEntity(message.entityId);*/
             if (TouhouMaidCompat.isMaidEntity(entity)) {
                 TouhouMaidCompat.registerAnimationRoulette(entity, message.category, message.animationIndex);
                 return;

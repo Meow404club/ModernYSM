@@ -13,7 +13,12 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 //? }
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
+// 1.21.5 ArmorItem 类删除（装备组件化，world/item/equipment/Equippable）
+//? if <21.5
 import net.minecraft.world.item.ArmorItem;
+//? if >=21.5
+/*import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.equipment.Equippable;*/
 import net.minecraft.world.item.Item;
 //? if <1.19.4 {
 import net.minecraft.client.renderer.block.model.ItemTransforms;
@@ -35,8 +40,11 @@ public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity>
     public CustomPlayerArmorLayer(EntityRendererProvider.Context context) {
         //? if <1.19.2
         /*this.itemRenderer = new ItemInHandRenderer(net.minecraft.client.Minecraft.getInstance());*/
-        //? if >=1.19.2
+        //? if >=1.19.2 && <1.21.2
         this.itemRenderer = context.getItemInHandRenderer();
+        // 1.21.2 Context 删 getItemInHandRenderer → GameRenderer 公有字段
+        //? if >=1.21.2
+        /*this.itemRenderer = net.minecraft.client.Minecraft.getInstance().gameRenderer.itemInHandRenderer;*/
     }
     //? }
 
@@ -64,8 +72,16 @@ public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity>
         // return (item instanceof ArmorItem) && ((ArmorItem) item).getSlot() == EquipmentSlot.HEAD;
         //? if >=1.17 && <1.19.4
         /*return (item instanceof ArmorItem) && ((ArmorItem) item).getSlot() == EquipmentSlot.HEAD;*/
-        //? if >=1.19.4
+        //? if >=1.19.4 && <1.21.2
         return (item instanceof ArmorItem) && ((ArmorItem) item).getEquipmentSlot() == EquipmentSlot.HEAD;
+        // 1.21.2 槽位查询改 IItemExtension.getEquipmentSlot(ItemStack)（ArmorItem 无参形删除）
+        //? if >=21.3 && <21.5
+        /*return (item instanceof ArmorItem) && ((ArmorItem) item).getEquipmentSlot(stack) == EquipmentSlot.HEAD;*/
+        // 1.21.5 ArmorItem 类删除 → Equippable 数据组件槽位判定（neoforge-21.5.98-sources
+        // DataComponents.java:176 EQUIPPABLE / Equippable.java:33 record slot 访问器）
+        //? if >=21.5
+        /*Equippable equippable = stack.get(DataComponents.EQUIPPABLE);
+        return equippable != null && equippable.slot() == EquipmentSlot.HEAD;*/
     }
 
     private void renderArmorPiece(PoseStack poseStack, MultiBufferSource bufferSource, int i, AnimatedGeoModel model, Player player, ItemStack stack) {
@@ -75,8 +91,15 @@ public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity>
         poseStack.translate(0.0f, 0.25f, 0.0f);
         //? if <1.19.4
         // this.itemRenderer.renderItem(player, stack, ItemTransforms.TransformType.HEAD, false, poseStack, bufferSource, i);
-        //? if >=1.19.4
+        //? if >=1.19.4 && <21.5
         this.itemRenderer.renderItem(player, stack, ItemDisplayContext.HEAD, false, poseStack, bufferSource, i);
+        // 1.21.5 ItemInHandRenderer.renderItem 删 isLeftHand 布尔参（ItemInHandRenderer.java:132 六参形）
+        //? if >=21.5 && <21.9
+        /*this.itemRenderer.renderItem(player, stack, ItemDisplayContext.HEAD, poseStack, bufferSource, i);*/
+        // 1.21.9 renderItem 尾参 SubmitNodeCollector（同 ItemInHandLayer 注）→ 21.9+ 不渲染，功能债入账
+        //? if >=21.9 {
+        /*// no-op
+         *///?}
         poseStack.popPose();
     }
 }

@@ -23,7 +23,7 @@ import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.PlayerModelPart;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.UseAnim;
+import rip.ysm.util.UseAction;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Optional;
@@ -56,6 +56,11 @@ public class QueryBinding extends ContextBinding {
         var("life_time", ctx -> ctx.geoInstance().getSeekTime() / 20.0d);
         var("head_x_rotation", ctx -> ctx.data().netHeadYaw);
         var("head_y_rotation", ctx -> ctx.data().headPitch);
+        // 1.21.11 Level.getMoonPhase 删（月相改 EnvironmentAttributes 探针，SkyRenderState.moonPhase
+        // 枚举化）→ 按默认主世界公式 dayTime/24000%8 折算，维度感知差异入功能债
+        //? if >=21.11
+        /*var("moon_phase", ctx -> (int) (ctx.level().getDayTime() / 24000L % 8L));*/
+        //? if <21.11
         var("moon_phase", ctx -> ctx.level().getMoonPhase());
         var("time_of_day", ctx -> MolangUtils.normalizeTime(ctx.level().getDayTime()));
         var("time_stamp", ctx -> ctx.level().getDayTime());
@@ -63,17 +68,36 @@ public class QueryBinding extends ContextBinding {
 
         entityVar("yaw_speed", QueryBinding::getYawSpeed);
         entityVar("cardinal_facing_2d", ctx -> ctx.entity().getDirection().get3DDataValue());
+        // 1.21.11 Camera.getPosition() → position()（2111 Camera.java:168）
+        //? if >=21.11
+        /*entityVar("distance_from_camera", ctx -> ctx.mc().gameRenderer.getMainCamera().position().distanceTo(ctx.entity().position()));*/
+        //? if <21.11
         entityVar("distance_from_camera", ctx -> ctx.mc().gameRenderer.getMainCamera().getPosition().distanceTo(ctx.entity().position()));
         entityVar("eye_target_x_rotation", ctx -> ctx.entity().getViewXRot(ctx.animationEvent().getPartialTick()));
         entityVar("eye_target_y_rotation", ctx -> ctx.entity().getViewYRot(ctx.animationEvent().getPartialTick()));
         entityVar("ground_speed", ctx -> getGroundSpeed(ctx.entity()));
+        // 1.21.2 Entity.walkDist 删除 → LivingEntity.walkAnimation.position()
+        //（vanilla-1.21.3 LivingEntity.java:213/WalkAnimationState 实证）
+        // 铁律：>=1.21.2 门控内容必须存储态——裸行泄入 1.20.1 根活动节点致本键双注册、
+        // 后者胜出把 molang modified_distance_moved 从 walkDist 漂移为 walkAnimation.position()
+        //（双在产线终验实证）
+        //? if <1.21.2
         entityVar("modified_distance_moved", ctx -> ctx.entity().walkDist);
+        //? if >=1.21.2 {
+        /*entityVar("modified_distance_moved", ctx -> ((net.minecraft.world.entity.LivingEntity) ctx.entity()).walkAnimation.position());*/
+        //?}
         entityVar("vertical_speed", QueryBinding::getVerticalSpeed);
         entityVar("walk_distance", ctx -> ctx.entity().moveDist);
         entityVar("has_rider", ctx -> ctx.entity().isVehicle());
         entityVar("is_first_person", ctx -> CameraUtil.getCameraType(ctx) == CameraType.FIRST_PERSON.ordinal());
         entityVar("is_in_water", ctx -> ctx.entity().isInWater());
+        // 1.21.5 Entity.isInWaterRainOrBubble 删除（21.5 Entity 无此方法，21.4 Entity.java:1304 尚在；
+        // isInBubbleColumn 一并删除）→ 降级 isInWaterOrRain（21.5 Entity.java:1341 公有），
+        // 功能差：气泡列不再计入 is_in_water_or_rain（molang 查询语义微差，入功能债）
+        //? if <21.5
         entityVar("is_in_water_or_rain", ctx -> ctx.entity().isInWaterRainOrBubble());
+        //? if >=21.5
+        /*entityVar("is_in_water_or_rain", ctx -> ctx.entity().isInWaterOrRain());*/
         entityVar("is_on_fire", ctx -> ctx.entity().isOnFire());
         //? if <1.17
         // entityVar("is_on_ground", ctx -> ctx.entity().isOnGround());
@@ -102,7 +126,7 @@ public class QueryBinding extends ContextBinding {
         livingEntityVar("health", QueryBinding::getHealth);
         livingEntityVar("max_health", QueryBinding::getMaxHealth);
         livingEntityVar("hurt_time", ctx -> ctx.entity().hurtTime);
-        livingEntityVar("is_eating", ctx -> ctx.entity().getUseItem().getUseAnimation() == UseAnim.EAT);
+        livingEntityVar("is_eating", ctx -> rip.ysm.util.UseAction.of(ctx.entity().getUseItem()) == UseAction.EAT);
         livingEntityVar("is_playing_dead", ctx -> ctx.entity().isDeadOrDying());
         livingEntityVar("is_sleeping", ctx -> ctx.entity().isSleeping());
         livingEntityVar("is_using_item", ctx -> ctx.entity().isUsingItem());
@@ -179,7 +203,11 @@ public class QueryBinding extends ContextBinding {
     }
 
     private static boolean hasCape(AbstractClientPlayer abstractClientPlayer) {
-        //? if neoforge
+        // 1.21.9 PlayerSkin 重组：capeTexture() 删 → cape()（ClientAsset.Texture 可空，
+        // neoforge-21.10.64 world/entity/player/PlayerSkin.java:15 实证）
+        //? if neoforge && >=21.9
+        /*return !abstractClientPlayer.isInvisible() && abstractClientPlayer.isModelPartShown(PlayerModelPart.CAPE) && abstractClientPlayer.getSkin().cape() != null;*/
+        //? if neoforge && <21.9
         /*return !abstractClientPlayer.isInvisible() && abstractClientPlayer.isModelPartShown(PlayerModelPart.CAPE) && abstractClientPlayer.getSkin().capeTexture() != null;*/
         //? if forge
         return abstractClientPlayer.isCapeLoaded() && !abstractClientPlayer.isInvisible() && abstractClientPlayer.isModelPartShown(PlayerModelPart.CAPE) && abstractClientPlayer.getCloakTextureLocation() != null;
@@ -240,6 +268,33 @@ public class QueryBinding extends ContextBinding {
         //? if <1.21
         float gameTime = context.animationEvent().getFrameTime();
         Player player = context.entity();
+        // 1.21.9 cloak/bob 字段从 Player 迁入 ClientAvatarState（xCloak 系私有化 →
+        // getInterpolatedCloakX/Y/Z(f)、oBob/bob → getInterpolatedBob(f)，neoforge-21.10.64
+        // ClientAvatarState.java:16-25 实证），f=插值系数 与旧 Mth.lerp(o,x) 同语义
+        //? if >=21.9 {
+        /*net.minecraft.client.entity.ClientAvatarState ysmAvatar = (player instanceof net.minecraft.client.player.AbstractClientPlayer)
+            ? ((net.minecraft.client.player.AbstractClientPlayer) player).avatarState() : null;
+        float fLerp = ysmAvatar == null ? 0.0f : (float) (ysmAvatar.getInterpolatedCloakX(gameTime) - Mth.lerp(gameTime, player.xo, player.getX()));
+        float fLerp2 = ysmAvatar == null ? 0.0f : (float) (ysmAvatar.getInterpolatedCloakY(gameTime) - Mth.lerp(gameTime, player.yo, player.getY()));
+        float fLerp3 = ysmAvatar == null ? 0.0f : (float) (ysmAvatar.getInterpolatedCloakZ(gameTime) - Mth.lerp(gameTime, player.zo, player.getZ()));
+        float f = player.yBodyRotO + (player.yBodyRot - player.yBodyRotO);
+        float fSin = Mth.sin(f * 0.017453292f);
+        float f2 = -Mth.cos(f * 0.017453292f);
+        float fClamp = Mth.clamp(fLerp2 * 10.0f, -6.0f, 32.0f);
+        float fClamp2 = Mth.clamp(((fLerp * fSin) + (fLerp3 * f2)) * 100.0f, 0.0f, 150.0f);
+        if (fClamp2 < 0.0f) {
+            fClamp2 = 0.0f;
+        }
+        float ysmBob = ysmAvatar == null ? 0.0f : ysmAvatar.getInterpolatedBob(gameTime);
+        // 1.21.2 walkDist/walkDistO → walkAnimation.position(f)（含插值语义）
+        //? if <1.21.2 {
+        float fSin2 = fClamp + (Mth.sin(Mth.lerp(gameTime, player.walkDistO, player.walkDist) * 6.0f) * 32.0f * ysmBob);
+        //?}
+        //? if >=1.21.2 {
+        float fSin2 = fClamp + (Mth.sin(player.walkAnimation.position(gameTime) * 6.0f) * 32.0f * ysmBob);
+        //?}
+        *///?}
+        //? if <21.9 {
         float fLerp = (float) (Mth.lerp(gameTime, player.xCloakO, player.xCloak) - Mth.lerp(gameTime, player.xo, player.getX()));
         float fLerp2 = (float) (Mth.lerp(gameTime, player.yCloakO, player.yCloak) - Mth.lerp(gameTime, player.yo, player.getY()));
         float fLerp3 = (float) (Mth.lerp(gameTime, player.zCloakO, player.zCloak) - Mth.lerp(gameTime, player.zo, player.getZ()));
@@ -251,7 +306,14 @@ public class QueryBinding extends ContextBinding {
         if (fClamp2 < 0.0f) {
             fClamp2 = 0.0f;
         }
+        // 1.21.2 walkDist/walkDistO → walkAnimation.position(f)（含插值语义）
+        //? if <1.21.2 {
         float fSin2 = fClamp + (Mth.sin(Mth.lerp(gameTime, player.walkDistO, player.walkDist) * 6.0f) * 32.0f * Mth.lerp(gameTime, player.oBob, player.bob));
+        //?}
+        //? if >=1.21.2 {
+        /*float fSin2 = fClamp + (Mth.sin(player.walkAnimation.position(gameTime) * 6.0f) * 32.0f * Mth.lerp(gameTime, player.oBob, player.bob));*/
+        //?}
+        //?}
         if (player.isCrouching()) {
             fSin2 += 25.0f;
         }

@@ -46,6 +46,11 @@ public class C2SSwingArmPacket {
                 sender.swinging = true;
                 sender.swingingArm = interactionHand;
                 if (YsmEntity.level(sender) instanceof ServerLevel) {
+                    // 1.21.9 ServerChunkCache.broadcast 删 → sendToTrackingPlayersAndSelf
+                    //（2110 ServerChunkCache.java:547，语义同含本体）
+                    //? if >=21.9
+                    /*((ServerChunkCache) YsmEntity.level(sender).getChunkSource()).sendToTrackingPlayersAndSelf(sender, new ClientboundAnimatePacket(sender, interactionHand == InteractionHand.MAIN_HAND ? 0 : 3));*/
+                    //? if <21.9
                     ((ServerChunkCache) YsmEntity.level(sender).getChunkSource()).broadcast(sender, new ClientboundAnimatePacket(sender, interactionHand == InteractionHand.MAIN_HAND ? 0 : 3));
                 }
             }
@@ -55,9 +60,17 @@ public class C2SSwingArmPacket {
         if (MobEffectUtil.hasDigSpeed(entity)) {
             return 6 - (1 + MobEffectUtil.getDigSpeedAmplification(entity));
         }
+        // 1.21.5 MobEffects.DIG_SLOWDOWN 更名 MINING_FATIGUE（neoforge-21.5.98-sources MobEffects.java:37）
+        //? if <21.5 {
         if (entity.hasEffect(MobEffects.DIG_SLOWDOWN)) {
             return 6 + ((1 + entity.getEffect(MobEffects.DIG_SLOWDOWN).getAmplifier()) * 2);
         }
+        //?}
+        //? if >=21.5 {
+        /*if (entity.hasEffect(MobEffects.MINING_FATIGUE)) {
+            return 6 + ((1 + entity.getEffect(MobEffects.MINING_FATIGUE).getAmplifier()) * 2);
+        }*/
+        //?}
         return 6;
     }
 }

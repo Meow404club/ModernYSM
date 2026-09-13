@@ -1,5 +1,6 @@
 package rip.ysm.gui;
 
+import rip.ysm.util.RenderCompat;
 import com.elfmcys.yesstevemodel.client.entity.CustomPlayerEntity;
 import com.elfmcys.yesstevemodel.client.entity.LivingAnimatable;
 import com.elfmcys.yesstevemodel.client.gui.ModelMetadataPresenter;
@@ -29,6 +30,9 @@ import org.joml.Quaternionf;
 //? if >=1.20.5 {
 /*import org.joml.Matrix4fStack;*/
 //?}
+//? if >=21.9 {
+/*import net.minecraft.client.input.MouseButtonEvent;
+ *///?}
 import net.minecraft.client.Minecraft;
 //? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
@@ -219,11 +223,11 @@ public class ModelSettingsScreen extends OptionScreen {
         int sy = (int) (this.minecraft.getWindow().getHeight() - previewBottom * scale);
         int sw = (int) ((previewRight - previewLeft) * scale);
         int sh = (int) ((previewBottom - previewTop) * scale);
-        YsmGui.enableScissorBox(sx, sy, sw, sh);
+                YsmGui.enableScissorBox(sx, sy, sw, sh);
         float cx = (previewLeft + previewRight) / 2.0f + offsetX;
         float cy = previewTop + (previewBottom - previewTop) * 0.65f + offsetY;
         renderPlayerForSettings(cx, cy, zoom, pitch, yaw, partialTick, la, renderer);
-        YsmGui.disableScissorBox();
+                YsmGui.disableScissorBox();
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -242,14 +246,14 @@ public class ModelSettingsScreen extends OptionScreen {
         modelViewStack.pushPose();
         modelViewStack.translate(x, y, 1250.0d);
         modelViewStack.scale(1.0f, 1.0f, -1.0f);
-        RenderSystem.applyModelViewMatrix();
+        RenderCompat.applyModelViewMatrix();
         //?}
         //? if >=1.20.5 {
         /*Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();
         modelViewStack.pushMatrix();
         modelViewStack.translate((float) x, (float) y, 1250.0f);
         modelViewStack.scale(1.0f, 1.0f, -1.0f);
-        RenderSystem.applyModelViewMatrix();*/
+        RenderCompat.applyModelViewMatrix();*/
         //?}
 
         PoseStack poseStack = new PoseStack();
@@ -308,6 +312,8 @@ public class ModelSettingsScreen extends OptionScreen {
         //? if <1.17 {
         /*Lighting.turnOff();
          *///?} else {
+        // 1.21.6+ Lighting 静态置光删（UBO 化）→ no-op
+        //? if <21.6
         Lighting.setupForEntityInInventory();
         //?}
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
@@ -320,14 +326,17 @@ public class ModelSettingsScreen extends OptionScreen {
         //? if >=1.19.4 {
         rotationX.conjugate();
         //?}
+        //? if <21.9
         dispatcher.overrideCameraOrientation(rotationX);
+        //? if <21.9
         dispatcher.setRenderShadow(false);
         MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
 
         try {
-            RenderSystem.runAsFancy(() -> renderer.renderEntity(animatable, 0.0f, partialTick, poseStack, bufferSource, 15728880));
+            RenderCompat.runAsFancy(() -> renderer.renderEntity(animatable, 0.0f, partialTick, poseStack, bufferSource, 15728880));
             bufferSource.endBatch();
         } finally {
+            //? if <21.9
             dispatcher.setRenderShadow(true);
             livingEntity.yBodyRot = oldBodyRot;
             livingEntity.yBodyRotO = oldBodyRotO;
@@ -350,18 +359,67 @@ public class ModelSettingsScreen extends OptionScreen {
              *///?}
             //? if >=1.17 && <1.20.5 {
             modelViewStack.popPose();
-            RenderSystem.applyModelViewMatrix();
-            Lighting.setupFor3DItems();
+            RenderCompat.applyModelViewMatrix();
+            //? if <21.6
+        Lighting.setupFor3DItems();
+        // 1.21.6+ Lighting 静态置光删（UBO 化）→ no-op
             //?}
             //? if >=1.20.5 {
             /*modelViewStack.popMatrix();
-            RenderSystem.applyModelViewMatrix();
-            Lighting.setupFor3DItems();*/
+            RenderCompat.applyModelViewMatrix();
+            //? if <21.6
+        Lighting.setupFor3DItems();
+        // 1.21.6+ Lighting 静态置光删（UBO 化）→ no-op*/
             //?}
             ModelPreviewRenderer.setPreviewMode(false);
         }
     }
 
+    // 1.21.9+ 输入事件对象化（mouseClicked(MouseButtonEvent,boolean)/mouseReleased(MouseButtonEvent)/
+    // mouseDragged(MouseButtonEvent,double,double)，neoforge-21.10.64 GuiEventListener.java:20-28 实证）
+    //? if >=21.9 {
+    /*@Override
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+        if (isInPreview(mouseX, mouseY)) {
+            draggingPreview = true;
+            draggingButton = button;
+            return true;
+        }
+        return super.mouseClicked(event, doubleClick);
+    }
+
+    @Override
+    public boolean mouseReleased(MouseButtonEvent event) {
+        if (draggingPreview && event.button() == draggingButton) {
+            draggingPreview = false;
+            draggingButton = -1;
+            return true;
+        }
+        return super.mouseReleased(event);
+    }
+
+    @Override
+    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+        if (draggingPreview && button == draggingButton) {
+            if (button == 0) {
+                yaw = (float) (yaw + dragX * 1.2);
+                pitch = Mth.clamp((float) (pitch - dragY * 0.8), -85.0f, 85.0f);
+            } else if (button == 1) {
+                offsetX = (float) (offsetX + dragX);
+                offsetY = (float) (offsetY + dragY);
+            }
+            return true;
+        }
+        return super.mouseDragged(event, dragX, dragY);
+    }
+    *///?}
+    //? if <21.9 {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (isInPreview(mouseX, mouseY)) {
@@ -396,6 +454,7 @@ public class ModelSettingsScreen extends OptionScreen {
         }
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
+    //?}
 
     @Override
     //? if neoforge

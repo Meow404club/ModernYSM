@@ -1,9 +1,15 @@
 package rip.ysm.gpu;
 
+// 1.21.5 GlStateManager 迁移 platform→opengl 包
+// 1.21.5 GlStateManager 迁移 platform→opengl 包（vcs 直通铁律：非 1.20.1 分支源码态必须注释）
+//? if <21.5
+import rip.ysm.util.RenderCompat;
+//? if <21.5
 import com.mojang.blaze3d.platform.GlStateManager;
+//? if >=21.5
+/*import com.mojang.blaze3d.opengl.GlStateManager;*/
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.BufferUploader;
 //? if >1.17 {
 import org.joml.Matrix4f;
 //?}
@@ -88,12 +94,28 @@ public final class BlurStack {
         //?}
     }
 
+    // 1.21.6+ GUI pose 改 Matrix3x2fStack → 重载分派到降级路径（清队列防泄漏）
+    //? if >=21.6 {
+    /*public static void flush(org.joml.Matrix3x2fStack pose) {
+        regions.clear();
+    }*/
+    //?}
+
     //? if <1.17 {
     /*private static void flushLegacy() {
         regions.clear();
     }
      *///?} else {
     private static void flushModern(PoseStack pose) {
+        // 1.21.5+ RenderPipeline 化：毛玻璃 capture（RenderTarget 抽象化删 frameBufferId）与
+        // blend/cull/depth 立即绘制状态删除 → Blur 整路径降级，仅清区域队列防泄漏（裁决②，功能债）。
+        // SearchSuggestions.pushBlur/flush 调用点保持原样（pushBlur 只入队、flush 降级后即时清空）。
+        //? if >=21.5
+        /*regions.clear();
+        return;*/
+        //? if <21.5 {
+        // isEmpty 早退必须保留在 <21.5 路径：丢失则 1.20.1/1.16.5 无毛玻璃区域也每帧
+        // captureScreen 全屏拷贝（双在产线终验实证的性能回归）
         if (regions.isEmpty()) return;
         if (!BlurShader.ensureCompiled()) {
             regions.clear();
@@ -161,13 +183,14 @@ public final class BlurStack {
 
         GlStateManager._glUseProgram(0);
         //? if >=1.19.2
-        BufferUploader.invalidate();
+        RenderCompat.invalidate();
         //? if <1.19.2
-        /*BufferUploader.reset();*/
+        /*RenderCompat.reset();*/
         GlStateManager._glBindVertexArray(0);
         RenderSystem.disableBlend();
 
         regions.clear();
+        //?}
     }
     //?}
 

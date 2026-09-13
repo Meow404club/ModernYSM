@@ -3,6 +3,10 @@ package com.elfmcys.yesstevemodel.geckolib3.core.molang.variable.entity;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.context.IContext;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.variable.IValueEvaluator;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.variable.LambdaVariable;
+// 1.21.11 ThrowableItemProjectile 移 throwableitemprojectile 子包
+//? if >=21.11
+/*import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrowableItemProjectile;*/
+//? if <21.11
 import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
 
 public class ThrowableProjectileEntityVariable extends LambdaVariable<ThrowableItemProjectile> {

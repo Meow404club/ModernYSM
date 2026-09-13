@@ -52,10 +52,16 @@ public final class YsmText {
 
     public static void sendSystemMessage(Player player, Component msg) {
         // Player.sendSystemMessage 1.19+；1.16.5~1.18.2 displayClientMessage(msg,false)（聊天栏同语义）
-        //? if <1.19.2 {
-        /*player.displayClientMessage(msg, false);
-         *///?} else {
+        // 1.21.2 Player.sendSystemMessage 删除（vanilla-1.21.3 Player.java 无此方法）→ 回退 displayClientMessage
+        // 铁律：>=1.21.2 门控内容必须存储态——裸行会泄入 1.20.1 根活动节点致消息双发
+        //（双在产线终验实证）
+        //? if >=1.19.2 && <1.21.2
         player.sendSystemMessage(msg);
+        //? if <1.19.2 {
+        /*player.displayClientMessage(msg, false);*/
+        //?}
+        //? if >=1.21.2 {
+        /*player.displayClientMessage(msg, false);*/
         //?}
     }
 

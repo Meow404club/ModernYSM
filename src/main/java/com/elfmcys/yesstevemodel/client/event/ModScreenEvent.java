@@ -16,7 +16,12 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
+//? if neoforge && <21.9 {
 @OnlyIn(Dist.CLIENT)
+//?}
+//? if forge {
+/*@OnlyIn(Dist.CLIENT)*/
+//?}
 public class ModScreenEvent {
 
     public static final String IMC_METHOD = "DownloadScreen";

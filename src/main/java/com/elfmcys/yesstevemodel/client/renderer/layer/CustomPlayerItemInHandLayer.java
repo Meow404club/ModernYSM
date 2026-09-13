@@ -98,7 +98,17 @@ public class CustomPlayerItemInHandLayer extends GeoLayerRenderer<CustomPlayerEn
                     poseStack.translate(0.1d, 0.0d, 0.0d);
                     poseStack.scale(1.25f, 1.25f, 1.25f);
                 }
+                //? if <21.5
                 this.itemRenderer.renderItem(livingEntity, itemStack, itemDisplayContext, isLeftHand, poseStack, multiBufferSource, i);
+                // 1.21.5 renderItem 删 isLeftHand 参（ItemInHandRenderer.java:132）
+                //? if >=21.5 && <21.9
+                /*this.itemRenderer.renderItem(livingEntity, itemStack, itemDisplayContext, poseStack, multiBufferSource, i);*/
+                // 1.21.9 renderItem 尾参 MultiBufferSource → SubmitNodeCollector（render-dag，
+                // 2110 ItemInHandRenderer.java:134 实证）→ Static 直绘无 collector，
+                // 骨骼绑定手持原版物品 21.9+ 不渲染，功能债入账
+                //? if >=21.9 {
+                /*// no-op
+                 *///?}
             }
             poseStack.popPose();
             (isLeftHand ? model.rightHandChain() : model.leftHandChains()).forEach(list -> {
@@ -112,7 +122,17 @@ public class CustomPlayerItemInHandLayer extends GeoLayerRenderer<CustomPlayerEn
                     if (SWarfareCompat.isGunItem(itemStack)) {
                         poseStack.scale(1.25f, 1.25f, 1.25f);
                     }
-                    this.itemRenderer.renderItem(livingEntity, itemStack, itemDisplayContext, isLeftHand, poseStack, multiBufferSource, i);
+                    //? if <21.5
+                this.itemRenderer.renderItem(livingEntity, itemStack, itemDisplayContext, isLeftHand, poseStack, multiBufferSource, i);
+                // 1.21.5 renderItem 删 isLeftHand 参（ItemInHandRenderer.java:132）
+                //? if >=21.5 && <21.9
+                /*this.itemRenderer.renderItem(livingEntity, itemStack, itemDisplayContext, poseStack, multiBufferSource, i);*/
+                // 1.21.9 renderItem 尾参 MultiBufferSource → SubmitNodeCollector（render-dag，
+                // 2110 ItemInHandRenderer.java:134 实证）→ Static 直绘无 collector，
+                // 骨骼绑定手持原版物品 21.9+ 不渲染，功能债入账
+                //? if >=21.9 {
+                /*// no-op
+                 *///?}
                 }
                 poseStack.popPose();
             });

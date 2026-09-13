@@ -15,6 +15,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
 import net.minecraft.ChatFormatting;
 //? if >=1.20 {
+//? if >=21.9 {
+/*import net.minecraft.client.input.MouseButtonEvent;
+ *///?}
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import net.minecraft.client.gui.components.EditBox;
@@ -368,7 +371,7 @@ public class ModernPlayerTextureScreen extends OptionScreen {
         int sy = (int) (this.minecraft.getWindow().getHeight() - previewBottom * scale);
         int sw = (int) ((previewRight - previewLeft) * scale);
         int sh = (int) ((previewBottom - previewTop) * scale);
-        YsmGui.enableScissorBox(sx, sy, sw, sh);
+                YsmGui.enableScissorBox(sx, sy, sw, sh);
         PlayerCapability.get(this.minecraft.player).ifPresent(cap -> {
             modelHolder.initModelWithTexture(modelId, cap.getCurrentTextureName());
             float cx = (previewLeft + previewRight) / 2.0f + offsetX;
@@ -378,9 +381,54 @@ public class ModernPlayerTextureScreen extends OptionScreen {
             //? if <1.21
             ModelPreviewRenderer.renderEntityPreview(cx, cy, zoom, pitch, yaw, this.minecraft.getFrameTime(), modelHolder, RendererManager.getPlayerRenderer(), showGround);
         });
-        YsmGui.disableScissorBox();
+                YsmGui.disableScissorBox();
     }
 
+    // 1.21.9+ 输入事件对象化（mouseClicked(MouseButtonEvent,boolean)/mouseReleased(MouseButtonEvent)/
+    // mouseDragged(MouseButtonEvent,double,double)，neoforge-21.10.64 GuiEventListener.java:20-28 实证）
+    //? if >=21.9 {
+    /*@Override
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+        if (isInPreview(mouseX, mouseY)) {
+            draggingPreview = true;
+            draggingButton = button;
+            return true;
+        }
+        return super.mouseClicked(event, doubleClick);
+    }
+
+    @Override
+    public boolean mouseReleased(MouseButtonEvent event) {
+        if (draggingPreview && event.button() == draggingButton) {
+            draggingPreview = false;
+            draggingButton = -1;
+            return true;
+        }
+        return super.mouseReleased(event);
+    }
+
+    @Override
+    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+        if (draggingPreview && button == draggingButton) {
+            if (button == 0) {
+                yaw = (float) (yaw + dragX * 1.2);
+                pitch = Mth.clamp((float) (pitch - dragY * 0.8), -90.0f, 90.0f);
+            } else if (button == 1) {
+                offsetX = (float) (offsetX + dragX);
+                offsetY = (float) (offsetY + dragY);
+            }
+            return true;
+        }
+        return super.mouseDragged(event, dragX, dragY);
+    }
+    *///?}
+    //? if <21.9 {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0) {
@@ -423,6 +471,7 @@ public class ModernPlayerTextureScreen extends OptionScreen {
         }
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
+    //?}
 
     @Override
     //? if neoforge

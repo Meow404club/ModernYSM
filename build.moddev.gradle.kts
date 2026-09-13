@@ -6,7 +6,8 @@ version = "${property("mod_version")}-${property("deps.minecraft")}-neoforge"
 base.archivesName = property("archives_name") as String
 group = property("maven_group") as String
 
-// ===== M3 批二 a：neoforge 三线（1.20.4/1.20.6/1.21.1）共用本脚本 =====
+// ===== M3 批二 a 起 neoforge 线共用本脚本（批二 a：1.20.4/1.20.6/1.21.1；
+// 批二 b：21.3/21.4/21.5/21.8/21.10/21.11/26.1.2/26.2 后八线）=====
 // 分段依据（本机 vanilla 索引 + MDG 2.0.141 源码 tmp/harvest/m3-asm-mdg-src + NeoForge 官方文档
 // tmp/refs/neoforge-docs-full，检索证据见行内）：
 //  - <1.20.5（仅 1.20.4）：META-INF/mods.toml 装载（docs version-1.20.4 modfiles.md
@@ -21,6 +22,31 @@ val pre1205 = stonecutter.eval(stonecutter.current.version, "<1.20.5")
 val mcVersion = property("deps.minecraft") as String
 // neoforge 装载区间用线大版本（20.4.251→20.4 / 21.1.250→21.1）
 val neoMajor = (property("deps.neoforge") as String).substringBeforeLast('.')
+// 26.x 段（版本号去 1.x 前缀）：Java 25（piston-meta javaVersion.majorVersion=25 实证，
+// 2026-09-13 实拉；javac<25 读不了 classfile major 69 的 MC/NeoForge jar）。
+// stonecutter 数值段比较："26.1.2"/"26.2" 对 ">=26" 为 true、对 ">=1.21.x" 亦为 true、
+// 对 "<1.21" 为 false——条件轴不受影响
+val v26 = stonecutter.eval(stonecutter.current.version, ">=26")
+
+// 21.3+ 线 log4j 对齐：下方 eachDependency 已把 log4j-core 钉死 2.19.0（全线，NFRT 去抖），
+// 而 1.21.4/1.21.5 vanilla 自带 log4j-api 2.22.x 与 core 2.19.0 错配 → 启动即
+// NoSuchMethodError（ServiceLoaderUtil.loadServices 3 参签名缺失，21.4/21.5 runClient 实证）。
+// 21.8 的依赖图冲突（库传递 core 2.19.0 抢占 × api 2.24.1）同根。constraints 全家对齐 2.19.0
+// （21.8 runServer/runClient 绿实证的自洽组合）。1.20.4/1.20.6/1.21.1 实证 api 自然版 ×
+// core 2.19.0 可用，不在此列不动。
+println("[ysm] log4j alignment applied for " + stonecutter.current.version)
+if (stonecutter.eval(stonecutter.current.version, ">=21.3")) {
+    configurations.configureEach {
+        resolutionStrategy {
+            // 全家对齐 2.19.0：NFRT legacy classpath 固化 core 2.19.0（NFRT 内部解析，Gradle force
+            // 无法影响），Gradle 侧必须向其看齐——api 2.24/2.25 × core 2.19 混版启动即崩（实证）
+            force("org.apache.logging.log4j:log4j-core:2.19.0")
+            force("org.apache.logging.log4j:log4j-api:2.19.0")
+            force("org.apache.logging.log4j:log4j-slf4j2-impl:2.19.0")
+            force("org.apache.logging.log4j:log4j-slf4j-impl:2.19.0")
+        }
+    }
+}
 
 // NFRT 类路径含版本区间依赖（log4j-core 2.11.+），每次解析都 HEAD maven-metadata——
 // maven.neoforged.net 偶发 502 即断构建（实测两次）→ 钉死具体版本（loader 2.0.17 自带 2.19.0）去抖
@@ -85,9 +111,22 @@ neoForge {
 // additionalRuntimeClasspath configuration 由 MDG runs 装配期（上方 neoForge 块求值时）
 // 创建，故依赖声明必须置于其后（同 build.forge.gradle.kts legacyForge 块的次序约束）
 dependencies {
-    // MDG 主插件 dev run 由 NFRT 生成类路径，项目 implementation 不可见（同 legacyforge，
-    // build.forge.gradle.kts 注释实证）→ ImageStream 走 MDG 官方注入口 additionalRuntimeClasspath
-    "additionalRuntimeClasspath"("com.github.TartaricAlkaline:ImageStream:-SNAPSHOT")
+    // MDG 按 NeoForge userdev 能力数据（legacyClasspath capability）二选一
+    //（MDG 源码 ModDevRunWorkflow.java:101 legacy 分支 vs :120 新分支 + :145
+    // forbidAdditionalRuntimeDependencies，批二 b 21.10 线配置期报错实证分界）：
+    //  - legacy 形态（1.20.4~21.8 线）：implementation 依赖进模块层、游戏类路径不可见，
+    //    ImageStream 走 MDG 官方注入口 additionalRuntimeClasspath
+    //  - 新形态（21.10/21.11/26.x 线）：配置仍创建但禁止注入，报错文案明示改用标准
+    //    configuration（"Add the dependency to a standard configuration such as
+    //    implementation or runtimeOnly"）→ 走 runtimeOnly
+    // 两分支都创建同名 configuration，判别用 canBeConsumed：legacy 分支显式
+    // setCanBeConsumed(false)（ModDevRunWorkflow.java:97），新分支裸 create 默认 true
+    val additionalCp = configurations.findByName("additionalRuntimeClasspath")
+    if (additionalCp != null && !additionalCp.isCanBeConsumed) {
+        "additionalRuntimeClasspath"("com.github.TartaricAlkaline:ImageStream:-SNAPSHOT")
+    } else {
+        runtimeOnly("com.github.TartaricAlkaline:ImageStream:-SNAPSHOT")
+    }
 }
 // 配置期显式解析为 File（configuration cache 安全，勿把 Configuration 持进任务）
 val imageStreamEmbedJars: Set<File> = imageStreamEmbed.files
@@ -108,27 +147,76 @@ val imageStreamEmbedJars: Set<File> = imageStreamEmbed.files
 //  - compat shim 复用 1.16.5 线版本中立 shim（同 build.forge.gradle.kts pre120 块）
 sourceSets.main {
     java {
-        srcDir(rootProject.file("src/neoforge/java"))
+        // 基础树按代分挂（见下方链尾注记）：21.5 线挂 1215（= neoforge ∪ neoforge-1205 的
+        // 1.21.5 代副本）、21.8 线挂 1218（= 1215 ∪ 1213 的 1.21.8 代副本）、21.10 线挂 2110、
+        // 21.11+/26.x 线挂 2111，防同 FQCN 双份类定义
+        if (stonecutter.eval(stonecutter.current.version, "<21.8")) {
+            if (stonecutter.eval(stonecutter.current.version, "<21.5")) {
+                srcDir(rootProject.file("src/neoforge/java"))
+            } else {
+                srcDir(rootProject.file("src/neoforge-1215/java"))
+            }
+        } else if (stonecutter.eval(stonecutter.current.version, "<21.10")) {
+            srcDir(rootProject.file("src/neoforge-1218/java"))
+        } else if (stonecutter.eval(stonecutter.current.version, "<21.11")) {
+            // 2110 树 = 1218 的 1.21.10 代副本。分裂动因（neoforge-21.10.64-sources 实证）：
+            // RenderLevelStageEvent 删 AfterBlockEntities 子事件类（RenderFirstPlayerForgeHook）、
+            // PlayerRenderer → AvatarRenderer 改名（PlayerRenderStateEntityCache）
+            srcDir(rootProject.file("src/neoforge-2110/java"))
+        } else {
+            // 2111 树 = 2110 的 1.21.11 代副本：net.minecraft.resources.ResourceLocation →
+            // Identifier 全树改名（同包同 API，neoforge-21.11.45-sources 实证）+ Arrow 族
+            // 移 projectile.arrow 子包（ArrowPotionAccessor 目标）
+            srcDir(rootProject.file("src/neoforge-2111/java"))
+        }
         if (pre1205) {
             srcDir(rootProject.file("src/neoforge-1204/java"))
+            srcDir(rootProject.file("src/neoforge-pre1213/java"))
         } else if (stonecutter.eval(stonecutter.current.version, "<1.21")) {
             // 1205 树 = 1.20.6 代共用部分；1206 树 = 1.20.6 独占分歧
             //（ShieldBlockEvent 在 1.21.1 更名 LivingShieldBlockEvent）
             srcDir(rootProject.file("src/neoforge-1205/java"))
             srcDir(rootProject.file("src/neoforge-1206/java"))
-        } else {
+            srcDir(rootProject.file("src/neoforge-pre1213/java"))
+        } else if (stonecutter.eval(stonecutter.current.version, "<1.21.2")) {
             // 1211 树 = 1.21.1 分歧（LivingShieldBlockEvent、ItemAbilities 更名，
             // neoforge-1.21.1 实证）；shim 整树副本（ResourceLocation 私有构造 /
             // isValidResourceLocation 删除 → Rl/parse，2 文件已修），不挂原 shim 防 RAW 双份
             srcDir(rootProject.file("src/neoforge-1205/java"))
             srcDir(rootProject.file("src/neoforge-1211/java"))
+            srcDir(rootProject.file("src/neoforge-pre1213/java"))
+        } else if (stonecutter.eval(stonecutter.current.version, "<21.5")) {
+            // 1.21.2~1.21.4：1205 树跨代同形部分（MobEffect/FirstPlayer/HandRender 钩子、
+            // 网络与能力桥、ArrowPotionAccessor——ReplacePlayerRenderForgeHook 已移出至
+            // 1206/1211 树）+ 1213 树 = 1.21.2 render-state 化分歧独占（RenderLivingBridgeImpl
+            // state 形 / ReplacePlayerRenderForgeHook state 形 + 实体反查缓存 /
+            // ToolActionBridgeImpl 双参 onEntitySwing / 1211 同形桥副本：ShieldBlock 冷却与
+            // BufferBuilder 桥）；shim 沿用 1211 副本（1.21.2+ ResourceLocation 面与 1.21.1
+            // 同形，21.3 编译实证）
+            srcDir(rootProject.file("src/neoforge-1205/java"))
+            srcDir(rootProject.file("src/neoforge-1213/java"))
+        } else if (stonecutter.eval(stonecutter.current.version, "<21.8")) {
+            // 21.5：1215 树 = (neoforge ∪ neoforge-1205) 1.21.5 代副本（已在上方基础挂载处挂载）。
+            // 分裂动因：CompoundTag.getCompound Optional 化（ForgeCapabilityHooks）与
+            // KeyModifier.getActiveModifier 删除（KeyMappingFactoryImpl）在 RAW 树无条件下不可
+            // 两代共存（同 FQCN 二选一挂载防双份类定义）；1213 树 21.5 编译零残差，继续共用。
+            srcDir(rootProject.file("src/neoforge-1213/java"))
+        } else {
+            // 21.8+：1218/2110/2111 基础树 = (1215 ∪ 1213) 的各代副本，上方基础挂载已含本段
+            // 平台树全部类，不再重复挂载（21.8 同目录二次挂载会触发 sourcesJar 重复条目）
+            // 分裂动因：EventBusSubscriber 删 bus 属性（PlayerRenderStateEntityCache）、
+            // RenderLevelStageEvent 拆子事件类（RenderFirstPlayerForgeHook）、
+            // PacketDistributor.sendToServer→ClientPacketDistributor（YSMChannelImpl）
         }
-        // shim：<1.21 挂原件；1.21.1 挂整树副本（ResourceLocation 私有构造 /
-        // isValidResourceLocation 删除 → Rl/parse，2 文件已修，RAW 无条件化能力）
+        // shim：<1.21 挂原件；1.21+ 挂整树副本（ResourceLocation 私有构造 /
+        // isValidResourceLocation 删除 → Rl/parse，2 文件已修，RAW 无条件化能力）；
+        // >=21.11 挂 2111 副本（ResourceLocation→Identifier 同步改名）
         if (stonecutter.eval(stonecutter.current.version, "<1.21")) {
             srcDir(rootProject.file("versions/1.16.5-forge/src/shim/rip/ysm/compat"))
-        } else {
+        } else if (stonecutter.eval(stonecutter.current.version, "<21.11")) {
             srcDir(rootProject.file("src/neoforge-1211/shim/rip/ysm/compat"))
+        } else {
+            srcDir(rootProject.file("src/neoforge-2111/shim/rip/ysm/compat"))
         }
         // 第三方触点源码闸门 + platform/forge 树整体排除（清单与 build.forge.gradle.kts pre120
         // 块同源）。孪生走异包策略：src/neoforge/java 下 platform/neoforge 包（类名不变），
@@ -160,6 +248,68 @@ tasks {
         dependsOn("stonecutterGenerate")
     }
 
+    // ===== 1.21.11 Identifier 改名（stonecutter 生成树后处理，>=21.11 含 26.x）=====
+    // 1.21.11 vanilla net.minecraft.resources.ResourceLocation 改名 Identifier：同包同 API 面
+    //（neoforge-21.11.45-sources net/minecraft/resources/Identifier.java:16 实证——parse/
+    // fromNamespaceAndPath/withDefaultNamespace/tryParse/withPrefix/withSuffix/getPath/getNamespace
+    // 全数保留，仅 isAllowedInResourceLocation→isAllowedInIdentifier，共享源零调用），共享树 104 文件
+    // 的类型名引用不值得逐行条件化 → 生成树一次性语义等价改写，共享源零搅动、在产线零接触
+    //（任务只在 >=21.11 线注册）。生成树由 stonecutterGenerate 重刷时恢复 RL 名，本任务幂等重写；
+    // RAW 源集（平台/compat shim 树）绕开 stonecutter，走 2111 分代副本（见 sourceSets 挂载注）。
+    if (stonecutter.eval(stonecutter.current.version, ">=21.8")) {
+        val genJavaDir = layout.buildDirectory.dir("generated/stonecutter/main/java")
+        // 配置缓存铁律：doLast 只可捕获局部 String/Provider，stonecutter 脚本对象引用不可序列化
+        val curVersion = stonecutter.current.version
+        val is21_11 = stonecutter.eval(stonecutter.current.version, ">=21.11")
+        val rlToIdentifier = register<org.gradle.api.DefaultTask>("rlToIdentifier") {
+            dependsOn("stonecutterGenerate")
+            mustRunAfter("stonecutterGenerate")
+            // 声明输出=生成树：doLast 的原位改写必须让下游 compileJava 失效重编
+            //（无 outputs 声明时 Gradle 的 up-to-date 检查看不到本次改写，21.10 实证）
+            outputs.dir(genJavaDir)
+            doLast {
+                val root = genJavaDir.get().asFile
+                if (root.isDirectory) {
+                    var count = 0
+                    // [>=21.8] @OnlyIn(Dist.CLIENT) 注解行剥离——注解残留被 OnlyInWarningsHandler
+                    //  记为加载错误：loader 10 卡死 Client network registry lock（21.10 runClient
+                    //  实证）；21.8（loader 9.0.18）为阻断式「Warning while loading mods」警告屏，
+                    //  须手点 Proceed 才进主菜单（21854 runClient 截图实证）
+                    // [>=21.11] a) ResourceLocation → Identifier（同包纯改名）
+                    //           b) （撤销）location()→identifier() 仅 ResourceKey 系成立，
+                    //              TagKey/自有 ItemTag 保留 location() → 共享源位点级双行
+                    //           c) RenderType 静态工厂（entityCutoutNoCull/entityTranslucent/
+                    //              lineStrip/outline/entityCutoutNoCullZOffset）→ RenderTypes
+                    //              同名工厂（rendertype 包）
+                    //（全部基于 neoforge-21.10.64/21.11.45-sources 实证）
+                    val rules = mutableListOf(
+                        Regex("(?m)^[ \\t]*@OnlyIn\\(Dist\\.CLIENT\\)[ \\t]*\\r?\\n") to ""
+                    )
+                    if (is21_11) {
+                        rules.add(Regex("\\bResourceLocation\\b") to "Identifier")
+                        rules.add(Regex("\\bRenderType\\.(armorCutoutNoCull|entityCutoutNoCullZOffset|entityCutoutNoCull|entitySolid|entityTranslucentEmissive|entityTranslucent|lineStrip|outline)\\(")
+                            to "net.minecraft.client.renderer.rendertype.RenderTypes.$1(")
+                    }
+                    root.walkTopDown().filter { it.isFile && it.extension == "java" }.forEach { f ->
+                        val text = f.readText()
+                        if (rules.any { (re, _) -> re.containsMatchIn(text) }) {
+                            var next = text
+                            for ((re, rep) in rules) next = re.replace(next, rep)
+                            f.writeText(next)
+                            count++
+                        }
+                    }
+                    println("[ysm] rlToIdentifier: ${count} files rewritten for ${curVersion}")
+                }
+            }
+        }
+        named<org.gradle.api.tasks.compile.JavaCompile>("compileJava") { dependsOn(rlToIdentifier) }
+        // sourcesJar 打包生成树源码，同样依赖改写后内容
+        matching { it.name == "sourcesJar" }.configureEach {
+            dependsOn(rlToIdentifier)
+        }
+    }
+
     register<Copy>("buildAndCollect") {
         group = "build"
         from(jar.map { it.archiveFile })
@@ -184,14 +334,25 @@ tasks {
 
 java {
     withSourcesJar()
-    // 1.20.4 运行时 Java 17；1.20.6/1.21.1 运行时 Java 21（docs.neoforged.net Java 表）
-    val javaCompat = if (pre1205) JavaVersion.VERSION_17 else JavaVersion.VERSION_21
+    // 1.20.4=17；1.20.6/1.21.x=21（docs.neoforged.net Java 表）；26.x=25（piston-meta 实证，
+    // toolchain 由 MDG 按 NeoForge userdev 能力数据自动请求，MDG 源码
+    // ModDevArtifactsWorkflow.java:103 convention(javaVersion()) 实证）。26.x 用
+    // toVersion(25) 规避枚举面差异（Gradle 9.2.1 JavaVersion 未必含 VERSION_25 字面量）
+    val javaCompat = when {
+        pre1205 -> JavaVersion.VERSION_17
+        v26 -> JavaVersion.toVersion(25)
+        else -> JavaVersion.VERSION_21
+    }
     sourceCompatibility = javaCompat
     targetCompatibility = javaCompat
 }
 
 tasks.withType<JavaCompile>().configureEach {
-    options.release = if (pre1205) 17 else 21
+    options.release = when {
+        pre1205 -> 17
+        v26 -> 25
+        else -> 21
+    }
 }
 
 tasks.named<ProcessResources>("processResources") {
@@ -220,17 +381,34 @@ tasks.named<ProcessResources>("processResources") {
     // 配置缓存铁律：filter lambda 只可捕获任务配置块内的局部 val（脚本顶层 val = 脚本对象
     // 引用，不可序列化——1.20.6 build 配置缓存实测报错），先物化为局部量
     val neoMajorLocal = neoMajor
-    val mcVersionLocal = mcVersion
+    // FML 版本比较用游戏真实版本串：21.x 线的 ID 是缩写，MC 真身 = "1."+ID（21.8→1.21.8，
+    // crash report "Currently, minecraft is 1.21.8" vs 范围 "[21.8,)" 不匹配实证）；26.x 起新纪元 ID 即真身
+    val mcReal = if (mcVersion.startsWith("21.")) "1.$mcVersion" else mcVersion
+    val mcRealLocal = mcReal
     filesMatching(listOf("META-INF/neoforge.mods.toml", "META-INF/mods.toml")) {
         filter { line: String ->
             line.replace("versionRange = \"[20.6,)\"", "versionRange = \"[$neoMajorLocal,)\"")
-                .replace("versionRange = \"[1.20.6,)\"", "versionRange = \"[$mcVersionLocal,)\"")
+                .replace("versionRange = \"[1.20.6,)\"", "versionRange = \"[$mcRealLocal,)\"")
         }
     }
-    // pack.mcmeta：资源包格式 1.20.4=22 / 1.20.6=32 / 1.21.1=34（共享源为 1.20.1 口径 15）
-    val packFormat = if (pre1205) 22
-    else if (stonecutter.eval(stonecutter.current.version, "<1.21")) 32
-    else 34
+    // pack.mcmeta 资源包格式（共享源为 1.20.1 口径 15）：
+    // 1.20.4=22 / 1.20.6=32 / 1.21.1=34（批二 a）；批二 b 各线取 minecraft.wiki Pack format
+    // 表（2026-09-13 实拉，26.1 与本机 vanilla-mc/26.1 version.json pack_version
+    // resource_major=84 互证）：1.21.3=42 / 1.21.4=46 / 1.21.5=55 / 1.21.8=64 /
+    // 1.21.10=69 / 1.21.11=75 / 26.1.2=84 / 26.2=88
+    val packFormat = mapOf(
+        "1.20.4" to 22,
+        "1.20.6" to 32,
+        "1.21.1" to 34,
+        "21.3" to 42,
+        "21.4" to 46,
+        "21.5" to 55,
+        "21.8" to 64,
+        "21.10" to 69,
+        "21.11" to 75,
+        "26.1.2" to 84,
+        "26.2" to 88,
+    )[mcVersion] ?: 15
     filesMatching("pack.mcmeta") {
         filter { line: String -> line.replace("\"pack_format\": 15", "\"pack_format\": $packFormat") }
     }
@@ -242,10 +420,17 @@ tasks.named<ProcessResources>("processResources") {
     if (!pre1205) {
         // 配置缓存铁律：lambda 内只引任务配置块局部 val（stonecutter 是脚本对象引用）
         val dropBufferBuilderMixin = stonecutter.eval(stonecutter.current.version, ">=1.21")
+        // 配置缓存铁律：条件在配置期物化为局部量，filter 内不可捕 stonecutter 脚本对象
+        val dropRenderSystemAccessor = stonecutter.eval(stonecutter.current.version, ">=21.6")
         filesMatching("*.mixins.json") {
             filter { line: String ->
                 var out = line.replace("\"JAVA_17\"", "\"JAVA_21\"")
                     .replace("\"client.ArrowEntityAccessor\"", "\"client.ArrowPotionAccessor\"")
+                if (dropRenderSystemAccessor) {
+                    // 1.21.9 RenderSystem.shaderLightDirections 改 GpuBufferSlice → accessor 失效，
+                    // 注冊表剔除（GpuRenderPath.refreshLights 已有默认平行光兜底）
+                    out = out.replace("\"client.RenderSystemAccessor\", ", "")
+                }
                 if (dropBufferBuilderMixin) {
                     // 1.21 BufferBuilder 原生内存重构（无 buffer/nextElementByte/ensureCapacity，
                     // vanilla-1.21.1 BufferBuilder.java:18-31）——JNI SIMD 直传面不存在，
@@ -258,7 +443,6 @@ tasks.named<ProcessResources>("processResources") {
     }
 }
 
-// runServer 控制台 stdin（harness/tour.sh 和平启动注入通道）：与 forge 线同款
 tasks.named<org.gradle.api.tasks.JavaExec>("runServer") {
     standardInput = System.`in`
 }

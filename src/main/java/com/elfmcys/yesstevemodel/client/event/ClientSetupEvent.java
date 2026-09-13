@@ -59,8 +59,11 @@ import org.lwjgl.opengl.GL20;
  * mod 总线事件走注解式静态订阅（与 platform/forge/ForgeClientSetupHooks 同款），
  * 不依赖 {@link #register()} 的构造期调用时序。
  */
-//? if neoforge && >=1.20.5
+// 1.21.6+ EventBusSubscriber 删 bus 属性（单总线自动路由）
+//? if neoforge && >=1.20.5 && <21.6
 /*@EventBusSubscriber(modid = YesSteveModel.MOD_ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)*/
+//? if neoforge && >=21.6
+/*@EventBusSubscriber(modid = YesSteveModel.MOD_ID, value = Dist.CLIENT)*/
 //? if neoforge && <1.20.5
 /*@Mod.EventBusSubscriber(modid = YesSteveModel.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)*/
 //? if forge

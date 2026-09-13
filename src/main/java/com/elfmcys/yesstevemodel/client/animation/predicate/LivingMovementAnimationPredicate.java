@@ -15,9 +15,21 @@ import com.elfmcys.yesstevemodel.molang.runtime.ExpressionEvaluator;
 import com.elfmcys.yesstevemodel.client.animation.condition.ConditionVehicle;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+// 1.21.5 Saddleable 接口删除 → Mob isSaddled 判定
+//? if <21.5
 import net.minecraft.world.entity.Saddleable;
+//? if >=21.5
+/*import net.minecraft.world.entity.Mob;*/
+// 1.21.11 Pig 移 animal.pig 子包
+//? if >=21.11
+/*import net.minecraft.world.entity.animal.pig.Pig;*/
+//? if <21.11
 import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.player.Player;
+// 1.21.11 Boat 移 vehicle.boat 子包
+//? if >=21.11
+/*import net.minecraft.world.entity.vehicle.boat.Boat;*/
+//? if <21.11
 import net.minecraft.world.entity.vehicle.Boat;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
@@ -62,9 +74,18 @@ public class LivingMovementAnimationPredicate implements IAnimationPredicate<Liv
         if (vehicle instanceof Pig) {
             return IAnimationPredicate.playAnimationWithLoop(event, "ride_pig", ILoopType.EDefaultLoopTypes.LOOP);
         }
+        //? if <21.5 {
         if (vehicle instanceof Saddleable) {
             return IAnimationPredicate.playAnimationWithLoop(event, "ride", ILoopType.EDefaultLoopTypes.LOOP);
         }
+        //?}
+        // 1.21.5 Saddleable 接口删除（鞍改 EquipmentSlot.SADDLE 组件制，neoforge-21.5.98-sources
+        //Mob.java:782 isSaddled）。行为差：未上鞍的可鞍乘骑不再命中 ride（入功能债）
+        //? if >=21.5 {
+        /*if (vehicle instanceof Mob mob && mob.isSaddled()) {
+            return IAnimationPredicate.playAnimationWithLoop(event, "ride", ILoopType.EDefaultLoopTypes.LOOP);
+        }*/
+        //?}
         if (vehicle instanceof Boat) {
             return IAnimationPredicate.playAnimationWithLoop(event, "boat", ILoopType.EDefaultLoopTypes.LOOP);
         }

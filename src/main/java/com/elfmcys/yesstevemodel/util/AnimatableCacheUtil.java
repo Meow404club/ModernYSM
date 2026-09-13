@@ -16,7 +16,12 @@ import net.minecraft.world.entity.Entity;
 
 import java.util.concurrent.TimeUnit;
 
+//? if neoforge && <21.9 {
 @OnlyIn(Dist.CLIENT)
+//?}
+//? if forge {
+/*@OnlyIn(Dist.CLIENT)*/
+//?}
 public final class AnimatableCacheUtil {
     public static final Cache<ResourceLocation, Entity> ENTITIES_CACHE = CacheBuilder.newBuilder().expireAfterAccess(5, TimeUnit.MINUTES).build();
 }

@@ -24,7 +24,12 @@ public class InnerClassify {
         if (SlashBladeCompat.isSlashBladeItem(itemStack)) {
             return "slashblade";
         }
+        // 1.21.5 SwordItem/PickaxeItem 类删除（1.21.5 world/item 无此二类，斧铲锄仍在）：
+        // instanceof 半支退役，物品标签判定语义不变
+        //? if <21.5
         if ((item instanceof SwordItem) || ItemTagsConstants.SWORDS.matches(itemStack)) {
+        //? if >=21.5
+        /*if (ItemTagsConstants.SWORDS.matches(itemStack)) {*/
             return "sword";
         }
         if (TouhouLittleMaidCompat.isMaidItem(item)) {
@@ -33,7 +38,10 @@ public class InnerClassify {
         if ((item instanceof AxeItem) || ItemTagsConstants.AXES.matches(itemStack)) {
             return "axe";
         }
+        //? if <21.5
         if ((item instanceof PickaxeItem) || ItemTagsConstants.PICKAXES.matches(itemStack)) {
+        //? if >=21.5
+        /*if (ItemTagsConstants.PICKAXES.matches(itemStack)) {*/
             return "pickaxe";
         }
         if ((item instanceof ShovelItem) || ItemTagsConstants.SHOVELS.matches(itemStack)) {

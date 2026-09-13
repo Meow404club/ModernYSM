@@ -8,6 +8,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import com.mojang.blaze3d.vertex.PoseStack;
+import rip.ysm.util.RenderCompat;
 //? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
@@ -39,12 +40,20 @@ public class PackIconButton extends YsmButton {
         this.packData = packData;
     }
 
-    //? if >=1.20 {
+    //? if >=1.20 && <21.11 {
     @Override
     public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
     //?}
+    // 1.21.11 AbstractButton.renderWidget final 化 → renderContents
+    //? if >=21.11 {
+    /*
+    @Override
+    public void renderContents(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+    *///?}
     //? if >=1.19.4 && <1.20 {
     /*@Override
     public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
@@ -65,14 +74,23 @@ public class PackIconButton extends YsmButton {
         guiGraphics.fillGradient(getX(), getY(), getX() + this.width, getY() + this.height, -6598176, -6598176);
         ResourceLocation location = FileTypeUtil.getPackIconLocation(this.packData.getPath());
         AbstractTexture texture = guiGraphics.getTexture(location);
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+        RenderCompat.enableBlend();
+        RenderCompat.defaultBlendFunc();
+        // 1.21.4 MissingTextureAtlasSprite.getTexture() 删除 → 以缺省纹理
+        // TextureManager.getTexture(rl) 的返回比对改为引用缺省单参返回值不可行，
+        // 直接以 RegisteredTexture 判定改为：对缺省纹理不做特判（未注册 rl 本就返回缺省
+        // 纹理实例，blit 同样渲染灰白占位）——保留图标分支仅 <21.4
+        //? if <21.4 {
         if (texture == MissingTextureAtlasSprite.getTexture()) {
             guiGraphics.blit(default_pack_icon, getX(), getY(), 0.0f, 0.0f, this.width, this.height, this.width, this.height);
         } else {
             guiGraphics.blit(location, getX(), getY(), 0.0f, 0.0f, this.width, this.height, this.width, this.height);
         }
-        RenderSystem.disableBlend();
+        //?}
+        //? if >=21.4 {
+        /*guiGraphics.blit(location, getX(), getY(), 0.0f, 0.0f, this.width, this.height, this.width, this.height);*/
+        //?}
+        RenderCompat.disableBlend();
         List listSplit = font.split(getMessage(), 45);
         if (listSplit.size() > 1) {
             drawCenteredString(guiGraphics, font, (FormattedCharSequence) listSplit.get(0), getX() + (this.width / 2), (getY() + this.height) - 19, 5592405);
@@ -95,10 +113,19 @@ public class PackIconButton extends YsmButton {
         }
         List<Component> listSingletonList = Collections.singletonList(YsmText.literal(str));
         if (/*? if >=1.18.2 && <1.19.4 {*/ /*isHoveredOrFocused()*//*?} else {*/ isHovered() /*?}*/) {
+            //? if <21.6
             guiGraphics.pose().pushPose();
+            //? if >=21.6
+            /*guiGraphics.pose().pushMatrix();*/
+            //? if <21.6
             guiGraphics.pose().translate(0.0f, 0.0f, 4000.0f);
+            //? if >=21.6
+            /*guiGraphics.pose().translate(0.0f, 0.0f);*/
             guiGraphics.renderScreenComponentTooltip(screen, Minecraft.getInstance().font, listSingletonList, mouseX, mouseY);
+            //? if <21.6
             guiGraphics.pose().popPose();
+            //? if >=21.6
+            /*guiGraphics.pose().popMatrix();*/
         }
     }
 

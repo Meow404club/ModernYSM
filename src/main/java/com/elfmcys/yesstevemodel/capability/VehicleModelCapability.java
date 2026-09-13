@@ -62,12 +62,28 @@ public class VehicleModelCapability {
     }
 
     public void deserializeNBT(CompoundTag compoundTag) {
+        // 1.21.5 CompoundTag getter Optional 化（同 ModelInfoCapability 注）
+        //? if <21.5
         this.ownerModelId = compoundTag.getString("owner_model_id");
+        //? if >=21.5
+        /*this.ownerModelId = compoundTag.getStringOr("owner_model_id", "");*/
+        //? if <21.5
         this.initialized = compoundTag.getBoolean("initialized");
+        //? if >=21.5
+        /*this.initialized = compoundTag.getBooleanOr("initialized", false);*/
         this.molangVars.clear();
+        //? if <21.5
         CompoundTag compound = compoundTag.getCompound("molang_vars_server_bound");
+        //? if >=21.5
+        /*CompoundTag compound = compoundTag.getCompoundOrEmpty("molang_vars_server_bound");*/
+        //? if <21.5
         for (String str : compound.getAllKeys()) {
+        //? if >=21.5
+        /*for (String str : compound.keySet()) {*/
+            //? if <21.5
             this.molangVars.put(str, compound.getFloat(str));
+            //? if >=21.5
+            /*this.molangVars.put(str, compound.getFloatOr(str, 0.0F));*/
         }
     }
 }

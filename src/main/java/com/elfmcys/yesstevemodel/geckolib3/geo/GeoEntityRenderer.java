@@ -11,11 +11,21 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
+// 1.21.11 RenderType 移 net.minecraft.client.renderer.rendertype 子包
+//? if >=21.11
+/*import net.minecraft.client.renderer.rendertype.RenderType;*/
+//? if <21.11
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 //? if >=1.17 {
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 //? }
+// 1.21.2 render-state 化：EntityRenderer 泛型 1→2 参（<T, S extends EntityRenderState>，
+// vanilla-1.21.3 EntityRenderer.java:29），render(S,...) 取代 render(T,F,F,...)；
+// 本类实例不走 vanilla dispatcher 注册（Static 驱动路径），state 仅为 super.render 合成面
+//? if >=1.21.2 {
+/*import net.minecraft.client.renderer.entity.state.EntityRenderState;
+ *///?}
 // Axis（1.19.3+）1.16.5/中段走 com.mojang.math.Vector3f.YP/ZP.rotationDegrees（返回 moj Quaternion）；
 // 本文件 Axis 触点仅存在于注释（mulPose 旋转由 NativeModelRenderer 管线承接）
 //? if >=1.19.4 {
@@ -24,10 +34,42 @@ import com.mojang.math.Axis;
 // Axis（1.19.3+）1.16.5 走 com.mojang.math.Vector3f.YP/ZP.rotationDegrees（返回 moj Quaternion）
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.entity.Entity;
+//? if >=1.21.2 {
+/*import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
+ *///?}
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 
+//? if <1.21.2
 public abstract class GeoEntityRenderer<TEntity extends Entity, T extends AnimatableEntity<TEntity>> extends EntityRenderer<TEntity> implements IGeoRenderer<T> {
+//? if >=1.21.2 {
+/*public abstract class GeoEntityRenderer<TEntity extends Entity, T extends AnimatableEntity<TEntity>> extends EntityRenderer<TEntity, EntityRenderState> implements IGeoRenderer<T> {
+
+    private Entity currentEntity;
+
+    private float currentPartialTick;
+
+    @Override
+    public EntityRenderState createRenderState() {
+        return new EntityRenderState();
+    }
+
+    @Override
+    public void extractRenderState(TEntity entity, EntityRenderState state, float partialTick) {
+        super.extractRenderState(entity, state, partialTick);
+        this.currentEntity = entity;
+        this.currentPartialTick = partialTick;
+    }
+
+    // 无 @Override：EntityRenderer 基类无 getTextureLocation 抽象（仅 LivingEntityRenderer 有，
+    // vanilla-1.21.3 EntityRenderer/EntityRenderer.java 实证）——此为实现占位
+    public ResourceLocation getTextureLocation(EntityRenderState state) {
+        // 本类实例走 Static 驱动路径（renderEntity 显式传实体），vanilla dispatch 永不触发；
+        // 纹理由 AnimatableEntity.getTextureLocation() 提供（renderEntityWithTexture 内）
+        return MissingTextureAtlasSprite.getLocation();
+    }*/
+//?}
 
     public Matrix4f worldMatrix;
 
@@ -79,7 +121,12 @@ public abstract class GeoEntityRenderer<TEntity extends Entity, T extends Animat
                 poseStack.popPose();
             }
         }
+        //? if <1.21.2
         super.render(t.getEntity(), f, f2, poseStack, multiBufferSource, i);
+        // 1.21.9+ EntityRenderer.render(state,...) 删（submit 范式）→ vanilla 派发链不可用，
+        // 21.9+ 走本类 Static 直绘路径（submit 移植为功能债）
+        //? if >=1.21.2 && <21.9
+        /*super.render(this.createRenderState(t.getEntity(), f2), poseStack, multiBufferSource, i);*/
     }
 
     @Override

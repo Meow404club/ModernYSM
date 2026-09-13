@@ -58,12 +58,14 @@ public class AnimationSlider extends RangedSliderWidget implements ISpecialWidge
         return DECIMAL_FORMAT.format(getValue());
     }
 
-    //? if >=1.20 {
+    //? if >=1.20 && <21.11 {
     @Override
     public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
     //?}
+    //（AnimationSlider 走 AbstractSliderButton 父链，renderWidget(GuiGraphics) 21.11 仍可覆写，
+    //  无需 renderContents 适配）
     //? if >=1.19.4 && <1.20 {
     /*
     @Override

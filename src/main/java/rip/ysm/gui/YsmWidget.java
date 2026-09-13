@@ -4,6 +4,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 //? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
+//? if >=21.9 {
+/*import net.minecraft.client.input.MouseButtonEvent;
+ *///?}
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
 
@@ -25,6 +28,36 @@ public abstract class YsmWidget extends AbstractWidget {
     protected YsmWidget(int x, int y, int width, int height, Component message) {
         super(x, y, width, height, message);
     }
+
+    // 1.21.9+ AbstractWidget 事件对象化（onClick(MouseButtonEvent,boolean)/
+    // onDrag(MouseButtonEvent,double,double)/onRelease(MouseButtonEvent)，
+    // neoforge-21.10.64 AbstractWidget.java:119-137 实证）→ 本仓双参钩子收编为本类持有，
+    // vanilla 新签名转发（子类 @Override 双参钩子全线语义不变）
+    //? if >=21.9 {
+    /*public void onClick(double mouseX, double mouseY) {
+    }
+
+    protected void onDrag(double mouseX, double mouseY, double dragX, double dragY) {
+    }
+
+    public void onRelease(double mouseX, double mouseY) {
+    }
+
+    @Override
+    public void onClick(MouseButtonEvent event, boolean doubleClick) {
+        this.onClick(event.x(), event.y());
+    }
+
+    @Override
+    protected void onDrag(MouseButtonEvent event, double dragX, double dragY) {
+        this.onDrag(event.x(), event.y(), dragX, dragY);
+    }
+
+    @Override
+    public void onRelease(MouseButtonEvent event) {
+        this.onRelease(event.x(), event.y());
+    }
+    *///?}
 
     // 1.16.5~1.19.2 AbstractWidget 无 getX/getY/setX/setY（x/y 为 public 字段），补桥接；
     // 1.19.4+ 侧父类自带同名方法（1194:315-330），桥接注释态（不可加 @Override：父类无此签名）

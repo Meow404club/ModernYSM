@@ -15,6 +15,9 @@ import com.elfmcys.yesstevemodel.util.data.OrderedStringMap;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.ChatFormatting;
+//? if >=21.9 {
+/*import net.minecraft.client.input.MouseButtonEvent;
+ *///?}
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -271,14 +274,50 @@ public class PlayerTextureScreen extends Screen {
     }
 
     public void renderTexturePreview(YsmGui guiGraphics, int scissorX, int scissorY, int scissorWidth, int scissorHeight, float partialTick) {
+        // 1.21.6+ RenderSystem.enableScissor 删 → GuiGraphics 剪裁（GUI 坐标=窗口坐标/guiScale 翻转 Y）
+        //? if <21.6
         RenderSystem.enableScissor(scissorX, scissorY, scissorWidth, scissorHeight);
+        //? if >=21.6 {
+        /*double ysmGuiScale = Minecraft.getInstance().getWindow().getGuiScale();
+        int ysmWinH = Minecraft.getInstance().getWindow().getHeight();
+        guiGraphics.graphics().enableScissor(
+            (int) (scissorX / ysmGuiScale),
+            (int) ((ysmWinH - (scissorY + scissorHeight)) / ysmGuiScale),
+            (int) ((scissorX + scissorWidth) / ysmGuiScale),
+            (int) ((ysmWinH - scissorY) / ysmGuiScale));*/
+        //?}
         PlayerCapability.get(this.minecraft.player).ifPresent(cap -> {
             this.modelHolder.initModelWithTexture(this.modelId, cap.getCurrentTextureName());
             ModelPreviewRenderer.renderEntityPreview(this.guiLeft + 149.5f + 40.0f + this.offsetX, this.guiTop + 117.5f + 80.0f + this.offsetY, this.zoom, this.pitch, this.yaw, partialTick, this.modelHolder, RendererManager.getPlayerRenderer(), this.showGround);
         });
+        //? if <21.6
         RenderSystem.disableScissor();
+        //? if >=21.6
+        /*guiGraphics.graphics().disableScissor();*/
     }
 
+    // 1.21.9+ 输入事件对象化（mouseDragged(MouseButtonEvent,double,double)）
+    //? if >=21.9 {
+    /*public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+        if (this.minecraft == null || !isInPreviewArea(mouseX, mouseY)) {
+            return false;
+        }
+        if (button == 0) {
+            this.yaw = (float) (this.yaw + (1.5d * dragX));
+            adjustPitch((float) dragY);
+        }
+        if (button == 1) {
+            this.offsetX = (float) (this.offsetX + dragX);
+            this.offsetY = (float) (this.offsetY + dragY);
+            return true;
+        }
+        return true;
+    }
+    *///?}
+    //? if <21.9 {
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if (this.minecraft == null || !isInPreviewArea(mouseX, mouseY)) {
             return false;
@@ -294,6 +333,7 @@ public class PlayerTextureScreen extends Screen {
         }
         return true;
     }
+    //?}
 
     //? if neoforge
 /*public boolean mouseScrolled(double mouseX, double mouseY, double delta, double scrollY) {*/

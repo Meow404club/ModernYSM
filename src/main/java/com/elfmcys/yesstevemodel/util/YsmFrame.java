@@ -13,10 +13,13 @@ public final class YsmFrame {
     }
 
     public static float partialTick(Minecraft minecraft) {
-        //? if >=1.21 {
-        /*return minecraft.getTimer().getGameTimeDeltaPartialTick(false);
-         *///?} else {
+        // 1.21.2 Minecraft.getTimer 删除 → getDeltaTracker（DeltaTracker 同名方法，
+        // vanilla-1.21.3 Minecraft.java:2606）
+        //? if >=1.21 && <1.21.2
+        /*return minecraft.getTimer().getGameTimeDeltaPartialTick(false);*/
+        //? if >=1.21.2
+        /*return minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false);*/
+        //? if <1.21
         return minecraft.getFrameTime();
-        //?}
     }
 }

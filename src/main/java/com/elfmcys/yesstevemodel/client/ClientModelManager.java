@@ -64,7 +64,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
+//? if neoforge && <21.9 {
 @OnlyIn(Dist.CLIENT)
+//?}
+//? if forge {
+/*@OnlyIn(Dist.CLIENT)*/
+//?}
 public class ClientModelManager {
     private static int syncStep = 1;
     private static byte[] key1;
@@ -981,6 +986,11 @@ public class ClientModelManager {
                 ResourceLocation location2 = FileTypeUtil.getPackIconLocation(packData.getPath());
                 Minecraft.getInstance().submit(() -> {
                     Minecraft.getInstance().getTextureManager().register(location2, iconTexture);
+                    // 铁律：>=21.4 门控内容必须存储态——裸行泄入 1.20.1 根活动节点致包图标
+                    // register 后重复 load（双在产线终验实证）
+                    //? if >=21.4 {
+                    /*iconTexture.load(Minecraft.getInstance().getResourceManager());*/
+                    //?}
                 });
             }
         }

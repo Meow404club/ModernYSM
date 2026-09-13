@@ -32,13 +32,25 @@ public class GeckoProjectileEntity extends GeoEntity<Projectile> {
     @Nullable
     public GeoEntity.ModelWrapper buildRenderShape(ModelAssembly modelAssembly, boolean isDefault) {
         ProjectileModelBundle modelBundle;
-        // 1171 EntityType 无 builtInRegistryHolder（merged jar 实证）→ EntityType.getKey 静态（1165/1171 同款）
-        //? if <1.18.2
-        // if (!isDefault && (modelBundle = modelAssembly.getProjectileModels().get(net.minecraft.world.entity.EntityType.getKey(this.entity.getType()))) != null) {
-        //? if >=1.18.2
+        // 1171 EntityType 无 builtInRegistryHolder（merged jar 实证）→ EntityType.getKey 静态（1165/1171 同款）；
+        // 1.21.11 ResourceKey.location() → identifier()（2111 ResourceKey.java:57）
+        // 1165/1171 分支用存储态块（条件真展开/假保持注释），勿用裸块：裸块对 <1.18.2 生成线
+        // 会被包裹致 buildRenderShape 退化恒 null（双在产线终验实证，1165 抛射物模型全灭）
+        //? if <1.18.2 {
+        /*if (!isDefault && (modelBundle = modelAssembly.getProjectileModels().get(net.minecraft.world.entity.EntityType.getKey(this.entity.getType()))) != null) {
+            return new ProjectileModelWrapper(modelAssembly, false, modelBundle);
+        }*/
+        //?}
+        //? if >=21.11 {
+        /*if (!isDefault && (modelBundle = modelAssembly.getProjectileModels().get(this.entity.getType().builtInRegistryHolder().key().identifier())) != null) {
+            return new ProjectileModelWrapper(modelAssembly, false, modelBundle);
+        }*/
+        //?}
+        //? if >=1.18.2 && <21.11 {
         if (!isDefault && (modelBundle = modelAssembly.getProjectileModels().get(this.entity.getType().builtInRegistryHolder().key().location())) != null) {
             return new ProjectileModelWrapper(modelAssembly, false, modelBundle);
         }
+        //?}
         return null;
     }
 
@@ -47,8 +59,10 @@ public class GeckoProjectileEntity extends GeoEntity<Projectile> {
         super.onModelLoaded(modelAssembly);
         //? if <1.18.2
         // this.projectileModelContext = modelAssembly.getProjectileModels().get(net.minecraft.world.entity.EntityType.getKey(this.entity.getType()));
-        //? if >=1.18.2
+        //? if >=1.18.2 && <21.11
         // this.projectileModelContext = modelAssembly.getProjectileModels().get(this.entity.getType().builtInRegistryHolder().key().location());
+        //? if >=21.11
+        // this.projectileModelContext = modelAssembly.getProjectileModels().get(this.entity.getType().builtInRegistryHolder().key().identifier());
     }
 
     @Override

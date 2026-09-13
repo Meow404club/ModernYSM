@@ -25,10 +25,15 @@ import com.elfmcys.yesstevemodel.util.FileTypeUtil;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceMap;
+// 1.21.11 Util 移 net.minecraft.util 子包
+//? if >=21.11
+/*import net.minecraft.util.Util;*/
+//? if <21.11
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import com.mojang.blaze3d.vertex.PoseStack;
+import rip.ysm.util.RenderCompat;
 //? if >=1.20 {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
@@ -206,12 +211,20 @@ public class ModelButton extends YsmButton {
         }
     }
 
-    //? if >=1.20 {
+    //? if >=1.20 && <21.11 {
     @Override
     public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
     //?}
+    // 1.21.11 AbstractButton.renderWidget final 化 → renderContents（2111 AbstractWidget.java 实证）
+    //? if >=21.11 {
+    /*
+    @Override
+    public void renderContents(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+    *///?}
     //? if >=1.19.4 && <1.20 {
     /*@Override
     public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
@@ -247,28 +260,35 @@ public class ModelButton extends YsmButton {
         int y = getY();
         guiGraphics.fillGradient(x, y, x + this.width, y + this.height, this.backgroundColor, this.backgroundColor);
         if (this.backgroundTexture != null) {
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
+            RenderCompat.enableBlend();
+            RenderCompat.defaultBlendFunc();
             guiGraphics.blit(this.backgroundTexture.getResourceLocation().get(), x, y, 0.0f, 0.0f, this.width, this.height, this.width, this.height);
-            RenderSystem.disableBlend();
+            RenderCompat.disableBlend();
         }
         if (ClientModelManager.isModelPending(this.targetModelId)) {
             drawLoading(guiGraphics, x + (this.width / 2.0f), y + ((this.height - 20) / 2.0f), 8.0f);
         } else {
             double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
+            // 1.21.6+ RenderSystem.enableScissor 删 → GuiGraphics 剪裁（GUI 坐标）
+            //? if <21.6
             RenderSystem.enableScissor((int) (x * guiScale), (int) (Minecraft.getInstance().getWindow().getHeight() - (((y + this.height) - 20) * guiScale)), (int) (this.width * guiScale), (int) ((this.height - 20) * guiScale));
+            //? if >=21.6
+            /*guiGraphics.graphics().enableScissor(x, y, x + this.width, y + this.height - 20);*/
             //? if >=1.21
             /*ModelPreviewRenderer.renderLivingEntityPreview(x + (this.width / 2.0f), y + (this.height / 2.0f) + 20.0f, 30.0f, YsmFrame.partialTick(minecraft), this.modelIdHolder, RendererManager.getPlayerRenderer(), this.disablePreviewRotation, true);*/
             //? if <1.21
             ModelPreviewRenderer.renderLivingEntityPreview(x + (this.width / 2.0f), y + (this.height / 2.0f) + 20.0f, 30.0f, minecraft.getFrameTime(), this.modelIdHolder, RendererManager.getPlayerRenderer(), this.disablePreviewRotation, true);
+            //? if <21.6
             RenderSystem.disableScissor();
+            //? if >=21.6
+            /*guiGraphics.graphics().disableScissor();*/
         }
         int starZ = 3500;
         if (this.foregroundTexture != null) {
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
+            RenderCompat.enableBlend();
+            RenderCompat.defaultBlendFunc();
             guiGraphics.blit(this.foregroundTexture.getResourceLocation().get(), x, y, 3500, 0, 0, this.width, this.height, this.width, this.height);
-            RenderSystem.disableBlend();
+            RenderCompat.disableBlend();
         }
         List listSplit = font.split(getMessage(), 45);
         if (listSplit.size() > 1) {
@@ -300,20 +320,30 @@ public class ModelButton extends YsmButton {
         float inner = radius - thickness;
         float time = (System.nanoTime() % 10_000_000_000L) / 1.0E9f;
 
+        //? if <21.6
         Pie.draw(guiGraphics.pose(), centerX, centerY, inner, radius, 0.0f, Pie.tau, 0x33FFFFFF);
+        // 1.21.6+ Pie 已降级 no-op（pose 类型变化，调用点一并退役）
 
         float sweepPhase = (time % 2.0f) / 2.0f;
         float eased = 0.5f - 0.5f * Mth.cos(sweepPhase * Pie.tau);
         float sweep = Mth.lerp(eased, 0.12f, 0.78f) * Pie.tau;
         float start = ((time % 1.4f) / 1.4f) * Pie.tau + sweepPhase * Pie.tau;
 
+        //? if <21.6
         Pie.draw(guiGraphics.pose(), centerX, centerY, inner, radius, start, start + sweep, 0xFFF3D08A);
+        // 1.21.6+ Pie 已降级 no-op（pose 类型变化，调用点一并退役）
     }
 
     public void renderTooltip(YsmGui guiGraphics, Screen screen, int mouseX, int mouseY) {
         if (/*? if >=1.18.2 && <1.19.4 {*/ /*isHoveredOrFocused()*//*?} else {*/ isHovered() /*?}*/) {
+            //? if <21.6
             guiGraphics.pose().pushPose();
+            //? if >=21.6
+            /*guiGraphics.pose().pushMatrix();*/
+            //? if <21.6
             guiGraphics.pose().translate(0.0f, 0.0f, 4000.0f);
+            //? if >=21.6
+            /*guiGraphics.pose().translate(0.0f, 0.0f);*/
             //? if <1.17
         /*String selected = Minecraft.getInstance().getLanguageManager().getSelected().getCode();*/
         // LanguageManager.getSelected() 1.19.4 起返回 String（1194:70），1.17~1.19.2 为 LanguageInfo → getCode()
@@ -326,6 +356,11 @@ public class ModelButton extends YsmButton {
                 this.detailedTooltipLines = null;
                 this.tooltipLines = null;
             }
+            // 1.21.9 Window.getWindow(long 句柄) → handle()（2110 Window.java:427）
+            // 1.21.9+ isKeyDown 首参 (long 句柄 → Window 对象)（2110 InputConstants.java:191）
+            //? if >=21.9
+            /*if (InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), 340) || InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), 344)) {*/
+            //? if <21.9
             if (InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), 340) || InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), 344)) {
                 if (this.detailedTooltipLines == null) {
                     this.detailedTooltipLines = ModelMetadataPresenter.buildModelTooltip(this.renderContext, selected, this.modelIdHolder.getModelId(), true);
@@ -337,11 +372,23 @@ public class ModelButton extends YsmButton {
                 }
                 guiGraphics.renderScreenComponentTooltip(screen, Minecraft.getInstance().font, this.tooltipLines, mouseX, mouseY);
             }
+            //? if <21.6
             guiGraphics.pose().popPose();
+            //? if >=21.6
+            /*guiGraphics.pose().popMatrix();*/
         }
     }
 
+    // 1.21.4 AbstractWidget.clicked(double,double) 删除（protected 命中判定方法移除，
+    // vanilla-1.21.4 AbstractWidget 无 clicked 方法）→ isHovered() 对位
+    //? if <21.4 {
     public boolean clicked(double mouseX, double mouseY) {
         return !this.isStarred && super.clicked(mouseX, mouseY);
     }
+    //?}
+    //? if >=21.4 {
+    /*public boolean clicked(double mouseX, double mouseY) {
+        return !this.isStarred && this.isHovered();
+    }*/
+    //?}
 }

@@ -30,9 +30,12 @@ public final class PlayerRenderStateEntityCache {
     public static void onRegisterModifiers(RegisterRenderStateModifiersEvent event) {
         // AvatarRenderer 泛型化（1.21.9 AvatarRenderer<T extends Avatar & ClientAvatarEntity>）
         // → raw TypeToken.of(...) 推断失败（2110 编译实证）→ 匿名子类显式定位 E/S
+        // 21.10 校验器要求 user 类型实参为各 bound 的超型（RegisterRenderStateModifiersEvent
+        // .java:114-124 ensureParametersMatchBounds），AvatarRenderer&lt;AbstractClientPlayer&gt;
+        // 不满足 → 通配符 &lt;?&gt; 让 E/S 落到 bound，lambda 内收窄转型（运行时仅玩家/人偶触发）
         event.registerEntityModifier(
-                new com.google.common.reflect.TypeToken<net.minecraft.client.renderer.entity.player.AvatarRenderer<net.minecraft.client.player.AbstractClientPlayer>>() {},
-                (entity, state) -> BY_STATE.put(state, entity));
+                new com.google.common.reflect.TypeToken<net.minecraft.client.renderer.entity.player.AvatarRenderer<?>>() {},
+                (entity, state) -> BY_STATE.put((net.minecraft.client.renderer.entity.state.LivingEntityRenderState) state, (net.minecraft.client.player.AbstractClientPlayer) entity));
     }
 
     public static AbstractClientPlayer get(LivingEntityRenderState state) {

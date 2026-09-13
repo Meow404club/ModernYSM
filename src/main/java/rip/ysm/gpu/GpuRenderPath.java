@@ -259,9 +259,14 @@ public final class GpuRenderPath {
         //? if >=1.17 && <1.19.4 {
         /*Vector3f[] arr = null;
          *///?}
-        //? if >=1.19.4 {
+        //? if >=1.19.4 && <21.6 {
         Vector3f[] arr = RenderSystemAccessor.ysm$getShaderLightDirections();
         //?}
+        // 1.21.6+ RenderSystem.shaderLightDirections 改 GpuBufferSlice 类型（2108 RenderSystem.java:78）
+        // → Vector3f[] accessor 不可读，走默认平行光兜底（功能债入账）
+        //? if >=21.6 {
+        /*Vector3f[] arr = null;
+         *///?}
         currentLights[0] = (arr != null && arr.length > 0 && arr[0] != null) ? arr[0] : new Vector3f(0.2f, 1.0f, -0.7f).normalize();
         currentLights[1] = (arr != null && arr.length > 1 && arr[1] != null) ? arr[1] : new Vector3f(-0.2f, 1.0f, 0.7f).normalize();
     }

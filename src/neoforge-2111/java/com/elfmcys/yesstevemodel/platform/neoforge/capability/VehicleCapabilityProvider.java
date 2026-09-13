@@ -2,8 +2,6 @@ package com.elfmcys.yesstevemodel.platform.neoforge.capability;
 
 import com.elfmcys.yesstevemodel.capability.VehicleCapability;
 import net.minecraft.world.entity.Entity;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.capabilities.EntityCapability;
 import rip.ysm.util.Rl;
 
@@ -14,7 +12,6 @@ import java.util.WeakHashMap;
 /**
  * neoforge 孪生（同 FQCN；客户端 molang 状态能力）。口径见 PlayerCapabilityProvider 孪生头注。
  */
-@OnlyIn(Dist.CLIENT)
 public class VehicleCapabilityProvider {
 
     public static final EntityCapability<VehicleCapability, Void> VEHICLE_CAP =

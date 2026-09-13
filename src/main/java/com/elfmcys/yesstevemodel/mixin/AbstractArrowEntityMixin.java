@@ -33,15 +33,21 @@ public class AbstractArrowEntityMixin implements ProjectileStateAccessor {
     @Unique
     private String ownerMainHandItem = StringPool.EMPTY;
 
+    // AbstractArrow.inGround 布尔字段删（1.21.6 render-dag 前置重排，2108/2111 零命中，
+    // 仅余 protected inGroundTime）→ >=21.6 用 inGroundTime>0 近似「已落地」语义，功能债入账
+    //? if <21.6 {
     @Shadow
     public boolean inGround;
-
+    //?}
     @Shadow
     public int inGroundTime;
 
     @Override
     @Unique
     public boolean isInGround() {
+        //? if >=21.6
+        /*return this.inGroundTime > 0;*/
+        //? if <21.6
         return this.inGround;
     }
 

@@ -845,12 +845,13 @@ moveCursorToEnd();;
 
     // 1.21.11 Screen.resize 去 Minecraft 头参（2111 Screen.java:450）
     //? if >=21.11 {
+    /*
     public void resize(int width, int height) {
         String value = this.searchBox.getValue();
         super.resize(width, height);
         this.searchBox.setValue(value);
     }
-    //?}
+    *///?}
     //? if <21.11 {
     public void resize(Minecraft minecraft, int width, int height) {
         String value = this.searchBox.getValue();

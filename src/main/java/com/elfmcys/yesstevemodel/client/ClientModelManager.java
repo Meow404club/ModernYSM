@@ -64,7 +64,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
+//? if neoforge && <21.9 {
 @OnlyIn(Dist.CLIENT)
+//?}
+//? if forge {
+/*@OnlyIn(Dist.CLIENT)*/
+//?}
 public class ClientModelManager {
     private static int syncStep = 1;
     private static byte[] key1;

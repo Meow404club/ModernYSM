@@ -133,7 +133,6 @@ public class CustomPlayerElytraLayer extends GeoLayerRenderer<CustomPlayerEntity
             // renderToBuffer 颜色改 int 打包（vanilla-1.21.1 Model.java:23）
             //? if >=1.21 && <21.9
             /*this.elytraModel.renderToBuffer(poseStack, ItemRenderer.getArmorFoilBuffer(bufferSource, RenderType.armorCutoutNoCull(cloakTextureLocation), stack.hasFoil()), packedLightIn, OverlayTexture.NO_OVERLAY, -1);*/
-            //? if <1.21
             // 1.21.9 getArmorFoilBuffer → getFoilBuffer（ItemRenderer.java:67 四参，语义同形）
             //? if >=21.9
             /*this.elytraModel.renderToBuffer(poseStack, ItemRenderer.getFoilBuffer(bufferSource, RenderType.armorCutoutNoCull(cloakTextureLocation), false, stack.hasFoil()), packedLightIn, OverlayTexture.NO_OVERLAY, -1);*/

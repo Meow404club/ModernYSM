@@ -52,8 +52,10 @@ public class EntityRenderDispatcherMixin {
 
     // 1.21.2 render-state 化：INVOKE 目标改 renderer.render(EntityRenderState,...)，实体上下文
     // 经 MixinExtras @Local 从私有重载 render(E,DDD,F,PoseStack,MultiBufferSource,I,EntityRenderer)
-    // 参数捕获（entity/float 各唯一；yaw 从 state 化前的实体插值自算）
-    //? if >=1.21.2 {
+    // 参数捕获（entity/float 各唯一；yaw 从 state 化前的实体插值自算）。
+    // 1.21.9+ EntityRenderer.render(state,...) 删（render-dag/SubmitNodeCollector 换代）→ 本
+    // wrap 目标不存在，21.9+ 载具/抛射物原版位渲染不挂载（submit 移植=功能债，M4 级）
+    //? if >=1.21.2 && <21.9 {
     /*@WrapWithCondition(method = {"render(Lnet/minecraft/world/entity/Entity;DDDFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/client/renderer/entity/EntityRenderer;)V"}, at = {@At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/entity/EntityRenderer;render(Lnet/minecraft/client/renderer/entity/state/EntityRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V")})
     private boolean render(@Local(argsOnly = true) Entity entity, @Local(argsOnly = true) float partialTicks, EntityRenderer<?, ?> renderer, EntityRenderState state, PoseStack poseStack, MultiBufferSource multiBufferSource, int packedLight) {
         if (!YesSteveModel.isAvailable()) {

@@ -16,6 +16,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.neoforged.neoforge.network.handling.IPayloadHandler;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
@@ -95,11 +96,14 @@ public final class YSMChannelImpl {
     private static void registerPayload(PayloadRegistrar registrar, int discriminator) {
         Identifier id = payloadId(discriminator);
         idByDiscriminator.put(discriminator, id);
+        // 1.21.10 3 参 playBidirectional 的 clientHandler 固定 null（2110 PayloadRegistrar.java:70/80）
+        // → 显式同 handler 双向注册，否则客户端 payload 全部「missing client-side handlers」崩加载
+        IPayloadHandler<Wrapped<?>> ysmHandler = (payload, context) -> dispatch((Wrapped<?>) payload, context);
         registrar.playBidirectional((CustomPacketPayload.Type) new CustomPacketPayload.Type<Wrapped<?>>(id),
                 StreamCodec.ofMember(
                         (Wrapped<?> payload, RegistryFriendlyByteBuf buf) -> payload.encode(buf),
                         (RegistryFriendlyByteBuf buf) -> Wrapped.decode(buf, id, discriminator)),
-                (payload, context) -> dispatch((Wrapped<?>) payload, context));
+                ysmHandler, ysmHandler);
     }
 
     private static Identifier payloadId(int discriminator) {

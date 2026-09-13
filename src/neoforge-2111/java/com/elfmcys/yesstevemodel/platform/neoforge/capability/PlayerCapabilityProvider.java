@@ -3,8 +3,6 @@ package com.elfmcys.yesstevemodel.platform.neoforge.capability;
 import com.elfmcys.yesstevemodel.capability.PlayerCapability;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.world.entity.Entity;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.capabilities.EntityCapability;
 import rip.ysm.util.Rl;
 
@@ -17,7 +15,6 @@ import java.util.WeakHashMap;
  * 实体实例状态改由 WeakHashMap 逐实体缓存承载（实体卸载随 GC 回收）；
  * 仅客户端世界提供（forge 侧 attach 期 client-world 守卫语义，移入查询 lambda，见 ForgeCapabilityHooks 孪生）。
  */
-@OnlyIn(Dist.CLIENT)
 public class PlayerCapabilityProvider {
 
     public static final EntityCapability<PlayerCapability, Void> PLAYER_CAP =

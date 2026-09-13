@@ -91,7 +91,12 @@ public class YesSteveModel {
 
     // 原 fabric @Environment(EnvType.CLIENT) → Forge @OnlyIn 等价替换：
     // 专用服剥离本方法（调用方均在 client 包，见 ClientPlayerJoinNotification/PlayerModelToggleKey）
+    //? if neoforge && <21.9 {
     @OnlyIn(Dist.CLIENT)
+    //?}
+    //? if forge {
+    /*    @OnlyIn(Dist.CLIENT)*/
+    //?}
     public static void sendUnavailableMessage() {
         LocalPlayer localPlayer = Minecraft.getInstance().player;
         if (localPlayer != null) {

@@ -45,17 +45,19 @@ public class GeckoVehicleEntity extends GeoEntity<Entity> {
     @Override
     @Nullable
     public GeoEntity.ModelWrapper buildRenderShape(ModelAssembly modelAssembly, boolean isDefault) {
-        // 1171 EntityType 无 builtInRegistryHolder（merged jar 实证）→ EntityType.getKey 静态（1165/1171 同款）
+        // 1171 EntityType 无 builtInRegistryHolder（merged jar 实证）→ EntityType.getKey 静态（1165/1171 同款）；
+        // 1.21.11 ResourceKey.location() → identifier()（2111 ResourceKey.java:57）。
+        // 三分支纯赋值形态：1.20.1 根活动节点原文直编译下前两分支均可见（后者胜出=正确分支）
+        VehicleModelBundle modelBundle;
         //? if <1.18.2 {
-        // VehicleModelBundle modelBundle = modelAssembly.getVehicleModels().get(net.minecraft.world.entity.EntityType.getKey(this.entity.getType()));
-        //? } else {
-        // 1.21.11 ResourceKey.location() → identifier()（2111 ResourceKey.java:57）
-        //? if >=21.11 {
-        /*VehicleModelBundle modelBundle = modelAssembly.getVehicleModels().get(this.entity.getType().builtInRegistryHolder().key().identifier());*/
+        modelBundle = modelAssembly.getVehicleModels().get(net.minecraft.world.entity.EntityType.getKey(this.entity.getType()));
         //?}
-        //? if <21.11 {
-        VehicleModelBundle modelBundle = modelAssembly.getVehicleModels().get(this.entity.getType().builtInRegistryHolder().key().location());
-        //? }
+        //? if >=1.18.2 && <21.11 {
+        modelBundle = modelAssembly.getVehicleModels().get(this.entity.getType().builtInRegistryHolder().key().location());
+        //?}
+        //? if >=21.11 {
+        /*modelBundle = modelAssembly.getVehicleModels().get(this.entity.getType().builtInRegistryHolder().key().identifier());*/
+        //?}
         if (modelBundle != null) {
             return new EntityModelWrapper(modelAssembly, isDefault, modelBundle);
         }

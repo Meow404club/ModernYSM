@@ -7,11 +7,12 @@ package com.elfmcys.yesstevemodel.client.renderer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 
-// 1.16.5 无 net.minecraft.Util（1.17+ 才有，1165 为 net.minecraft.util.Util）；1.21.11 移 net.minecraft.util 子包
-//? if >=1.17 && <21.11
-import net.minecraft.Util;
+// 1.16.5 无 Util（本文件 CACHE 仅 >=1.17 分支触及）；1.17~1.21.10 = net.minecraft.Util；
+// 1.21.11 移 net.minecraft.util.Util 子包。1.20.1 根活动节点原文直编译、条件仅注释 →
+// import 行不可版本化，改单点 FQN（见 CACHE 行）
 //? if >=21.11
-import net.minecraft.util.Util;
+/*import net.minecraft.util.Util;*/
+
 
 import java.util.function.Function;
 
@@ -29,8 +30,10 @@ public class CustomEntityTranslucentRenderType extends RenderType {
     // 须用已注释态/存储态形式
     //? if <1.17
     // private static final java.util.concurrent.ConcurrentMap<ResourceLocation, CustomEntityTranslucentRenderType> CACHE_MAP = new java.util.concurrent.ConcurrentHashMap<>();
-    //? if >=1.17
-    private static final Function<ResourceLocation, CustomEntityTranslucentRenderType> CACHE = Util.memoize(CustomEntityTranslucentRenderType::new);
+    //? if >=1.17 && <21.11
+    private static final Function<ResourceLocation, CustomEntityTranslucentRenderType> CACHE = net.minecraft.Util.memoize(CustomEntityTranslucentRenderType::new);
+    //? if >=21.11
+    /*private static final Function<ResourceLocation, CustomEntityTranslucentRenderType> CACHE = net.minecraft.util.Util.memoize(CustomEntityTranslucentRenderType::new);*/
 
     private final boolean useBlend;
 

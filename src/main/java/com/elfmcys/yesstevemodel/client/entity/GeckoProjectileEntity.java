@@ -34,14 +34,15 @@ public class GeckoProjectileEntity extends GeoEntity<Projectile> {
         ProjectileModelBundle modelBundle;
         // 1171 EntityType 无 builtInRegistryHolder（merged jar 实证）→ EntityType.getKey 静态（1165/1171 同款）；
         // 1.21.11 ResourceKey.location() → identifier()（2111 ResourceKey.java:57）
-        //? if <1.18.2
-        // if (!isDefault && (modelBundle = modelAssembly.getProjectileModels().get(net.minecraft.world.entity.EntityType.getKey(this.entity.getType()))) != null) {
+        //? if <1.18.2 && >=1.18.2 {
+        //（<1.18.2 无内建 Holder 链，走 getKey 静态；该分支实为空集占位）
+        //?}
         //? if >=21.11 {
         /*if (!isDefault && (modelBundle = modelAssembly.getProjectileModels().get(this.entity.getType().builtInRegistryHolder().key().identifier())) != null) {
             return new ProjectileModelWrapper(modelAssembly, false, modelBundle);
         }*/
         //?}
-        //? if <21.11 && >=1.18.2 {
+        //? if >=1.18.2 && <21.11 {
         if (!isDefault && (modelBundle = modelAssembly.getProjectileModels().get(this.entity.getType().builtInRegistryHolder().key().location())) != null) {
             return new ProjectileModelWrapper(modelAssembly, false, modelBundle);
         }

@@ -31,7 +31,12 @@ import net.minecraft.resources.ResourceLocation;
 import java.util.function.Consumer;
 
 //? if <21.11 {
+//? if neoforge && <21.9 {
 @OnlyIn(Dist.CLIENT)
+//?}
+//? if forge {
+/*@OnlyIn(Dist.CLIENT)*/
+//?}
 public class ConfigCheckBox extends StateSwitchingButton implements ISpecialWidget {
 
     //? if >=1.21
@@ -109,7 +114,7 @@ public class ConfigCheckBox extends StateSwitchingButton implements ISpecialWidg
 }
 //?}
 //? if >=21.11 {
-@OnlyIn(Dist.CLIENT)
+/*
 public class ConfigCheckBox extends YsmWidget implements ISpecialWidget {
 
     private static final ResourceLocation location = ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "texture/roulette.png");
@@ -150,4 +155,4 @@ public class ConfigCheckBox extends YsmWidget implements ISpecialWidget {
         this.consumer2.accept(Boolean.valueOf(this.isStateTriggered));
     }
 }
-//?}
+ *///?}

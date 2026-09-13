@@ -17,7 +17,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+//? if neoforge && <21.9 {
 @OnlyIn(Dist.CLIENT)
+//?}
+//? if forge {
+/*@OnlyIn(Dist.CLIENT)*/
+//?}
 public final class ClientOnlySelection {
 
     private static final Path FILE = ServerModelManager.FOLDER.resolve("client_selection.json");

@@ -50,11 +50,12 @@ public class FlatColorButton extends YsmButton {
     //?}
     // 1.21.11 AbstractButton.renderWidget final 化 → renderContents（2111 AbstractWidget.java 实证）
     //? if >=21.11 {
+    /*
     @Override
     public void renderContents(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
-    //?}
+    *///?}
     //? if >=1.19.4 && <1.20 {
     /*@Override
     public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
@@ -86,8 +87,7 @@ public class FlatColorButton extends YsmButton {
         /*guiGraphics.drawString(font, getMessage(), getX() + 2, getY() + (this.height - 8) / 2, 15986656, false);*/
         //? if >=1.17 && <1.20
         /*guiGraphics.renderScrollingString(font, getMessage(), getX() + 2, getY(), (getX() + this.width) - 2, getY() + this.height, 15986656);*/
-        //? if >=1.20
-        //? if <21.11
+        //? if >=1.20 && <21.11
         renderScrollingString(guiGraphics.graphics(), font, 2, 15986656);
         //? if >=21.11
         /*guiGraphics.drawString(font, this.getMessage(), this.getX() + 2, this.getY(), 15986656, false);*/

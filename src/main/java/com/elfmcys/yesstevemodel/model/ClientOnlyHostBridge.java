@@ -14,7 +14,12 @@ import net.minecraft.client.player.LocalPlayer;
 
 import java.util.UUID;
 
+//? if neoforge && <21.9 {
 @OnlyIn(Dist.CLIENT)
+//?}
+//? if forge {
+/*@OnlyIn(Dist.CLIENT)*/
+//?}
 final class ClientOnlyHostBridge {
 
     private ClientOnlyHostBridge() {

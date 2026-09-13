@@ -253,28 +253,39 @@ tasks {
     // 的类型名引用不值得逐行条件化 → 生成树一次性语义等价改写，共享源零搅动、在产线零接触
     //（任务只在 >=21.11 线注册）。生成树由 stonecutterGenerate 重刷时恢复 RL 名，本任务幂等重写；
     // RAW 源集（平台/compat shim 树）绕开 stonecutter，走 2111 分代副本（见 sourceSets 挂载注）。
-    if (stonecutter.eval(stonecutter.current.version, ">=21.11")) {
+    if (stonecutter.eval(stonecutter.current.version, ">=21.9")) {
         val genJavaDir = layout.buildDirectory.dir("generated/stonecutter/main/java")
         // 配置缓存铁律：doLast 只可捕获局部 String/Provider，stonecutter 脚本对象引用不可序列化
         val curVersion = stonecutter.current.version
+        val is21_11 = stonecutter.eval(stonecutter.current.version, ">=21.11")
         val rlToIdentifier = register<org.gradle.api.DefaultTask>("rlToIdentifier") {
             dependsOn("stonecutterGenerate")
             mustRunAfter("stonecutterGenerate")
+            // 声明输出=生成树：doLast 的原位改写必须让下游 compileJava 失效重编
+            //（无 outputs 声明时 Gradle 的 up-to-date 检查看不到本次改写，21.10 实证）
+            outputs.dir(genJavaDir)
             doLast {
                 val root = genJavaDir.get().asFile
                 if (root.isDirectory) {
                     var count = 0
-                    // 1.21.11 同波改名/移家三条规则（全部基于 neoforge-21.11.45-sources 实证）：
-                    //  a) ResourceLocation → Identifier（同包纯改名）
-                    //  b) （撤销）location()→identifier() 仅 ResourceKey 系成立，TagKey/自有
-                    //     ItemTag 保留 location() → 改为共享源位点级双行（见各文件注）
-                    //  c) RenderType 静态工厂（entityCutoutNoCull/entityTranslucent/lineStrip/outline/
-                    //     entityCutoutNoCullZOffset）→ RenderTypes 同名工厂（rendertype 包）
-                    val rules = listOf(
-                        Regex("\\bResourceLocation\\b") to "Identifier",
-                        Regex("\\bRenderType\\.(armorCutoutNoCull|entityCutoutNoCullZOffset|entityCutoutNoCull|entitySolid|entityTranslucentEmissive|entityTranslucent|lineStrip|outline)\\(")
-                            to "net.minecraft.client.renderer.rendertype.RenderTypes.$1("
+                    // [>=21.9] @OnlyIn(Dist.CLIENT) 注解行剥离——loader 10 起 member-stripping
+                    //  行为废除，注解残留被 OnlyInWarningsHandler 记为加载错误，卡死 Client
+                    //  network registry lock（21.10 runClient 实证）
+                    // [>=21.11] a) ResourceLocation → Identifier（同包纯改名）
+                    //           b) （撤销）location()→identifier() 仅 ResourceKey 系成立，
+                    //              TagKey/自有 ItemTag 保留 location() → 共享源位点级双行
+                    //           c) RenderType 静态工厂（entityCutoutNoCull/entityTranslucent/
+                    //              lineStrip/outline/entityCutoutNoCullZOffset）→ RenderTypes
+                    //              同名工厂（rendertype 包）
+                    //（全部基于 neoforge-21.10.64/21.11.45-sources 实证）
+                    val rules = mutableListOf(
+                        Regex("(?m)^[ \\t]*@OnlyIn\\(Dist\\.CLIENT\\)[ \\t]*\\r?\\n") to ""
                     )
+                    if (is21_11) {
+                        rules.add(Regex("\\bResourceLocation\\b") to "Identifier")
+                        rules.add(Regex("\\bRenderType\\.(armorCutoutNoCull|entityCutoutNoCullZOffset|entityCutoutNoCull|entitySolid|entityTranslucentEmissive|entityTranslucent|lineStrip|outline)\\(")
+                            to "net.minecraft.client.renderer.rendertype.RenderTypes.$1(")
+                    }
                     root.walkTopDown().filter { it.isFile && it.extension == "java" }.forEach { f ->
                         val text = f.readText()
                         if (rules.any { (re, _) -> re.containsMatchIn(text) }) {
@@ -289,6 +300,10 @@ tasks {
             }
         }
         named<org.gradle.api.tasks.compile.JavaCompile>("compileJava") { dependsOn(rlToIdentifier) }
+        // sourcesJar 打包生成树源码，同样依赖改写后内容
+        matching { it.name == "sourcesJar" }.configureEach {
+            dependsOn(rlToIdentifier)
+        }
     }
 
     register<Copy>("buildAndCollect") {
@@ -401,10 +416,17 @@ tasks.named<ProcessResources>("processResources") {
     if (!pre1205) {
         // 配置缓存铁律：lambda 内只引任务配置块局部 val（stonecutter 是脚本对象引用）
         val dropBufferBuilderMixin = stonecutter.eval(stonecutter.current.version, ">=1.21")
+        // 配置缓存铁律：条件在配置期物化为局部量，filter 内不可捕 stonecutter 脚本对象
+        val dropRenderSystemAccessor = stonecutter.eval(stonecutter.current.version, ">=21.6")
         filesMatching("*.mixins.json") {
             filter { line: String ->
                 var out = line.replace("\"JAVA_17\"", "\"JAVA_21\"")
                     .replace("\"client.ArrowEntityAccessor\"", "\"client.ArrowPotionAccessor\"")
+                if (dropRenderSystemAccessor) {
+                    // 1.21.9 RenderSystem.shaderLightDirections 改 GpuBufferSlice → accessor 失效，
+                    // 注冊表剔除（GpuRenderPath.refreshLights 已有默认平行光兜底）
+                    out = out.replace("\"client.RenderSystemAccessor\", ", "")
+                }
                 if (dropBufferBuilderMixin) {
                     // 1.21 BufferBuilder 原生内存重构（无 buffer/nextElementByte/ensureCapacity，
                     // vanilla-1.21.1 BufferBuilder.java:18-31）——JNI SIMD 直传面不存在，

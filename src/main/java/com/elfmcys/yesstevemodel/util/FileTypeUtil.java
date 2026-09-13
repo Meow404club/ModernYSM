@@ -81,10 +81,11 @@ public final class FileTypeUtil {
      *  带#的是实体 Tag
      */
     //? if >=21.11 {
+    /*
     private static net.minecraft.resources.Identifier ysmKeyString(net.minecraft.resources.ResourceKey<?> key) {
         return key.identifier();
     }
-    //?}
+    *///?}
     //? if <21.11 {
     private static net.minecraft.resources.ResourceLocation ysmKeyString(net.minecraft.resources.ResourceKey<?> key) {
         return key.location();

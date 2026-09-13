@@ -390,9 +390,10 @@ public final class ModelPreviewRenderer {
     // 1.21.9+ dispatcher.render 直绘删（render-dag 换代）→ 载具动画预览降级 no-op
     //（真身实现仅 <21.9，功能债同 renderVehicleEntity）
     //? if >=21.9 {
+    /*
     private static void renderVehicleForAnimation(float yaw, AnimatableEntity animatableEntity, float partialTick, PoseStack poseStack, EntityRenderDispatcher entityRenderDispatcher, MultiBufferSource.BufferSource bufferSource) throws ExecutionException {
     }
-    //?}
+    *///?}
     //? if <21.9 {
     private static void renderVehicleForAnimation(float yaw, AnimatableEntity animatableEntity, float partialTick, PoseStack poseStack, EntityRenderDispatcher entityRenderDispatcher, MultiBufferSource.BufferSource bufferSource) throws ExecutionException {
         Entity entity = animatableEntity.getEntity();
@@ -438,9 +439,10 @@ public final class ModelPreviewRenderer {
     // 2110 EntityRenderDispatcher.java 方法面实证）→ 载具预览降级 no-op
     //（正规迁移=extractEntity+submit 重构，功能债入账）；真身实现仅 <21.9
     //? if >=21.9 {
+    /*
     private static void renderVehicleEntity(float yaw, Entity riderEntity, PoseStack poseStack, EntityRenderDispatcher entityRenderDispatcher, MultiBufferSource.BufferSource bufferSource, Entity vehicleEntity, float partialTick) {
     }
-    //?}
+    *///?}
     //? if <21.9 {
     private static void renderVehicleEntity(float yaw, Entity riderEntity, PoseStack poseStack, EntityRenderDispatcher entityRenderDispatcher, MultiBufferSource.BufferSource bufferSource, Entity vehicleEntity, float partialTick) {
         poseStack.pushPose();

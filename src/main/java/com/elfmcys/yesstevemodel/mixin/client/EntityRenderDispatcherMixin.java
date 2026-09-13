@@ -53,11 +53,14 @@ public class EntityRenderDispatcherMixin {
     // 1.21.2 render-state 化：INVOKE 目标改 renderer.render(EntityRenderState,...)，实体上下文
     // 经 MixinExtras @Local 从私有重载 render(E,DDD,F,PoseStack,MultiBufferSource,I,EntityRenderer)
     // 参数捕获（entity/float 各唯一；yaw 从 state 化前的实体插值自算）。
+    // ⚠ MixinExtras 糖参必须 trailing（SugarInjector.stripSugar：出现普通参后再遇糖参即抛
+    // "Found non-trailing sugared parameters"，21.3 runClient 实证崩；0.5.3 源码
+    // SugarInjector.java:143-148 规则）→ @Local 参置于普通参之后
     // 1.21.9+ EntityRenderer.render(state,...) 删（render-dag/SubmitNodeCollector 换代）→ 本
     // wrap 目标不存在，21.9+ 载具/抛射物原版位渲染不挂载（submit 移植=功能债，M4 级）
     //? if >=1.21.2 && <21.9 {
     /*@WrapWithCondition(method = {"render(Lnet/minecraft/world/entity/Entity;DDDFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/client/renderer/entity/EntityRenderer;)V"}, at = {@At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/entity/EntityRenderer;render(Lnet/minecraft/client/renderer/entity/state/EntityRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V")})
-    private boolean render(@Local(argsOnly = true) Entity entity, @Local(argsOnly = true) float partialTicks, EntityRenderer<?, ?> renderer, EntityRenderState state, PoseStack poseStack, MultiBufferSource multiBufferSource, int packedLight) {
+    private boolean render(EntityRenderer<?, ?> renderer, EntityRenderState state, PoseStack poseStack, MultiBufferSource multiBufferSource, int packedLight, @Local(argsOnly = true) Entity entity, @Local(argsOnly = true) float partialTicks) {
         if (!YesSteveModel.isAvailable()) {
             return true;
         }

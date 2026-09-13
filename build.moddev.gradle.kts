@@ -28,6 +28,23 @@ val neoMajor = (property("deps.neoforge") as String).substringBeforeLast('.')
 // 对 "<1.21" 为 false——条件轴不受影响
 val v26 = stonecutter.eval(stonecutter.current.version, ">=26")
 
+// 21.6+ 线 log4j 对齐：1.21.8 依赖图有库传递引入 log4j-core 2.19.0 抢占（nearest-wins），
+// 与 log4j-api 2.24.1 错配 → 启动即 NoSuchMethodError
+// （ServiceLoaderUtil.loadServices 签名缺失，21.8 runServer 实证）。constraints 强制同版。
+println("[ysm] log4j alignment applied for " + stonecutter.current.version)
+if (stonecutter.eval(stonecutter.current.version, ">=21.6")) {
+    configurations.configureEach {
+        resolutionStrategy {
+            // 全家对齐 2.19.0：NFRT legacy classpath 固化 core 2.19.0（NFRT 内部解析，Gradle force
+            // 无法影响），Gradle 侧必须向其看齐——api 2.24/2.25 × core 2.19 混版启动即崩（实证）
+            force("org.apache.logging.log4j:log4j-core:2.19.0")
+            force("org.apache.logging.log4j:log4j-api:2.19.0")
+            force("org.apache.logging.log4j:log4j-slf4j2-impl:2.19.0")
+            force("org.apache.logging.log4j:log4j-slf4j-impl:2.19.0")
+        }
+    }
+}
+
 // NFRT 类路径含版本区间依赖（log4j-core 2.11.+），每次解析都 HEAD maven-metadata——
 // maven.neoforged.net 偶发 502 即断构建（实测两次）→ 钉死具体版本（loader 2.0.17 自带 2.19.0）去抖
 configurations.all {
@@ -285,11 +302,14 @@ tasks.named<ProcessResources>("processResources") {
     // 配置缓存铁律：filter lambda 只可捕获任务配置块内的局部 val（脚本顶层 val = 脚本对象
     // 引用，不可序列化——1.20.6 build 配置缓存实测报错），先物化为局部量
     val neoMajorLocal = neoMajor
-    val mcVersionLocal = mcVersion
+    // FML 版本比较用游戏真实版本串：21.x 线的 ID 是缩写，MC 真身 = "1."+ID（21.8→1.21.8，
+    // crash report "Currently, minecraft is 1.21.8" vs 范围 "[21.8,)" 不匹配实证）；26.x 起新纪元 ID 即真身
+    val mcReal = if (mcVersion.startsWith("21.")) "1.$mcVersion" else mcVersion
+    val mcRealLocal = mcReal
     filesMatching(listOf("META-INF/neoforge.mods.toml", "META-INF/mods.toml")) {
         filter { line: String ->
             line.replace("versionRange = \"[20.6,)\"", "versionRange = \"[$neoMajorLocal,)\"")
-                .replace("versionRange = \"[1.20.6,)\"", "versionRange = \"[$mcVersionLocal,)\"")
+                .replace("versionRange = \"[1.20.6,)\"", "versionRange = \"[$mcRealLocal,)\"")
         }
     }
     // pack.mcmeta 资源包格式（共享源为 1.20.1 口径 15）：
@@ -337,7 +357,6 @@ tasks.named<ProcessResources>("processResources") {
     }
 }
 
-// runServer 控制台 stdin（harness/tour.sh 和平启动注入通道）：与 forge 线同款
 tasks.named<org.gradle.api.tasks.JavaExec>("runServer") {
     standardInput = System.`in`
 }

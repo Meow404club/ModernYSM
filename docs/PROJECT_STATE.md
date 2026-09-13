@@ -78,7 +78,9 @@
 - 双在产线验收口径演化为"语义零变化"（字面逐字节不可达：条件注释行必漂移 LNT+zip 序随环境变），审查独立构建复核通过（1165=2454 条目 0 增删/160/161 逐指令全同）
 - 遗传入账：1171 init 重入清场债（trio<1.17+clearWidgets≥1.18.2 组合解，1171 空档段不清场）；RenderArmEvent/ShieldBlockCooldown/RegisterClientCommandsEvent 三事件功能差；中段线生产 jar 内嵌 MixinExtras（forge 37.1.1 无内置）归发布卡
 
-## M3 第二批 neoforge（tasks.m3-batch2a/2b，2a 进行中）
+## M3 第二批 neoforge（2a 已合入 dev=a129edc，2026-09-13；2b 进行中）
+- 2a：1.20.4/1.20.6/1.21.1 三线全绿+16 屏走查进世界；moddev 构建线建成（MDG2 neoforge、分代树 srcDir、neoforge.mods.toml、[[mixins]] 声明、零 refmap 直配、compatLevel JAVA_17/21/21）；双在产线对基线逐类 javap+资源全同（4 处回归抓回修复）；TouhouMaidCompat @OnlyIn 中立化裁决通过（专用服更安全）
+- 2b（进行中）：21.3/21.4/21.5/21.8/21.10/21.11（Java 21）+ 26.1.2/26.2（Java 25）——复用分代树模式+nerfed_learnings 四条沉淀
 - 2a：1.20.4（20.4.x stable）/1.20.6（20.6.x）/1.21.1（21.1.x）——moddev 构建线首次建立（MDG neoforge），Java 17/21/21
 - 2b：21.3/21.4/21.5/21.8/21.10/21.11/26.1.2/26.2（Java 21→25）
 - 已知要点：NeoForge 1.20.2+ 运行时=mojmap（无 SRG reobf，mixin refmap 口径待验证）；1.20.5+ neoforge.mods.toml/Component 体系；26.x 需 Java 25 toolchain

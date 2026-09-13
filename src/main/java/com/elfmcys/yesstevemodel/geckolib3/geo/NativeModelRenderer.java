@@ -263,7 +263,7 @@ public class NativeModelRenderer {
         VertexConsumer vc = (VertexConsumer) v;
         int fIdx = 0, iIdx = 0;
         for (int n = 0; n < vertexCount; n++) {
-            //? if >=1.21
+            //? if >=1.21 {
             /*vc.addVertex(
                     f.get(fIdx),     f.get(fIdx + 1), f.get(fIdx + 2),
                     net.minecraft.util.FastColor.ABGR32.color(net.minecraft.util.FastColor.as8BitChannel(f.get(fIdx + 6)), net.minecraft.util.FastColor.as8BitChannel(f.get(fIdx + 5)), net.minecraft.util.FastColor.as8BitChannel(f.get(fIdx + 4)), net.minecraft.util.FastColor.as8BitChannel(f.get(fIdx + 3))),
@@ -271,14 +271,16 @@ public class NativeModelRenderer {
                     in.get(iIdx),    in.get(iIdx + 1),
                     f.get(fIdx + 9), f.get(fIdx + 10), f.get(fIdx + 11)
             );*/
-            //? if <1.21
-            /*vc.vertex(
+            //?}
+            //? if <1.21 {
+            vc.vertex(
                     f.get(fIdx),     f.get(fIdx + 1), f.get(fIdx + 2),
                     f.get(fIdx + 3), f.get(fIdx + 4), f.get(fIdx + 5), f.get(fIdx + 6),
                     f.get(fIdx + 7), f.get(fIdx + 8),
                     in.get(iIdx),    in.get(iIdx + 1),
                     f.get(fIdx + 9), f.get(fIdx + 10), f.get(fIdx + 11)
-            );*/
+            );
+            //?}
             fIdx += 12;
             iIdx += 2;
         }

@@ -19,7 +19,9 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-import rip.ysm.util.Rl;
+//? if >=1.21 {
+/*import rip.ysm.util.Rl;*/
+//?}
 
 public class ConditionArmor {
 

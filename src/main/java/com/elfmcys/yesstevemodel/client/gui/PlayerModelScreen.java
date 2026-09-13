@@ -58,7 +58,9 @@ import rip.ysm.gpu.GpuCapability;
 import rip.ysm.pinyin.PinyinMatcher;
 
 import java.util.*;
-import com.elfmcys.yesstevemodel.util.YsmFrame;
+//? if >=1.21 {
+/*import com.elfmcys.yesstevemodel.util.YsmFrame;*/
+//?}
 
 public class PlayerModelScreen extends Screen implements IGuiWidget {
 

@@ -64,6 +64,8 @@ sourceSets.main {
     java {
         exclude("rip/ysm/zstd/**")
         exclude("com/elfmcys/yesstevemodel/util/UnsafeUtil.java")
+        // neoforge 三线专属跨版本工厂（forge 1.16.5 线零引用，见 build.forge 同款注释）
+        exclude("rip/ysm/util/Rl.java", "com/elfmcys/yesstevemodel/util/YsmFrame.java")
     }
 }
 tasks.named<JavaCompile>("compileUnsafe8Java") {

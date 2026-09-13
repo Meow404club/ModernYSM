@@ -16,7 +16,9 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
-import rip.ysm.util.Rl;
+//? if >=1.21 {
+/*import rip.ysm.util.Rl;*/
+//?}
 
 public class ConditionSwing {
 

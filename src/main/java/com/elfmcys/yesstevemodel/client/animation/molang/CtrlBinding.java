@@ -34,7 +34,9 @@ import net.minecraft.world.entity.player.Player;
 
 import java.util.Objects;
 import java.util.function.Predicate;
-import com.elfmcys.yesstevemodel.util.YsmFrame;
+//? if >=1.21 {
+/*import com.elfmcys.yesstevemodel.util.YsmFrame;*/
+//?}
 
 public class CtrlBinding extends ContextBinding {
 

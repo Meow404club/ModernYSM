@@ -5,7 +5,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import org.apache.commons.lang3.StringUtils;
 import rip.ysm.compat.gun.swarfare.SWarfareCompat;
-import rip.ysm.util.Rl;
+//? if >=1.21 {
+/*import rip.ysm.util.Rl;*/
+//?}
 
 public class ConditionTAC {
 

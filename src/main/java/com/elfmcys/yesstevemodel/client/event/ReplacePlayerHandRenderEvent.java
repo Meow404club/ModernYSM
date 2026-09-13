@@ -12,7 +12,9 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.player.Player;
-import com.elfmcys.yesstevemodel.util.YsmFrame;
+//? if >=1.21 {
+/*import com.elfmcys.yesstevemodel.util.YsmFrame;*/
+//?}
 
 public class ReplacePlayerHandRenderEvent {
 

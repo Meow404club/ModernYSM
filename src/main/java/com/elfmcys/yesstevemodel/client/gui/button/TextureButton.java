@@ -26,7 +26,9 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.FormattedCharSequence;
 
 import java.util.List;
-import com.elfmcys.yesstevemodel.util.YsmFrame;
+//? if >=1.21 {
+/*import com.elfmcys.yesstevemodel.util.YsmFrame;*/
+//?}
 
 public class TextureButton extends YsmButton {
 

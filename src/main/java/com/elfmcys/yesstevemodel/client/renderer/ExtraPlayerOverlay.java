@@ -10,7 +10,9 @@ import net.minecraft.client.gui.GuiGraphics;
 //?}
 import net.minecraft.client.player.LocalPlayer;
 import rip.ysm.api.client.HudOverlay;
-import com.elfmcys.yesstevemodel.util.YsmFrame;
+//? if >=1.21 {
+/*import com.elfmcys.yesstevemodel.util.YsmFrame;*/
+//?}
 
 public class ExtraPlayerOverlay implements HudOverlay {
     // 1.16.5 降级：不渲染（实现委托 ModelPreviewRenderer.renderPlayerOverlay，其 modelViewStack/

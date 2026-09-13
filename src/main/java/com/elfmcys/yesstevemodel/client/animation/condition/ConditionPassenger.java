@@ -8,7 +8,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import rip.ysm.util.Rl;
+//? if >=1.21 {
+/*import rip.ysm.util.Rl;*/
+//?}
 
 public class ConditionPassenger {
 

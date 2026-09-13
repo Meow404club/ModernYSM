@@ -418,6 +418,10 @@ public final class ModelPreviewRenderer {
         /*entityRenderDispatcher.render(vehicleEntity, 0.0d, (-vehicleEntity.getMyRidingOffset(riderEntity) - riderEntity.getMyRidingOffset(vehicleEntity)), 0.0d, 0.0f, partialTick, poseStack, bufferSource, 15728880);*/
         //? if neoforge && >=1.20.5
         /*entityRenderDispatcher.render(vehicleEntity, 0.0d, (-vehicleEntity.getVehicleAttachmentPoint(riderEntity).y - riderEntity.getVehicleAttachmentPoint(vehicleEntity).y), 0.0d, 0.0f, partialTick, poseStack, bufferSource, 15728880);*/
+        // forge<1.19.4 分支（基线=无条件行；4e0a2d9 分支化时漏掉 <1.19.4 段导致
+        // 1.16.5~1.19.2 载具预览 render 丢失——1.16.5 产物 javap 对比实证，此处补回）
+        //? if forge && <1.19.4
+        /*entityRenderDispatcher.render(vehicleEntity, 0.0d, (-vehicleEntity.getPassengersRidingOffset()) - riderEntity.getMyRidingOffset(), 0.0d, 0.0f, partialTick, poseStack, bufferSource, 15728880);*/
         //? if forge && >=1.19.4
         entityRenderDispatcher.render(vehicleEntity, 0.0d, (-vehicleEntity.getPassengersRidingOffset()) - riderEntity.getMyRidingOffset(), 0.0d, 0.0f, partialTick, poseStack, bufferSource, 15728880);
         poseStack.popPose();

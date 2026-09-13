@@ -50,6 +50,16 @@ public class EffectLevel extends ContextFunction<Entity> {
                             return null;
                         }
 
+                        //? if neoforge && >=1.20.5 {
+                        /*for (MobEffectInstance mobEffectInstance : ((com.elfmcys.yesstevemodel.mixin.client.ArrowPotionAccessor)((IContext<?>)context.entity()).entity())
+                                .ysm$getPotionContents().getAllEffects()) {
+                            if (mobEffectInstance.getEffect().value() == mobEffect) {
+                                effects += mobEffectInstance.getAmplifier() + 1;
+                                break;
+                            }
+                        }*/
+                        //?}
+                        //? if forge || neoforge && <1.20.5 {
                         for (MobEffectInstance mobEffectInstance : ((ArrowEntityAccessor)((IContext<?>)context.entity()).entity())
                                 .getEffects()) {
                             if (mobEffectInstance.getEffect() == mobEffect) {
@@ -57,6 +67,7 @@ public class EffectLevel extends ContextFunction<Entity> {
                                 break;
                             }
                         }
+                        //?}
                     }
                 }
             }

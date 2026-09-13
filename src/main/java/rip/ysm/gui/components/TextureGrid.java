@@ -19,7 +19,9 @@ import rip.ysm.gui.OptionRow;
 
 import java.util.ArrayList;
 import java.util.List;
-import com.elfmcys.yesstevemodel.util.YsmFrame;
+//? if >=1.21 {
+/*import com.elfmcys.yesstevemodel.util.YsmFrame;*/
+//?}
 
 public final class TextureGrid extends OptionRow<Object> {
     private static final int TEX_BTN_W = 54;

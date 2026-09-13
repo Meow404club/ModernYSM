@@ -7,7 +7,9 @@ import immersive_melodies.client.MelodyProgressManager;
 import immersive_melodies.client.animation.EntityModelAnimator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.LivingEntity;
-import com.elfmcys.yesstevemodel.util.YsmFrame;
+//? if >=1.21 {
+/*import com.elfmcys.yesstevemodel.util.YsmFrame;*/
+//?}
 
 public class ImmersiveMelodiesBinding {
     public static void registerControllerFunctions(CtrlBinding binding) {

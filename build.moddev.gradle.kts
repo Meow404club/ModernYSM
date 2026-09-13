@@ -237,9 +237,12 @@ tasks.named<ProcessResources>("processResources") {
     // mixins.json compatibilityLevel：1.20.4 产物 Java 17 字节码 → 保持 JAVA_17；
     // 1.20.6/1.21.1 产物 Java 21 字节码 + Java 21 运行时 → JAVA_17 声明双不符，替换为 JAVA_21
     //（机制同 build.forge.gradle.kts 的 pre118 JAVA_17→JAVA_16 替换；产物实测归终验 d）
+    // Arrow 效果 accessor 版本化：1.20.5+ Arrow.effects 字段删除（数据组件化），换成
+    // PotionContents Invoker（src/neoforge-{1205,1211}/java .../mixin/client/ArrowPotionAccessor）
     if (!pre1205) {
         filesMatching("*.mixins.json") {
-            filter { line: String -> line.replace("\"JAVA_17\"", "\"JAVA_21\"") }
+            filter { line: String -> line.replace("\"JAVA_17\"", "\"JAVA_21\"")
+                .replace("\"client.ArrowEntityAccessor\"", "\"client.ArrowPotionAccessor\"") }
         }
     }
 }

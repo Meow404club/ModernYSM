@@ -20,7 +20,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.*;
 import java.util.zip.DataFormatException;
-import rip.ysm.util.Rl;
+//? if >=1.21 {
+/*import rip.ysm.util.Rl;*/
+//?}
 
 public final class YesModelUtils {
     public static final int HEAD = 0x59_53_47_50;

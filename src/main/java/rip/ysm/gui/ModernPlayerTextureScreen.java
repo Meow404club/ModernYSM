@@ -36,7 +36,9 @@ import rip.ysm.util.YsmCollections;
 
 import java.util.List;
 import java.util.Map;
-import com.elfmcys.yesstevemodel.util.YsmFrame;
+//? if >=1.21 {
+/*import com.elfmcys.yesstevemodel.util.YsmFrame;*/
+//?}
 
 public class ModernPlayerTextureScreen extends OptionScreen {
 

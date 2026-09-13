@@ -807,10 +807,13 @@ public class AnimationRouletteScreen extends Screen {
         bufferBuilder.addVertex(matrix4f, this.centerX + (innerRadius * Mth.cos(endAngle)), this.centerY + (innerRadius * Mth.sin(endAngle)), 0.0f).setColor(red, green, blue, alpha);
         bufferBuilder.addVertex(matrix4f, this.centerX + (outerRadius * Mth.cos(endAngle)), this.centerY + (outerRadius * Mth.sin(endAngle)), 0.0f).setColor(red, green, blue, alpha);*/
         //? if <1.21
-        /*bufferBuilder.vertex(matrix4f, this.centerX + (outerRadius * Mth.cos(startAngle)), this.centerY + (outerRadius * Mth.sin(startAngle)), 0.0f).color(red, green, blue, alpha).endVertex();
+        bufferBuilder.vertex(matrix4f, this.centerX + (outerRadius * Mth.cos(startAngle)), this.centerY + (outerRadius * Mth.sin(startAngle)), 0.0f).color(red, green, blue, alpha).endVertex();
+        //? if <1.21
         bufferBuilder.vertex(matrix4f, this.centerX + (innerRadius * Mth.cos(startAngle)), this.centerY + (innerRadius * Mth.sin(startAngle)), 0.0f).color(red, green, blue, alpha).endVertex();
+        //? if <1.21
         bufferBuilder.vertex(matrix4f, this.centerX + (innerRadius * Mth.cos(endAngle)), this.centerY + (innerRadius * Mth.sin(endAngle)), 0.0f).color(red, green, blue, alpha).endVertex();
-        bufferBuilder.vertex(matrix4f, this.centerX + (outerRadius * Mth.cos(endAngle)), this.centerY + (outerRadius * Mth.sin(endAngle)), 0.0f).color(red, green, blue, alpha).endVertex();*/
+        //? if <1.21
+        bufferBuilder.vertex(matrix4f, this.centerX + (outerRadius * Mth.cos(endAngle)), this.centerY + (outerRadius * Mth.sin(endAngle)), 0.0f).color(red, green, blue, alpha).endVertex();
     }
     // addRenderableWidget/addWidget 均为 protected 实例方法（JLS 6.6.2 子类内才可调）→ 桥方法；
     // 泛型返回保持原 addRenderableWidget 的链式取回语义（如 .setTooltipText 续链）

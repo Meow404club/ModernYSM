@@ -413,6 +413,12 @@ public class YSMBinding extends ContextBinding {
             return null;
         }
         if (context.entity() instanceof Arrow) {
+            // 1.20.5+ Arrow.effects 字段删除 → PotionContents.getAllEffects()（Invoker 孪生）
+            //? if neoforge && >=1.20.5
+            /*java.util.ArrayList<MobEffectInstance> arrowEffects = new java.util.ArrayList<>();
+            ((com.elfmcys.yesstevemodel.mixin.client.ArrowPotionAccessor) context.entity()).ysm$getPotionContents().getAllEffects().forEach(arrowEffects::add);
+            activeEffects = arrowEffects;*/
+            //? if forge || neoforge && <1.20.5
             activeEffects = ((ArrowEntityAccessor) context.entity()).getEffects();
         } else if (context.entity() instanceof LivingEntity) {
             activeEffects = ((LivingEntity) context.entity()).getActiveEffects();

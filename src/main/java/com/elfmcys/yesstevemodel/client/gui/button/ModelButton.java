@@ -47,7 +47,9 @@ import rip.ysm.gpu.Pie;
 
 import java.util.List;
 import java.util.Objects;
-import com.elfmcys.yesstevemodel.util.YsmFrame;
+//? if >=1.21 {
+/*import com.elfmcys.yesstevemodel.util.YsmFrame;*/
+//?}
 
 public class ModelButton extends YsmButton {
 

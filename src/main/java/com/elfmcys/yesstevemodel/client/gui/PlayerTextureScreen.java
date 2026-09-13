@@ -34,7 +34,9 @@ import net.minecraft.util.Mth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import com.elfmcys.yesstevemodel.util.YsmFrame;
+//? if >=1.21 {
+/*import com.elfmcys.yesstevemodel.util.YsmFrame;*/
+//?}
 
 public class PlayerTextureScreen extends Screen {
 

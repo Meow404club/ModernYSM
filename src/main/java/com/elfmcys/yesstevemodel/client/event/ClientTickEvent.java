@@ -33,7 +33,7 @@ public final class ClientTickEvent {
         //? if neoforge && >=1.20.5
         /*NeoForge.EVENT_BUS.addListener(ClientTickEvent::onClientPreTickEvent);*/
         //? if forge
-        MinecraftForge.EVENT_BUS.addListener(ClientTickEvent::onClientTickEvent);
+        MinecraftForge.EVENT_BUS.addListener(ClientTickEvent::onClientTick);
     }
 
     // 同简单名冲突：neoforge 1.20.5+ 的 ClientTickEvent 不能单类型 import（与本类同名），
@@ -51,7 +51,7 @@ public final class ClientTickEvent {
         onClientPreTick(Minecraft.getInstance());
     }*/
     //? if forge {
-    private static void onClientTickEvent(TickEvent.ClientTickEvent event) {
+    private static void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.START) {
             return;
         }

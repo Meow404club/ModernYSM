@@ -105,7 +105,11 @@ mixin {
 // NoSuchFieldError: IBM_SEMERU（JvmVendor 枚举跨版本不兼容，stacktrace 实证）→
 // 编译目标以 javac --release 16 下发（Java 16 语义/字节码 major 60），运行期工具链 21。
 if (pre118) {
-    java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+    // TODO(asm-upgrade): 见 tasks.m3-asm-problem 描述卡
+    // 工具链 17（原 21）：MDG dev run 继承工具链 JVM，1.17.1 内置 mixin 的旧 ASM
+    // 解析不了 JDK21 自身类（java/lang/String major 65 → ClassMetadataNotFoundException
+    // 拒启实测）；Java 17 javac --release 16 产物不变（major 60）
+    java.toolchain.languageVersion = JavaLanguageVersion.of(17)
     tasks.withType<JavaCompile>().configureEach {
         options.release = 16
     }
@@ -148,6 +152,20 @@ legacyForge {
 dependencies {
     if (imageStreamEmbed != null) {
         "additionalRuntimeClasspath"("com.github.TartaricAlkaline:ImageStream:-SNAPSHOT")
+    }
+    // MixinExtras dev 运行时：implementation 的 mixinextras-forge 会被 MDG 当 mod 装载
+    //（module 层 mixinextras@0.3.6），其 MixinExtrasConfigPlugin.onLoad 引用
+    // MixinExtrasBootstrap（API 体在 mixinextras-common）→ 缺 common 即 NCDFE 拒启。
+    // 仅 1.17.1 需要：Forge 40.3.0 起自带 MixinExtras 模块，再注入 common 会
+    // split-package 冲突（Modules mixinextras.common and MixinExtras export ... 实测）。
+    // 生产 jar 内嵌归发布卡（同 1165 线 embedMixinExtras 先例）。
+    if (pre118) {
+        "additionalRuntimeClasspath"("io.github.llamalad7:mixinextras-common:${property("deps.mixinextras")}")
+    }
+    // JOML dev 运行时（pre1193 三线）：implementation 对 MDG dev 不可见（同上），mixin
+    // 后插桩/渲染栈 org/joml/Matrix4fc NCDFE 实测；1194+ MC 自带 JOML 不需要
+    if (pre1193) {
+        "additionalRuntimeClasspath"("org.joml:joml:1.10.5")
     }
 }
 

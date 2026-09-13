@@ -72,7 +72,18 @@
 - 遗留 P1 已修（dev=4983cbb）：cleanup FIFO 写入 timeout 包裹；runs 拆分后旧 run/saves 不自动迁移（冒烟改走 tour 自管世界）；crash 快速失败覆盖窄
 - 发布卡新增：主仓 build/libs/2.6.6.6/ 是 mojmap 陈旧副本（真基线在 versions/1.20.1-forge/build/libs/，SRG 形态），发布前必重建
 
-## M3 平铺（tasks.m3-flat-tiling，矩阵已定，前置卡 m3-condition-axis）
+## M3 第一批 forge 四线（tasks.m3-batch1-forge-lines，已合入 dev=ebc4427，2026-09-13）
+- 四线注册+条件轴四段化（<1.17/<1.19.4/<1.20/≥1.20）+ 1.19.2/1.18.2/1.19.4/1.17.1 逐线修绿，9 枚提交（三轮会话接力）
+- ASM 事件闭环：dev run 继承 toolchain JVM→mixin 0.8.4+ASM9.1 读 JDK 类（major 65）炸；方案 B=toolchain 21+asm force 9.8（Celeritas/GTNH/forge 官方分支三先例），**JVM21 与 Java25 均实测到主菜单**；生产口径=1.17.1 线声明 Java16-17，发布 gate 加"安装器+Java25+生产 jar"实测档（机制推论装 mod 后 Java≥21 会炸，jarJar 不可达）
+- 双在产线验收口径演化为"语义零变化"（字面逐字节不可达：条件注释行必漂移 LNT+zip 序随环境变），审查独立构建复核通过（1165=2454 条目 0 增删/160/161 逐指令全同）
+- 遗传入账：1171 init 重入清场债（trio<1.17+clearWidgets≥1.18.2 组合解，1171 空档段不清场）；RenderArmEvent/ShieldBlockCooldown/RegisterClientCommandsEvent 三事件功能差；中段线生产 jar 内嵌 MixinExtras（forge 37.1.1 无内置）归发布卡
+
+## M3 第二批 neoforge（tasks.m3-batch2a/2b，2a 进行中）
+- 2a：1.20.4（20.4.x stable）/1.20.6（20.6.x）/1.21.1（21.1.x）——moddev 构建线首次建立（MDG neoforge），Java 17/21/21
+- 2b：21.3/21.4/21.5/21.8/21.10/21.11/26.1.2/26.2（Java 21→25）
+- 已知要点：NeoForge 1.20.2+ 运行时=mojmap（无 SRG reobf，mixin refmap 口径待验证）；1.20.5+ neoforge.mods.toml/Component 体系；26.x 需 Java 25 toolchain
+
+## M3 平铺总纲（tasks.m3-flat-tiling，矩阵已定）
 - **17 行必铺矩阵**（tasks.m3-matrix-research，官方 maven 证据）：forge 6 行 1.16.5/1.17.1/1.18.2/1.19.2/1.19.4/1.20.1（legacyforge，1.16.5 走 unimined）+ neoforge 11 行 1.20.4/1.20.6/1.21.1/21.3/21.4/21.5/21.8/21.10/21.11/26.1.2/26.2（moddev）；1.20.1 一 jar 双跑（neoforge fork 47.1.106 兼容声明）；26.x 需 Java 25 toolchain；短命版官方无 stable 跳过（1.17.0/1.18.0/1.19.1/20.3/20.5/21.2/21.6/21.7/21.9 等）
 - **前置：条件轴四段化**（tasks.m3-condition-axis，>1.17 二元轴被证伪）：GuiGraphics=1.20、renderWidget GuiGraphics 签名=1.20、getX/narration 新 API=1.19.3——重排为 <1.17/<1.19.3/<1.20/≥1.20；与 M2.5 同文件域，已解除阻塞
 - 相邻补丁版 API 面一致可共享条件组；20+ 条目考虑 settings/properties 生成脚本化

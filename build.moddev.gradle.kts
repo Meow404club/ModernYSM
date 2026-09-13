@@ -256,7 +256,7 @@ tasks {
     // 的类型名引用不值得逐行条件化 → 生成树一次性语义等价改写，共享源零搅动、在产线零接触
     //（任务只在 >=21.11 线注册）。生成树由 stonecutterGenerate 重刷时恢复 RL 名，本任务幂等重写；
     // RAW 源集（平台/compat shim 树）绕开 stonecutter，走 2111 分代副本（见 sourceSets 挂载注）。
-    if (stonecutter.eval(stonecutter.current.version, ">=21.9")) {
+    if (stonecutter.eval(stonecutter.current.version, ">=21.8")) {
         val genJavaDir = layout.buildDirectory.dir("generated/stonecutter/main/java")
         // 配置缓存铁律：doLast 只可捕获局部 String/Provider，stonecutter 脚本对象引用不可序列化
         val curVersion = stonecutter.current.version
@@ -271,9 +271,10 @@ tasks {
                 val root = genJavaDir.get().asFile
                 if (root.isDirectory) {
                     var count = 0
-                    // [>=21.9] @OnlyIn(Dist.CLIENT) 注解行剥离——loader 10 起 member-stripping
-                    //  行为废除，注解残留被 OnlyInWarningsHandler 记为加载错误，卡死 Client
-                    //  network registry lock（21.10 runClient 实证）
+                    // [>=21.8] @OnlyIn(Dist.CLIENT) 注解行剥离——注解残留被 OnlyInWarningsHandler
+                    //  记为加载错误：loader 10 卡死 Client network registry lock（21.10 runClient
+                    //  实证）；21.8（loader 9.0.18）为阻断式「Warning while loading mods」警告屏，
+                    //  须手点 Proceed 才进主菜单（21854 runClient 截图实证）
                     // [>=21.11] a) ResourceLocation → Identifier（同包纯改名）
                     //           b) （撤销）location()→identifier() 仅 ResourceKey 系成立，
                     //              TagKey/自有 ItemTag 保留 location() → 共享源位点级双行

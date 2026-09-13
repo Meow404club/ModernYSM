@@ -24,9 +24,18 @@ public class ProjectileAnimationPredicate implements IAnimationPredicate<GeckoPr
         if (projectile.isOnFire()) {
             return IAnimationPredicate.predicate(event, "fire");
         }
+        // >=21.3 ProjectileStateAccessor.isInGround 被 Mixin 丢弃（与目标 protected 同签名，
+        // AbstractArrowEntityMixin 头注）→ inGroundTime>0 近似（滞后一 tick，功能债）
+        //? if <21.3 {
         if ((projectile instanceof ProjectileStateAccessor) && ((ProjectileStateAccessor) projectile).isInGround()) {
             return IAnimationPredicate.predicate(event, "ground");
         }
+        //?}
+        //? if >=21.3 {
+        /*if ((projectile instanceof ProjectileStateAccessor) && ((ProjectileStateAccessor) projectile).getInGroundTime() > 0) {
+            return IAnimationPredicate.predicate(event, "ground");
+        }*/
+        //?}
         return IAnimationPredicate.predicate(event, "air");
     }
 }

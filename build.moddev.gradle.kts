@@ -28,11 +28,14 @@ val neoMajor = (property("deps.neoforge") as String).substringBeforeLast('.')
 // 对 "<1.21" 为 false——条件轴不受影响
 val v26 = stonecutter.eval(stonecutter.current.version, ">=26")
 
-// 21.6+ 线 log4j 对齐：1.21.8 依赖图有库传递引入 log4j-core 2.19.0 抢占（nearest-wins），
-// 与 log4j-api 2.24.1 错配 → 启动即 NoSuchMethodError
-// （ServiceLoaderUtil.loadServices 签名缺失，21.8 runServer 实证）。constraints 强制同版。
+// 21.3+ 线 log4j 对齐：下方 eachDependency 已把 log4j-core 钉死 2.19.0（全线，NFRT 去抖），
+// 而 1.21.4/1.21.5 vanilla 自带 log4j-api 2.22.x 与 core 2.19.0 错配 → 启动即
+// NoSuchMethodError（ServiceLoaderUtil.loadServices 3 参签名缺失，21.4/21.5 runClient 实证）。
+// 21.8 的依赖图冲突（库传递 core 2.19.0 抢占 × api 2.24.1）同根。constraints 全家对齐 2.19.0
+// （21.8 runServer/runClient 绿实证的自洽组合）。1.20.4/1.20.6/1.21.1 实证 api 自然版 ×
+// core 2.19.0 可用，不在此列不动。
 println("[ysm] log4j alignment applied for " + stonecutter.current.version)
-if (stonecutter.eval(stonecutter.current.version, ">=21.6")) {
+if (stonecutter.eval(stonecutter.current.version, ">=21.3")) {
     configurations.configureEach {
         resolutionStrategy {
             // 全家对齐 2.19.0：NFRT legacy classpath 固化 core 2.19.0（NFRT 内部解析，Gradle force

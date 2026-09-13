@@ -33,9 +33,15 @@ public class AbstractArrowEntityMixin implements ProjectileStateAccessor {
     @Unique
     private String ownerMainHandItem = StringPool.EMPTY;
 
-    // AbstractArrow.inGround 布尔字段删（1.21.6 render-dag 前置重排，2108/2111 零命中，
-    // 仅余 protected inGroundTime）→ >=21.6 用 inGroundTime>0 近似「已落地」语义，功能债入账
-    //? if <21.6 {
+    // AbstractArrow.inGround 布尔字段 1.21.2 起封装（21.3/21.4/21.5/21.8/21.10 sources 实证：
+    // 字段零命中，protected isInGround() 在 21.3 AbstractArrow.java:331；1.21.1 sources:60 仍有
+    // protected boolean inGround；全部 forge 线 1.16.5~1.20.1 为 public 字段）
+    // → <21.3 保 @Shadow 字段；>=21.3 用 inGroundTime>0 近似「已落地」（tick 语义：落地帧自增/
+    // 离地帧清零，滞后一 tick，功能债入账）。
+    // ⚠ @Unique isInGround() 与目标 protected isInGround() 同签名 → Mixin 丢弃
+    //（21.10/21.11 runClient WARN 实证 "Discarding @Unique public method isInGround"）→
+    // >=21.3 接口方法永不满足，调用方（YSMBinding/ProjectileAnimationPredicate）>=21.3 门控绕行
+    //? if <21.3 {
     @Shadow
     public boolean inGround;
     //?}
@@ -45,9 +51,9 @@ public class AbstractArrowEntityMixin implements ProjectileStateAccessor {
     @Override
     @Unique
     public boolean isInGround() {
-        //? if >=21.6
+        //? if >=21.3
         /*return this.inGroundTime > 0;*/
-        //? if <21.6
+        //? if <21.3
         return this.inGround;
     }
 

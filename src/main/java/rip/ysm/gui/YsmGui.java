@@ -284,9 +284,9 @@ public final class YsmGui {
 
      *///?}
 
-    /** TextureManager.getTexture：1.16.5 仅单参重载（未注册时 computeIfAbsent 落缺失纹理占位，
-     * 与双参版差异=占位条目可能入 byPath，后续 register(location, texture) 会覆盖，语义等价）；
-     * 1.17+ 双参（rl, missing）显式占位。1.20 侧版本在下方 >=1.20 段。 */
+    // TextureManager.getTexture：1.16.5 仅单参重载（未注册时 computeIfAbsent 落缺失纹理占位，
+    // 与双参版差异=占位条目可能入 byPath，后续 register(location, texture) 会覆盖，语义等价）；
+    // 1.17+ 双参（rl, missing）显式占位。1.20 侧版本在下方 >=1.20 段。
     //? if <1.17 {
     /*public net.minecraft.client.renderer.texture.AbstractTexture getTexture(ResourceLocation location) {
         return Minecraft.getInstance().getTextureManager().getTexture(location);
@@ -509,14 +509,19 @@ public final class YsmGui {
     //?}
 
     /** TextureManager.getTexture(rl, missing) 双参语义：未注册时返回缺失纹理占位（不注册占位条目）。 */
+    // 1.21.4 MissingTextureAtlasSprite.getTexture() 删除 → 单参 getTexture
+    //（缺省缺纹理占位语义一致，vanilla-1.21.4 TextureManager.java:96）。
+    // 用块条件复制方法体（行条件翻转触发 stitcher 注释转义，21.5 产物 /^ 实证——勿改回）
+    //? if <1.21.4 {
     public net.minecraft.client.renderer.texture.AbstractTexture getTexture(ResourceLocation location) {
-        // 1.21.4 MissingTextureAtlasSprite.getTexture() 删除 → 单参 getTexture
-        //（缺省缺纹理占位语义一致，vanilla-1.21.4 TextureManager.java:96）
-        //? if <1.21.4
         return Minecraft.getInstance().getTextureManager().getTexture(location, net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.getTexture());
-        //? if >=1.21.4
-        /*return Minecraft.getInstance().getTextureManager().getTexture(location);*/
     }
+    //?}
+    //? if >=1.21.4 {
+    /*public net.minecraft.client.renderer.texture.AbstractTexture getTexture(ResourceLocation location) {
+        return Minecraft.getInstance().getTextureManager().getTexture(location);
+    }*/
+    //?}
 
     public void enableScissor(int minX, int minY, int maxX, int maxY) {
         this.graphics.enableScissor(minX, minY, maxX, maxY);

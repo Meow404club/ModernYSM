@@ -25,4 +25,33 @@ public final class RenderCompat {
         //? if >=1.21.2
         /*action.run();*/
     }
+
+    // ===== 1.21.5 RenderPipeline 化：立即绘制缓存/混合状态入口删除 → 门面 no-op =====
+    // 1.21.5 BufferUploader 类删除（立即绘制系统整体移除，无可失效缓存）
+    public static void invalidate() {
+        //? if <1.21.5
+        com.mojang.blaze3d.vertex.BufferUploader.invalidate();
+    }
+
+    public static void reset() {
+        //? if <1.21.5
+        com.mojang.blaze3d.vertex.BufferUploader.reset();
+    }
+
+    // 1.21.5 混合状态进 RenderPipeline 定义（GUI 管线自带 blend）→ no-op；
+    // 自定义 GL 绘制路径（gpu 包）在 >=1.21.5 已降级，不受影响
+    public static void enableBlend() {
+        //? if <1.21.5
+        com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+    }
+
+    public static void disableBlend() {
+        //? if <1.21.5
+        com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+    }
+
+    public static void defaultBlendFunc() {
+        //? if <1.21.5
+        com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
+    }
 }

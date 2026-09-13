@@ -1,8 +1,13 @@
 package rip.ysm.gpu;
 
+import rip.ysm.util.RenderCompat;
 import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
 import com.elfmcys.yesstevemodel.mixin.client.RenderSystemAccessor;
-import com.mojang.blaze3d.platform.GlStateManager;
+// 1.21.5 GlStateManager 迁移 platform→opengl 包
+//? if <1.21.5
+/*import com.mojang.blaze3d.platform.GlStateManager;*/
+//? if >=1.21.5
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
@@ -175,10 +180,11 @@ public final class GpuRenderPath {
         GL15.glBindBuffer(GL43.GL_SHADER_STORAGE_BUFFER, 0);
         GlStateManager._glUseProgram(0);
 
-        //? if >=1.19.2
-        com.mojang.blaze3d.vertex.BufferUploader.invalidate();
+        //? if >=1.19.2 && <1.21.5
+
+        RenderCompat.invalidate();
         //? if <1.19.2
-        /*com.mojang.blaze3d.vertex.BufferUploader.reset();*/
+        /*RenderCompat.reset();*/
         GlStateManager._glBindVertexArray(0);
 
         mc.gameRenderer.lightTexture().turnOffLightLayer();

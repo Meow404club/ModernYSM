@@ -1,11 +1,15 @@
 package rip.ysm.gpu;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+// 1.21.5 GlStateManager 迁移 platform→opengl 包
+//? if <1.21.5
+/*import rip.ysm.util.RenderCompat;
+import com.mojang.blaze3d.platform.GlStateManager;*/
+//? if >=1.21.5
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 //? if >1.17 {
 import org.joml.Matrix4f;
-import com.mojang.blaze3d.vertex.BufferUploader;
 //?}
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL11;
@@ -106,9 +110,9 @@ public final class Pie {
         GlStateManager._glUseProgram(0);
         //? if >1.17 {
         //? if >=1.19.2
-        BufferUploader.invalidate();
+        RenderCompat.invalidate();
         //? if <1.19.2
-        /*BufferUploader.reset();*/
+        /*RenderCompat.reset();*/
         //?}
         //? if <1.17 {
         /*GL30.glBindVertexArray(0);

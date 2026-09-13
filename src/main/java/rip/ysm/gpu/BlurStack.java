@@ -1,9 +1,13 @@
 package rip.ysm.gpu;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+// 1.21.5 GlStateManager 迁移 platform→opengl 包
+//? if <1.21.5
+/*import rip.ysm.util.RenderCompat;
+import com.mojang.blaze3d.platform.GlStateManager;*/
+//? if >=1.21.5
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.BufferUploader;
 //? if >1.17 {
 import org.joml.Matrix4f;
 //?}
@@ -161,9 +165,9 @@ public final class BlurStack {
 
         GlStateManager._glUseProgram(0);
         //? if >=1.19.2
-        BufferUploader.invalidate();
+        RenderCompat.invalidate();
         //? if <1.19.2
-        /*BufferUploader.reset();*/
+        /*RenderCompat.reset();*/
         GlStateManager._glBindVertexArray(0);
         RenderSystem.disableBlend();
 

@@ -38,6 +38,14 @@ stonecutter {
         // Celeritas 生产先例：forge <1.17 → unimined，>=1.17 → legacyforge
         vers("1.16.5-forge", "1.16.5").buildscript = "build.unimined.gradle.kts"
 
+        // M3 批二 a：neoforge 三线走 moddev（MDG 2 主插件，1.20.4/1.20.6 由 MDG2 公告点名支持，
+        // 1.21 起全支持，tmp/harvest/m3-matrix-mdg/）；neoforge 版本号取 maven metadata 最新 stable
+        //（tmp/harvest/m3-matrix/maven-metadata.xml：20.4 线 beta 止于 20.4.99-beta，ga 止于
+        // 20.4.251；20.6 线 beta 止于 20.6.114-beta，ga 止于 20.6.141；21.1 线全 ga 至 21.1.250）
+        vers("1.20.4-neoforge", "1.20.4").buildscript = "build.moddev.gradle.kts"
+        vers("1.20.6-neoforge", "1.20.6").buildscript = "build.moddev.gradle.kts"
+        vers("1.21.1-neoforge", "1.21.1").buildscript = "build.moddev.gradle.kts"
+
         vcsVersion = "1.20.1-forge"
     }
 }

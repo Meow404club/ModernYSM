@@ -360,13 +360,22 @@ moveCursorToEnd();;
         int fullHeight = visibleCount * 12;
         int height = Math.max(1, Math.round(fullHeight * openDisplay));
 
+        //? if <21.6
         guiGraphics.pose().pushPose();
+        //? if >=21.6
+        /*guiGraphics.pose().pushMatrix();*/
+        //? if <21.6
         guiGraphics.pose().translate(0.0f, 0.0f, 500.0f);
+        //? if >=21.6
+        /*guiGraphics.pose().translate(0.0f, 0.0f);*/
 
         boolean blurred = GeneralConfig.BLUR_GUI.get() && GpuCapability.isAvailable();
         if (blurred) {
             BlurStack.pushBlur(left, top, width, height, 3.0f, 16.0f, 0xFF4F4F4F);
+            //? if <21.6
             BlurStack.flush(guiGraphics.pose());
+            //? if >=21.6
+            /*BlurStack.flush(guiGraphics.pose());*/
         }
 
         guiGraphics.fill(left, top, left + width, top + height, blurred ? 0x99000000 : 0xE6100010);
@@ -401,7 +410,10 @@ moveCursorToEnd();;
             guiGraphics.fill(left + width - 2, barY, left + width - 1, barY + barHeight, 0xFF7F7F9F);
         }
 
+        //? if <21.6
         guiGraphics.pose().popPose();
+        //? if >=21.6
+        /*guiGraphics.pose().popMatrix();*/
     }
 
     private void renderHighlighted(YsmGui guiGraphics, Entry entry, int x, int y, boolean isSelected, int maxWidth) {

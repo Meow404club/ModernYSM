@@ -37,8 +37,11 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import rip.ysm.compat.sbackpack.SBackpackCompat;
 
-//? if neoforge && >=1.20.5
+// 1.21.6+ EventBusSubscriber 删 bus 属性
+//? if neoforge && >=1.20.5 && <21.6
 /*@EventBusSubscriber(modid = YesSteveModel.MOD_ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)*/
+//? if neoforge && >=21.6
+/*@EventBusSubscriber(modid = YesSteveModel.MOD_ID, value = Dist.CLIENT)*/
 //? if neoforge && <1.20.5
 /*@Mod.EventBusSubscriber(modid = YesSteveModel.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)*/
 //? if forge

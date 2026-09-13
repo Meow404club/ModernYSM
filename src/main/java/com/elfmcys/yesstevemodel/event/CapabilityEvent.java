@@ -103,8 +103,11 @@ import java.util.function.Consumer;
  */
 // 事件总线注解：1.20.5+ neoforge 换代为 fml.common.EventBusSubscriber（默认 game bus）；
 // <1.20.5 neoforge 与 forge 全线 = Mod.EventBusSubscriber.Bus.FORGE（game bus 同义）
-//? if neoforge && >=1.20.5
+//? if neoforge && >=1.20.5 && <21.6
 /*@EventBusSubscriber(modid = YesSteveModel.MOD_ID, bus = EventBusSubscriber.Bus.GAME)*/
+// 1.21.6+ 删 bus 属性（单总线自动路由）
+//? if neoforge && >=21.6
+/*@EventBusSubscriber(modid = YesSteveModel.MOD_ID)*/
 //? if neoforge && <1.20.5
 /*@Mod.EventBusSubscriber(modid = YesSteveModel.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)*/
 //? if forge

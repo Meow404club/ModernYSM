@@ -48,6 +48,7 @@ public final class GpuRenderPath {
             ResourceLocation textureLocation
     ) {
         if (!GpuCapability.isAvailable()) return false;
+        // 1.21.8 降级闸门在 GpuCapability.isAvailable（CPU 投影/雾读取删除，见其类内注记）
         //? if <1.17 {
         /*// 1.16.5 恒 false 闸门（照 gui-hud 卡 IrisRenderPath 同款降级）：本方法依赖
         // RenderSystem.getProjectionMatrix/getModelViewMatrix/getShaderTexture/getShaderFog*、
@@ -73,11 +74,17 @@ public final class GpuRenderPath {
         Matrix4f projMat = com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.projectionMatrix();
         Matrix4f mvMat = com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.modelViewMatrix();
          *///?}
-        //? if >=1.19.4 {
+        //? if >=1.19.4 && <21.8 {
         Matrix4f rootPose = pose.pose();
         Matrix3f rootNormal = pose.normal();
         Matrix4f projMat = RenderSystem.getProjectionMatrix();
         Matrix4f mvMat = RenderSystem.getModelViewMatrix();
+        //?}
+        //? if >=21.8 {
+        /*Matrix4f rootPose = new Matrix4f();
+        Matrix3f rootNormal = new Matrix3f();
+        Matrix4f projMat = new Matrix4f();
+        Matrix4f mvMat = new Matrix4f();*/
         //?}
 
         rootPose.get(rootPoseScratch);
@@ -115,7 +122,9 @@ public final class GpuRenderPath {
         int modelTexId = modelTex.getId();
         // 1.21.5 AbstractTexture.getId 删 → getTexture()(GpuTexture) 具体类 GlTexture.glId()
         //（neoforge-21.5.98-sources AbstractTexture.java:51 / GlTexture.java:82）
-        //? if >=21.5
+        //? if >=21.5 && <21.8
+        /*int modelTexId = ((GlTexture) modelTex.getTexture()).glId();*/
+        //? if >=21.8
         /*int modelTexId = ((GlTexture) modelTex.getTexture()).glId();*/
 
         GlStateManager._activeTexture(GL13.GL_TEXTURE0 + 2);
@@ -126,8 +135,13 @@ public final class GpuRenderPath {
         // 1.21.5 getShaderTexture 返回 GpuTexture（RenderSystem.java:306）
         //? if <21.5
         GlStateManager._bindTexture(RenderSystem.getShaderTexture(1)); // overlayTexture里的texture没getter，固定bind 1
-        //? if >=21.5
+        //? if >=21.5 && <21.8
         /*GlStateManager._bindTexture(((GlTexture) RenderSystem.getShaderTexture(1)).glId());*/
+        // 1.21.8 getShaderTexture 返回 GpuTextureView（无 glId）且路径已降级：跳过冗余绑定
+        //? if >=21.8 {
+        /*GlStateManager._activeTexture(GL13.GL_TEXTURE0 + 1);
+        mc.gameRenderer.overlayTexture().setupOverlayColor();*/
+        //?}
 
         GlStateManager._activeTexture(GL13.GL_TEXTURE0);
         GlStateManager._bindTexture(modelTexId);
@@ -138,13 +152,22 @@ public final class GpuRenderPath {
 
         // 1.21.2 fog 状态打包 FogParameters record（getShaderFogStart/End/Color/Shape 删除，
         // vanilla-1.21.3 RenderSystem.java:348 getShaderFog()）
-        //? if >=1.21.2 {
+        //? if >=1.21.2 && <21.8 {
         /*
         net.minecraft.client.renderer.FogParameters ysmFogParams = RenderSystem.getShaderFog();
         float fogStart = ysmFogParams.start();
         float fogEnd = ysmFogParams.end();
         float[] fogColor = new float[] { ysmFogParams.red(), ysmFogParams.green(), ysmFogParams.blue(), ysmFogParams.alpha() };
         int fogShape = ysmFogParams.shape().getIndex();
+        */
+        //?}
+        // 1.21.8 fog 改 GpuBufferSlice（RenderSystem.java:168）且路径已降级：零雾兜底（不可达）
+        //? if >=21.8 {
+        /*
+        float fogStart = 0.0f;
+        float fogEnd = 0.0f;
+        float[] fogColor = new float[] { 0.0f, 0.0f, 0.0f, 0.0f };
+        int fogShape = 0;
         */
         //?}
         //? if <1.21.2 {

@@ -359,24 +359,45 @@ public abstract class OptionScreen extends Screen {
                 adjTabMouseY = inTabArea ? mouseY + Math.round(tabScrollDisplay) : Integer.MIN_VALUE;
             }
             g.enableScissor(tabAreaLeft, tabAreaTop, tabAreaRight, tabAreaBottom);
+            //? if <21.6
             g.pose().pushPose();
+            //? if >=21.6
+            /*g.pose().pushMatrix();*/
+            //? if <21.6
             if (compactTabs) g.pose().translate(-tabScrollDisplay, 0, 0);
+            //? if >=21.6
+            /*if (compactTabs) g.pose().translate(-tabScrollDisplay, 0);*/
+            //? if <21.6
             else g.pose().translate(0, -tabScrollDisplay, 0);
+            //? if >=21.6
+            /*else g.pose().translate(0, -tabScrollDisplay);*/
             for (TabButton tb : tabButtons) {
                 g.renderWidget(tb, adjTabMouseX, adjTabMouseY, partialTick);
             }
+            //? if <21.6
             g.pose().popPose();
+            //? if >=21.6
+            /*g.pose().popMatrix();*/
             g.disableScissor();
             if (maxTabScroll > 0) renderTabScrollbar(g);
         }
 
         g.enableScissor(rowAreaLeft, rowAreaTop, rowAreaRight, rowAreaBottom);
+        //? if <21.6
         g.pose().pushPose();
+        //? if >=21.6
+        /*g.pose().pushMatrix();*/
+        //? if <21.6
         g.pose().translate(0, -rowScrollDisplay, 0);
+        //? if >=21.6
+        /*g.pose().translate(0, -rowScrollDisplay);*/
         for (OptionRow<?> row : activeRows) {
             g.renderWidget(row, mouseX, adjMouseY, partialTick);
         }
+        //? if <21.6
         g.pose().popPose();
+        //? if >=21.6
+        /*g.pose().popMatrix();*/
         g.disableScissor();
         if (maxRowScroll > 0) renderRowScrollbar(g);
 
@@ -443,7 +464,10 @@ public abstract class OptionScreen extends Screen {
             if (r[2] <= 0 || r[3] <= 0) continue;
             BlurStack.pushBlur(r[0], r[1], r[2], r[3], 0.0f, 24.0f);
         }
+        //? if <21.6
         BlurStack.flush(g.pose());
+        //? if >=21.6
+        /*BlurStack.flush(g.pose());*/
     }
 
     private void renderRowScrollbar(YsmGui g) {

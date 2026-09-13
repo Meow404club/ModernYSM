@@ -94,6 +94,13 @@ public final class BlurStack {
         //?}
     }
 
+    // 1.21.6+ GUI pose 改 Matrix3x2fStack → 重载分派到降级路径（清队列防泄漏）
+    //? if >=21.6 {
+    /*public static void flush(org.joml.Matrix3x2fStack pose) {
+        regions.clear();
+    }*/
+    //?}
+
     //? if <1.17 {
     /*private static void flushLegacy() {
         regions.clear();

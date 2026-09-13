@@ -181,7 +181,12 @@ public final class MatrixBridge {
     }
 
     public static Matrix4f projectionMatrix() {
+        //? if <21.8
         return com.mojang.blaze3d.systems.RenderSystem.getProjectionMatrix();
+        // 1.21.8 RenderSystem 删 CPU 投影读取（GpuBufferSlice 化）→ 桥面兜底
+        //（GPU 路径 21.8+ 已降级 return false，此分支不可达死代码）
+        //? if >=21.8
+        /*return new Matrix4f();*/
     }
 
     public static Matrix4f modelViewMatrix() {

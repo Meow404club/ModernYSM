@@ -127,12 +127,16 @@ val imageStreamEmbedJars: Set<File> = imageStreamEmbed.files
 //  - compat shim 复用 1.16.5 线版本中立 shim（同 build.forge.gradle.kts pre120 块）
 sourceSets.main {
     java {
-        // 基础树按 1.21.5 分代：>=1.21.5 挂 1215 树（= neoforge ∪ neoforge-1205 的 1.21.5 代副本，
-        // 见下方 else 分支注记），防同 FQCN 双份类定义
-        if (stonecutter.eval(stonecutter.current.version, "<21.5")) {
-            srcDir(rootProject.file("src/neoforge/java"))
+        // 基础树按代分挂（见下方链尾注记）：21.5 线挂 1215（= neoforge ∪ neoforge-1205 的
+        // 1.21.5 代副本）、21.8+ 线挂 1218（= 1215 ∪ 1213 的 1.21.8 代副本），防同 FQCN 双份类定义
+        if (stonecutter.eval(stonecutter.current.version, "<21.8")) {
+            if (stonecutter.eval(stonecutter.current.version, "<21.5")) {
+                srcDir(rootProject.file("src/neoforge/java"))
+            } else {
+                srcDir(rootProject.file("src/neoforge-1215/java"))
+            }
         } else {
-            srcDir(rootProject.file("src/neoforge-1215/java"))
+            srcDir(rootProject.file("src/neoforge-1218/java"))
         }
         if (pre1205) {
             srcDir(rootProject.file("src/neoforge-1204/java"))
@@ -160,13 +164,18 @@ sourceSets.main {
             // 同形，21.3 编译实证）
             srcDir(rootProject.file("src/neoforge-1205/java"))
             srcDir(rootProject.file("src/neoforge-1213/java"))
-        } else {
-            // 1.21.5+（21.5/21.8/21.10/21.11/26.x）：1215 树 = (neoforge ∪ neoforge-1205)
-            // 1.21.5 代副本（已在上方基础挂载处挂载）。分裂动因：CompoundTag.getCompound
-            // Optional 化（ForgeCapabilityHooks）与 KeyModifier.getActiveModifier 删除
-            // （KeyMappingFactoryImpl）在 RAW 树无条件下不可两代共存（同 FQCN 二选一挂载
-            // 防双份类定义）；1213 树 21.5 编译零残差，继续共用。
+        } else if (stonecutter.eval(stonecutter.current.version, "<21.8")) {
+            // 21.5：1215 树 = (neoforge ∪ neoforge-1205) 1.21.5 代副本（已在上方基础挂载处挂载）。
+            // 分裂动因：CompoundTag.getCompound Optional 化（ForgeCapabilityHooks）与
+            // KeyModifier.getActiveModifier 删除（KeyMappingFactoryImpl）在 RAW 树无条件下不可
+            // 两代共存（同 FQCN 二选一挂载防双份类定义）；1213 树 21.5 编译零残差，继续共用。
             srcDir(rootProject.file("src/neoforge-1213/java"))
+        } else {
+            // 21.8+（21.8/21.10/21.11/26.x）：1218 树 = (1215 ∪ 1213) 1.21.8 代副本。
+            // 分裂动因：EventBusSubscriber 删 bus 属性（PlayerRenderStateEntityCache）、
+            // RenderLevelStageEvent 拆子事件类（RenderFirstPlayerForgeHook）、
+            // PacketDistributor.sendToServer→ClientPacketDistributor（YSMChannelImpl）
+            srcDir(rootProject.file("src/neoforge-1218/java"))
         }
         // shim：<1.21 挂原件；1.21+ 挂整树副本（ResourceLocation 私有构造 /
         // isValidResourceLocation 删除 → Rl/parse，2 文件已修，RAW 无条件化能力）

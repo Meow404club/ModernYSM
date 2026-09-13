@@ -368,7 +368,7 @@ public class ModernPlayerTextureScreen extends OptionScreen {
         int sy = (int) (this.minecraft.getWindow().getHeight() - previewBottom * scale);
         int sw = (int) ((previewRight - previewLeft) * scale);
         int sh = (int) ((previewBottom - previewTop) * scale);
-        YsmGui.enableScissorBox(sx, sy, sw, sh);
+                YsmGui.enableScissorBox(sx, sy, sw, sh);
         PlayerCapability.get(this.minecraft.player).ifPresent(cap -> {
             modelHolder.initModelWithTexture(modelId, cap.getCurrentTextureName());
             float cx = (previewLeft + previewRight) / 2.0f + offsetX;
@@ -378,7 +378,7 @@ public class ModernPlayerTextureScreen extends OptionScreen {
             //? if <1.21
             ModelPreviewRenderer.renderEntityPreview(cx, cy, zoom, pitch, yaw, this.minecraft.getFrameTime(), modelHolder, RendererManager.getPlayerRenderer(), showGround);
         });
-        YsmGui.disableScissorBox();
+                YsmGui.disableScissorBox();
     }
 
     @Override

@@ -171,7 +171,10 @@ public class ModernAnimationRouletteScreen extends Screen {
             BlurStack.pushBlurPie(centerX - 128.0f, centerY, 0.0f, 16.0f, 0.0f, Pie.tau, 20.0f);
             BlurStack.pushBlurPie(centerX + 128.0f, centerY, 0.0f, 16.0f, 0.0f, Pie.tau, 20.0f);
         }
+        //? if <21.6
         BlurStack.flush(g.pose());
+        //? if >=21.6
+        /*BlurStack.flush(g.pose());*/
     }
 
     private void updateHover(int mouseX, int mouseY) {
@@ -226,7 +229,9 @@ public class ModernAnimationRouletteScreen extends Screen {
     private void drawSlice(YsmGui g, int sliceIndex, float sliceSpan, float inner, float outer, int color) {
         float start = sliceStartOffset() + sliceIndex * sliceSpan + 0.02f;
         float end = sliceStartOffset() + (sliceIndex + 1) * sliceSpan - 0.02f;
+        //? if <21.6
         Pie.draw(g.pose(), centerX, centerY, inner, outer, start, end, color, 1.0f);
+        // 1.21.6+ Pie 已降级 no-op（pose 类型变化，调用点一并退役）
     }
 
     private void drawSettingsIcon(YsmGui g, int sliceIndex, float sliceSpan, boolean hover) {
@@ -312,7 +317,9 @@ public class ModernAnimationRouletteScreen extends Screen {
 
     private void drawPageButton(YsmGui g, float cx, float cy, boolean enabled, boolean hover, String arrow) {
         int color = !enabled ? 0x40000000 : (hover ? 0xD0FFFFFF : 0x90000000);
+        //? if <21.6
         Pie.draw(g.pose(), cx, cy, 0.0f, 16.0f, 0.0f, Pie.tau, color, 1.0f);
+        // 1.21.6+ Pie 已降级 no-op（pose 类型变化，调用点一并退役）
         int textColor = enabled ? (hover ? 0xFF000000 : 0xFFFFFFFF) : 0x60FFFFFF;
         g.drawCenteredString(this.font, arrow, (int) cx, (int) cy - 4, textColor);
     }

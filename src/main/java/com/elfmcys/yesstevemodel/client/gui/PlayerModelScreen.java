@@ -575,10 +575,19 @@ moveCursorToEnd();;
             renderer = "GPU";
         }
         String strVersionString = YsmPlatform.getMod(YesSteveModel.MOD_ID).getVersion();
+        //? if <21.6
         guiGraphics.pose().pushPose();
+        //? if >=21.6
+        /*guiGraphics.pose().pushMatrix();*/
+        //? if <21.6
         guiGraphics.pose().translate(0.0f, 0.0f, 1000.0f);
+        //? if >=21.6
+        /*guiGraphics.pose().translate(0.0f, 0.0f);*/
         guiGraphics.drawString(this.font, strVersionString + " (" + renderer + ")", this.guiLeft + 2, this.guiTop + 226, ChatFormatting.DARK_GRAY.getColor().intValue());
+        //? if <21.6
         guiGraphics.pose().popPose();
+        //? if >=21.6
+        /*guiGraphics.pose().popMatrix();*/
         renderBreadcrumb(guiGraphics, mouseX, mouseY);
         renderSyncStatus(guiGraphics);
         boolean occluded = this.suggestions != null && this.suggestions.isOccluding(mouseX, mouseY);
@@ -623,10 +632,19 @@ moveCursorToEnd();;
         if (this.searchBox.isHovered() && (this.suggestions == null || !this.suggestions.isVisible())) {
 
             MutableComponent mutableComponentWithStyle = YsmText.translatable("gui.yes_steve_model.search.tip").withStyle(ChatFormatting.GRAY);
+            //? if <21.6
             guiGraphics.pose().pushPose();
+            //? if >=21.6
+            /*guiGraphics.pose().pushMatrix();*/
+            //? if <21.6
             guiGraphics.pose().translate(0.0f, 0.0f, 4000.0f);
+            //? if >=21.6
+            /*guiGraphics.pose().translate(0.0f, 0.0f);*/
             guiGraphics.renderTooltip(this.font, this.font.split(mutableComponentWithStyle, 320), mouseX, mouseY);
+            //? if <21.6
             guiGraphics.pose().popPose();
+            //? if >=21.6
+            /*guiGraphics.pose().popMatrix();*/
         }
     }
 
@@ -766,9 +784,19 @@ moveCursorToEnd();;
         LocalPlayer localPlayer = Minecraft.getInstance().player;
         if (localPlayer != null) {
             double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
+            // 1.21.6+ RenderSystem.enableScissor 删 → GuiGraphics 剪裁（GUI 坐标）
+            //? if <21.6
             RenderSystem.enableScissor((int) ((this.guiLeft + 5) * guiScale), (int) (Minecraft.getInstance().getWindow().getHeight() - ((this.guiTop + 200) * guiScale)), (int) (125.0d * guiScale), (int) (171.0d * guiScale));
+            //? if >=21.6
+            /*guiGraphics.graphics().enableScissor(this.guiLeft + 5, this.guiTop + 200, this.guiLeft + 5 + 125, this.guiTop + 200 + 171);*/
+            //? if <21.6
             guiGraphics.pose().pushPose();
+            //? if >=21.6
+            /*guiGraphics.pose().pushMatrix();*/
+            //? if <21.6
             guiGraphics.pose().translate(0.0f, 0.0f, 100.0f);
+            //? if >=21.6
+            /*guiGraphics.pose().translate(0.0f, 0.0f);*/
 //? if <1.18.2
             /*InventoryScreen.renderEntityInInventory(this.guiLeft + 67, this.guiTop + 190, 70, (this.guiLeft + 67) - mouseX, ((this.guiTop + 180) - 95) - mouseY, localPlayer);*/
             // 1.17~1.19.2 仅 6 参 renderEntityInInventory（1182/1192:102，无 PoseStack）；renderEntityInInventoryFollowsMouse
@@ -783,8 +811,14 @@ moveCursorToEnd();;
             /*InventoryScreen.renderEntityInInventoryFollowsAngle(guiGraphics.graphics(), this.guiLeft + 67, this.guiTop + 190, (this.guiLeft + 67) + 70, (this.guiTop + 190) + 70, 70, 0.0625F,
                     (float) Math.atan(((this.guiLeft + 67) - mouseX) / 40.0F), (float) Math.atan((((this.guiTop + 180) - 95) - mouseY) / 40.0F), localPlayer);
              *///?}
+            //? if <21.6
             guiGraphics.pose().popPose();
+            //? if >=21.6
+            /*guiGraphics.pose().popMatrix();*/
+            //? if <21.6
             RenderSystem.disableScissor();
+            //? if >=21.6
+            /*guiGraphics.graphics().disableScissor();*/
             PlayerCapability.get(localPlayer).ifPresent(cap -> {
                 List<FormattedCharSequence> listSplit = this.font.split(FormattedText.of(ClientModelManager.getModelContext(cap.getModelId()).map(it -> {
                     Metadata metadata2 = it.getModelData().getExtraInfo();

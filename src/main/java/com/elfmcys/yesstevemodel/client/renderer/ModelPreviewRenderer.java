@@ -220,7 +220,7 @@ public final class ModelPreviewRenderer {
         // 1.16.5 无 setupForEntityInInventory（1.17+），GUI 平光用 setupForFlatItems
         //? if <1.17
         // Lighting.setupForFlatItems();
-        //? if >=1.17
+        //? if >=1.17 && <21.6
         // Lighting.setupForEntityInInventory();
         EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         //? if <1.17
@@ -304,7 +304,9 @@ public final class ModelPreviewRenderer {
         /*modelViewStack.popMatrix();*/
         //? if >=1.17
         // RenderCompat.applyModelViewMatrix();
+        //? if <21.6
         Lighting.setupFor3DItems();
+        // 1.21.6+ Lighting 静态置光删（UBO 化）→ no-op
         setPreviewMode(false);
     }
 
@@ -590,7 +592,7 @@ public final class ModelPreviewRenderer {
         // 1.16.5 无 setupForEntityInInventory（1.17+），GUI 平光用 setupForFlatItems
         //? if <1.17
         // Lighting.setupForFlatItems();
-        //? if >=1.17
+        //? if >=1.17 && <21.6
         // Lighting.setupForEntityInInventory();
         EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         //? if <1.17
@@ -667,7 +669,9 @@ public final class ModelPreviewRenderer {
         /*modelViewStack.popMatrix();*/
         //? if >=1.17
         // RenderCompat.applyModelViewMatrix();
+        //? if <21.6
         Lighting.setupFor3DItems();
+        // 1.21.6+ Lighting 静态置光删（UBO 化）→ no-op
         setPreviewMode(false);
     }
 
@@ -720,6 +724,8 @@ public final class ModelPreviewRenderer {
         com.mojang.math.Quaternion rotationY = com.mojang.math.Vector3f.YP.rotationDegrees((Mth.lerp(partialTick, localPlayer.yBodyRotO, localPlayer.yBodyRot) + yawOffset) - 180.0f);
         rotationZ.mul(rotationY);
         poseStack.mulPose(rotationZ);
+        // 1.21.6+ Lighting 静态置光删（UBO 化）→ no-op
+        //? if <21.6
         Lighting.setupForEntityInInventory();
         EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         rotationY.conj();
@@ -733,7 +739,9 @@ public final class ModelPreviewRenderer {
         poseStack.popPose();
         modelViewStack.popPose();
         RenderCompat.applyModelViewMatrix();
+        //? if <21.6
         Lighting.setupFor3DItems();
+        // 1.21.6+ Lighting 静态置光删（UBO 化）→ no-op
         setExtraPlayerMode(false);
     }
      *///?}
@@ -754,6 +762,8 @@ public final class ModelPreviewRenderer {
         Quaternionf rotationY = Axis.YP.rotationDegrees((Mth.lerp(partialTick, localPlayer.yBodyRotO, localPlayer.yBodyRot) + yawOffset) - 180.0f);
         rotationZ.mul(rotationY);
         poseStack.mulPose(rotationZ);
+        // 1.21.6+ Lighting 静态置光删（UBO 化）→ no-op
+        //? if <21.6
         Lighting.setupForEntityInInventory();
         EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         rotationY.conjugate();
@@ -767,11 +777,13 @@ public final class ModelPreviewRenderer {
         poseStack.popPose();
         modelViewStack.popPose();
         RenderCompat.applyModelViewMatrix();
+        //? if <21.6
         Lighting.setupFor3DItems();
+        // 1.21.6+ Lighting 静态置光删（UBO 化）→ no-op
         setExtraPlayerMode(false);
     }
      *///?}
-    //? if >=1.20 {
+    //? if >=1.20 && <21.6 {
     public static void renderPlayerOverlay(GuiGraphics guiGraphics, LocalPlayer localPlayer, double x, double y, float scale, float yawOffset, int zDepth, float partialTick) {
         setExtraPlayerMode(true);
         //? if >=1.20.5
@@ -804,7 +816,7 @@ public final class ModelPreviewRenderer {
         // 1.16.5 无 setupForEntityInInventory（1.17+），GUI 平光用 setupForFlatItems
         //? if <1.17
         // Lighting.setupForFlatItems();
-        //? if >=1.17
+        //? if >=1.17 && <21.6
         // Lighting.setupForEntityInInventory();
         EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         rotationY.conjugate();
@@ -832,8 +844,16 @@ public final class ModelPreviewRenderer {
         //? if >=1.20 && <1.20.5
         modelViewStack.popPose();
         RenderCompat.applyModelViewMatrix();
+        //? if <21.6
         Lighting.setupFor3DItems();
+        // 1.21.6+ Lighting 静态置光删（UBO 化）→ no-op
         setExtraPlayerMode(false);
     }
-    //? }
+    //?}
+    // 1.21.6+ GUI 全状态化（pose()→Matrix3x2fStack、drawSpecial 删）→ 纸娃娃 HUD 整体降级
+    // no-op（正规迁移=GuiEntityRenderState PIP，功能债入账）
+    //? if >=21.6 {
+    /*public static void renderPlayerOverlay(GuiGraphics guiGraphics, LocalPlayer localPlayer, double x, double y, float scale, float yawOffset, int zDepth, float partialTick) {
+    }*/
+    //?}
 }

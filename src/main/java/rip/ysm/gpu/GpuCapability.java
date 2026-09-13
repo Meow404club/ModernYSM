@@ -11,7 +11,20 @@ public final class GpuCapability {
     private static volatile boolean available = false;
     private static volatile String reason = null;
 
+    // 1.21.8+ 降级闸门：恒 true，但经方法调用（编译器不可折叠 → 后续语句不算不可达）
+    private static boolean cpuMatrixUnavailable() {
+        return true;
+    }
+
     public static boolean isAvailable() {
+        // 1.21.8+ RenderSystem 删 CPU 投影/雾读取（GpuBufferSlice 化，RenderSystem.java:296/168）→
+        // GL43 compute 蒙皮路径无法取 CPU 矩阵，整体降级 vanilla CPU 渲染（性能债，1.21.1 native 降级先例）
+        //? if >=21.8 {
+        /*if (cpuMatrixUnavailable()) {
+            reason = "1.21.8+ removed CPU-side projection/fog access from RenderSystem";
+            return false;
+        }*/
+        //?}
         if (!checked) check();
         return available;
     }

@@ -257,12 +257,19 @@ public class ModelButton extends YsmButton {
             drawLoading(guiGraphics, x + (this.width / 2.0f), y + ((this.height - 20) / 2.0f), 8.0f);
         } else {
             double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
+            // 1.21.6+ RenderSystem.enableScissor 删 → GuiGraphics 剪裁（GUI 坐标）
+            //? if <21.6
             RenderSystem.enableScissor((int) (x * guiScale), (int) (Minecraft.getInstance().getWindow().getHeight() - (((y + this.height) - 20) * guiScale)), (int) (this.width * guiScale), (int) ((this.height - 20) * guiScale));
+            //? if >=21.6
+            /*guiGraphics.graphics().enableScissor(x, y, x + this.width, y + this.height - 20);*/
             //? if >=1.21
             /*ModelPreviewRenderer.renderLivingEntityPreview(x + (this.width / 2.0f), y + (this.height / 2.0f) + 20.0f, 30.0f, YsmFrame.partialTick(minecraft), this.modelIdHolder, RendererManager.getPlayerRenderer(), this.disablePreviewRotation, true);*/
             //? if <1.21
             ModelPreviewRenderer.renderLivingEntityPreview(x + (this.width / 2.0f), y + (this.height / 2.0f) + 20.0f, 30.0f, minecraft.getFrameTime(), this.modelIdHolder, RendererManager.getPlayerRenderer(), this.disablePreviewRotation, true);
+            //? if <21.6
             RenderSystem.disableScissor();
+            //? if >=21.6
+            /*guiGraphics.graphics().disableScissor();*/
         }
         int starZ = 3500;
         if (this.foregroundTexture != null) {
@@ -301,20 +308,30 @@ public class ModelButton extends YsmButton {
         float inner = radius - thickness;
         float time = (System.nanoTime() % 10_000_000_000L) / 1.0E9f;
 
+        //? if <21.6
         Pie.draw(guiGraphics.pose(), centerX, centerY, inner, radius, 0.0f, Pie.tau, 0x33FFFFFF);
+        // 1.21.6+ Pie 已降级 no-op（pose 类型变化，调用点一并退役）
 
         float sweepPhase = (time % 2.0f) / 2.0f;
         float eased = 0.5f - 0.5f * Mth.cos(sweepPhase * Pie.tau);
         float sweep = Mth.lerp(eased, 0.12f, 0.78f) * Pie.tau;
         float start = ((time % 1.4f) / 1.4f) * Pie.tau + sweepPhase * Pie.tau;
 
+        //? if <21.6
         Pie.draw(guiGraphics.pose(), centerX, centerY, inner, radius, start, start + sweep, 0xFFF3D08A);
+        // 1.21.6+ Pie 已降级 no-op（pose 类型变化，调用点一并退役）
     }
 
     public void renderTooltip(YsmGui guiGraphics, Screen screen, int mouseX, int mouseY) {
         if (/*? if >=1.18.2 && <1.19.4 {*/ /*isHoveredOrFocused()*//*?} else {*/ isHovered() /*?}*/) {
+            //? if <21.6
             guiGraphics.pose().pushPose();
+            //? if >=21.6
+            /*guiGraphics.pose().pushMatrix();*/
+            //? if <21.6
             guiGraphics.pose().translate(0.0f, 0.0f, 4000.0f);
+            //? if >=21.6
+            /*guiGraphics.pose().translate(0.0f, 0.0f);*/
             //? if <1.17
         /*String selected = Minecraft.getInstance().getLanguageManager().getSelected().getCode();*/
         // LanguageManager.getSelected() 1.19.4 起返回 String（1194:70），1.17~1.19.2 为 LanguageInfo → getCode()
@@ -338,7 +355,10 @@ public class ModelButton extends YsmButton {
                 }
                 guiGraphics.renderScreenComponentTooltip(screen, Minecraft.getInstance().font, this.tooltipLines, mouseX, mouseY);
             }
+            //? if <21.6
             guiGraphics.pose().popPose();
+            //? if >=21.6
+            /*guiGraphics.pose().popMatrix();*/
         }
     }
 

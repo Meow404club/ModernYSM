@@ -105,10 +105,19 @@ public class PackIconButton extends YsmButton {
         }
         List<Component> listSingletonList = Collections.singletonList(YsmText.literal(str));
         if (/*? if >=1.18.2 && <1.19.4 {*/ /*isHoveredOrFocused()*//*?} else {*/ isHovered() /*?}*/) {
+            //? if <21.6
             guiGraphics.pose().pushPose();
+            //? if >=21.6
+            /*guiGraphics.pose().pushMatrix();*/
+            //? if <21.6
             guiGraphics.pose().translate(0.0f, 0.0f, 4000.0f);
+            //? if >=21.6
+            /*guiGraphics.pose().translate(0.0f, 0.0f);*/
             guiGraphics.renderScreenComponentTooltip(screen, Minecraft.getInstance().font, listSingletonList, mouseX, mouseY);
+            //? if <21.6
             guiGraphics.pose().popPose();
+            //? if >=21.6
+            /*guiGraphics.pose().popMatrix();*/
         }
     }
 

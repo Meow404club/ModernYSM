@@ -271,12 +271,26 @@ public class PlayerTextureScreen extends Screen {
     }
 
     public void renderTexturePreview(YsmGui guiGraphics, int scissorX, int scissorY, int scissorWidth, int scissorHeight, float partialTick) {
+        // 1.21.6+ RenderSystem.enableScissor 删 → GuiGraphics 剪裁（GUI 坐标=窗口坐标/guiScale 翻转 Y）
+        //? if <21.6
         RenderSystem.enableScissor(scissorX, scissorY, scissorWidth, scissorHeight);
+        //? if >=21.6 {
+        /*double ysmGuiScale = Minecraft.getInstance().getWindow().getGuiScale();
+        int ysmWinH = Minecraft.getInstance().getWindow().getHeight();
+        guiGraphics.graphics().enableScissor(
+            (int) (scissorX / ysmGuiScale),
+            (int) ((ysmWinH - (scissorY + scissorHeight)) / ysmGuiScale),
+            (int) ((scissorX + scissorWidth) / ysmGuiScale),
+            (int) ((ysmWinH - scissorY) / ysmGuiScale));*/
+        //?}
         PlayerCapability.get(this.minecraft.player).ifPresent(cap -> {
             this.modelHolder.initModelWithTexture(this.modelId, cap.getCurrentTextureName());
             ModelPreviewRenderer.renderEntityPreview(this.guiLeft + 149.5f + 40.0f + this.offsetX, this.guiTop + 117.5f + 80.0f + this.offsetY, this.zoom, this.pitch, this.yaw, partialTick, this.modelHolder, RendererManager.getPlayerRenderer(), this.showGround);
         });
+        //? if <21.6
         RenderSystem.disableScissor();
+        //? if >=21.6
+        /*guiGraphics.graphics().disableScissor();*/
     }
 
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {

@@ -220,11 +220,11 @@ public class ModelSettingsScreen extends OptionScreen {
         int sy = (int) (this.minecraft.getWindow().getHeight() - previewBottom * scale);
         int sw = (int) ((previewRight - previewLeft) * scale);
         int sh = (int) ((previewBottom - previewTop) * scale);
-        YsmGui.enableScissorBox(sx, sy, sw, sh);
+                YsmGui.enableScissorBox(sx, sy, sw, sh);
         float cx = (previewLeft + previewRight) / 2.0f + offsetX;
         float cy = previewTop + (previewBottom - previewTop) * 0.65f + offsetY;
         renderPlayerForSettings(cx, cy, zoom, pitch, yaw, partialTick, la, renderer);
-        YsmGui.disableScissorBox();
+                YsmGui.disableScissorBox();
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -309,6 +309,8 @@ public class ModelSettingsScreen extends OptionScreen {
         //? if <1.17 {
         /*Lighting.turnOff();
          *///?} else {
+        // 1.21.6+ Lighting 静态置光删（UBO 化）→ no-op
+        //? if <21.6
         Lighting.setupForEntityInInventory();
         //?}
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
@@ -352,12 +354,16 @@ public class ModelSettingsScreen extends OptionScreen {
             //? if >=1.17 && <1.20.5 {
             modelViewStack.popPose();
             RenderCompat.applyModelViewMatrix();
-            Lighting.setupFor3DItems();
+            //? if <21.6
+        Lighting.setupFor3DItems();
+        // 1.21.6+ Lighting 静态置光删（UBO 化）→ no-op
             //?}
             //? if >=1.20.5 {
             /*modelViewStack.popMatrix();
             RenderCompat.applyModelViewMatrix();
-            Lighting.setupFor3DItems();*/
+            //? if <21.6
+        Lighting.setupFor3DItems();
+        // 1.21.6+ Lighting 静态置光删（UBO 化）→ no-op*/
             //?}
             ModelPreviewRenderer.setPreviewMode(false);
         }

@@ -469,8 +469,14 @@ public class AnimationRouletteScreen extends Screen {
         } else {
             scrolledMouseY = mouseY + this.configScrollOffset;
         }
+        //? if <21.6
         guiGraphics.pose().pushPose();
+        //? if >=21.6
+        /*guiGraphics.pose().pushMatrix();*/
+        //? if <21.6
         guiGraphics.pose().translate(0.0f, -this.configScrollOffset, 0.0f);
+        //? if >=21.6
+        /*guiGraphics.pose().translate(0.0f, -this.configScrollOffset);*/
         for (/*? if <1.19.4 {*/ /*Widget *//*?} else {*/ Renderable /*?}*/ renderable2 : ((ScreenAccessor) this).ysm$getRenderables()) {
             if (renderable2 instanceof ISpecialWidget) {
                 //? if <1.20
@@ -479,7 +485,10 @@ public class AnimationRouletteScreen extends Screen {
                 renderable2.render(guiGraphics.graphics(), mouseX, scrolledMouseY, partialTick);
             }
         }
+        //? if <21.6
         guiGraphics.pose().popPose();
+        //? if >=21.6
+        /*guiGraphics.pose().popMatrix();*/
         guiGraphics.disableScissor();
         renderHoverTooltip(guiGraphics, mouseX, scrolledMouseY);
     }
@@ -792,9 +801,10 @@ public class AnimationRouletteScreen extends Screen {
     }
     //?}
 
-    // 1.21.5+ 专用形：BufferUploader/Tesselator.getBuilder 删除（RenderPipeline 化）→
-    // 扇形经 drawSpecial 进入 gui 渲染器集成管线（vanilla-1.21.5 GuiGraphics.java:1087）
-    //? if >=21.5 {
+    // 1.21.5 专用形：BufferUploader/Tesselator.getBuilder 删除（RenderPipeline 化）→
+    // 扇形经 drawSpecial 进入 gui 渲染器集成管线（vanilla-1.21.5 GuiGraphics.java:1087；
+    // 1.21.6 删 drawSpecial → 21.8+ 走 RouletteFanState/submitGuiElementRenderState）
+    //? if >=21.5 && <21.6 {
     /*private void renderRadialBackground(YsmGui guiGraphics, PoseStack poseStack, int mouseX, int mouseY) {
         if (this.currentProperties.isEmpty()) {
             return;
@@ -836,6 +846,52 @@ public class AnimationRouletteScreen extends Screen {
     }*/
     //?}
 
+    // 21.6+ 专用形：drawSpecial 删除（1.21.6 GUI 全状态化）→ 自定义 GuiElementRenderState
+    //（RouletteFanState，POSITION_COLOR 顶点收集）经 submitGuiElementRenderState 提交
+    //（1.21.8 GuiGraphics.java:1282），GuiRenderer 按管线通用渲染（GuiRenderer.java:665）
+    //? if >=21.6 {
+    /*private void renderRadialBackground(YsmGui guiGraphics, org.joml.Matrix3x2fStack poseStack, int mouseX, int mouseY) {
+        if (this.currentProperties.isEmpty()) {
+            return;
+        }
+        rip.ysm.gui.RouletteFanState ysmFan = new rip.ysm.gui.RouletteFanState();
+        com.mojang.blaze3d.vertex.VertexConsumer builder = ysmFan.sink();
+        // 1.21.6+ 扇形顶点直接处于 GuiGraphics 坐标系：恒等变换（轮盘不依赖 push 变换）
+        Matrix4f matrix4fPose = new Matrix4f();
+        float pointerAngle = (float) Mth.atan2(mouseY - this.centerY, mouseX - this.centerX);
+        if (pointerAngle < 0.0f) {
+            pointerAngle = 6.2831855f + pointerAngle;
+        }
+        float pointerRadius = Mth.sqrt(Mth.square(mouseY - this.centerY) + Mth.square(mouseX - this.centerX));
+        boolean hoveredAny = false;
+        boolean hoveredConfig = false;
+        for (int i = 0; i < Math.min(8, this.currentProperties.size() - (this.currentNavEntry.getRight().intValue() * 8)); i++) {
+            float startAngle = ((6.2831855f / 8) * i) + 0.034906585f;
+            float endAngle = ((6.2831855f / 8) * (i + 1)) - 0.034906585f;
+            int iIntValue = i + (this.currentNavEntry.getRight().intValue() * 8);
+            boolean zStartsWith = this.currentProperties.getValueAt(iIntValue).startsWith(SUBMENU_PREFIX);
+            hoveredAny = checkRadialHover(startAngle, pointerAngle, endAngle, pointerRadius, hoveredAny, zStartsWith, i, builder, matrix4fPose);
+            boolean isConfigSliceHovered = startAngle < pointerAngle && pointerAngle < endAngle && 20.0f < pointerRadius && pointerRadius < 50.0f;
+            if (zStartsWith) {
+                if (isConfigSliceHovered) {
+                    drawRadialSegment(builder, matrix4fPose, 15.0f, 50.0f, startAngle, endAngle, -268382465);
+                    hoveredConfig = true;
+                    this.hoveredConfigIndex = iIntValue;
+                } else {
+                    drawRadialSegment(builder, matrix4fPose, 25.0f, 50.0f, startAngle, endAngle, 1879101183);
+                }
+            }
+        }
+        if (!hoveredAny) {
+            this.hoveredIndex = -1;
+        }
+        if (!hoveredConfig) {
+            this.hoveredConfigIndex = -1;
+        }
+        this.ysmRawGuiGraphics.submitGuiElementRenderState(ysmFan);
+    }*/
+    //?}
+
     private boolean checkRadialHover(float startAngle, float pointerAngle, float endAngle, float pointerRadius, boolean alreadyHovered, boolean isSubmenu, int index, com.mojang.blaze3d.vertex.VertexConsumer bufferBuilder, Matrix4f matrix4f) {
         boolean isHovered = startAngle < pointerAngle && pointerAngle < endAngle && 50.0f < pointerRadius && pointerRadius < 100.0f;
         if (isHovered) {
@@ -867,7 +923,7 @@ public class AnimationRouletteScreen extends Screen {
         bufferBuilder.addVertex(matrix4f, this.centerX + (innerRadius * Mth.cos(endAngle)), this.centerY + (innerRadius * Mth.sin(endAngle)), 0.0f).setColor(red, green, blue, alpha);
         bufferBuilder.addVertex(matrix4f, this.centerX + (outerRadius * Mth.cos(endAngle)), this.centerY + (outerRadius * Mth.sin(endAngle)), 0.0f).setColor(red, green, blue, alpha);*/
         // 1.21.5 addVertex(Matrix4f,...) 重载删除（Pose 制化）→ Matrix4f 手工变换
-        //? if >=21.5 {
+        //? if >=21.5 && <21.6 {
         /*org.joml.Vector3f ysmV = new org.joml.Vector3f();
         ysmV.set(this.centerX + (outerRadius * Mth.cos(startAngle)), this.centerY + (outerRadius * Mth.sin(startAngle)), 0.0f).mulPosition(matrix4f);
         bufferBuilder.addVertex(ysmV.x(), ysmV.y(), ysmV.z()).setColor(red, green, blue, alpha);

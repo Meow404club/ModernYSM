@@ -1731,6 +1731,17 @@ public final class ServerModelManager {
                     //? if <1.19.2 {
                     /*connection.send((Packet<?>) obj, future -> atomicInteger.set(1));
                      *///?} else {
+                    // 1.21.8 PacketSendListener 类化（静态工具，net.minecraft.network.PacketSendListener）
+                    //→ 匿名回调改裸 ChannelFutureListener（成功置 1 / 失败置 -1，语义等价）
+                    //? if >=21.8 {
+                    /*connection.send((Packet<?>) obj, future -> {
+                        if (future.isSuccess()) {
+                            atomicInteger.set(1);
+                        } else {
+                            atomicInteger.set(-1);
+                        }
+                    });*/
+                    //?} else {
                     connection.send((Packet<?>) obj, new PacketSendListener() {
                         public void onSuccess() {
                             atomicInteger.set(1);
@@ -1743,6 +1754,7 @@ public final class ServerModelManager {
                             return null;
                         }
                     });
+                    //?}
                     //?}
                     long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30);
                     while (atomicInteger.get() == 0

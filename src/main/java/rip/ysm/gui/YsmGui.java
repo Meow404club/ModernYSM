@@ -66,9 +66,17 @@ public final class YsmGui {
         return this.graphics;
     }
 
+//? if <21.6 {
     public PoseStack pose() {
         return this.graphics.pose();
     }
+//?}
+// 1.21.6+ GuiGraphics.pose() 返回 Matrix3x2fStack（GUI 状态化矩阵栈）
+//? if >=21.6 {
+    /*public org.joml.Matrix3x2fStack pose() {
+        return this.graphics.pose();
+    }*/
+    //?}
 
     //?}
 
@@ -354,12 +362,18 @@ public final class YsmGui {
     }
 
     //?}
-    //? if >=1.21.2 {
+    //? if >=1.21.2 && <21.6 {
     /*public void blit(ResourceLocation atlas, int x, int y, int u, int v, int width, int height) {
         this.graphics.blit(net.minecraft.client.renderer.RenderType::guiTexturedOverlay, atlas, x, y, (float) u, (float) v, width, height, 256, 256);
     }
 
      */
+    //?}
+    // 1.21.6+ RenderType 工厂引用删 → RenderPipelines.GUI_TEXTURED（RenderPipelines.java:615）
+    //? if >=21.6 {
+    /*public void blit(ResourceLocation atlas, int x, int y, int u, int v, int width, int height) {
+        this.graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, atlas, x, y, (float) u, (float) v, width, height, 256, 256);
+    }*/
     //?}
 
     /** 全参版（独立 uW/vH）：1.16.5 与 1.17+ 参数序同形（1165:155 / 1182:165 / 1194:207），
@@ -385,12 +399,17 @@ public final class YsmGui {
     }
 
     //?}
-    //? if >=1.21.2 {
+    //? if >=1.21.2 && <21.6 {
     /*public void blit(ResourceLocation atlas, int x, int y, int renderWidth, int renderHeight, float uOffset, float vOffset, int uWidth, int vHeight, int textureWidth, int textureHeight) {
         this.graphics.blit(net.minecraft.client.renderer.RenderType::guiTexturedOverlay, atlas, x, y, uOffset, vOffset, uWidth, vHeight, renderWidth, renderHeight, textureWidth, textureHeight);
     }
 
      */
+    //?}
+    //? if >=21.6 {
+    /*public void blit(ResourceLocation atlas, int x, int y, int renderWidth, int renderHeight, float uOffset, float vOffset, int uWidth, int vHeight, int textureWidth, int textureHeight) {
+        this.graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, atlas, x, y, uOffset, vOffset, uWidth, vHeight, renderWidth, renderHeight, textureWidth, textureHeight);
+    }*/
     //?}
 
     /** float u/v + 显式纹理尺寸 blit：1.16.5 (x,y,w,h,u,v,uW,vH,texW,texH) 形；
@@ -415,11 +434,16 @@ public final class YsmGui {
         this.graphics.blit(atlas, x, y, width, height, uOffset, vOffset, width, height, textureWidth, textureHeight);
     }
     //?}
-    //? if >=1.21.2 {
+    //? if >=1.21.2 && <21.6 {
     /*public void blit(ResourceLocation atlas, int x, int y, float uOffset, float vOffset, int width, int height, int textureWidth, int textureHeight) {
         this.graphics.blit(net.minecraft.client.renderer.RenderType::guiTexturedOverlay, atlas, x, y, uOffset, vOffset, width, height, textureWidth, textureHeight);
     }
     */
+    //?}
+    //? if >=21.6 {
+    /*public void blit(ResourceLocation atlas, int x, int y, float uOffset, float vOffset, int width, int height, int textureWidth, int textureHeight) {
+        this.graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, atlas, x, y, uOffset, vOffset, width, height, textureWidth, textureHeight);
+    }*/
     //?}
 
     /** 带 z 序 blit：1.17+ 有 z 形 (x,y,z,u,v,w,h,texW,texH)（1182:157）；1.16.5 无 z → 落 0 层同形。 */
@@ -447,12 +471,17 @@ public final class YsmGui {
     }
 
     //?}
-    //? if >=1.21.2 {
+    //? if >=1.21.2 && <21.6 {
     /*public void blit(ResourceLocation atlas, int x, int y, int z, int uOffset, int vOffset, int width, int height, int textureWidth, int textureHeight) {
         this.graphics.blit(net.minecraft.client.renderer.RenderType::guiTexturedOverlay, atlas, x, y, uOffset, vOffset, width, height, textureWidth, textureHeight);
     }
 
      */
+    //?}
+    //? if >=21.6 {
+    /*public void blit(ResourceLocation atlas, int x, int y, int z, int uOffset, int vOffset, int width, int height, int textureWidth, int textureHeight) {
+        this.graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, atlas, x, y, uOffset, vOffset, width, height, textureWidth, textureHeight);
+    }*/
     //?}
 
     // ==================== setColor（color4f 1.17 分界） ====================
@@ -481,12 +510,17 @@ public final class YsmGui {
     // 1.21.2 GuiGraphics.setColor 删除 → 全局 setShaderColor（vanilla-1.21.3 GuiGraphics
     // 无 setColor 定义、RenderSystem.java:384 仍在）；管线对 shaderColor 的读取
     // 归 runClient 视觉走查核验
-    //? if >=1.21.2 {
+    //? if >=1.21.2 && <21.6 {
     /*public void setColor(float r, float g, float b, float a) {
         com.mojang.blaze3d.systems.RenderSystem.setShaderColor(r, g, b, a);
     }
 
      */
+    //?}
+    // 1.21.6+ RenderSystem.setShaderColor 删 → no-op（着色差入功能债）
+    //? if >=21.6 {
+    /*public void setColor(float r, float g, float b, float a) {
+    }*/
     //?}
 
     /** 垂直渐变填充（GuiGraphics.fillGradient 对位）。 */
@@ -501,11 +535,16 @@ public final class YsmGui {
         this.graphics.blit(atlas, x, y, uOffset, vOffset, width, height, textureWidth, textureHeight);
     }
     //?}
-    //? if >=1.21.2 {
+    //? if >=1.21.2 && <21.6 {
     /*public void blit(ResourceLocation atlas, int x, int y, int uOffset, int vOffset, int width, int height, int textureWidth, int textureHeight) {
         this.graphics.blit(net.minecraft.client.renderer.RenderType::guiTexturedOverlay, atlas, x, y, uOffset, vOffset, width, height, textureWidth, textureHeight);
     }
      */
+    //?}
+    //? if >=21.6 {
+    /*public void blit(ResourceLocation atlas, int x, int y, int uOffset, int vOffset, int width, int height, int textureWidth, int textureHeight) {
+        this.graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, atlas, x, y, uOffset, vOffset, width, height, textureWidth, textureHeight);
+    }*/
     //?}
 
     /** TextureManager.getTexture(rl, missing) 双参语义：未注册时返回缺失纹理占位（不注册占位条目）。 */
@@ -547,11 +586,19 @@ public final class YsmGui {
 
     /** 带 z 序的渐变/纹理绘制（1.20.1 GuiGraphics z 重载；<1.20 无 z 轴 → 落回 0 层，绘制顺序不变）。 */
     public void fillGradient(int minX, int minY, int maxX, int maxY, int z, int colorFrom, int colorTo) {
+        //? if <21.6
         this.graphics.fillGradient(minX, minY, maxX, maxY, z, colorFrom, colorTo);
+        // 1.21.6+ z 轴删（stratum 制，GuiGraphics.java:171 六参形）
+        //? if >=21.6
+        /*this.graphics.fillGradient(minX, minY, maxX, maxY, colorFrom, colorTo);*/
     }
 
     public void renderTooltip(Font font, java.util.List<net.minecraft.util.FormattedCharSequence> lines, int mouseX, int mouseY) {
+        //? if <21.6
         this.graphics.renderTooltip(font, lines, mouseX, mouseY);
+        // 1.21.6+ tooltip 状态化（GuiGraphics.java:976）
+        //? if >=21.6
+        /*this.graphics.setTooltipForNextFrame(font, lines, mouseX, mouseY);*/
     }
 
     public void fill(int minX, int minY, int maxX, int maxY, int color) {
@@ -559,7 +606,11 @@ public final class YsmGui {
     }
 
     public void fill(int minX, int minY, int maxX, int maxY, int z, int color) {
+        //? if <21.6
         this.graphics.fill(minX, minY, maxX, maxY, z, color);
+        // 1.21.6+ z 轴删（GuiGraphics.java:151）
+        //? if >=21.6
+        /*this.graphics.fill(minX, minY, maxX, maxY, color);*/
     }
 
     public void drawString(Font font, Component text, int x, int y, int color, boolean shadow) {
@@ -612,10 +663,15 @@ public final class YsmGui {
 
     /** GuiGraphics.renderComponentTooltip 的版本中性入口（Screen 渲染 tooltip 用）。 */
     public void renderScreenComponentTooltip(net.minecraft.client.gui.screens.Screen screen, Font font, List<Component> lines, int mouseX, int mouseY) {
+        //? if <21.6
         this.graphics.renderComponentTooltip(font, lines, mouseX, mouseY);
+        // 1.21.6+ tooltip 状态化（GuiGraphics.java:933）
+        //? if >=21.6
+        /*this.graphics.setComponentTooltipForNextFrame(font, lines, mouseX, mouseY);*/
     }
 
     /** 已处于窗口像素坐标的裸 scissor（1.20.1 = RenderSystem.enableScissor）。 */
+    //? if <21.6 {
     public static void enableScissorBox(int x, int y, int width, int height) {
         com.mojang.blaze3d.systems.RenderSystem.enableScissor(x, y, width, height);
     }
@@ -623,5 +679,16 @@ public final class YsmGui {
     public static void disableScissorBox() {
         com.mojang.blaze3d.systems.RenderSystem.disableScissor();
     }
+    //?} else {
+    /*// 1.21.6+ RenderSystem 剪裁入口删：预览实体立即绘制路径仍受 GL 剪裁约束，原语义直写 GL
+    public static void enableScissorBox(int x, int y, int width, int height) {
+        org.lwjgl.opengl.GL11.glEnable(org.lwjgl.opengl.GL11.GL_SCISSOR_TEST);
+        org.lwjgl.opengl.GL11.glScissor(x, y, width, height);
+    }
+
+    public static void disableScissorBox() {
+        org.lwjgl.opengl.GL11.glDisable(org.lwjgl.opengl.GL11.GL_SCISSOR_TEST);
+    }*/
+    //?}
     //?}
 }

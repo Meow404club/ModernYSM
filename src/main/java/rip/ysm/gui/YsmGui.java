@@ -850,7 +850,7 @@ public final class YsmGui {
         //? if forge && <21.6
         screen.renderBackground(this.graphics);
         //? if forge && >=21.10
-        screen.renderBackground(this.graphics);
+        /*screen.renderBackground(this.graphics);*/
     }
 
     /** GuiGraphics.renderComponentTooltip 的版本中性入口（Screen 渲染 tooltip 用）。 */

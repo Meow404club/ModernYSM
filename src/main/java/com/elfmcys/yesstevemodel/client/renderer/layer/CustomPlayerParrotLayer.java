@@ -103,7 +103,7 @@ public class CustomPlayerParrotLayer extends GeoLayerRenderer<CustomPlayerEntity
             // ParrotOnShoulderLayer 同款状态制（ParrotRenderState.pose=ON_SHOULDER +
             // setupAnim + renderToBuffer，vanilla-1.21.3 ParrotOnShoulderLayer.java:50-68/
             // ParrotModel.java:83 实证）
-            //? if >=21.3 && <21.5 {
+            //? if >=21.2 && <21.5 {
             /*net.minecraft.client.renderer.entity.state.ParrotRenderState parrotState = new net.minecraft.client.renderer.entity.state.ParrotRenderState();
             parrotState.pose = ParrotModel.Pose.ON_SHOULDER;
             parrotState.ageInTicks = player.tickCount;

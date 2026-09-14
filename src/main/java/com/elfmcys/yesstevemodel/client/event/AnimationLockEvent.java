@@ -98,7 +98,7 @@ public class AnimationLockEvent {
     }
 
     public static boolean isPlayerMoving(LocalPlayer localPlayer) {
-        //? if >=21.3 && <21.5 {
+        //? if >=21.2 && <21.5 {
         /*ClientInput input = localPlayer.input;
         return input != null && (isSignificantImpulse(input.leftImpulse) || isSignificantImpulse(input.forwardImpulse)
                 || input.keyPresses.jump() || input.keyPresses.shift());*/

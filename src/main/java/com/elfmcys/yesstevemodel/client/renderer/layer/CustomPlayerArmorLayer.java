@@ -89,7 +89,7 @@ public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity>
         //? if >=1.20 && <1.21.2
         return (item instanceof ArmorItem) && ((ArmorItem) item).getEquipmentSlot() == EquipmentSlot.HEAD;
         // 1.21.2 槽位查询改 IItemExtension.getEquipmentSlot(ItemStack)（ArmorItem 无参形删除）
-        //? if >=21.3 && <21.5
+        //? if >=21.2 && <21.5
         /*return (item instanceof ArmorItem) && ((ArmorItem) item).getEquipmentSlot(stack) == EquipmentSlot.HEAD;*/
         // 1.21.5 ArmorItem 类删除 → Equippable 数据组件槽位判定（neoforge-21.5.98-sources
         // DataComponents.java:176 EQUIPPABLE / Equippable.java:33 record slot 访问器）

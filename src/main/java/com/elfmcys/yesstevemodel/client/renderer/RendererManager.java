@@ -135,7 +135,7 @@ public class RendererManager {
         // vanilla-1.21.3 EntityRendererProvider.java:35 实证）
         //? if >=1.19.2 && <1.21.2
         EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemRenderer(), Minecraft.getInstance().getBlockRenderer(), entityRenderDispatcher.getItemInHandRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), Minecraft.getInstance().font);
-        //? if >=21.3 && <21.4
+        //? if >=21.2 && <21.4
         /*EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemRenderer(), Minecraft.getInstance().getMapRenderer(), Minecraft.getInstance().getBlockRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), Minecraft.getInstance().getEquipmentModels(), Minecraft.getInstance().font);*/
         // 1.21.4 Context：ItemRenderer→ItemModelResolver、EquipmentModelSet→EquipmentAssetManager
         //（vanilla-1.21.4 EntityRendererProvider.java:38-48）；EquipmentAssetManager 无

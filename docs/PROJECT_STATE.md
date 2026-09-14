@@ -82,6 +82,8 @@
 - 2a：1.20.4/1.20.6/1.21.1 三线全绿+16 屏走查进世界；moddev 构建线建成（MDG2 neoforge、分代树 srcDir、neoforge.mods.toml、[[mixins]] 声明、零 refmap 直配、compatLevel JAVA_17/21/21）；双在产线对基线逐类 javap+资源全同（4 处回归抓回修复）；TouhouMaidCompat @OnlyIn 中立化裁决通过（专用服更安全）
 - 2b（已合入 dev=07e171e）：21.3/21.4/21.5/21.8/21.10/21.11 六线绿+主菜单证据；26.1.2/26.2 park（NFRT 由 MDG 2.0.147 解除，剩自身代号适配 26.1.2≈100 错 GuiGraphics 移包/26.2≈100 错 TextureFormat 移包）→26.x 适配卡（26.1/26.1.1 同代一并）
 - 批二 c：2c-1 **已合入 dev=5c5888f**（2026-09-14，rebase 8444dbf 后四提交 0dd7641/83c8b5d/f2ecf2f/01754ff 重签）——十线注册（forge beta/latest 六线 + unimined 1.16.1~4）+ 1.16.1/1.18/1.18.1/1.19/1.19.1/1.19.3 六线修绿；审查修正 b59cf0c：1.18/1.18.1 RenderSystem 三断言按 merged jar javap 实证恢复激活（coder 曾整体误砍）、20 处恒假条件死码清除；剩余（1.16.2/3/4 修绿、1.18/1.18.1/1.19 build、双在产线 javap 终验、compatLevel 表）归接手卡 m3-batch2c1b-forge-remainder
+- 批二 c 接手卡 **已合入 dev=0478ed2**（2026-09-14，5 提交+审查修正 7b2a6c9）——1.16.2/3/4 修绿（双分界实证修正：RenderArmEvent=forge 36 才有、scissor=1.16.4 起）+ 1.20 线修绿（forge46 renderWidget public abstract 专属段）+ 1.16.1 回归修复（m2.7 getCameraType→CameraUtil 反射门面）+ 1.20 mods.toml 参数化（生产拒载缺陷）+ tour.sh 十四线路由；**终验三层独立复验**：1201/1165 对 5c5888f 零 diff、1165 对 8444dbf^ 恰 5 类=m2.7 预期集，零泄漏（证据 tmp/evidence/rv-m3b2c1b/）；compatLevel 表 1.16 系=JAVA_8/中段=JAVA_17；审查修正=CameraUtil thirdPersonView null 守卫（NPE 隐患闭环）。**forge 侧批二c 至此收官**
+- 批二c1b 遗留（环境卡待立项）：1.16.2 dev-run mixin Re-entrance / 1.16.3-4 SecureJarHandler NSME / 1.16.1 进世界断连（均 unimined 环境层，产物绿）；1.18.1 RenderArmEvent 门排外已入债（debt-forge-linegen）
 - 批二 c-2（待发）：neoforge 8 条（1.20.2 POC/1.20.3 POC/1.20.5/1.21/1.21.2/1.21.6/1.21.7/21.9）
 - 全谱 37 线；semver 铁律（stonecutter 版本 ID 数值比较，分代用 <21.5/>=21.5 风格）与 vcs 直通铁律（1.20.1 根活动节点，21 轴门控必须存储态）为平铺期两大新沉淀
 - 2a：1.20.4（20.4.x stable）/1.20.6（20.6.x）/1.21.1（21.1.x）——moddev 构建线首次建立（MDG neoforge），Java 17/21/21

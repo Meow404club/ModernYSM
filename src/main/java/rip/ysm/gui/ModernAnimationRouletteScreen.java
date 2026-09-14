@@ -36,6 +36,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
+//? if >=1.16.2
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -268,6 +269,16 @@ public class ModernAnimationRouletteScreen extends Screen {
             if (isSubmenuLink) comp = comp.withStyle(ChatFormatting.GOLD);
             boolean showKey = page() == 0 && navigationStack.size() == 1 && absoluteIdx < ExtraAnimationKey.KEY_MAPPINGS.size();
             int wrapWidth = (int) ((100.0f - (hasGear ? 46.0f : 22.0f)) * 0.9f);
+            //? if <1.16.2 {
+            /*List<net.minecraft.network.chat.FormattedText> lines = this.font.split(comp, wrapWidth);
+            int totalH = lines.size() * 9 + (showKey ? 10 : 0);
+            int lineY = ly - totalH / 2;
+            for (net.minecraft.network.chat.FormattedText line : lines) {
+                g.drawCenteredString(this.font, line, lx, lineY, 0xFFFFFFFF);
+                lineY += 9;
+            }*/
+            //?}
+            //? if >=1.16.2 {
             List<FormattedCharSequence> lines = this.font.split(comp, wrapWidth);
             int totalH = lines.size() * 9 + (showKey ? 10 : 0);
             int lineY = ly - totalH / 2;
@@ -275,6 +286,7 @@ public class ModernAnimationRouletteScreen extends Screen {
                 g.drawCenteredString(this.font, line, lx, lineY, 0xFFFFFFFF);
                 lineY += 9;
             }
+            //?}
             if (showKey) renderKeyBinding(g, absoluteIdx, lx, lineY + 1);
         }
     }

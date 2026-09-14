@@ -11,8 +11,11 @@ import net.minecraftforge.common.MinecraftForge;
 //? if <1.17 {
 /*import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
  *///?}
-//? if >=1.17 && <1.18.2 {
+//? if >=1.17 && <1.18 {
 /*import net.minecraftforge.fmlserverevents.FMLServerAboutToStartEvent;
+ *///?}
+//? if >=1.18 && <1.18.2 {
+/*import net.minecraftforge.event.server.ServerAboutToStartEvent;
  *///?}
 //? if >=1.18.2 && neoforge
 /*import net.neoforged.neoforge.event.server.ServerAboutToStartEvent;*/
@@ -33,8 +36,10 @@ public final class ServerStartupEvent {
 
     //? if <1.17
     /*private static void onServerAboutToStart(FMLServerAboutToStartEvent event) {*/
-    //? if >=1.17 && <1.18.2
+    //? if >=1.17 && <1.18
     /*private static void onServerAboutToStart(FMLServerAboutToStartEvent event) {*/
+    //? if >=1.18 && <1.18.2
+    /*private static void onServerAboutToStart(ServerAboutToStartEvent event) {*/
     //? if >=1.18.2
     private static void onServerAboutToStart(ServerAboutToStartEvent event) {
         MinecraftServer server = event.getServer();

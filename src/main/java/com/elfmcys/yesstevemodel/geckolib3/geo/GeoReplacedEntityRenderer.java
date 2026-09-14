@@ -243,13 +243,13 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
                     // vehicleRot.conj();
                     // poseStack.mulPose(vehicleRot);
                     //? }
-                    //? if >=1.17 && <1.19.4 {
+                    //? if >=1.17 && <1.19.3 {
                     /*
                     com.mojang.math.Quaternion vehicleRot = new com.mojang.math.Quaternion(vector3f.z, 0.0f, vector3f.x, false);
                     vehicleRot.conj();
                     poseStack.mulPose(vehicleRot);
                      *///? }
-                    //? if >=1.19.4 {
+                    //? if >=1.19.3 {
                     poseStack.mulPose(new Quaternionf().rotateZYX(vector3f.z, 0.0f, vector3f.x).invert());
                     //? }
                     }

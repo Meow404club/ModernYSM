@@ -24,15 +24,20 @@ public final class YsmTag {
 
     /** 物品标签句柄（opaque）。 */
     public static final class ItemTag {
-        //? if <1.18.2 {
-        /*private final net.minecraftforge.common.Tags.IOptionalNamedTag<Item> tag;
+        // 1.16.1 forge 32.x 无 createOptional/IOptionalNamedTag（33.x/36.x 起）→
+        // SerializationTags.getInstance().getItems().getTagOrEmpty(rl) 动态查询（官方 1161
+        // client.txt 全套命名实证：SerializationTags.getInstance/getItems、TagCollection
+        // getTagOrEmpty、Tag.contains）。tag 缺失时 getTagOrEmpty 返回空 tag → contains=false，
+        // 与下方 1.16.5 未绑定守卫同语义（不抛不炸）。
+        //? if <1.16.2 {
+        /*private final ResourceLocation rl;
 
-        private ItemTag(net.minecraftforge.common.Tags.IOptionalNamedTag<Item> tag) {
-            this.tag = tag;
+        private ItemTag(ResourceLocation rl) {
+            this.rl = rl;
         }
 
         static ItemTag of(ResourceLocation rl) {
-            return new ItemTag(net.minecraft.tags.ItemTags.createOptional(rl));
+            return new ItemTag(rl);
         }
 
         // 1.16.5 未绑定守卫：StaticTagHelper$Wrapper.resolve()（SRG TagRegistry$NamedTag.func_232944_c_）
@@ -43,6 +48,25 @@ public final class YsmTag {
         // 未绑定时语义=不含任何物品→false。吞点必须在本层（molang eval 入口），不放行到渲染序列中段。
         // 注意：本方法整体处于 <1.17 注释包分支内（stonecutter 块条件不嵌套；注释只能用 // 行注释，
         // 任何块注释的 star-slash 都会提前闭合外层包裹）。
+        public boolean matches(ItemStack stack) {
+            return net.minecraft.tags.SerializationTags.getInstance().getItems().getTagOrEmpty(this.rl).contains(stack.getItem());
+        }
+
+        public ResourceLocation location() {
+            return this.rl;
+        }
+         *///?}
+        //? if >=1.16.2 && <1.18.2 {
+        /*private final net.minecraftforge.common.Tags.IOptionalNamedTag<Item> tag;
+
+        private ItemTag(net.minecraftforge.common.Tags.IOptionalNamedTag<Item> tag) {
+            this.tag = tag;
+        }
+
+        static ItemTag of(ResourceLocation rl) {
+            return new ItemTag(net.minecraft.tags.ItemTags.createOptional(rl));
+        }
+
         public boolean matches(ItemStack stack) {
             try {
                 return this.tag.contains(stack.getItem());
@@ -56,7 +80,7 @@ public final class YsmTag {
         }
          *///?}
         // 中段（1.17~1.19.2）：TagKey.create(Registry.ITEM_REGISTRY)；TagKey 为 record（location() 同名）
-        //? if >=1.18.2 && <1.19.4 {
+        //? if >=1.18.2 && <1.19.3 {
         /*
         private final net.minecraft.tags.TagKey<Item> tag;
 
@@ -76,7 +100,7 @@ public final class YsmTag {
             return this.tag.location();
         }
          *///?}
-        //? if >=1.19.4 {
+        //? if >=1.19.3 {
         private final net.minecraft.tags.TagKey<Item> tag;
 
         private ItemTag(net.minecraft.tags.TagKey<Item> tag) {
@@ -99,7 +123,27 @@ public final class YsmTag {
 
     /** 实体类型标签句柄（opaque）。 */
     public static final class EntityTypeTag {
-        //? if <1.18.2 {
+        //? if <1.16.2 {
+        /*private final ResourceLocation rl;
+
+        private EntityTypeTag(ResourceLocation rl) {
+            this.rl = rl;
+        }
+
+        static EntityTypeTag of(ResourceLocation rl) {
+            return new EntityTypeTag(rl);
+        }
+
+        // 同 ItemTag.matches：<1.16.2 走 getTagOrEmpty（缺失=空 tag=不含）。
+        public boolean matches(EntityType<?> type) {
+            return net.minecraft.tags.SerializationTags.getInstance().getEntityTypes().getTagOrEmpty(this.rl).contains(type);
+        }
+
+        public ResourceLocation location() {
+            return this.rl;
+        }
+         *///?}
+        //? if >=1.16.2 && <1.18.2 {
         /*private final net.minecraftforge.common.Tags.IOptionalNamedTag<EntityType<?>> tag;
 
         private EntityTypeTag(net.minecraftforge.common.Tags.IOptionalNamedTag<EntityType<?>> tag) {
@@ -124,7 +168,7 @@ public final class YsmTag {
         }
          *///?}
         // 中段：TagKey.create(Registry.ENTITY_TYPE_REGISTRY)
-        //? if >=1.18.2 && <1.19.4 {
+        //? if >=1.18.2 && <1.19.3 {
         /*
         private final net.minecraft.tags.TagKey<EntityType<?>> tag;
 
@@ -144,7 +188,7 @@ public final class YsmTag {
             return this.tag.location();
         }
          *///?}
-        //? if >=1.19.4 {
+        //? if >=1.19.3 {
         private final net.minecraft.tags.TagKey<EntityType<?>> tag;
 
         private EntityTypeTag(net.minecraft.tags.TagKey<EntityType<?>> tag) {
@@ -175,7 +219,7 @@ public final class YsmTag {
 
     public static ResourceLocation itemKey(Item item) {
         // Registry.ITEM/... 静态字段 1.16.5~1.19.2 同形（1182 Registry.java:204）；BuiltInRegistries 1.19.3+
-        //? if <1.19.4 {
+        //? if <1.19.3 {
         /*return net.minecraft.core.Registry.ITEM.getKey(item);
          *///?} else {
         return net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(item);
@@ -183,7 +227,7 @@ public final class YsmTag {
     }
 
     public static ResourceLocation blockKey(net.minecraft.world.level.block.Block block) {
-        //? if <1.19.4 {
+        //? if <1.19.3 {
         /*return net.minecraft.core.Registry.BLOCK.getKey(block);
          *///?} else {
         return net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(block);
@@ -196,7 +240,7 @@ public final class YsmTag {
      * Holder<Enchantment> → >=1.21 返回值即 Holder（同名异返回类型按版本二选一）。 */
     //? if <1.21 {
     public static net.minecraft.world.item.enchantment.Enchantment enchantment(ResourceLocation rl) {
-        //? if <1.19.4 {
+        //? if <1.19.3 {
         /*return net.minecraft.core.Registry.ENCHANTMENT.get(rl);
          *///?} else {
         return net.minecraft.core.registries.BuiltInRegistries.ENCHANTMENT.get(rl);
@@ -215,7 +259,7 @@ public final class YsmTag {
 
     /** 物品注册表直查。 */
     public static Item item(ResourceLocation rl) {
-        //? if <1.19.4 {
+        //? if <1.19.3 {
         /*return net.minecraft.core.Registry.ITEM.get(rl);
          *///?} else {
         // 1.21.2 Registry.get(rl) 语义变 Optional<Reference<T>>，直取 T 改名 getValue
@@ -228,7 +272,7 @@ public final class YsmTag {
     }
 
     public static ResourceLocation entityTypeKey(EntityType<?> type) {
-        //? if <1.19.4 {
+        //? if <1.19.3 {
         /*return net.minecraft.core.Registry.ENTITY_TYPE.getKey(type);
          *///?} else {
         return net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(type);
@@ -236,7 +280,7 @@ public final class YsmTag {
     }
 
     public static ResourceLocation mobEffectKey(MobEffect effect) {
-        //? if <1.19.4 {
+        //? if <1.19.3 {
         /*return net.minecraft.core.Registry.MOB_EFFECT.getKey(effect);
          *///?} else {
         return net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.getKey(effect);
@@ -245,7 +289,7 @@ public final class YsmTag {
 
     /** 1.16.5 轴走 Registry.MOB_EFFECT.get(rl)（对位 1.20.1 BuiltInRegistries.MOB_EFFECT.get(rl)）。 */
     public static MobEffect mobEffect(ResourceLocation rl) {
-        //? if <1.19.4 {
+        //? if <1.19.3 {
         /*return net.minecraft.core.Registry.MOB_EFFECT.get(rl);
          *///?} else {
         // 1.21.2 get(rl) 语义变 Optional<Reference<T>>，直取 T 改名 getValue（同 item()）
@@ -258,7 +302,7 @@ public final class YsmTag {
 
     /** 1.16.5 Registry.getId(T) 内部数值 id（对位 1.20.1 writeId 的数值 id 语义，同版本线自洽）。 */
     public static int mobEffectNetworkId(MobEffect effect) {
-        //? if <1.19.4 {
+        //? if <1.19.3 {
         /*return net.minecraft.core.Registry.MOB_EFFECT.getId(effect);
          *///?} else {
         return net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.getId(effect);
@@ -267,7 +311,7 @@ public final class YsmTag {
 
     /** 1.16.5 Registry.byId(int)（对位 1.20.1 readById）。 */
     public static MobEffect mobEffectByNetworkId(int id) {
-        //? if <1.19.4 {
+        //? if <1.19.3 {
         /*return net.minecraft.core.Registry.MOB_EFFECT.byId(id);
          *///?} else {
         return net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.byId(id);
@@ -275,7 +319,7 @@ public final class YsmTag {
     }
 
     public static ResourceLocation particleTypeKey(ParticleType<?> type) {
-        //? if <1.19.4 {
+        //? if <1.19.3 {
         /*return net.minecraft.core.Registry.PARTICLE_TYPE.getKey(type);
          *///?} else {
         return net.minecraft.core.registries.BuiltInRegistries.PARTICLE_TYPE.getKey(type);

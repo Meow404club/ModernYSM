@@ -34,9 +34,28 @@ stonecutter {
         vers("1.18.2-forge", "1.18.2").buildscript = "build.forge.gradle.kts"
         vers("1.19.2-forge", "1.19.2").buildscript = "build.forge.gradle.kts"
         vers("1.19.4-forge", "1.19.4").buildscript = "build.forge.gradle.kts"
+        // M3 批二 c-1：forge beta/latest 六线（同走 legacyforge；官方支持域 1.17~1.20.1 零越界）。
+        // 版本号取 maven metadata（tmp/harvest/m3-matrix-forge/maven-metadata.xml 2026-08-27 快照，
+        // 证据行号 state:tasks.m3-beta-lines-enumeration）：
+        //   1.18=38.0.17(latest-only,xml:871) / 1.18.1=39.1.2(rec,xml:1044) /
+        //   1.19=41.1.0(rec=latest,xml:521) / 1.19.1=42.0.9(latest-only,xml:863) /
+        //   1.19.3=44.1.23(rec,xml:707) / 1.20=46.0.14(latest-only,xml:212)。Java 17 全部。
+        vers("1.18-forge", "1.18").buildscript = "build.forge.gradle.kts"
+        vers("1.18.1-forge", "1.18.1").buildscript = "build.forge.gradle.kts"
+        vers("1.19-forge", "1.19").buildscript = "build.forge.gradle.kts"
+        vers("1.19.1-forge", "1.19.1").buildscript = "build.forge.gradle.kts"
+        vers("1.19.3-forge", "1.19.3").buildscript = "build.forge.gradle.kts"
+        vers("1.20-forge", "1.20").buildscript = "build.forge.gradle.kts"
         // <1.17 的 forge 走 unimined 线（MDG/NFRT 拒绝 pre-1.17，实证 tmp/poc-1165/RUN-REPORT.md 实测 4）；
-        // Celeritas 生产先例：forge <1.17 → unimined，>=1.17 → legacyforge
+        // Celeritas 生产先例：forge <1.17 → unimined，>=1.17 → legacyforge。
+        // M3 批二 c-1：1.16.1~1.16.4 四线同款铺入（用户裁量 2026-09-13，构建数 92/46/58/55，
+        // latest=32.0.108(xml:1530)/33.0.61(1484)/34.1.42(1426)/35.1.37(1371)，1.16.3/4 有 rec），
+        // unimined + Java 8 口径与 1.16.5 完全一致
         vers("1.16.5-forge", "1.16.5").buildscript = "build.unimined.gradle.kts"
+        vers("1.16.1-forge", "1.16.1").buildscript = "build.unimined.gradle.kts"
+        vers("1.16.2-forge", "1.16.2").buildscript = "build.unimined.gradle.kts"
+        vers("1.16.3-forge", "1.16.3").buildscript = "build.unimined.gradle.kts"
+        vers("1.16.4-forge", "1.16.4").buildscript = "build.unimined.gradle.kts"
 
         // M3 批二 a：neoforge 三线走 moddev（MDG 2 主插件，1.20.4/1.20.6 由 MDG2 公告点名支持，
         // 1.21 起全支持，tmp/harvest/m3-matrix-mdg/）；neoforge 版本号取 maven metadata 最新 stable

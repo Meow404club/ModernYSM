@@ -27,6 +27,14 @@ base.archivesName = "${property("archives_name")}-${stonecutter.current.version}
 group = property("maven_group") as String
 
 val mcVersion = property("deps.minecraft") as String
+// forge 大版本号（36.2.39→36）：mods.toml loaderVersion/forge 装载区间用
+val forgeMajor = (property("deps.forge") as String).substringBefore('.')
+// 版本独有源（shim/imagestream vendor/mcp stub）物理落点：1.16.5 拥有本体，
+// 其余 unimined 线（1.16.1~1.16.4，批二 c-1）复用 1.16.5 树（全部为 <1.17 通用
+// API/纯 Java 8 源，零 1.16.5 专属符号；机制同 build.forge.gradle.kts 中段线的
+// rootProject 锚定先例）。1.16.5 相对路径语义不变（在产线脚本形态保持）。
+val vendoredBase: java.io.File = if (stonecutter.current.version == "1.16.5") projectDir
+else rootProject.file("versions/1.16.5-forge")
 
 // Java 分段（与 build.forge.gradle.kts 口径一致：1.16.5 → 8）。
 // daemon/toolchain 跑 JDK21（foojay 兜底可拉），javac --release 8 出目标字节码——unimined 官方 testing 同款
@@ -98,6 +106,24 @@ unimined.minecraft {
     version(mcVersion)
 
     mappings {
+        // 1.16.1 vanilla 混淆事故（1.16/1.16.1 混淆时 Widget 新增 getter 漏跑混淆器，
+        // 1.16.2 修正）：vanilla jar 里字面 getHeight() 与被混淆方法 obf e（官方映射同样
+        // 命名为 getHeight，SRG=func_238483_d_）是逐指令相同的重复方法（javap 实证，均
+        // return field_230689_k_）。searge→mojmap 联合重映射时两者都落到 getHeight →
+        // tiny-remapper target-name 冲突（"Mapping target name conflicts detected"；
+        // TinyRemapper.handleConflicts 的 targetNameCheckFailed 分支无视 ignoreConflicts
+        // 必抛，tiny-remapper 0.8.7 TinyRemapper.java:864 实证）→ 1.16.1 官方 mojmap
+        // 本身自冲突，任何 mojmap 工具链都过不去。解法=stub 把字面方法指到别名
+        // ysmGetHeight1：编译期 getHeight 由真方法（func_238483_d_）提供，别名成员
+        // 运行时无人引用；发布 remapJar（mojmap→searge）中 getHeight→func_238483_d_
+        // 反向映射唯一化，SRG 运行时（getHeight 与 func_238483_d_ 并存）两名字都有效。
+        if (stonecutter.current.version == "1.16.1") {
+            stubs("searge", "mojmap") {
+                c("net/minecraft/client/gui/widget/Widget", "net/minecraft/client/gui/components/AbstractWidget") {
+                    m("getHeight;()I", "ysmGetHeight1;()I")
+                }
+            }
+        }
         searge() // 发布命名空间：重映射回 SRG（remapJar 产物 func_/field_ 命名）
         mojmap() // 编译命名空间：1.16.5 官方映射（与 1.20.1 共享源码的 mojmap 口径一致）
         // 注：POC 脚本的 devFallbackNamespace("searge") 在 unimined 1.4.1 已 deprecated
@@ -191,17 +217,21 @@ dependencies {
 //    TouhouMaidModelButton、TouhouMaidTextureButton、SophisticatedBackpackLayer
 sourceSets.main {
     java {
-        srcDir("src/shim/rip/ysm/compat")
+        // shim 落点说明：srcDir 根即 rip/ysm/compat 包目录（文件相对路径只剩文件名），
+        // 天然不命中下方 "rip/ysm/compat/**" 排除模式——否则排除会把版本独有 shim 一并
+        // 杀掉（shim 与被排除源同包同名 FQCN，靠 sourceSets 级 exclude 与生成树互斥）。
+        // shim 内容 = 门面签名镜像 + mod-absent 返回值，运行时语义与 1.20.1 守卫链缺席分支一致。
+        srcDir(vendoredBase.resolve("src/shim/rip/ysm/compat"))
         // ImageStream 源码 vendor（上游 TartaricAlkaline/ImageStream master，Java17 编译）：
         // JitPack 产物 major 61，Java 8 dev 运行时一触发模型加载即 UnsupportedClassVersionError
         // （1.16.5 runServer 实测）——改为本线 Java 8 工具链直接编译（自动 major 52），
         // 语法下移仅 8 文件（箭头 switch→经典 switch、pattern instanceof→cast，语义逐行等价）。
-        srcDir("src/imagestream")
-        // mcp 注解 stub srcDir（根=mcp 包目录）：unimined 1.16.5 mojmap jar 全系缺
+        srcDir(vendoredBase.resolve("src/imagestream"))
+        // mcp 注解 stub srcDir（根=mcp 包目录）：unimined 1.16.x mojmap jar 全系缺
         // mcp/MethodsReturnNonnullByDefault.class，而 forge 侧 CapabilityProvider/
         // CapabilityDispatcher/LazyOptional 及 11 个 package-info 的签名引用它
         //（javap+zip 字节扫描实证）——capability 继承链 attribution 需要可解析。
-        srcDir("src/shim/mcp")
+        srcDir(vendoredBase.resolve("src/shim/mcp"))
         exclude(
             "rip/ysm/compat/**",
             "com/elfmcys/yesstevemodel/client/compat/**",
@@ -216,13 +246,10 @@ sourceSets.main {
             "com/elfmcys/yesstevemodel/platform/forge/client/renderer/layer/SophisticatedBackpackLayer.java",
         )
     }
-    // shim 落点说明：srcDir 根即 rip/ysm/compat 包目录（文件相对路径只剩文件名），
-    // 天然不命中上方 "rip/ysm/compat/**" 排除模式——否则排除会把版本独有 shim 一并杀掉
-    //（shim 与被排除源同包同名 FQCN，靠 sourceSets 级 exclude 与生成树互斥）。
-    // shim 内容 = 门面签名镜像 + mod-absent 返回值，运行时语义与 1.20.1 守卫链缺席分支一致。
+    // shim 落点说明见上方 sourceSets.main.java 块内注释（包目录根 + 排除模式互斥原理）
     // ImageStream 的 javax.imageio SPI 注册文件（2 条）随源码一并 vendor，随主 jar 打包。
     resources {
-        srcDir("src/imagestream-resources")
+        srcDir(vendoredBase.resolve("src/imagestream-resources"))
     }
 }
 tasks {
@@ -373,13 +400,14 @@ tasks.named<ProcessResources>("processResources") {
         filter { line: String -> line.replace("\"client.RenderSystemAccessor\", ", "") }
     }
     // mods.toml 版本口径：共享源为 1.20.1 事实（loaderVersion/forge=47 系、minecraft 1.20.1），
-    // 1.16.5=forge 36.x（forge 1.16.5 MDK 模板值：loaderVersion "[36,)" / forge "[36,)" /
-    // minecraft "[1.16.5,1.17)"）——不替换则 mandatory=true 的三处声明在 36.2.39 上必然拒载
+    // 按本线 forge 大版本/MC 版本替换（1.16.5 MDK 模板口径：loaderVersion "[36,)" / forge
+    // "[36,)" / minecraft "[1.16.5,1.17)"；批二 c-1 起参数化——1.16.5 算出值与原字面量逐字节
+    // 相同，在产线产物零变化）——不替换则 mandatory=true 的三处声明在本线 forge 上必然拒载
     filesMatching("META-INF/mods.toml") {
         filter { line: String ->
-            line.replace("loaderVersion = \"[47,)\"", "loaderVersion = \"[36,)\"")
-                .replace("versionRange = \"[47,)\"", "versionRange = \"[36,)\"")
-                .replace("versionRange = \"[1.20.1,)\"", "versionRange = \"[1.16.5,1.17)\"")
+            line.replace("loaderVersion = \"[47,)\"", "loaderVersion = \"[$forgeMajor,)\"")
+                .replace("versionRange = \"[47,)\"", "versionRange = \"[$forgeMajor,)\"")
+                .replace("versionRange = \"[1.20.1,)\"", "versionRange = \"[$mcVersion,1.17)\"")
         }
     }
     val props = mapOf(

@@ -3,10 +3,10 @@ package com.elfmcys.yesstevemodel.geckolib3.core.molang.builtin.query;
 //? if <1.17 {
 // import net.minecraft.core.Registry;
 //? }
-//? if >=1.17 && <1.19.4 {
+//? if >=1.17 && <1.19.3 {
 /*import net.minecraft.core.Registry;
  *///?}
-//? if >=1.19.4 {
+//? if >=1.19.3 {
 import net.minecraft.core.registries.Registries;
 //?}
 import rip.ysm.compat.cosmeticarmorreworked.CosmeticArmorHelper;
@@ -14,7 +14,7 @@ import com.elfmcys.yesstevemodel.geckolib3.core.molang.context.IContext;
 import com.elfmcys.yesstevemodel.geckolib3.util.MolangUtils;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.funciton.entity.LivingEntityFunction;
 import com.elfmcys.yesstevemodel.molang.runtime.ExecutionContext;
-//? if >=1.19.4 {
+//? if >=1.19.3 {
 import net.minecraft.core.registries.BuiltInRegistries;
 //? }
 import net.minecraft.resources.ResourceLocation;
@@ -31,9 +31,9 @@ public class IsItemNameAny extends LivingEntityFunction {
             return null;
         }
         ItemStack stack = CosmeticArmorHelper.getArmorItem(context.entity().entity(), slotType);
-        //? if <1.19.4
+        //? if <1.19.3
         // if (!stack.isEmpty() && (key = Registry.ITEM.getKey(stack.getItem())) != null) {
-        //? if >=1.19.4
+        //? if >=1.19.3
         if (!stack.isEmpty() && (key = BuiltInRegistries.ITEM.getKey(stack.getItem())) != null) {
             for (int i = 1; i < arguments.size(); i++) {
                 ResourceLocation location = arguments.getResourceLocation(context, i);

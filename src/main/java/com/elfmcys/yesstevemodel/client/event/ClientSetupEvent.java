@@ -15,20 +15,24 @@ import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 //? if >=1.19.2 && neoforge
 /*import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;*/
-//? if >=1.19.2 && forge
+//? if >=1.19 && forge
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
-//? if <1.19.2 {
+//? if <1.19 {
 /*import net.minecraft.network.chat.TextComponent;
  *///?}
 //? if <1.17 {
 /*import net.minecraft.network.chat.TextComponent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;*/
 //?}
-//? if >=1.17 && <1.18.2 {
+//? if >=1.17 && <1.18 {
 /*import net.minecraft.network.chat.TextComponent;
 import net.minecraftforge.fmlclient.registry.ClientRegistry;
  *///?}
-//? if >=1.18.2 && <1.19.2 {
+//? if >=1.18 && <1.18.2 {
+/*import net.minecraft.network.chat.TextComponent;
+import net.minecraftforge.client.ClientRegistry;
+ *///?}
+//? if >=1.18.2 && <1.19 {
 /*import net.minecraft.network.chat.TextComponent;
 import net.minecraftforge.client.ClientRegistry;
  *///?}
@@ -86,7 +90,9 @@ public final class ClientSetupEvent {
         }
     }
 
-    //? if >=1.19.2 {
+    // RegisterKeyMappingsEvent 1.19.0 已有（f119 sources 实证）→ 键位注册边界 1.19.2 放宽 1.19；
+    // 1.19.0 ClientRegistry 已删 → <1.19 才走 ClientRegistry 路径
+    //? if >=1.19 {
     @SubscribeEvent
     public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
         event.register(PlayerModelToggleKey.KEY_MAPPING);
@@ -125,12 +131,19 @@ public final class ClientSetupEvent {
      */
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onClientSetup(FMLClientSetupEvent event) {
-        //? if <1.19.2 {
+        // 1.16.1 forge 32 无 enqueueWork/ParallelDispatchEvent → DeferredWorkQueue.runLater（同主线程排队语义）
+        //? if <1.16.2 {
+        /*net.minecraftforge.fml.DeferredWorkQueue.runLater(ClientSetupEvent::registerKeyBindings);*/
+        //?}
+        //? if >=1.16.2 && <1.19 {
         /*event.enqueueWork(ClientSetupEvent::registerKeyBindings);*/
-//?}
+        //?}
         if (!YesSteveModel.isAvailable()) {
             return;
         }
+        //? if <1.16.2
+        /*net.minecraftforge.fml.DeferredWorkQueue.runLater(ClientSetupEvent::checkNativeInitialization);*/
+        //? if >=1.16.2
         event.enqueueWork(ClientSetupEvent::checkNativeInitialization);
     }
 
@@ -139,9 +152,9 @@ public final class ClientSetupEvent {
             int maxTexSize = GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE);
             if (maxTexSize <= 0) {
                 // Component.literal 为 1.19.4+ 工厂方法，1.16.5 用 new TextComponent
-                //? if >=1.19.2
+                //? if >=1.19
                 return Component.literal("YSM: OpenGL context not available");
-                //? if <1.19.2
+                //? if <1.19
                 /*return new TextComponent("YSM: OpenGL context not available");*/
             }
             // 原始C++碼檢查了GL20（著色器）和 GL30（VAO）的可用性
@@ -151,9 +164,9 @@ public final class ClientSetupEvent {
                     GL20.glDeleteShader(testShader);
                 }
             } catch (Exception e) {
-                //? if >=1.19.2
+                //? if >=1.19
                 return Component.literal("YSM: GL20 (shaders) not available");
-                //? if <1.19.2
+                //? if <1.19
                 /*return new TextComponent("YSM: GL20 (shaders) not available");*/
             }
 
@@ -162,9 +175,9 @@ public final class ClientSetupEvent {
             //ClientModelManager.schedulePreloadDefaultModel();
             return null; // 成功
         } catch (Exception e) {
-            //? if >=1.19.2
+            //? if >=1.19
             return Component.literal("YSM Client Init Failed: " + e.getMessage());
-            //? if <1.19.2
+            //? if <1.19
             /*return new TextComponent("YSM Client Init Failed: " + e.getMessage());*/
         }
     }

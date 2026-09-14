@@ -7,8 +7,11 @@ import net.minecraft.server.level.ServerPlayer;
 //? if >=1.18.2 {
 import net.minecraftforge.network.NetworkEvent;
 //?}
-//? if >=1.17 && <1.18.2 {
+//? if >=1.17 && <1.18 {
 /*import net.minecraftforge.fmllegacy.network.NetworkEvent;
+ *///?}
+//? if >=1.18 && <1.18.2 {
+/*import net.minecraftforge.network.NetworkEvent;
  *///?}
 //? if <1.17 {
 /*import net.minecraftforge.fml.network.NetworkEvent;*/

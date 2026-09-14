@@ -48,9 +48,9 @@ public class AnimationLockEvent {
         MinecraftForge.EVENT_BUS.addListener(AnimationLockEvent::onClientTickEvent);
     }
 
-    //? if <1.19.2
+    //? if <1.19
     /*private static void onKeyEvent(InputEvent.KeyInputEvent event) {*/
-    //? if >=1.19.2
+    //? if >=1.19
     private static void onKeyEvent(InputEvent.Key event) {
         // 1.21.9 KeyMapping.matches(int,int) → matches(KeyEvent)（2110 KeyMapping.java:255）
         //? if >=21.9

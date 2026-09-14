@@ -83,7 +83,7 @@ public class DumpEquippedItem extends LivingEntityFunction {
     /** ComponentUtils.copyOnClickText（1.19.2+）↔ 1.16.5 无 → 原串直返。 */
     private static net.minecraft.network.chat.Component copyOnClickTextCompat(String str) {
         // ComponentUtils.copyOnClickText 1.19.4+：中段+1.16.5 原串直返
-        //? if <1.19.4 {
+        //? if <1.19.3 {
         /*return YsmText.literal(str);
          *///?} else {
         return net.minecraft.network.chat.ComponentUtils.copyOnClickText(str);

@@ -22,11 +22,17 @@ import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.fml.network.simple.SimpleChannel;*/
 //?}
-//? if >=1.17 && <1.18.2 {
+//? if >=1.17 && <1.18 {
 /*import net.minecraftforge.fmllegacy.network.NetworkDirection;
 import net.minecraftforge.fmllegacy.network.NetworkRegistry;
 import net.minecraftforge.fmllegacy.network.PacketDistributor;
 import net.minecraftforge.fmllegacy.network.simple.SimpleChannel;
+ *///?}
+//? if >=1.18 && <1.18.2 {
+/*import net.minecraftforge.network.NetworkDirection;
+import net.minecraftforge.network.NetworkRegistry;
+import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.network.simple.SimpleChannel;
  *///?}
 //? if >=1.18.2 {
 import net.minecraftforge.network.NetworkDirection;

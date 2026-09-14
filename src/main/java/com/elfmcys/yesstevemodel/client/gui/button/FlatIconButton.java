@@ -68,8 +68,9 @@ public class FlatIconButton extends AbstractWidget implements ISpecialWidget {
      *///?}
 
     // 1.16.5~1.19.2 AbstractWidget 无 getX/getY（x/y public 字段 1192 AbstractWidget.java:25-26），
-    // getWidth/getHeight 1.16.5 也无 → 全量桥接；1.19.4+ 父类自带 getX/getY/getWidth/getHeight
-    //? if <1.19.4 {
+    // getWidth/getHeight 1.16.5 也无 → 全量桥接；1.19.3 起 x/y 私有化 + 父类自带全量访问器
+    //（1.19.3 merged jar 实证）→ 桥接边界回 1.19.3
+    //? if <1.19.3 {
     /*public int getX() {
         return this.x;
     }
@@ -100,15 +101,15 @@ public class FlatIconButton extends AbstractWidget implements ISpecialWidget {
     }
 
     // narration：updateNarration 抽象 1.17~1.19.2（NarratableEntry extends NarrationSupplier 且
-    // AbstractWidget 不实现，1192 编译实测 concrete 子类必炸）；updateWidgetNarration 1.19.4 起
-    //（1194:301）；defaultButtonNarrationText 1182:231/1192 同名存活
-    //? if >=1.17 && <1.19.4 {
+    // AbstractWidget 不实现，1192 编译实测 concrete 子类必炸）；updateWidgetNarration 抽象 1.19.3 起
+    //（f1193 AbstractWidget 实证）；defaultButtonNarrationText 1182:231/1192 同名存活
+    //? if >=1.17 && <1.19.3 {
     /*@Override
     public void updateNarration(NarrationElementOutput narrationElementOutput) {
         this.defaultButtonNarrationText(narrationElementOutput);
     }
      *///?}
-    //? if >=1.19.4 {
+    //? if >=1.19.3 {
     @Override
     public void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
         defaultButtonNarrationText(narrationElementOutput);

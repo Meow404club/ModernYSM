@@ -29,6 +29,9 @@ public class ProjectileCapability extends GeckoProjectileEntity {
         //? if neoforge
         /*return java.util.Optional.ofNullable(entity.getCapability(ProjectileCapabilityProvider.PROJECTILE_CAP));*/
         //? if forge
+        //? if <1.16.2
+        /*return java.util.Optional.ofNullable(entity.getCapability(ProjectileCapabilityProvider.PROJECTILE_CAP).orElse(null));*/
+        //? if >=1.16.2
         return entity.getCapability(ProjectileCapabilityProvider.PROJECTILE_CAP).resolve();
     }
 
@@ -36,6 +39,9 @@ public class ProjectileCapability extends GeckoProjectileEntity {
         //? if neoforge
         /*return java.util.Optional.ofNullable(projectile.getCapability(ProjectileCapabilityProvider.PROJECTILE_CAP));*/
         //? if forge
+        //? if <1.16.2
+        /*return java.util.Optional.ofNullable(projectile.getCapability(ProjectileCapabilityProvider.PROJECTILE_CAP).orElse(null));*/
+        //? if >=1.16.2
         return projectile.getCapability(ProjectileCapabilityProvider.PROJECTILE_CAP).resolve();
     }
 

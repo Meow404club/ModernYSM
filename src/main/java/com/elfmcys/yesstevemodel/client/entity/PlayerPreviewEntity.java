@@ -104,9 +104,9 @@ public final class PlayerPreviewEntity extends CustomPlayerEntity implements IPr
 
     private static class DummyPlayer extends AbstractClientPlayer {
         public DummyPlayer() {
-            // AbstractClientPlayer 构造器仅 1.19.2 带 ProfilePublicKey 三参（1192:35，可空），
-            // 1165:??/1182:42/1194:36/1201 均为 (ClientLevel, GameProfile) 两参
-            //? if >=1.19.2 && <1.19.4 {
+            // AbstractClientPlayer 构造器 1.19.0 起带 ProfilePublicKey 三参（f119 sources 实证，可空），
+            // 1.16.x~1.18.x 为 (ClientLevel, GameProfile) 两参
+            //? if >=1.19 && <1.19.3 {
             /*super(Minecraft.getInstance().level, createGameProfile(), (net.minecraft.world.entity.player.ProfilePublicKey) null);
              *///?} else {
             super(Minecraft.getInstance().level, createGameProfile());

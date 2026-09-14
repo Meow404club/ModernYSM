@@ -17,6 +17,9 @@ public class ProjectileModelCapability {
         //? if neoforge
         /*return java.util.Optional.ofNullable(entity.getCapability(ProjectileModelCapabilityProvider.PROJECTILE_MODEL));*/
         //? if forge
+        //? if <1.16.2
+        /*return java.util.Optional.ofNullable(entity.getCapability(ProjectileModelCapabilityProvider.PROJECTILE_MODEL).orElse(null));*/
+        //? if >=1.16.2
         return entity.getCapability(ProjectileModelCapabilityProvider.PROJECTILE_MODEL).resolve();
     }
 
@@ -24,6 +27,9 @@ public class ProjectileModelCapability {
         //? if neoforge
         /*return java.util.Optional.ofNullable(projectile.getCapability(ProjectileModelCapabilityProvider.PROJECTILE_MODEL));*/
         //? if forge
+        //? if <1.16.2
+        /*return java.util.Optional.ofNullable(projectile.getCapability(ProjectileModelCapabilityProvider.PROJECTILE_MODEL).orElse(null));*/
+        //? if >=1.16.2
         return projectile.getCapability(ProjectileModelCapabilityProvider.PROJECTILE_MODEL).resolve();
     }
 

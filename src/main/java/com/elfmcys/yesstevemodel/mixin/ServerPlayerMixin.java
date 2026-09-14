@@ -13,10 +13,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 // 1.19.4 起 ServerPlayer 不再覆写 startRiding（vanilla-mc-1194 ServerPlayer.java 无该方法，
 // javap 1194 merged jar 实证）→ ServerPlayer 目标失效；1165~1192 覆写体无 positionRider
 // 调用（1171/1182 merged jar javap：体=瞬移分支 + invokespecial Player.startRiding）→
-// <1.19.4 注入 super 调用返回后（挂载完成、乘客已入列，语义等价）；1194 段改注
+// <1.19.3 注入 super 调用返回后（挂载完成、乘客已入列，语义等价）；1194 段改注
 // Entity.startRiding TAIL（this=乘客，isPassenger 守卫过滤失败分支）；1.20.1 恢复基线
 // ServerPlayer + positionRider 形（在产线产物零变化）。
-//? if <1.19.4 {
+//? if <1.19.3 {
 /*
 @Mixin({ServerPlayer.class})
 public abstract class ServerPlayerMixin {
@@ -29,7 +29,7 @@ public abstract class ServerPlayerMixin {
     }
 }
  *///?}
-//? if >=1.19.4 && <1.20 {
+//? if >=1.19.3 && <1.20 {
 /*
 @Mixin({Entity.class})
 public abstract class ServerPlayerMixin {

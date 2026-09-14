@@ -17,9 +17,9 @@ public final class GpuMeshBuilder {
     public static GpuMesh build(GeoModel model) {
         if (model.bakedBones == null || model.bakedBones.isEmpty()) return null;
         //? if >1.17 {
-        //? if <1.18.2
+        //? if <1.18
         /*RenderSystem.assertThread(RenderSystem::isOnRenderThread);*/
-        //? if >=1.18.2
+        //? if >=1.18
         RenderSystem.assertOnRenderThread();
         //?}
         ByteBuffer modelBuf = serializeModel(model);

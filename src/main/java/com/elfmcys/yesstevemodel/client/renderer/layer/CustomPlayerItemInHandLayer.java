@@ -21,7 +21,7 @@ import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.world.item.ItemDisplayContext;
 //?}
 import net.minecraft.world.item.ItemStack;
-//? if >=1.19.4 {
+//? if >=1.19.3 {
 import com.mojang.math.Axis;
 //? }
 
@@ -90,9 +90,9 @@ public class CustomPlayerItemInHandLayer extends GeoLayerRenderer<CustomPlayerEn
             poseStack.pushPose();
             if (!applyItemBoneTransform(humanoidArm, poseStack, model)) {
                 poseStack.translate(0.0d, -0.0625d, -0.1d);
-                //? if <1.19.4
+                //? if <1.19.3
                 // poseStack.mulPose(com.mojang.math.Vector3f.XP.rotationDegrees(-90.0f));
-                //? if >=1.19.4
+                //? if >=1.19.3
                 poseStack.mulPose(Axis.XP.rotationDegrees(-90.0f));
                 if (SWarfareCompat.isGunItem(itemStack)) {
                     poseStack.translate(0.1d, 0.0d, 0.0d);
@@ -115,9 +115,9 @@ public class CustomPlayerItemInHandLayer extends GeoLayerRenderer<CustomPlayerEn
                 poseStack.pushPose();
                 if (!RenderUtils.prepMatrixForLocator(poseStack, list)) {
                     poseStack.translate(0.0d, -0.0625d, -0.1d);
-                    //? if <1.19.4
+                    //? if <1.19.3
                     // poseStack.mulPose(com.mojang.math.Vector3f.XP.rotationDegrees(-90.0f));
-                    //? if >=1.19.4
+                    //? if >=1.19.3
                     poseStack.mulPose(Axis.XP.rotationDegrees(-90.0f));
                     if (SWarfareCompat.isGunItem(itemStack)) {
                         poseStack.scale(1.25f, 1.25f, 1.25f);

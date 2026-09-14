@@ -1,7 +1,7 @@
 package com.elfmcys.yesstevemodel.mixin.client;
 
 import com.elfmcys.yesstevemodel.client.renderer.ModelPreviewRenderer;
-//? if >=1.19.4 && <1.20 {
+//? if >=1.19.3 && <1.20 {
 import com.mojang.blaze3d.vertex.PoseStack;
 //?}
 //? if >=1.20 {
@@ -35,7 +35,7 @@ public class InventoryScreenMixin {
     //?}
     // 1.20.2+（neoforge 三线）：bounding box 扩为 x1,y1,x2,y2 五 int + scale/angleX/angleY 三 float。
     // 注释态包裹：1.20.1 vcs 直通编译原文，裸 @Inject 会被 mixin AP 解析 1.20.2+ 签名失败
-    //（d8fcfbd 回归实证）；其余 <1.19.4 块同款注释态先例
+    //（d8fcfbd 回归实证）；其余 <1.19.3 块同款注释态先例
     //? if neoforge && >=1.20 {
     /*@Inject(at = {@At("HEAD")}, method = {"renderEntityInInventoryFollowsMouse(Lnet/minecraft/client/gui/GuiGraphics;IIIIIFFFLnet/minecraft/world/entity/LivingEntity;)V"})
     private static void renderEntityInInventoryFollowsAnglePreNeo(GuiGraphics guiGraphics, int x, int y, int x2, int y2, int scale, float angleXComponent, float angleYComponent, float partialTicks, LivingEntity entity, CallbackInfo ci) {
@@ -47,20 +47,21 @@ public class InventoryScreenMixin {
         ModelPreviewRenderer.setPreviewMode(false);
     }
      *///?}
-    // 1.19.4：renderEntityInInventory 更名 FollowsMouse 且首参 PoseStack（1194 InventoryScreen.java:112）
-    //? if >=1.19.4 && <1.20 {
+    // 1.19.3：renderEntityInInventory 仍是 (IIIFF, LivingEntity) 六参（1.19.3 merged jar
+    // javap 实证；GuiGraphics/PoseStack 版与 FollowsMouse 更名 1.19.4 起）→ 与 <1.19.3 同形
+    //? if >=1.19.3 && <1.20 {
     /*
-    @Inject(at = {@At("HEAD")}, method = {"renderEntityInInventoryFollowsMouse(Lcom/mojang/blaze3d/vertex/PoseStack;IIIFFLnet/minecraft/world/entity/LivingEntity;)V"})
-    private static void renderEntityInInventoryFollowsAnglePre(PoseStack poseStack, int x, int y, int scale, float angleXComponent, float angleYComponent, LivingEntity entity, CallbackInfo ci) {
+    @Inject(at = {@At("HEAD")}, method = {"renderEntityInInventory(IIIFFLnet/minecraft/world/entity/LivingEntity;)V"})
+    private static void renderEntityInInventoryFollowsAnglePre(int x, int y, int scale, float angleXComponent, float angleYComponent, LivingEntity entity, CallbackInfo ci) {
         ModelPreviewRenderer.setPreviewMode(true);
     }
 
-    @Inject(at = {@At("RETURN")}, method = {"renderEntityInInventoryFollowsMouse(Lcom/mojang/blaze3d/vertex/PoseStack;IIIFFLnet/minecraft/world/entity/LivingEntity;)V"})
-    private static void renderEntityInInventoryFollowsAnglePost(PoseStack poseStack, int x, int y, int scale, float angleXComponent, float angleYComponent, LivingEntity entity, CallbackInfo ci) {
+    @Inject(at = {@At("RETURN")}, method = {"renderEntityInInventory(IIIFFLnet/minecraft/world/entity/LivingEntity;)V"})
+    private static void renderEntityInInventoryFollowsAnglePost(int x, int y, int scale, float angleXComponent, float angleYComponent, LivingEntity entity, CallbackInfo ci) {
         ModelPreviewRenderer.setPreviewMode(false);
     }
      *///?}
-    //? if <1.19.4 {
+    //? if <1.19.3 {
     /*@Inject(at = {@At("HEAD")}, method = {"renderEntityInInventory(IIIFFLnet/minecraft/world/entity/LivingEntity;)V"})
     private static void renderEntityInInventoryFollowsAnglePre(int x, int y, int scale, float angleXComponent, float angleYComponent, LivingEntity entity, CallbackInfo ci) {
         ModelPreviewRenderer.setPreviewMode(true);

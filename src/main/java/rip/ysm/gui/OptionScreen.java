@@ -11,6 +11,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+//? if >=1.16.2
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
@@ -515,6 +516,16 @@ public abstract class OptionScreen extends Screen {
 
         Component desc = opt.getDescription();
         int maxWidth = panelRight - panelLeft - 6 * 2;
+        //? if <1.16.2 {
+        /*List<net.minecraft.network.chat.FormattedText> lines = this.font.split(desc, maxWidth);
+        int lineY = descY + 16;
+        int max = Math.min(lines.size(), (28 - 16) / 10);
+        for (int i = 0; i < max; i++) {
+            g.drawString(this.font, lines.get(i), panelLeft + 6, lineY, 0xFFCCCCCC, false);
+            lineY += 10;
+        }*/
+        //?}
+        //? if >=1.16.2 {
         List<FormattedCharSequence> lines = this.font.split(desc, maxWidth);
         int lineY = descY + 16;
         int max = Math.min(lines.size(), (28 - 16) / 10);
@@ -522,6 +533,7 @@ public abstract class OptionScreen extends Screen {
             g.drawString(this.font, lines.get(i), panelLeft + 6, lineY, 0xFFCCCCCC, false);
             lineY += 10;
         }
+        //?}
     }
 
     // 1.21.9+ 输入事件对象化（GuiEventListener 三方法换代，GuiEventListener.java:20-28）

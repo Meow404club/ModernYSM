@@ -20,6 +20,7 @@ import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+//? if >=1.16.2
 import net.minecraft.util.FormattedCharSequence;
 import org.apache.commons.lang3.StringUtils;
 
@@ -93,8 +94,14 @@ public class PackIconButton extends YsmButton {
         RenderCompat.disableBlend();
         List listSplit = font.split(getMessage(), 45);
         if (listSplit.size() > 1) {
+            //? if <1.16.2 {
+            /*drawCenteredString(guiGraphics, font, (net.minecraft.network.chat.FormattedText) listSplit.get(0), getX() + (this.width / 2), (getY() + this.height) - 19, 5592405);
+            drawCenteredString(guiGraphics, font, (net.minecraft.network.chat.FormattedText) listSplit.get(1), getX() + (this.width / 2), (getY() + this.height) - 10, 5592405);*/
+            //?}
+            //? if >=1.16.2 {
             drawCenteredString(guiGraphics, font, (FormattedCharSequence) listSplit.get(0), getX() + (this.width / 2), (getY() + this.height) - 19, 5592405);
             drawCenteredString(guiGraphics, font, (FormattedCharSequence) listSplit.get(1), getX() + (this.width / 2), (getY() + this.height) - 10, 5592405);
+            //?}
         } else {
             drawCenteredString(guiGraphics, font, getMessage(), getX() + (this.width / 2), (getY() + this.height) - 15, 5592405);
         }
@@ -112,7 +119,7 @@ public class PackIconButton extends YsmButton {
             return;
         }
         List<Component> listSingletonList = Collections.singletonList(YsmText.literal(str));
-        if (/*? if >=1.18.2 && <1.19.4 {*/ /*isHoveredOrFocused()*//*?} else {*/ isHovered() /*?}*/) {
+        if (/*? if >=1.18 && <1.19.4 {*/ /*isHoveredOrFocused()*//*?} else {*/ isHovered() /*?}*/) {
             //? if <21.6
             guiGraphics.pose().pushPose();
             //? if >=21.6
@@ -133,7 +140,15 @@ public class PackIconButton extends YsmButton {
         guiGraphics.drawString(font, component, centerX - (font.width(component) / 2), y, color, false);
     }
 
+    // 1.16.1 无 FormattedCharSequence → <1.16.2 段为 FormattedText 形（其余行为等价）
+    //? if <1.16.2 {
+    /*private static void drawCenteredString(YsmGui guiGraphics, Font font, net.minecraft.network.chat.FormattedText formattedCharSequence, int centerX, int y, int color) {
+        guiGraphics.drawString(font, formattedCharSequence, centerX - (font.width(formattedCharSequence) / 2), y, color, false);
+    }
+     *///?}
+    //? if >=1.16.2 {
     private static void drawCenteredString(YsmGui guiGraphics, Font font, FormattedCharSequence formattedCharSequence, int centerX, int y, int color) {
         guiGraphics.drawString(font, formattedCharSequence, centerX - (font.width(formattedCharSequence) / 2), y, color, false);
     }
+    //?}
 }

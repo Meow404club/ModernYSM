@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 //? if <1.17 {
 /*import net.minecraftforge.fml.server.ServerLifecycleHooks;
  *///?}
-//? if >=1.17 && <1.18.2 {
+//? if >=1.17 && <1.18 {
 /*import net.minecraftforge.fmllegacy.server.ServerLifecycleHooks;
  *///?}
 //? if forge && >=1.18.2
@@ -74,8 +74,11 @@ public class YSMMessageFormatter {
         //? if <1.17 {
         /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();
          *///?}
-        //? if >=1.17 && <1.18.2 {
+        //? if >=1.17 && <1.18 {
         /*MinecraftServer currentServer = net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();
+         *///?}
+        //? if >=1.18 && <1.18.2 {
+        /*MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
          *///?}
         //? if forge && >=1.18.2
         MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();

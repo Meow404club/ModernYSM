@@ -22,10 +22,10 @@ import net.minecraft.network.chat.Component;
 //? if <1.17 {
 import java.util.Random;
 //?}
-//? if >=1.17 && <1.19.2 {
+//? if >=1.17 && <1.19 {
 /*import net.minecraft.world.level.levelgen.RandomSource;
  *///?}
-//? if >=1.19.2 {
+//? if >=1.19 {
 import net.minecraft.util.RandomSource;
 //?}
 // ^ RandomSource 为 1.17+ 类；1.16.5 用 java.util.Random（消费面仅 nextFloat/nextInt）

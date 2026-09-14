@@ -23,7 +23,8 @@ import net.minecraft.network.chat.Component;
  */
 public abstract class YsmButton extends Button {
     protected YsmButton(int x, int y, int width, int height, Component message, OnPress onPress) {
-        //? if >=1.19.4 {
+        // 1.19.3 起 Button 6 参构造删除 + x/y 私有化（1.19.3 merged jar 实证）→ 双边界 1.19.2→1.19.3
+        //? if >=1.19.3 {
         super(x, y, width, height, message, onPress, DEFAULT_NARRATION);
         //?} else {
         /*super(x, y, width, height, message, onPress);
@@ -31,8 +32,8 @@ public abstract class YsmButton extends Button {
     }
 
     // 1.16.5~1.19.2 AbstractWidget 无 getX/getY/setX/setY（x/y 为 public 字段），补桥接；
-    // 1.19.4+ 侧父类自带同名方法，桥接注释态（不可加 @Override：父类无此签名）
-    //? if <1.19.4 {
+    // 1.19.3+ 侧父类自带同名方法，桥接注释态（不可加 @Override：父类无此签名）
+    //? if <1.19.3 {
     /*public int getX() {
         return this.x;
     }
@@ -99,7 +100,8 @@ public abstract class YsmButton extends Button {
     }
 
     protected boolean hoveredOrFocused() {
-        //? if >=1.18.2 {
+        // 1.18.0 已有 isHoveredOrFocused（isHovered 同删，1180 编译实证）→ 下界由 1.18.2 放宽到 1.18
+        //? if >=1.18 {
         return this.isHoveredOrFocused();
         //?} else {
         /*return this.isHovered();

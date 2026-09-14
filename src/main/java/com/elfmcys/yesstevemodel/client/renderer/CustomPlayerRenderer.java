@@ -50,8 +50,18 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
         //? if <1.17
         // addLayerRenderer(new CustomPlayerItemInHandLayer(new net.minecraft.client.renderer.ItemInHandRenderer(net.minecraft.client.Minecraft.getInstance())));
         // EntityRendererProvider.Context.getItemInHandRenderer 1.19.2 起（1182 Context 无该字段）
-        //? if >=1.17 && <1.19.2
+        //? if >=1.17 && <1.18 {
         /*addLayerRenderer(new CustomPlayerItemInHandLayer(new net.minecraft.client.renderer.ItemInHandRenderer(Minecraft.getInstance())));*/
+        //?}
+        //? if >=1.18 && <1.19 {
+        /*// 1.18.x ItemInHandRenderer 单参 (Minecraft)（1.19.0 起三参，f119 sources 实证）
+        addLayerRenderer(new CustomPlayerItemInHandLayer(new net.minecraft.client.renderer.ItemInHandRenderer(Minecraft.getInstance())));*/
+        //?}
+        //? if >=1.19 && <1.19.2 {
+        /*// 1.19.0 三参构造 (Minecraft, EntityRenderDispatcher, ItemRenderer)
+        addLayerRenderer(new CustomPlayerItemInHandLayer(new net.minecraft.client.renderer.ItemInHandRenderer(Minecraft.getInstance(),
+                Minecraft.getInstance().getEntityRenderDispatcher(), Minecraft.getInstance().getItemRenderer())));*/
+        //?}
         // 1.21.2 EntityRendererProvider.Context 删 getItemInHandRenderer（vanilla-1.21.3
         // EntityRendererProvider.java Context 面实证）→ GameRenderer 公有字段 itemInHandRenderer
         //（vanilla-1.21.3 GameRenderer.java:84）
@@ -174,7 +184,7 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
         //? if forge
         if (dDistanceToSqr < 100.0d && (displayObjective = (scoreboard = player.getScoreboard()).getDisplayObjective(2)) != null) {
             // Component.literal（1.19+）→ 1.16.5 new TextComponent；append 双版同名
-            //? if <1.19.2
+            //? if <1.19
             // super.renderNameTag(player, new net.minecraft.network.chat.TextComponent(Integer.toString(scoreboard.getOrCreatePlayerScore(player.getScoreboardName(), displayObjective).getScore())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i);
             //? if neoforge && >=1.19.2 && <1.20.5
             /*super.renderNameTag(player, Component.literal(Integer.toString(scoreboard.getOrCreatePlayerScore(player, displayObjective).get())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i);*/
@@ -182,7 +192,7 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
             /*super.renderNameTag(player, Component.literal(Integer.toString(scoreboard.getOrCreatePlayerScore(player, displayObjective).get())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i, partialTick);*/
             //? if neoforge && >=1.21.2 && <21.9
             /*super.renderNameTag(state, Component.literal(Integer.toString(scoreboard.getOrCreatePlayerScore(player, displayObjective).get())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i);*/
-            //? if forge && >=1.19.2
+            //? if forge && >=1.19
             super.renderNameTag(player, Component.literal(Integer.toString(scoreboard.getOrCreatePlayerScore(player.getScoreboardName(), displayObjective).getScore())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i);
             poseStack.translate(0.0d, 0.25875d, 0.0d);
         }

@@ -1289,8 +1289,10 @@ public final class ServerModelManager {
             try {
                 //? if <1.17
                 /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
-                //? if >=1.17 && <1.18.2
+                //? if >=1.17 && <1.18
                 /*MinecraftServer currentServer = net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();*/
+                //? if >=1.18 && <1.18.2
+                /*MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();*/
                 //? if forge && >=1.18.2
                 MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
                 //? if neoforge
@@ -1610,8 +1612,10 @@ public final class ServerModelManager {
     public static void requestPlayerAuth(ServerPlayer serverPlayer, @Nullable Consumer<UUIDComponentData> consumer) {
         //? if <1.17
                 /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
-                //? if >=1.17 && <1.18.2
+                //? if >=1.17 && <1.18
                 /*MinecraftServer currentServer = net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();*/
+                //? if >=1.18 && <1.18.2
+                /*MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();*/
                 //? if forge && >=1.18.2
                 MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
                 //? if neoforge
@@ -1657,8 +1661,10 @@ public final class ServerModelManager {
             }
             //? if <1.17
                 /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
-                //? if >=1.17 && <1.18.2
+                //? if >=1.17 && <1.18
                 /*MinecraftServer currentServer = net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();*/
+                //? if >=1.18 && <1.18.2
+                /*MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();*/
                 //? if forge && >=1.18.2
                 MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
                 //? if neoforge
@@ -1685,8 +1691,10 @@ public final class ServerModelManager {
         Consumer<ModelLoadResult> consumer = (Consumer<ModelLoadResult>) obj;
         //? if <1.17
                 /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
-                //? if >=1.17 && <1.18.2
+                //? if >=1.17 && <1.18
                 /*MinecraftServer currentServer = net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();*/
+                //? if >=1.18 && <1.18.2
+                /*MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();*/
                 //? if forge && >=1.18.2
                 MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
                 //? if neoforge
@@ -1729,8 +1737,10 @@ public final class ServerModelManager {
         ServerPlayer player;
 //? if <1.17
         /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
-        //? if >=1.17 && <1.18.2
+        //? if >=1.17 && <1.18
         /*MinecraftServer currentServer = net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();*/
+        //? if >=1.18 && <1.18.2
+        /*MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();*/
         //? if forge && >=1.18.2
         MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
         //? if neoforge
@@ -1750,13 +1760,20 @@ public final class ServerModelManager {
         }
         return serverGamePacketListenerImpl.connection;
          *///?}
-        //? if >=1.17 && <1.19.4 {
+        //? if >=1.17 && <1.19.3 {
         /*
         if (!serverGamePacketListenerImpl.connection.isConnected() || !serverGamePacketListenerImpl.getClass().equals(ServerGamePacketListenerImpl.class)) {
             return null;
         }
         return serverGamePacketListenerImpl.connection;
          *///?}
+        //? if >=1.19.3 && <1.19.4 {
+        /*// 1.19.3 无 isAcceptingMessages（f1193 实证）→ Connection.isConnected 同判
+        if (!serverGamePacketListenerImpl.connection.isConnected() || !serverGamePacketListenerImpl.getClass().equals(ServerGamePacketListenerImpl.class)) {
+            return null;
+        }
+        return serverGamePacketListenerImpl.connection;*/
+        //?}
         //? if >=1.19.4 {
         if (!serverGamePacketListenerImpl.isAcceptingMessages() || !serverGamePacketListenerImpl.getClass().equals(ServerGamePacketListenerImpl.class)) {
             return null;
@@ -1810,22 +1827,17 @@ public final class ServerModelManager {
                 }
             } else {
                 try {
-                    // PacketSendListener 1.19.4+：<1.17 用 GenericFutureListener（发送即视为成功，
-                    // 失败探测由后续 deadline 轮询 isConnected 兜底，语义等价）
-                    //? if <1.19.2 {
+                    // PacketSendListener 代差：<1.19.1 send(P,GenericFutureListener) 收 netty 监听
+                    //（发送即视为成功，失败探测由后续 deadline 轮询 isConnected 兜底，语义等价）；
+                    // 1.19.1 起第二参改收 PacketSendListener（1.19.1 为双 default 方法接口非函数接口，
+                    // javap 42.0.9 merged jar 实证；1.19.2+ 同）→ thenRun(Runnable) 静态工厂同语义
+                    //? if <1.19.1 {
                     /*connection.send((Packet<?>) obj, future -> atomicInteger.set(1));
-                     *///?} else {
-                    // 1.21.8 PacketSendListener 类化（静态工具，net.minecraft.network.PacketSendListener）
-                    //→ 匿名回调改裸 ChannelFutureListener（成功置 1 / 失败置 -1，语义等价）
-                    //? if >=21.8 {
-                    /*connection.send((Packet<?>) obj, future -> {
-                        if (future.isSuccess()) {
-                            atomicInteger.set(1);
-                        } else {
-                            atomicInteger.set(-1);
-                        }
-                    });*/
-                    //?} else {
+                     *///?}
+                    //? if >=1.19.1 && <1.19.2 {
+                    /*connection.send((Packet<?>) obj, net.minecraft.network.PacketSendListener.thenRun(() -> atomicInteger.set(1)));
+                     *///?}
+                    //? if >=1.19.2 && <21.8 {
                     connection.send((Packet<?>) obj, new PacketSendListener() {
                         public void onSuccess() {
                             atomicInteger.set(1);
@@ -1839,6 +1851,16 @@ public final class ServerModelManager {
                         }
                     });
                     //?}
+                    // 1.21.8 PacketSendListener 类化（静态工具）→ 匿名回调改裸 ChannelFutureListener
+                    //（成功置 1 / 失败置 -1，语义等价）
+                    //? if >=21.8 {
+                    /*connection.send((Packet<?>) obj, future -> {
+                        if (future.isSuccess()) {
+                            atomicInteger.set(1);
+                        } else {
+                            atomicInteger.set(-1);
+                        }
+                    });*/
                     //?}
                     long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30);
                     while (atomicInteger.get() == 0

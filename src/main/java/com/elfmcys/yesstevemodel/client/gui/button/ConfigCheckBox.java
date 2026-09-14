@@ -86,8 +86,8 @@ public class ConfigCheckBox extends StateSwitchingButton implements ISpecialWidg
      *///?}
 
     // 1.16.5~1.19.2 StateSwitchingButton 无 getX/getY（x/y 为 public 字段 1192 AbstractWidget.java:25-26）
-    // → 桥接（对位 YsmButton 同款）；1.19.4+ 父类自带
-    //? if <1.19.4 {
+    // → 桥接（对位 YsmButton 同款）；1.19.3 起 x/y 私有化且父类自带（1.19.3 merged jar 实证）
+    //? if <1.19.3 {
     /*public int getX() {
         return this.x;
     }

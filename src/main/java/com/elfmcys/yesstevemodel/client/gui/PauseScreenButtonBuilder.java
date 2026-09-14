@@ -26,8 +26,8 @@ public class PauseScreenButtonBuilder {
     // Button 双轴构造收敛：1.20.1 Button.builder().bounds().build()（1.17+）↔
     // 1.16.5 new Button(x,y,w,h,label,onPress)（1.16.5 Button.java:12）；Tooltip 为 1.17+ API
     private static Button makeButton(int x, int y, int width, int height, Component label, Runnable action) {
-        // Button.builder 1.19.4+（1194 Button.java:17）；1.16.5~1.19.2 public 6 参构造（1182:15）
-        //? if <1.19.4 {
+        // Button.builder 1.19.0 起可用（f119 sources）；1.19.3 起 6 参构造删除（1.19.3 merged jar）
+        //? if <1.19.3 {
         /*return new Button(x, y, width, height, label, button -> action.run());
          *///?} else {
         return Button.builder(label, button -> action.run()).bounds(x, y, width, height).build();

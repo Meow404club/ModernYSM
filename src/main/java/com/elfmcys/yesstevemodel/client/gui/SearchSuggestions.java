@@ -274,14 +274,21 @@ public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
             searchBox.setValue(StringPool.EMPTY);
     // EditBox.setFocused(boolean) 1.16.5~1.19.2 均 protected（1192 AbstractWidget.java:217）→
     // 经 Screen.setFocused(null) 解焦；1.19.4+ public 可直调（1194 AbstractWidget.java:280）
-    //? if <1.19.4 {
+    //? if <1.19.3 {
     /*net.minecraft.client.Minecraft.getInstance().screen.setFocused(null);*/
     //?}
-    //? if >=1.17 && <1.19.4 {
+    //? if >=1.17 && <1.19.3 {
     /*net.minecraft.client.Minecraft.getInstance().screen.setFocused(null);
      *///?}
-    //? if >=1.19.4 {
-    searchBox.setFocused(false);
+    // 1.19.3 AbstractWidget.setFocused 改 protected（1.19.3 merged jar 实证）→
+    // EditBox 焦点清除走 setHighlighted?（无公开 API）→ 反射降级，功能差入账
+    //? if >=1.19.3 {
+    try {
+        java.lang.reflect.Method m = net.minecraft.client.gui.components.EditBox.class.getMethod("setFocused", boolean.class);
+        m.setAccessible(true);
+        m.invoke(searchBox, false);
+    } catch (ReflectiveOperationException ignored) {
+    }
     //?}
         } else {
             searchBox.setValue(entry.insertion);
@@ -298,19 +305,19 @@ moveCursorToEnd();;
     private int getLeft() {
 //? if <1.17
         /*return searchBox.x - 1;*/
-        // EditBox.getX/getY 1.19.4 起；1.16.5~1.19.2 x/y 为 public 字段（1192 EditBox 经 AbstractWidget :25-26）
-//? if >=1.17 && <1.19.4
+        // EditBox.getX/getY 1.19.0 起存在（f119 AbstractWidget 实证）；1.19.3 起 x/y 私有化强制走访问器
+//? if >=1.17 && <1.19.3
 /*return searchBox.x - 1;*/
-//? if >=1.19.4
+//? if >=1.19.3
         return searchBox.getX() - 1;
     }
 
     private int getTop() {
 //? if <1.17
         /*return searchBox.y + searchBox.getHeight() + 1;*/
-//? if >=1.17 && <1.19.4
+//? if >=1.17 && <1.19.3
 /*return searchBox.y + searchBox.getHeight() + 1;*/
-//? if >=1.19.4
+//? if >=1.19.3
         return searchBox.getY() + searchBox.getHeight() + 1;
     }
 

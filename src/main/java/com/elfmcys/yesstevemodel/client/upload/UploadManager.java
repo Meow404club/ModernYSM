@@ -44,12 +44,12 @@ public class UploadManager {
     }
 
     public static IResourceLocatable getOrCreateLocatableWithSize(AbstractTexture texture, boolean register, int sizeHint) {
-        //? if <1.18.2
+        //? if <1.18
         /*RenderSystem.assertThread(RenderSystem::isOnRenderThread);*/
-        //? if >=1.17 && <1.18.2
+        //? if >=1.17 && <1.18
         /*RenderSystem.assertThread(RenderSystem::isOnRenderThread);*/
         // 1171 无 assertOnRenderThread（RenderSystem.java:120 仅 assertThread(Supplier)）
-        //? if >=1.18.2
+        //? if >=1.18
         RenderSystem.assertOnRenderThread();
         WeakReference<TextureLocatable> weakReference = textureCache.get(texture);
         if (weakReference != null) {
@@ -97,23 +97,23 @@ public class UploadManager {
     }
 
     public static void removeTexture(AbstractTexture abstractTexture) {
-        //? if <1.18.2
+        //? if <1.18
         /*RenderSystem.assertThread(RenderSystem::isOnRenderThread);*/
-        //? if >=1.17 && <1.18.2
+        //? if >=1.17 && <1.18
         /*RenderSystem.assertThread(RenderSystem::isOnRenderThread);*/
         // 1171 无 assertOnRenderThread（RenderSystem.java:120 仅 assertThread(Supplier)）
-        //? if >=1.18.2
+        //? if >=1.18
         RenderSystem.assertOnRenderThread();
         textureCache.remove(abstractTexture);
     }
 
     public static void processPendingUploads() {
-        //? if <1.18.2
+        //? if <1.18
         /*RenderSystem.assertThread(RenderSystem::isOnRenderThread);*/
-        //? if >=1.17 && <1.18.2
+        //? if >=1.17 && <1.18
         /*RenderSystem.assertThread(RenderSystem::isOnRenderThread);*/
         // 1171 无 assertOnRenderThread（RenderSystem.java:120 仅 assertThread(Supplier)）
-        //? if >=1.18.2
+        //? if >=1.18
         RenderSystem.assertOnRenderThread();
         if (!expiredTextures.isEmpty()) {
             //? if <1.18.2

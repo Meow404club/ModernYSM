@@ -30,6 +30,9 @@ public class VehicleCapability extends GeckoVehicleEntity {
         //? if neoforge
         /*return java.util.Optional.ofNullable(entity.getCapability(VehicleCapabilityProvider.VEHICLE_CAP));*/
         //? if forge
+        //? if <1.16.2
+        /*return java.util.Optional.ofNullable(entity.getCapability(VehicleCapabilityProvider.VEHICLE_CAP).orElse(null));*/
+        //? if >=1.16.2
         return entity.getCapability(VehicleCapabilityProvider.VEHICLE_CAP).resolve();
     }
 

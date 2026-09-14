@@ -7,10 +7,10 @@ import com.elfmcys.yesstevemodel.molang.runtime.ExecutionContext;
 //? if <1.17 {
 // import java.util.Random;
 //? }
-//? if >=1.17 && <1.19.2 {
+//? if >=1.17 && <1.19 {
 // import net.minecraft.world.level.levelgen.RandomSource;
 //? }
-//? if >=1.19.2 {
+//? if >=1.19 {
 import net.minecraft.util.RandomSource;
 //? }
 

@@ -67,14 +67,14 @@ public final class GpuRenderPath {
         GpuMesh mesh = decodeMeshRef(model.gpuMeshHandle);
         if (mesh == null) return false;
 
-        //? if >=1.17 && <1.19.4 {
+        //? if >=1.17 && <1.19.3 {
         /*
         Matrix4f rootPose = com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.pose(pose);
         Matrix3f rootNormal = com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.normal(pose);
         Matrix4f projMat = com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.projectionMatrix();
         Matrix4f mvMat = com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.modelViewMatrix();
          *///?}
-        //? if >=1.19.4 && <21.8 {
+        //? if >=1.19.3 && <21.8 {
         Matrix4f rootPose = pose.pose();
         Matrix3f rootNormal = pose.normal();
         Matrix4f projMat = RenderSystem.getProjectionMatrix();
@@ -256,10 +256,10 @@ public final class GpuRenderPath {
         /*Vector3f[] arr = RenderSystemAccessor.ysm$getShaderLightDirections();
          *///?}
         // 1.17~1.19.2 accessor 为 mojang Vector3f 签名（JOML 前夜）不可读，恒 null → 兜底默认平行光
-        //? if >=1.17 && <1.19.4 {
+        //? if >=1.17 && <1.19.3 {
         /*Vector3f[] arr = null;
          *///?}
-        //? if >=1.19.4 && <21.6 {
+        //? if >=1.19.3 && <21.6 {
         Vector3f[] arr = RenderSystemAccessor.ysm$getShaderLightDirections();
         //?}
         // 1.21.6+ RenderSystem.shaderLightDirections 改 GpuBufferSlice 类型（2108 RenderSystem.java:78）

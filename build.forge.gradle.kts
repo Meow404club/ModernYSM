@@ -15,6 +15,10 @@ group = property("maven_group") as String
 val pre120 = stonecutter.eval(stonecutter.current.version, "<1.20")
 val pre1193 = stonecutter.eval(stonecutter.current.version, "<1.19.3")
 val pre118 = stonecutter.eval(stonecutter.current.version, "<1.18")
+// Forge 自带 MixinExtras 自 40.3.0 起（=1.18.2 线，批一 run_fixes 实证 split-package 边界）：
+// 更早的 forge 大版本（37/38/39，即 <1.18.2 三线）dev 运行时缺 MixinExtras 运行体，
+// @WrapWithCondition 被纯 Mixin 静默忽略——与 pre118 同因，运行时注入边界随之扩到 <1.18.2
+val pre1182 = stonecutter.eval(stonecutter.current.version, "<1.18.2")
 // mods.toml 装载区间用 forge 大版本号（37.1.1→37 / 47.4.20→47）
 val forgeMajor = (property("deps.forge") as String).substringBefore('.')
 val mcVersion = property("deps.minecraft") as String
@@ -168,10 +172,11 @@ dependencies {
     // MixinExtras dev 运行时：implementation 的 mixinextras-forge 会被 MDG 当 mod 装载
     //（module 层 mixinextras@0.3.6），其 MixinExtrasConfigPlugin.onLoad 引用
     // MixinExtrasBootstrap（API 体在 mixinextras-common）→ 缺 common 即 NCDFE 拒启。
-    // 仅 1.17.1 需要：Forge 40.3.0 起自带 MixinExtras 模块，再注入 common 会
+    // 仅 Forge 未自带 MixinExtras 的线需要（批一实证 40.3.0 起自带）：1.17.1(37.1.1)/
+    // 1.18(38.0.17)/1.18.1(39.1.2) 即 <1.18.2 三线；40.3.0+ 再注入 common 会
     // split-package 冲突（Modules mixinextras.common and MixinExtras export ... 实测）。
     // 生产 jar 内嵌归发布卡（同 1165 线 embedMixinExtras 先例）。
-    if (pre118) {
+    if (pre1182) {
         "additionalRuntimeClasspath"("io.github.llamalad7:mixinextras-common:${property("deps.mixinextras")}")
     }
     // JOML dev 运行时（pre1193 三线）：implementation 对 MDG dev 不可见（同上），mixin
@@ -327,8 +332,12 @@ tasks.named<ProcessResources>("processResources") {
                     .replace("versionRange = \"[1.20.1,)\"", "versionRange = \"[$mcVersion,)\"")
             }
         }
-        // pack.mcmeta：资源包格式 1.17.1=7 / 1.18.2=8 / 1.19.2=9（共享源为 1.20.1 口径 15）
-        val packFormat = if (stonecutter.eval(stonecutter.current.version, ">=1.19.3")) 15
+        // pack.mcmeta：资源包格式 1.17.1=7 / 1.18.x=8 / 1.19~1.19.2=9 / 1.19.3=12 /
+        // 1.19.4=13 / 1.20=15（共享源为 1.20.1 口径 15；批一 >=1.19.3 一刀切 15 对
+        // 1.19.3/1.19.4 与真实值 12/13 不符，批二 c-1 注册新线时一并修正）
+        val packFormat = if (stonecutter.eval(stonecutter.current.version, ">=1.20")) 15
+        else if (stonecutter.eval(stonecutter.current.version, ">=1.19.4")) 13
+        else if (stonecutter.eval(stonecutter.current.version, ">=1.19.3")) 12
         else if (stonecutter.eval(stonecutter.current.version, ">=1.19")) 9
         else if (stonecutter.eval(stonecutter.current.version, ">=1.18")) 8
         else 7

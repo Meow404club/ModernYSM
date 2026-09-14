@@ -44,6 +44,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
+//? if >=1.16.2
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import org.apache.commons.lang3.StringUtils;
@@ -241,7 +242,7 @@ public class ModelButton extends YsmButton {
     @Override
     public void renderWidget(YsmGui guiGraphics, int mouseX, int mouseY, float partialTick) {
         AnimationTracker c0117x8455a741Mo1262xaffeef43 = this.modelIdHolder.getAnimationStateMachine();
-        if (/*? if >=1.18.2 && <1.19.4 {*/ /*isHoveredOrFocused()*//*?} else {*/ isHovered() /*?}*/) {
+        if (/*? if >=1.18 && <1.19.4 {*/ /*isHoveredOrFocused()*//*?} else {*/ isHovered() /*?}*/) {
             this.lastHoverTime = Util.getMillis();
             c0117x8455a741Mo1262xaffeef43.setPreviousAnimation(this.modelId);
         } else if (Util.getMillis() - this.lastHoverTime < this.animationDuration) {
@@ -270,7 +271,11 @@ public class ModelButton extends YsmButton {
         } else {
             double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
             // 1.21.6+ RenderSystem.enableScissor 删 → GuiGraphics 剪裁（GUI 坐标）
-            //? if <21.6
+            //? if <1.16.2 {
+            /*org.lwjgl.opengl.GL11.glEnable(org.lwjgl.opengl.GL11.GL_SCISSOR_TEST);
+            org.lwjgl.opengl.GL11.glScissor((int) (x * guiScale), (int) (Minecraft.getInstance().getWindow().getHeight() - (((y + this.height) - 20) * guiScale)), (int) (this.width * guiScale), (int) ((this.height - 20) * guiScale));*/
+            //?}
+            //? if >=1.16.2 && <21.6
             RenderSystem.enableScissor((int) (x * guiScale), (int) (Minecraft.getInstance().getWindow().getHeight() - (((y + this.height) - 20) * guiScale)), (int) (this.width * guiScale), (int) ((this.height - 20) * guiScale));
             //? if >=21.6
             /*guiGraphics.graphics().enableScissor(x, y, x + this.width, y + this.height - 20);*/
@@ -278,7 +283,9 @@ public class ModelButton extends YsmButton {
             /*ModelPreviewRenderer.renderLivingEntityPreview(x + (this.width / 2.0f), y + (this.height / 2.0f) + 20.0f, 30.0f, YsmFrame.partialTick(minecraft), this.modelIdHolder, RendererManager.getPlayerRenderer(), this.disablePreviewRotation, true);*/
             //? if <1.21
             ModelPreviewRenderer.renderLivingEntityPreview(x + (this.width / 2.0f), y + (this.height / 2.0f) + 20.0f, 30.0f, minecraft.getFrameTime(), this.modelIdHolder, RendererManager.getPlayerRenderer(), this.disablePreviewRotation, true);
-            //? if <21.6
+            //? if <1.16.2
+            /*org.lwjgl.opengl.GL11.glDisable(org.lwjgl.opengl.GL11.GL_SCISSOR_TEST);*/
+            //? if >=1.16.2 && <21.6
             RenderSystem.disableScissor();
             //? if >=21.6
             /*guiGraphics.graphics().disableScissor();*/
@@ -292,8 +299,14 @@ public class ModelButton extends YsmButton {
         }
         List listSplit = font.split(getMessage(), 45);
         if (listSplit.size() > 1) {
+            //? if <1.16.2 {
+            /*guiGraphics.drawCenteredString(font, (net.minecraft.network.chat.FormattedText) listSplit.get(0), x + (this.width / 2), (y + this.height) - 19, 15986656);
+            guiGraphics.drawCenteredString(font, (net.minecraft.network.chat.FormattedText) listSplit.get(1), x + (this.width / 2), (y + this.height) - 10, 15986656);*/
+            //?}
+            //? if >=1.16.2 {
             guiGraphics.drawCenteredString(font, (FormattedCharSequence) listSplit.get(0), x + (this.width / 2), (y + this.height) - 19, 15986656);
             guiGraphics.drawCenteredString(font, (FormattedCharSequence) listSplit.get(1), x + (this.width / 2), (y + this.height) - 10, 15986656);
+            //?}
         } else {
             guiGraphics.drawCenteredString(font, getMessage(), x + (this.width / 2), (y + this.height) - 15, 15986656);
         }
@@ -335,7 +348,7 @@ public class ModelButton extends YsmButton {
     }
 
     public void renderTooltip(YsmGui guiGraphics, Screen screen, int mouseX, int mouseY) {
-        if (/*? if >=1.18.2 && <1.19.4 {*/ /*isHoveredOrFocused()*//*?} else {*/ isHovered() /*?}*/) {
+        if (/*? if >=1.18 && <1.19.4 {*/ /*isHoveredOrFocused()*//*?} else {*/ isHovered() /*?}*/) {
             //? if <21.6
             guiGraphics.pose().pushPose();
             //? if >=21.6

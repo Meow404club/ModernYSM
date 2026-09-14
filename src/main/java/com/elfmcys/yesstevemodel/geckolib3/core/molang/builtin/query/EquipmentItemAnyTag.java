@@ -4,11 +4,11 @@ package com.elfmcys.yesstevemodel.geckolib3.core.molang.builtin.query;
 /*import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.Tag;
  *///?}
-//? if >=1.18.2 && <1.19.4 {
+//? if >=1.18.2 && <1.19.3 {
 /*import net.minecraft.tags.TagKey;
 import net.minecraft.core.Registry;
  *///?}
-//? if >=1.19.4 {
+//? if >=1.19.3 {
 import net.minecraft.tags.TagKey;
 import net.minecraft.core.registries.Registries;
 //?}
@@ -49,12 +49,12 @@ public class EquipmentItemAnyTag extends LivingEntityFunction {
                 return true;
             }
              *///?}
-            //? if >=1.18.2 && <1.19.4 {
+            //? if >=1.18.2 && <1.19.3 {
             /*if (stack.is(TagKey.create(net.minecraft.core.Registry.ITEM_REGISTRY, key))) {
                 return true;
             }
              *///?}
-            //? if >=1.19.4 {
+            //? if >=1.19.3 {
             if (stack.is(TagKey.create(Registries.ITEM, key))) {
                 return true;
             }

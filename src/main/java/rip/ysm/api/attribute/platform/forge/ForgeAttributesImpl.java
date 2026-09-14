@@ -27,8 +27,12 @@ public final class ForgeAttributesImpl {
         //? if <1.17 {
         /*return ForgeMod.REACH_DISTANCE.get();
          *///?}
-        //? if >=1.17 && <1.19.4 {
+        //? if >=1.17 && <1.19.3 {
         /*return ForgeMod.REACH_DISTANCE.get();
+         *///?}
+        //? if >=1.19.3 && <1.19.4 {
+        /*// 1.19.3 = ATTACK_RANGE（ENTITY_REACH 1.20+ 更名，f1193 ForgeMod.java:158 实证）
+        return ForgeMod.ATTACK_RANGE.get();
          *///?}
         //? if >=1.19.4 {
         return ForgeMod.ENTITY_REACH.get();

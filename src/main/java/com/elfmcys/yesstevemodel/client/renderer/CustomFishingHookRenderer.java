@@ -60,6 +60,10 @@ public class CustomFishingHookRenderer {
         float anglerEye;
         EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         Options options = entityRenderDispatcher.options;
+        // 1.16.1 无 Options.getCameraType（CameraUtil <1.16.2 反射分支承接）
+        //? if <1.16.2
+        /*if (options == null || !com.elfmcys.yesstevemodel.util.CameraUtil.isFirstPersonView() || player != Minecraft.getInstance().player) {*/
+        //? if >=1.16.2
         if (options == null || !options.getCameraType().isFirstPerson() || player != Minecraft.getInstance().player) {
             anglerX = (Mth.lerp(partialTick, player.xo, player.getX()) - (dCos * handOffset)) - (dSin * 0.8d);
             anglerY = ((player.yo + player.getEyeHeight()) + ((player.getY() - player.yo) * partialTick)) - 0.45d;
@@ -76,10 +80,10 @@ public class CustomFishingHookRenderer {
             //         .yRot(swingProgressSqrt * 0.5f)
             //         .xRot(-swingProgressSqrt * 0.7f);
             //? } else {
-            // options.fov() 访问器 1.19.2+；1182 为 public double fov 字段（Options.java:209）
-            //? if >=1.19.2
+            // options.fov() 访问器 1.19.0 起（f119 Options.java:739 实证）；1.18.x 为 public double fov 字段
+            //? if >=1.19
             Vec3 vec3XRot = entityRenderDispatcher.camera.getNearPlane().getPointOnPlane(hand * 0.525f, -0.1f).scale(960.0d / options.fov().get().intValue()).yRot(swingProgressSqrt * 0.5f).xRot((-swingProgressSqrt) * 0.7f);
-            //? if <1.19.2
+            //? if <1.19
             /*Vec3 vec3XRot = entityRenderDispatcher.camera.getNearPlane().getPointOnPlane(hand * 0.525f, -0.1f).scale(960.0d / options.fov).yRot(swingProgressSqrt * 0.5f).xRot((-swingProgressSqrt) * 0.7f);*/
             //? }
             anglerX = Mth.lerp(partialTick, player.xo, player.getX()) + vec3XRot.x;

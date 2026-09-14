@@ -49,7 +49,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import rip.ysm.gui.YsmGui;
-//? if >=1.19.4 {
+// 1.19.3 已将 Widget 改名 Renderable（1.19.3 merged jar 仅 Renderable.class，Widget 0 命中）
+//? if >=1.19.3 {
 import net.minecraft.client.gui.components.Renderable;
 //?} else {
 /*import net.minecraft.client.gui.components.Widget;
@@ -65,6 +66,7 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.sounds.SoundEvents;
+//? if >=1.16.2
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -76,10 +78,11 @@ import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-//? if <1.19.4 {
+// 1.19.3 vanilla 切 JOML（com.mojang.math.Matrix4f 删除）
+//? if <1.19.3 {
 /*import com.mojang.math.Matrix4f;
  *///?}
-//? if >=1.19.4 {
+//? if >=1.19.3 {
 import org.joml.Matrix4f;
 //?}
 import rip.ysm.api.client.KeyMappingFactory;
@@ -463,7 +466,7 @@ public class AnimationRouletteScreen extends Screen {
         renderRadialBackground(guiGraphics, guiGraphics.pose(), mouseX, mouseY);
         renderRadialButtons(guiGraphics);
         renderPageInfo(guiGraphics);
-        for (/*? if <1.19.4 {*/ /*Widget *//*?} else {*/ Renderable /*?}*/ renderable : ((ScreenAccessor) this).ysm$getRenderables()) {
+        for (/*? if <1.19.3 {*/ /*Widget *//*?} else {*/ Renderable /*?}*/ renderable : ((ScreenAccessor) this).ysm$getRenderables()) {
             if (!(renderable instanceof ISpecialWidget)) {
                 //? if <1.20
                 /*renderable.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
@@ -485,7 +488,7 @@ public class AnimationRouletteScreen extends Screen {
         guiGraphics.pose().translate(0.0f, -this.configScrollOffset, 0.0f);
         //? if >=21.6
         /*guiGraphics.pose().translate(0.0f, -this.configScrollOffset);*/
-        for (/*? if <1.19.4 {*/ /*Widget *//*?} else {*/ Renderable /*?}*/ renderable2 : ((ScreenAccessor) this).ysm$getRenderables()) {
+        for (/*? if <1.19.3 {*/ /*Widget *//*?} else {*/ Renderable /*?}*/ renderable2 : ((ScreenAccessor) this).ysm$getRenderables()) {
             if (renderable2 instanceof ISpecialWidget) {
                 //? if <1.20
                 /*renderable2.render(guiGraphics.pose(), mouseX, scrolledMouseY, partialTick);*/
@@ -798,6 +801,9 @@ public class AnimationRouletteScreen extends Screen {
         }
         Iterator it = listSplit.iterator();
         while (it.hasNext()) {
+            //? if <1.16.2
+            /*guiGraphics.drawCenteredString(this.font, (net.minecraft.network.chat.FormattedText) it.next(), x, lineY, 15986656);*/
+            //? if >=1.16.2
             guiGraphics.drawCenteredString(this.font, (FormattedCharSequence) it.next(), x, lineY, 15986656);
             lineY += 9;
         }

@@ -60,8 +60,9 @@ public abstract class YsmWidget extends AbstractWidget {
     *///?}
 
     // 1.16.5~1.19.2 AbstractWidget 无 getX/getY/setX/setY（x/y 为 public 字段），补桥接；
-    // 1.19.4+ 侧父类自带同名方法（1194:315-330），桥接注释态（不可加 @Override：父类无此签名）
-    //? if <1.19.4 {
+    // 1.19.3 起 x/y 私有化且父类自带 getX/getY（1.19.3 merged jar 实证）→ 桥接边界回 1.19.3，
+    // 桥接注释态（<1.19.3 父类无此签名，不可加 @Override）
+    //? if <1.19.3 {
     /*public int getX() {
         return this.x;
     }
@@ -107,14 +108,15 @@ public abstract class YsmWidget extends AbstractWidget {
     // 1.17~1.19.2：NarratableEntry extends NarrationSupplier（updateNarration 抽象），
     // AbstractWidget 不实现 → concrete 子类必炸（1192 编译实测）；中段补实现，
     // defaultButtonNarrationText 与 1.19.4+ 同名同义（1182 AbstractWidget.java:231）
-    //? if >=1.17 && <1.19.4 {
+    //? if >=1.17 && <1.19.3 {
     /*
     @Override
     public void updateNarration(net.minecraft.client.gui.narration.NarrationElementOutput output) {
         this.defaultButtonNarrationText(output);
     }
      *///?}
-    //? if >=1.19.4 {
+    // 1.19.3 updateWidgetNarration 已抽象（f1193 AbstractWidget 实证）→ 边界 1.19.4 放宽 1.19.3
+    //? if >=1.19.3 {
     @Override
     protected void updateWidgetNarration(net.minecraft.client.gui.narration.NarrationElementOutput output) {
         this.defaultButtonNarrationText(output);

@@ -798,10 +798,10 @@ public class ClientModelManager {
     public static SyncStatus getSyncStatus() {
         //? if <1.17
         /*RenderSystem.assertThread(RenderSystem::isOnGameThread);*/
-        //? if >=1.17 && <1.18.2
+        //? if >=1.17 && <1.18
         /*RenderSystem.assertThread(RenderSystem::isOnGameThread);*/
         // 1.21 RenderSystem.assertOnGameThread 删除（vanilla-1.21.1 RenderSystem 无此方法）
-        //? if >=1.18.2 && <1.21
+        //? if >=1.18 && <1.21
         RenderSystem.assertOnGameThread();
         return syncState;
     }

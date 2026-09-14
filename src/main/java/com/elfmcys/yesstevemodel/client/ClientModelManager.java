@@ -1510,7 +1510,11 @@ public class ClientModelManager {
         @Override
         public PlayerModelBundle getAnimationBundle() {
             ModelAssembly assembly = requestAndGetFallback();
-            return assembly == null ? null : assembly.getAnimationBundle();
+            // m2.7-extraoverlay-1165：fallback（localModelContext）本身可能是另一个/同一个
+            // LazyModelAssembly（getLocalModelContext 的 reg.get("default") 分支未滤 Lazy）——
+            // 无守卫时 getAnimationBundle→requestAndGetFallback→lazy→getAnimationBundle 无限递归
+            //（StackOverflow 崩溃实证：HUD 纸娃娃在模型加载窗口内渲染本地玩家触发）。未加载语义=返 null。
+            return assembly == null || assembly instanceof LazyModelAssembly ? null : assembly.getAnimationBundle();
         }
 
         @Override

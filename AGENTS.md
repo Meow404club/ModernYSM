@@ -59,7 +59,7 @@
 ## 四、并行 PR 工作流（像开源项目一样跑）
 
 ```
-① architect 出模块卡 → 你登记任务板（state key="tasks"）
+① architect 出模块卡 → 你登记任务板（state key="tasks.<slug>"，每卡一平键）
 ② 同一批互不重叠的任务 → 并行派发多个 coder（后台运行）
      每个 coder 独占 ../<仓库名>-trees/<slug> worktree + work/<slug> 分支
 ③ coder 返回 COMMITS hash → 立即派发 review-merge（多个并行卡可合并到一次派发）
@@ -68,7 +68,8 @@
 ⑥ 全部落账：state(tasks/progress/decisions) + KG + docs 镜像
 ```
 
-任务板是唯一真相源，格式（`state_update(key="tasks")`）：
+任务板是唯一真相源，每卡一平键写入（`state_update(key="tasks.<slug>")`；
+**严禁裸键 `tasks` 配 merge=true**——连环字符串化事故教训）：
 ```json
 {"<slug>": {"status": "research|queued|in_progress|in_review|merged|aborted",
             "branch": "work/<slug>", "worktree": "../<仓库名>-trees/<slug>",
@@ -79,9 +80,38 @@
 - **文件域隔离优先**：派发前给每个任务声明 `files_scope`，重叠域的任务串行或明确合并顺序。
 - **后台派发优先**：Agent 派发一律 `run_in_background: true`，派发后立即回应用户、
   完成通知到达再收结果——长任务不阻塞主会话，保住交互响应性。
-- **并行度上限 8**：并发 coder 数按文件域隔离情况放宽，超过 8 个时冲突与审查
-  积压风险大于收益。
-- **合并串行**：任何时刻只允许一个 review-merge 在动 dev。
+- **并行度上限 6**（环境受限或不稳时应再收紧）：并发 coder 数按文件域隔离
+  情况放宽，超过 6 个时冲突、审查积压与环境不稳风险大于收益。
+- **池拉齐并发：coder 池未满即从池拉活**。冻结串行线只表达依赖，不是并发
+  默认值——coder 并发不满（<6）时，主会话应主动从 todo 池拉与在途文件域
+  不冲突的任务提前进本阶段（研究卡→architect→coder 全管线照走；共享缝以
+  tail-append+rebase+显式合并序消化）。
+- **滚动合并队列 + 分层门禁**：
+  **每张大卡/波 = 恰好一条合并队列**；同波所有小卡共用它。没有塔、没有顶层集成卡、
+  全量验收在**阶段末**只跑一次（波与波之间不跑全量，尽量减少全量次数）。
+  ① **交卡门禁（coder 交卡前自跑，结果附交卡报告）**：
+     a. 编译 + 离线测试套件（分钟级）；
+     b. **本卡验收组**：拆卡时 architect 声明的 `files_scope → 验收命令/组` 映射
+        （写入任务卡 ACCEPTANCE）；
+     c. 触碰共享层（核心框架/公共工具）的卡 → 门禁升级为全量验收。
+  ② **队列循环（主会话守门，绿才合）**：卡完成 → 入队（任务板 `tasks.merge_queue`
+     记队列序与状态）→ 出队派 review-merge 审查并重跑该卡门禁实证（"2-3 并发"仅指
+     门禁内验收链的执行并发，**绝不是并行派多个 review-merge 会话**——全系统审查
+     会话恒为 1）→ **绿**：合入 dev，下一张；**红**：弹卡回 coder，只重跑本卡组
+     （分钟级修复循环）。
+  ③ **阶段末收官：全量验收整个阶段恰好一次**（阶段收尾跑，波与波之间不跑；
+     兜底映射漏测 + 跨卡集成），红则二分定位；已知 flaky 用例入 quarantine 排除表。
+  ④ **降级**：环境不稳期退 4-6 卡/批软流水（批间 barrier，测试与下一批开发重叠）。
+  ⑤ **常见误读（明令禁止）**：
+     × 每张小卡各自立塔、各跑一遍全量——同波只有一条队列、阶段末全量只有一次；
+     × 保留顶层集成卡/塔尖——队列本身就是集成，逐卡滚动；
+     × 队列未绿就合 dev / 未过交卡门禁就入队——dev 全绿性是硬纪律。
+- **审查串行（铁律级）**：**全系统任何时刻至多存在一个 review-merge 会话**——不是
+  "不同时合 dev"这种弱约束，而是审查活动本身单实例：上一个 review-merge 未返回
+  verdict 前，**禁止派发任何新的 review-merge**；"先派后补"也只能是 SendMessage
+  追加进既有会话，绝不是开第二个。原因：并行审查会在 rebase 顺序、合并序、门禁
+  实证上互相踩踏，dev 全绿性失守。发现并行=立即收敛（等先到者返回或废止后到者），
+  并把教训记入 lesson。
 - **批量合并会话（上下文有界轮换）**：同一 review-merge 会话单次最多连续审 5 个分支
   即轮换开新会话；新批次一律开新会话。
 - **同批完成不齐 → 先派后补（追加式）**：coder 交卡即先派 review-merge 审已完工分支；
@@ -117,6 +147,9 @@ BRANCH: work/<slug>（worktree ../ModernYSM-trees/<slug> 由 coder 自建）
 4. **绝不直接改 dev 主线**：dev 只接受 review-merge 的合并。
 5. **绝不手写生成器能产出的产物**：生成物一律走项目构建管线。
 6. **绝不留无记录的决策**：结论进 `remember()`/`state_update`，结构关系进 `kg_add`。
+7. **Hook 工程卫生**（新增 hook 时强制）：恒 exit 0（故障绝不阻塞会话）；≤5s 超时；
+   stdin JSON 容错；副作用事件去重锁；handler 不存在就整个不装；注入上下文必须
+   真数据，缺失就明说，禁止剧场输出（SessionStart 注入见 tools/context_inject.py）。
 
 ## 七、上下文工程纪律
 
@@ -130,7 +163,7 @@ BRANCH: work/<slug>（worktree ../ModernYSM-trees/<slug> 由 coder 自建）
 
 - 写：`remember(kind, text)`（语义记忆，近同事实自动 supersede）、
   `state_update`（账本；tmp.* + ttl_seconds 即临时键）、`kg_add`（结构关系）、
-  `kg_invalidate`（关系过时置失效保留历史）、`state_update(key="tasks")`（任务板）。
+  `kg_invalidate`（关系过时置失效保留历史）、`state_update(key="tasks.<slug>")`（任务板，每卡一平键）。
 - 读：`recall(query)`、`state_read`（无参=目录页）、`state_search`（语义定位）、
   `kg_query`（必须带过滤）、`kg_search`、`kg_stats`、`search_code`、`sym_query`、
   `get_source`、`mappings_lookup`、`web_fetch`、`harvest`、`refresh_index`、`project_status`。
@@ -159,6 +192,7 @@ tmp/bin/                specialsource / vineflower / autorenamingtool 反编译�
 tmp/index/              RAG 索引 rag.db 与日志（gitignore）
 tmp/models/             → 符号链接到 ../MGT6GA/gregtech6/tmp/models（嵌入/重排 GGUF 共用）
 tools/brain/            检索与记忆工具链（brain MCP = 常驻 HTTP 服务 :8999/mcp）
+tools/context_inject.py SessionStart 注入（压缩状态页，恒 exit 0 只读；用户级挂载）
 tools/services.sh       服务总线：start|stop|restart|status × brain|embed|rerank
 scripts/setup.sh        一键初始化（venv + 依赖 + 钩子）
 .zcode/agents/          六角色 subagent 模板

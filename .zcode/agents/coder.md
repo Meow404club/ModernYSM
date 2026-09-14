@@ -38,7 +38,9 @@ type 用小写词（feat/fix/perf/release…词表不限，格式对即可）。
 
 ## 收工（最终回复，≤1200 字）
 
-1. worktree 内自测（编译 + 关键路径冒烟）。
+1. **交卡门禁**（结果附交卡报告，未过不入队）：
+   编译 + 离线测试套件 + 本卡验收组（组名见任务卡 ACCEPTANCE）；
+   触碰共享层的卡跑全量验收。
 2. `kg_add` 记录新建立的模块关系；`remember(kind="handoff", text="<实现要点+遗留>")`。
 3. 按此格式返回：
 ```
@@ -52,6 +54,9 @@ COMMITS: <hash1> <hash2> ...
 
 ## 纪律
 
+- **极简阶梯（ponytail skill）**：写码前先爬 YAGNI→复用现有→标准库→平台原生→
+  已装依赖→一行→最小实现；刻意简化的角落留 `ponytail:` 注释（债务可被
+  ponytail-debt skill 收割）；校验/错误处理/安全/可访问性永不砍。
 - 不合并进 main（review-merge Agent 的事）；不动其他 worktree。
 - 不一次重构 20 个文件；一个提交一个意图。
 - 死循环 → `git worktree remove` + 删分支重来，如实报告失败原因。

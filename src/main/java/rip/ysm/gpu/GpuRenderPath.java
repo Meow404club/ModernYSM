@@ -74,13 +74,13 @@ public final class GpuRenderPath {
         Matrix4f projMat = com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.projectionMatrix();
         Matrix4f mvMat = com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.modelViewMatrix();
          *///?}
-        //? if >=1.19.3 && <21.8 {
+        //? if >=1.19.3 && <21.6 {
         Matrix4f rootPose = pose.pose();
         Matrix3f rootNormal = pose.normal();
         Matrix4f projMat = RenderSystem.getProjectionMatrix();
         Matrix4f mvMat = RenderSystem.getModelViewMatrix();
         //?}
-        //? if >=21.8 {
+        //? if >=21.6 {
         /*Matrix4f rootPose = new Matrix4f();
         Matrix3f rootNormal = new Matrix3f();
         Matrix4f projMat = new Matrix4f();
@@ -139,10 +139,10 @@ public final class GpuRenderPath {
         // 1.21.5 getShaderTexture 返回 GpuTexture（RenderSystem.java:306）
         //? if <21.5
         GlStateManager._bindTexture(RenderSystem.getShaderTexture(1)); // overlayTexture里的texture没getter，固定bind 1
-        //? if >=21.5 && <21.8
+        //? if >=21.5 && <21.6
         /*GlStateManager._bindTexture(((GlTexture) RenderSystem.getShaderTexture(1)).glId());*/
-        // 1.21.8 getShaderTexture 返回 GpuTextureView（无 glId）且路径已降级：跳过冗余绑定
-        //? if >=21.8 && <21.11 {
+        // 1.21.6 getShaderTexture 返回 GpuTextureView（21.6 RenderSystem.java:272，无 glId）且路径已降级：跳过冗余绑定
+        //? if >=21.6 && <21.11 {
         /*GlStateManager._activeTexture(GL13.GL_TEXTURE0 + 1);
         mc.gameRenderer.overlayTexture().setupOverlayColor();*/
         //?}
@@ -156,7 +156,7 @@ public final class GpuRenderPath {
 
         // 1.21.2 fog 状态打包 FogParameters record（getShaderFogStart/End/Color/Shape 删除，
         // vanilla-1.21.3 RenderSystem.java:348 getShaderFog()）
-        //? if >=1.21.2 && <21.8 {
+        //? if >=1.21.2 && <21.6 {
         /*
         net.minecraft.client.renderer.FogParameters ysmFogParams = RenderSystem.getShaderFog();
         float fogStart = ysmFogParams.start();
@@ -165,8 +165,8 @@ public final class GpuRenderPath {
         int fogShape = ysmFogParams.shape().getIndex();
         */
         //?}
-        // 1.21.8 fog 改 GpuBufferSlice（RenderSystem.java:168）且路径已降级：零雾兜底（不可达）
-        //? if >=21.8 {
+        // 1.21.6 fog 改 GpuBufferSlice（21.6 RenderSystem.java:170）且路径已降级：零雾兜底（不可达）
+        //? if >=21.6 {
         /*
         float fogStart = 0.0f;
         float fogEnd = 0.0f;

@@ -62,12 +62,13 @@ public class OuterFileTexture extends AbstractTexture implements ITextureMap {
             //?}
             // 1.21.5 AbstractTexture.getId 删、NativeImage.upload 删、纹理分配 GpuDevice 化：
             //仿 DynamicTexture（neoforge-21.5.98-sources DynamicTexture.java:29-39）
-            //? if >=21.5 && <21.8 {
+            //? if >=21.5 && <21.6 {
             /*this.texture = RenderSystem.getDevice().createTexture(() -> "ysm_outer_file_texture", TextureFormat.RGBA8, width, height, 1);
             RenderSystem.getDevice().createCommandEncoder().writeToTexture(this.texture, imageIn);*/
             //?}
-            // 1.21.8 createTexture 七参形（usage flags, depth, mips——DynamicTexture.java:42）
-            //? if >=21.8 {
+            // 1.21.6 createTexture 七参形（usage flags, depth, mips——21.6 GpuDevice.java:29 实证，
+            // Supplier/String 双形）；1.21.8 分界证伪（原注释 DynamicTexture.java:42 为 21.8 行号）
+            //? if >=21.6 {
             /*this.texture = RenderSystem.getDevice().createTexture(() -> "ysm_outer_file_texture", 5, TextureFormat.RGBA8, width, height, 1, 1);
             RenderSystem.getDevice().createCommandEncoder().writeToTexture(this.texture, imageIn);*/
             //?}

@@ -3,10 +3,10 @@
 > 由主 Agent 在每次 state_update 重要变更后同步镜像。2026-09-11 全量重写（历史行漂移清理）。
 
 ## 阶段
-- phase: 架构重构（Stonecutter 迁移）——M2 收官冲刺
-- done: [M0 骨架 e9f0b61 + 源码合并 d086af3, native 子模块 7db591f, M1 八卡全过 0f81660（Architectury 清零+进世界验收）, M2 七卡合入 3483e9d/acd46c8/c5606ae/8f23248/5b6d3ac/fa83f37/ea9bfb3]
-- current: M2 十卡全部合入，收官门禁 ingame-smoke-gate in_review（④/5，三层 PASS+6 文件修补 1f7e1a2）
-- next: 门禁合入+tag v2.6.6.6-m2 裁决 → **M2 收官：记忆整理（蒸馏/kg_stats/锚点）→ 用户压缩上下文 → M3 全谱平铺**
+- phase: 架构重构（Stonecutter 迁移）——M3 全谱平铺进行中（M2 已收官）
+- done: [M0 骨架+源码合并, native 子模块, M1 八卡全过, M2 十一卡全合入, M2.5/M2.6/M2.6.1 GUI 修复链, harness ccb6b23, 内置模型同步 ce1aaf9, M3 批一 ebc4427 + 批二a a129edc + 批二b 07e171e + 批二c-1 5c5888f, M2.7 8444dbf, reobf 撞名修复 d14e610]
+- current: 批二c 剩余接手卡 m3-batch2c1b-forge-remainder 进行中（1.16.2/3/4 修绿 + 1.18/1.18.1/1.19 build 补绿 + 双在产线 javap 终验 + compatLevel 表 + 功能差入账）
+- next: 批二c-2 neoforge 八线 → 26.x 适配卡 → FPM/RealCamera 修复卡（B1）→ Iris 系保性能重推导三卡 → 生产发布卡；完整队列见 state:tasks.handoff-2026-09-14
 
 ## ADR 摘要（decisions.adr-stonecutter-2026-09-10 + adr-m2-1165-stonecutter-entry）
 - stonecutter 0.7 + Gradle 9.2.1 单仓；路由：forge ≥1.17 → legacyforge(MDG 2.0.141)，<1.17 → unimined 1.4.1（Celeritas 生产先例）；NeoForge 1.20.5+ → moddev（M4）；1.20.1 一 jar 双跑 NeoForge 47.1
@@ -81,11 +81,19 @@
 ## M3 第二批 neoforge（2a 已合入 dev=a129edc，2026-09-13；2b 进行中）
 - 2a：1.20.4/1.20.6/1.21.1 三线全绿+16 屏走查进世界；moddev 构建线建成（MDG2 neoforge、分代树 srcDir、neoforge.mods.toml、[[mixins]] 声明、零 refmap 直配、compatLevel JAVA_17/21/21）；双在产线对基线逐类 javap+资源全同（4 处回归抓回修复）；TouhouMaidCompat @OnlyIn 中立化裁决通过（专用服更安全）
 - 2b（已合入 dev=07e171e）：21.3/21.4/21.5/21.8/21.10/21.11 六线绿+主菜单证据；26.1.2/26.2 park（NFRT 由 MDG 2.0.147 解除，剩自身代号适配 26.1.2≈100 错 GuiGraphics 移包/26.2≈100 错 TextureFormat 移包）→26.x 适配卡（26.1/26.1.1 同代一并）
-- 批二 c（进行中）：2c-1=forge 6 条（1.18/1.18.1/1.19/1.19.1/1.19.3/1.20）+1.16.1~1.16.4 unimined 四线；2c-2=neoforge 8 条（1.20.2 POC/1.20.3 POC/1.20.5/1.21/1.21.2/1.21.6/1.21.7/21.9）；1.19.3 条件轴过渡形态/21.6 排尾
+- 批二 c：2c-1 **已合入 dev=5c5888f**（2026-09-14，rebase 8444dbf 后四提交 0dd7641/83c8b5d/f2ecf2f/01754ff 重签）——十线注册（forge beta/latest 六线 + unimined 1.16.1~4）+ 1.16.1/1.18/1.18.1/1.19/1.19.1/1.19.3 六线修绿；审查修正 b59cf0c：1.18/1.18.1 RenderSystem 三断言按 merged jar javap 实证恢复激活（coder 曾整体误砍）、20 处恒假条件死码清除；剩余（1.16.2/3/4 修绿、1.18/1.18.1/1.19 build、双在产线 javap 终验、compatLevel 表）归接手卡 m3-batch2c1b-forge-remainder
+- 批二 c-2（待发）：neoforge 8 条（1.20.2 POC/1.20.3 POC/1.20.5/1.21/1.21.2/1.21.6/1.21.7/21.9）
 - 全谱 37 线；semver 铁律（stonecutter 版本 ID 数值比较，分代用 <21.5/>=21.5 风格）与 vcs 直通铁律（1.20.1 根活动节点，21 轴门控必须存储态）为平铺期两大新沉淀
 - 2a：1.20.4（20.4.x stable）/1.20.6（20.6.x）/1.21.1（21.1.x）——moddev 构建线首次建立（MDG neoforge），Java 17/21/21
 - 2b：21.3/21.4/21.5/21.8/21.10/21.11/26.1.2/26.2（Java 21→25）
 - 已知要点：NeoForge 1.20.2+ 运行时=mojmap（无 SRG reobf，mixin refmap 口径待验证）；1.20.5+ neoforge.mods.toml/Component 体系；26.x 需 Java 25 toolchain
+
+## 2026-09-14 会话四合并（dev→5c5888f）
+- **reobf 撞名修复 d14e610**：自有接口方法名与 vanilla 方法同名时，legacy reobf 把调用点误映射到 SRG 名→NoSuchMethodError。IAudioPlayer.isStopped→hasStopped（isFinished 与 vanilla WorldUpgrader 撞名被否）；YSMTickableSoundInstance <1.17 走状态位（vanilla TickableSoundInstance 覆写必须保名）。审计脚本 tools/audit_reobf_collision.py（扫产线 jar 中 owner=自有类的 SRG 引用，三档 OK/INHERITED/BROKEN）→发布门禁
+- **gradle OOM 纪律 841aab3**：全项目 parallel=false + workers.max=2（33 线并发实测 20G+ OOM）；个人覆盖走 ~/.gradle。一次 gradle 调用一条命令，版本测试一律串行
+- **M2.7 覆盖层修复 8444dbf**（1.16.5 纸娃娃三连）：根因三缺口=ExtraPlayerOverlay 空方法+死注释+注册只 Post(DEBUG)（F3 门控，ForgeIngameGui:208 证实 post(ALL) 才是无条件末点）→<1.20 真实现+MPR <1.17 配方（对照 vanilla InventoryScreen.renderEntityInInventory:101-138）+Post(ALL)；LazyModelAssembly getAnimationBundle SOE 守卫（fallback 崩溃路径改返 null，正常路径透传）；ExtraPlayerRenderScreen 拖拽预览 <1.20 启用。1.20.1 字节码零变化（javap 复验）
+- **兼容诊断定案（未动手，修复卡待发）**：FPM=SIMD 天然在链零动作、藏头正常，真实症状=合作分支 offset(1.5-cameraDistance) 对大模型穿模；次级 bug=onRenderHand 不查 isCanceled。RealCamera=双阻塞（贴图 id 不在默认 BindTarget 清单+GPU 直写绕过捕获器），修法 B1=RealCameraAPI.registerFunction 从 viewLocatorBone/headBones 直产 BindResult，**硬约束：绑定 GUI 手动覆盖必须保留**；调试工具 tmp/compat-debug/
+- **兼容不降性能原则**：Iris 系重推导三卡（D4 neoforge 真 compat→D2 21.2~21.4 改名移植→D3 21.8+ proj/fog 捕获复活 GPU 路径）；硬上限保留 D1/D6/D7；"检测到 mod 即降级"模式一律重新推导
 
 ## M3 平铺总纲（tasks.m3-flat-tiling，矩阵已定）
 - **17 行必铺矩阵**（tasks.m3-matrix-research，官方 maven 证据）：forge 6 行 1.16.5/1.17.1/1.18.2/1.19.2/1.19.4/1.20.1（legacyforge，1.16.5 走 unimined）+ neoforge 11 行 1.20.4/1.20.6/1.21.1/21.3/21.4/21.5/21.8/21.10/21.11/26.1.2/26.2（moddev）；1.20.1 一 jar 双跑（neoforge fork 47.1.106 兼容声明）；26.x 需 Java 25 toolchain；短命版官方无 stable 跳过（1.17.0/1.18.0/1.19.1/20.3/20.5/21.2/21.6/21.7/21.9 等）

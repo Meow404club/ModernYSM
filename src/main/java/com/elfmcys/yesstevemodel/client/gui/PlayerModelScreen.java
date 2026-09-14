@@ -791,11 +791,12 @@ moveCursorToEnd();;
         if (localPlayer != null) {
             double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
             // 1.21.6+ RenderSystem.enableScissor 删 → GuiGraphics 剪裁（GUI 坐标）
-            //? if <1.16.2 {
+            // scissor 系 API vanilla 1.16.4 才有（javap 实证）→ <1.16.4 走 GL11 直调
+            //? if <1.16.4 {
             /*org.lwjgl.opengl.GL11.glEnable(org.lwjgl.opengl.GL11.GL_SCISSOR_TEST);
             org.lwjgl.opengl.GL11.glScissor((int) ((this.guiLeft + 5) * guiScale), (int) (Minecraft.getInstance().getWindow().getHeight() - ((this.guiTop + 200) * guiScale)), (int) (125.0d * guiScale), (int) (171.0d * guiScale));*/
             //?}
-            //? if >=1.16.2 && <21.6
+            //? if >=1.16.4 && <21.6
             RenderSystem.enableScissor((int) ((this.guiLeft + 5) * guiScale), (int) (Minecraft.getInstance().getWindow().getHeight() - ((this.guiTop + 200) * guiScale)), (int) (125.0d * guiScale), (int) (171.0d * guiScale));
             //? if >=21.6
             /*guiGraphics.graphics().enableScissor(this.guiLeft + 5, this.guiTop + 200, this.guiLeft + 5 + 125, this.guiTop + 200 + 171);*/
@@ -825,9 +826,9 @@ moveCursorToEnd();;
             guiGraphics.pose().popPose();
             //? if >=21.6
             /*guiGraphics.pose().popMatrix();*/
-            //? if <1.16.2
+            //? if <1.16.4
             /*org.lwjgl.opengl.GL11.glDisable(org.lwjgl.opengl.GL11.GL_SCISSOR_TEST);*/
-            //? if >=1.16.2 && <21.6
+            //? if >=1.16.4 && <21.6
             RenderSystem.disableScissor();
             //? if >=21.6
             /*guiGraphics.graphics().disableScissor();*/

@@ -121,18 +121,19 @@ public class TextureButton extends YsmButton {
     public void renderPlayerPreview(YsmGui guiGraphics, float partialTick) {
         double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
         // 1.21.6+ RenderSystem.enableScissor 删 → GuiGraphics 剪裁（GUI 坐标，内部处理缩放）
-        //? if <1.16.2 {
+        // scissor 系 API vanilla 1.16.4 才有（javap 实证）→ <1.16.4 走 GL11 直调
+        //? if <1.16.4 {
         /*org.lwjgl.opengl.GL11.glEnable(org.lwjgl.opengl.GL11.GL_SCISSOR_TEST);
         org.lwjgl.opengl.GL11.glScissor((int) (getX() * guiScale), (int) (Minecraft.getInstance().getWindow().getHeight() - (((getY() + this.height) - 20) * guiScale)), (int) (this.width * guiScale), (int) ((this.height - 20) * guiScale));*/
         //?}
-        //? if >=1.16.2 && <21.6
+        //? if >=1.16.4 && <21.6
         RenderSystem.enableScissor((int) (getX() * guiScale), (int) (Minecraft.getInstance().getWindow().getHeight() - (((getY() + this.height) - 20) * guiScale)), (int) (this.width * guiScale), (int) ((this.height - 20) * guiScale));
         //? if >=21.6
         /*guiGraphics.graphics().enableScissor(getX(), getY(), getX() + this.width, getY() + this.height - 20);*/
         ModelPreviewRenderer.renderLivingEntityPreview(getX() + (this.width / 2.0f), getY() + (this.height / 2.0f) + 24.0f, 35.0f, partialTick, this.previewEntity, RendererManager.getPlayerRenderer(), false, true);
-        //? if <1.16.2
+        //? if <1.16.4
         /*org.lwjgl.opengl.GL11.glDisable(org.lwjgl.opengl.GL11.GL_SCISSOR_TEST);*/
-        //? if >=1.16.2 && <21.6
+        //? if >=1.16.4 && <21.6
         RenderSystem.disableScissor();
         //? if >=21.6
         /*guiGraphics.graphics().disableScissor();*/

@@ -3,10 +3,10 @@ package com.elfmcys.yesstevemodel.platform.forge.event;
 import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.client.event.ReplacePlayerHandRenderEvent;
 import net.minecraftforge.api.distmarker.Dist;
-//? if <1.16.2 {
+//? if <1.16.5 {
 /*import net.minecraftforge.client.event.RenderHandEvent;*/
 //?}
-//? if >=1.16.2 && <1.17 {
+//? if >=1.16.5 && <1.17 {
 /*import net.minecraftforge.client.event.RenderArmEvent;*/
 //?}
 //? if >=1.18.2 {
@@ -23,10 +23,13 @@ public final class ReplacePlayerHandRenderForgeHook {
     private ReplacePlayerHandRenderForgeHook() {
     }
 
-    // 1.16.1 forge 32.x 无 RenderArmEvent（36.x 起才有）→ RenderHandEvent 承接：第一人称
-    // 手部渲染恒为本地玩家（vanilla GameRenderer.renderHand），事件 @Cancelable 实证；
-    // 手→臂映射 MAIN_HAND=RIGHT/OFF_HAND=LEFT。功能差入 tasks.feature-debts（RenderArmEvent 先例格式）。
-    //? if <1.16.2 {
+    // RenderArmEvent forge 36 起才有（33/34/35 即 1.16.2/3/4 实证无——unimined merged jar
+    // unzip 逐线核对：三线均只有 RenderHandEvent.class，1.16.5 jar 两类并存）→ <1.16.5 全段
+    // RenderHandEvent 承接：第一人称手部渲染恒为本地玩家（vanilla GameRenderer.renderHand），
+    // 事件 @Cancelable 实证（forge 32~35 RenderHandEvent javap 同签名 getHand/
+    // getMatrixStack/getBuffers/getLight）；手→臂映射 MAIN_HAND=RIGHT/OFF_HAND=LEFT。
+    // 功能差入 tasks.feature-debts（RenderArmEvent 先例格式）。
+    //? if <1.16.5 {
     /*
     @SubscribeEvent
     public static void onRenderHand(RenderHandEvent event) {
@@ -41,7 +44,7 @@ public final class ReplacePlayerHandRenderForgeHook {
         }
     }
      *///?}
-    //? if >=1.16.2 && <1.17 {
+    //? if >=1.16.5 && <1.17 {
     /*
     @SubscribeEvent
     public static void onRenderArm(RenderArmEvent event) {

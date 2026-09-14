@@ -43,10 +43,15 @@ public final class RenderFirstPlayerForgeHook {
         //? if <1.17 {
         // RenderFirstPlayerBackground.onRenderHand(event.getMatrixStack(), event.getBuffers(), event.getLight(), event.getPartialTicks());
         //? }
-        //? if >=1.17 && <1.18.2 {
+        //? if >=1.17 && <1.18 {
         /*
         // 1.17~1.18.1 RenderHandEvent getter=旧名（1171 sources：getMatrixStack/getBuffers/getLight/getPartialTicks）
         RenderFirstPlayerBackground.onRenderHand(event.getMatrixStack(), event.getBuffers(), event.getLight(), event.getPartialTicks());
+         *///?}
+        //? if >=1.18 && <1.18.2 {
+        /*
+        // 1.18.0 getter 已改名（forge-1.18.x sources：getPoseStack/getMultiBufferSource/getPackedLight/getPartialTicks）
+        RenderFirstPlayerBackground.onRenderHand(event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight(), event.getPartialTicks());
          *///?}
         //? if >=1.18.2 && <1.19.2 {
         /*

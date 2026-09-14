@@ -99,7 +99,8 @@ public abstract class YsmButton extends Button {
     }
 
     protected boolean hoveredOrFocused() {
-        //? if >=1.18.2 {
+        // 1.18.0 已有 isHoveredOrFocused（isHovered 同删，1180 编译实证）→ 下界由 1.18.2 放宽到 1.18
+        //? if >=1.18 {
         return this.isHoveredOrFocused();
         //?} else {
         /*return this.isHovered();

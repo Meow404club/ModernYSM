@@ -1289,8 +1289,10 @@ public final class ServerModelManager {
             try {
                 //? if <1.17
                 /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
-                //? if >=1.17 && <1.18.2
+                //? if >=1.17 && <1.18
                 /*MinecraftServer currentServer = net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();*/
+                //? if >=1.18 && <1.18.2
+                /*MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();*/
                 //? if forge && >=1.18.2
                 MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
                 //? if neoforge
@@ -1610,8 +1612,10 @@ public final class ServerModelManager {
     public static void requestPlayerAuth(ServerPlayer serverPlayer, @Nullable Consumer<UUIDComponentData> consumer) {
         //? if <1.17
                 /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
-                //? if >=1.17 && <1.18.2
+                //? if >=1.17 && <1.18
                 /*MinecraftServer currentServer = net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();*/
+                //? if >=1.18 && <1.18.2
+                /*MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();*/
                 //? if forge && >=1.18.2
                 MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
                 //? if neoforge
@@ -1657,8 +1661,10 @@ public final class ServerModelManager {
             }
             //? if <1.17
                 /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
-                //? if >=1.17 && <1.18.2
+                //? if >=1.17 && <1.18
                 /*MinecraftServer currentServer = net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();*/
+                //? if >=1.18 && <1.18.2
+                /*MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();*/
                 //? if forge && >=1.18.2
                 MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
                 //? if neoforge
@@ -1685,8 +1691,10 @@ public final class ServerModelManager {
         Consumer<ModelLoadResult> consumer = (Consumer<ModelLoadResult>) obj;
         //? if <1.17
                 /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
-                //? if >=1.17 && <1.18.2
+                //? if >=1.17 && <1.18
                 /*MinecraftServer currentServer = net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();*/
+                //? if >=1.18 && <1.18.2
+                /*MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();*/
                 //? if forge && >=1.18.2
                 MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
                 //? if neoforge
@@ -1729,8 +1737,10 @@ public final class ServerModelManager {
         ServerPlayer player;
 //? if <1.17
         /*MinecraftServer currentServer = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();*/
-        //? if >=1.17 && <1.18.2
+        //? if >=1.17 && <1.18
         /*MinecraftServer currentServer = net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer();*/
+        //? if >=1.18 && <1.18.2
+        /*MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();*/
         //? if forge && >=1.18.2
         MinecraftServer currentServer = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
         //? if neoforge

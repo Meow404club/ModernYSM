@@ -489,8 +489,19 @@ public class YSMBinding extends ContextBinding {
             context.logWarningComponent(YsmText.literal("Name ").append(copyOnClickTextCompat(biomeName.toString())));
         }
          *///?}
-        // 1.18~1.19.2：Holder 体系已在（1182 Level.getBiome 返回 Holder），实体访问器为 getLevel()
-        //? if >=1.18 && <1.19.4 {
+        //? if >=1.18 && <1.18.2 {
+        /*
+        // 1.18.0 getBiome 仍返回 Biome 本体（Holder 化 1.18.2 起，1182 实证为 >=1.18.2 边界）；
+        // Registry 无类型化 BIOME 字段（1182 Registry.java 仅 BIOME_REGISTRY ResourceKey）→
+        // 经 level.registryAccess().registryOrThrow 取 Registry<Biome> 再 getKey
+        ResourceLocation biomeName = context.entity().getLevel().registryAccess().registryOrThrow(net.minecraft.core.Registry.BIOME_REGISTRY).getKey(context.entity().getLevel().getBiome(context.entity().blockPosition()));
+        if (biomeName != null) {
+            context.logWarningComponent(YsmText.literal("Name ").append(copyOnClickTextCompat(biomeName.toString())));
+        }
+         */
+        //?}
+        // 1.18.2~1.19.2：Holder 体系已在（1182 Level.getBiome 返回 Holder），实体访问器为 getLevel()
+        //? if >=1.18.2 && <1.19.4 {
         /*
         Holder<Biome> biome = context.entity().getLevel().getBiome(context.entity().blockPosition());
         biome.unwrapKey().ifPresent(resourceKey -> {

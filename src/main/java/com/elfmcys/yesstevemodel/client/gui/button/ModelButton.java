@@ -242,7 +242,7 @@ public class ModelButton extends YsmButton {
     @Override
     public void renderWidget(YsmGui guiGraphics, int mouseX, int mouseY, float partialTick) {
         AnimationTracker c0117x8455a741Mo1262xaffeef43 = this.modelIdHolder.getAnimationStateMachine();
-        if (/*? if >=1.18.2 && <1.19.4 {*/ /*isHoveredOrFocused()*//*?} else {*/ isHovered() /*?}*/) {
+        if (/*? if >=1.18 && <1.19.4 {*/ /*isHoveredOrFocused()*//*?} else {*/ isHovered() /*?}*/) {
             this.lastHoverTime = Util.getMillis();
             c0117x8455a741Mo1262xaffeef43.setPreviousAnimation(this.modelId);
         } else if (Util.getMillis() - this.lastHoverTime < this.animationDuration) {
@@ -348,7 +348,7 @@ public class ModelButton extends YsmButton {
     }
 
     public void renderTooltip(YsmGui guiGraphics, Screen screen, int mouseX, int mouseY) {
-        if (/*? if >=1.18.2 && <1.19.4 {*/ /*isHoveredOrFocused()*//*?} else {*/ isHovered() /*?}*/) {
+        if (/*? if >=1.18 && <1.19.4 {*/ /*isHoveredOrFocused()*//*?} else {*/ isHovered() /*?}*/) {
             //? if <21.6
             guiGraphics.pose().pushPose();
             //? if >=21.6

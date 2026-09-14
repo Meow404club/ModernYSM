@@ -27,7 +27,9 @@ public final class PieShader {
         if (program != 0) return true;
         if (failed) return false;
         //? if >1.17 {
-        //? if <1.18.2
+        //? if <1.18
+        /*RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);*/
+        //? if >=1.18.2 && <1.18.2
         /*RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);*/
         //? if >=1.18.2 && <21.5
         RenderSystem.assertOnRenderThreadOrInit();

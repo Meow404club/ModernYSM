@@ -119,7 +119,7 @@ public class PackIconButton extends YsmButton {
             return;
         }
         List<Component> listSingletonList = Collections.singletonList(YsmText.literal(str));
-        if (/*? if >=1.18.2 && <1.19.4 {*/ /*isHoveredOrFocused()*//*?} else {*/ isHovered() /*?}*/) {
+        if (/*? if >=1.18 && <1.19.4 {*/ /*isHoveredOrFocused()*//*?} else {*/ isHovered() /*?}*/) {
             //? if <21.6
             guiGraphics.pose().pushPose();
             //? if >=21.6

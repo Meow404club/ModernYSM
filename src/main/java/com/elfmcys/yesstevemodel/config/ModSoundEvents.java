@@ -21,8 +21,11 @@ import net.minecraftforge.registries.IForgeRegistry;
 //? if <1.17 {
 /*import net.minecraftforge.fml.RegistryObject;
  *///?}
-//? if >=1.17 && <1.18.2 {
+//? if >=1.17 && <1.18 {
 /*import net.minecraftforge.fmllegacy.RegistryObject;
+ *///?}
+//? if >=1.18 && <1.18.2 {
+/*import net.minecraftforge.registries.RegistryObject;
  *///?}
 //? if >=1.18.2 {
 //? if neoforge

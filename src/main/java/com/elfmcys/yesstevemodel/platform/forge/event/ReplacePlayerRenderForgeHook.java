@@ -23,8 +23,14 @@ public final class ReplacePlayerRenderForgeHook {
         //     event.setCanceled(true);
         // }
         //? }
-        //? if >=1.17 && <1.18.2 {
+        //? if >=1.17 && <1.18 {
         /*if (ReplacePlayerRenderEvent.onRenderPlayerPre((net.minecraft.world.entity.player.Player) event.getEntity(), event.getPartialRenderTick(), event.getMatrixStack(), event.getBuffers(), event.getLight())) {
+            event.setCanceled(true);
+        }
+         *///? }
+        //? if >=1.18 && <1.18.2 {
+        /*// 1.18.0 RenderPlayerEvent getter 改名：getPoseStack/getMultiBufferSource/getPackedLight/getPartialTick（forge-1.18.x 实证）
+        if (ReplacePlayerRenderEvent.onRenderPlayerPre((net.minecraft.world.entity.player.Player) event.getEntity(), event.getPartialTick(), event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight())) {
             event.setCanceled(true);
         }
          *///? }

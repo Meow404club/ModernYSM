@@ -125,12 +125,19 @@ public final class ClientSetupEvent {
      */
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onClientSetup(FMLClientSetupEvent event) {
-        //? if <1.19.2 {
+        // 1.16.1 forge 32 无 enqueueWork/ParallelDispatchEvent → DeferredWorkQueue.runLater（同主线程排队语义）
+        //? if <1.16.2 {
+        /*net.minecraftforge.fml.DeferredWorkQueue.runLater(ClientSetupEvent::registerKeyBindings);*/
+        //?}
+        //? if >=1.16.2 && <1.19.2 {
         /*event.enqueueWork(ClientSetupEvent::registerKeyBindings);*/
-//?}
+        //?}
         if (!YesSteveModel.isAvailable()) {
             return;
         }
+        //? if <1.16.2
+        /*net.minecraftforge.fml.DeferredWorkQueue.runLater(ClientSetupEvent::checkNativeInitialization);*/
+        //? if >=1.16.2
         event.enqueueWork(ClientSetupEvent::checkNativeInitialization);
     }
 

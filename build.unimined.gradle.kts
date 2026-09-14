@@ -106,6 +106,24 @@ unimined.minecraft {
     version(mcVersion)
 
     mappings {
+        // 1.16.1 vanilla 混淆事故（1.16/1.16.1 混淆时 Widget 新增 getter 漏跑混淆器，
+        // 1.16.2 修正）：vanilla jar 里字面 getHeight() 与被混淆方法 obf e（官方映射同样
+        // 命名为 getHeight，SRG=func_238483_d_）是逐指令相同的重复方法（javap 实证，均
+        // return field_230689_k_）。searge→mojmap 联合重映射时两者都落到 getHeight →
+        // tiny-remapper target-name 冲突（"Mapping target name conflicts detected"；
+        // TinyRemapper.handleConflicts 的 targetNameCheckFailed 分支无视 ignoreConflicts
+        // 必抛，tiny-remapper 0.8.7 TinyRemapper.java:864 实证）→ 1.16.1 官方 mojmap
+        // 本身自冲突，任何 mojmap 工具链都过不去。解法=stub 把字面方法指到别名
+        // ysmGetHeight1：编译期 getHeight 由真方法（func_238483_d_）提供，别名成员
+        // 运行时无人引用；发布 remapJar（mojmap→searge）中 getHeight→func_238483_d_
+        // 反向映射唯一化，SRG 运行时（getHeight 与 func_238483_d_ 并存）两名字都有效。
+        if (stonecutter.current.version == "1.16.1") {
+            stubs("searge", "mojmap") {
+                c("net/minecraft/client/gui/widget/Widget", "net/minecraft/client/gui/components/AbstractWidget") {
+                    m("getHeight;()I", "ysmGetHeight1;()I")
+                }
+            }
+        }
         searge() // 发布命名空间：重映射回 SRG（remapJar 产物 func_/field_ 命名）
         mojmap() // 编译命名空间：1.16.5 官方映射（与 1.20.1 共享源码的 mojmap 口径一致）
         // 注：POC 脚本的 devFallbackNamespace("searge") 在 unimined 1.4.1 已 deprecated

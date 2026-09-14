@@ -64,7 +64,19 @@ public class RendererManager {
      * 向 Minecraft 的 ReloadableResourceManager.registerReloadListener 挂接；
      * Forge 正规入口为 RegisterClientReloadListenersEvent（构造后、首轮资源重载前触发，落到同一管理器）。
      */
-    //? if <1.17 {
+    // 1.16.1 forge 32 无 enqueueWork/ParallelDispatchEvent（1.16.2+ 实证）→
+    // DeferredWorkQueue.runLater 同主线程排队语义。下方 <1.17 段的 // 行在活跃分支会被
+    // stonecutter 剥前缀成真码（1.16.5 现状行为），故 1.16.1 需独立分支承接。
+    //? if <1.16.2 {
+    /*@SubscribeEvent
+    public static void onClientSetup(FMLClientSetupEvent event) {
+        net.minecraftforge.fml.DeferredWorkQueue.runLater(() -> {
+            ResourceManagerReloadListener listener = resourceManager -> resetRenderers();
+            ((net.minecraft.server.packs.resources.ReloadableResourceManager) net.minecraft.client.Minecraft.getInstance().getResourceManager()).registerReloadListener(listener);
+        });
+    }
+     *///?}
+    //? if >=1.16.2 && <1.17 {
     // @SubscribeEvent
     // public static void onClientSetup(FMLClientSetupEvent event) {
     //     event.enqueueWork(() -> {
@@ -72,8 +84,8 @@ public class RendererManager {
     //         ((net.minecraft.server.packs.resources.ReloadableResourceManager) net.minecraft.client.Minecraft.getInstance().getResourceManager()).registerReloadListener(listener);
     //     });
     // }
-    //? } else {
-    //? if forge {
+    //?}
+    //? if forge && >=1.17 {
     @SubscribeEvent
     public static void onRegisterReloadListeners(RegisterClientReloadListenersEvent event) {
         ResourceManagerReloadListener listener = resourceManager -> resetRenderers();
@@ -82,21 +94,20 @@ public class RendererManager {
     //?}
     // 1.21.4 RegisterClientReloadListenersEvent 删除（neoforge-1.21.4 无此类，
     // AddClientReloadListenersEvent 接管，addListener 需显式 RL key）
-    //? if neoforge && <21.4 {
+    //? if neoforge && >=1.17 && <21.4 {
     /*@SubscribeEvent
     public static void onRegisterReloadListeners(RegisterClientReloadListenersEvent event) {
         ResourceManagerReloadListener listener = resourceManager -> resetRenderers();
         event.registerReloadListener(listener);
     }*/
     //?}
-    //? if neoforge && >=21.4 {
+    //? if neoforge && >=1.17 && >=21.4 {
     /*@SubscribeEvent
     public static void onRegisterReloadListeners(net.neoforged.neoforge.client.event.AddClientReloadListenersEvent event) {
         ResourceManagerReloadListener listener = resourceManager -> resetRenderers();
         event.addListener(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "renderer_manager_reset"), listener);
     }*/
     //?}
-    //? }
 
     private static void resetRenderers() {
         playerRenderer = null;

@@ -54,6 +54,9 @@ public final class PlayerCapability extends CustomPlayerEntity {
         //? if neoforge
         /*return java.util.Optional.ofNullable(player.getCapability(PlayerCapabilityProvider.PLAYER_CAP));*/
         //? if forge
+        //? if <1.16.2
+        /*return java.util.Optional.ofNullable(player.getCapability(PlayerCapabilityProvider.PLAYER_CAP).orElse(null));*/
+        //? if >=1.16.2
         return player.getCapability(PlayerCapabilityProvider.PLAYER_CAP).resolve();
     }
 
@@ -61,6 +64,9 @@ public final class PlayerCapability extends CustomPlayerEntity {
         //? if neoforge
         /*return java.util.Optional.ofNullable(entity.getCapability(PlayerCapabilityProvider.PLAYER_CAP));*/
         //? if forge
+        //? if <1.16.2
+        /*return java.util.Optional.ofNullable(entity.getCapability(PlayerCapabilityProvider.PLAYER_CAP).orElse(null));*/
+        //? if >=1.16.2
         return entity.getCapability(PlayerCapabilityProvider.PLAYER_CAP).resolve();
     }
 

@@ -32,6 +32,9 @@ public class ModelInfoCapability {
         //? if neoforge
         /*return java.util.Optional.ofNullable(player.getCapability(ModelInfoCapabilityProvider.MODEL_INFO_CAP));*/
         //? if forge
+        //? if <1.16.2
+        /*return java.util.Optional.ofNullable(player.getCapability(ModelInfoCapabilityProvider.MODEL_INFO_CAP).orElse(null));*/
+        //? if >=1.16.2
         return player.getCapability(ModelInfoCapabilityProvider.MODEL_INFO_CAP).resolve();
     }
 

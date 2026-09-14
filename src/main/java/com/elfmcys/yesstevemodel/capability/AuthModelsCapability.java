@@ -22,6 +22,9 @@ public class AuthModelsCapability {
         //? if neoforge
         /*return java.util.Optional.ofNullable(player.getCapability(AuthModelsCapabilityProvider.AUTH_MODELS_CAP));*/
         //? if forge
+        //? if <1.16.2
+        /*return java.util.Optional.ofNullable(player.getCapability(AuthModelsCapabilityProvider.AUTH_MODELS_CAP).orElse(null));*/
+        //? if >=1.16.2
         return player.getCapability(AuthModelsCapabilityProvider.AUTH_MODELS_CAP).resolve();
     }
 

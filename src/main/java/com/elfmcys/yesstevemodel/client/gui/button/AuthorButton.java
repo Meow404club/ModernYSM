@@ -25,6 +25,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
+//? if >=1.16.2
 import net.minecraft.util.FormattedCharSequence;
 
 import java.util.List;
@@ -122,6 +123,16 @@ public class AuthorButton extends YsmButton {
 
     public void drawWrappedText(YsmGui guiGraphics, FormattedText formattedText, int x, int y, int wrapWidth, int color) {
         Font font = Minecraft.getInstance().font;
+        //? if <1.16.2 {
+        /*for (net.minecraft.network.chat.FormattedText formattedCharSequence : font.split(formattedText, wrapWidth)) {
+            guiGraphics.drawString(font, formattedCharSequence, x, y, color, false);
+            y += 9;
+            if (y > getY() + this.height) {
+                return;
+            }
+        }*/
+        //?}
+        //? if >=1.16.2 {
         for (FormattedCharSequence formattedCharSequence : font.split(formattedText, wrapWidth)) {
             guiGraphics.drawString(font, formattedCharSequence, x, y, color, false);
             y += 9;
@@ -129,6 +140,7 @@ public class AuthorButton extends YsmButton {
                 return;
             }
         }
+        //?}
     }
 
     public void refreshContactComponents(YsmGui guiGraphics, Screen screen, int mouseX, int mouseY) {

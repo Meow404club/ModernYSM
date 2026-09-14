@@ -24,15 +24,20 @@ public final class YsmTag {
 
     /** 物品标签句柄（opaque）。 */
     public static final class ItemTag {
-        //? if <1.18.2 {
-        /*private final net.minecraftforge.common.Tags.IOptionalNamedTag<Item> tag;
+        // 1.16.1 forge 32.x 无 createOptional/IOptionalNamedTag（33.x/36.x 起）→
+        // SerializationTags.getInstance().getItems().getTagOrEmpty(rl) 动态查询（官方 1161
+        // client.txt 全套命名实证：SerializationTags.getInstance/getItems、TagCollection
+        // getTagOrEmpty、Tag.contains）。tag 缺失时 getTagOrEmpty 返回空 tag → contains=false，
+        // 与下方 1.16.5 未绑定守卫同语义（不抛不炸）。
+        //? if <1.16.2 {
+        /*private final ResourceLocation rl;
 
-        private ItemTag(net.minecraftforge.common.Tags.IOptionalNamedTag<Item> tag) {
-            this.tag = tag;
+        private ItemTag(ResourceLocation rl) {
+            this.rl = rl;
         }
 
         static ItemTag of(ResourceLocation rl) {
-            return new ItemTag(net.minecraft.tags.ItemTags.createOptional(rl));
+            return new ItemTag(rl);
         }
 
         // 1.16.5 未绑定守卫：StaticTagHelper$Wrapper.resolve()（SRG TagRegistry$NamedTag.func_232944_c_）
@@ -43,6 +48,25 @@ public final class YsmTag {
         // 未绑定时语义=不含任何物品→false。吞点必须在本层（molang eval 入口），不放行到渲染序列中段。
         // 注意：本方法整体处于 <1.17 注释包分支内（stonecutter 块条件不嵌套；注释只能用 // 行注释，
         // 任何块注释的 star-slash 都会提前闭合外层包裹）。
+        public boolean matches(ItemStack stack) {
+            return net.minecraft.tags.SerializationTags.getInstance().getItems().getTagOrEmpty(this.rl).contains(stack.getItem());
+        }
+
+        public ResourceLocation location() {
+            return this.rl;
+        }
+         *///?}
+        //? if >=1.16.2 && <1.18.2 {
+        /*private final net.minecraftforge.common.Tags.IOptionalNamedTag<Item> tag;
+
+        private ItemTag(net.minecraftforge.common.Tags.IOptionalNamedTag<Item> tag) {
+            this.tag = tag;
+        }
+
+        static ItemTag of(ResourceLocation rl) {
+            return new ItemTag(net.minecraft.tags.ItemTags.createOptional(rl));
+        }
+
         public boolean matches(ItemStack stack) {
             try {
                 return this.tag.contains(stack.getItem());
@@ -99,7 +123,27 @@ public final class YsmTag {
 
     /** 实体类型标签句柄（opaque）。 */
     public static final class EntityTypeTag {
-        //? if <1.18.2 {
+        //? if <1.16.2 {
+        /*private final ResourceLocation rl;
+
+        private EntityTypeTag(ResourceLocation rl) {
+            this.rl = rl;
+        }
+
+        static EntityTypeTag of(ResourceLocation rl) {
+            return new EntityTypeTag(rl);
+        }
+
+        // 同 ItemTag.matches：<1.16.2 走 getTagOrEmpty（缺失=空 tag=不含）。
+        public boolean matches(EntityType<?> type) {
+            return net.minecraft.tags.SerializationTags.getInstance().getEntityTypes().getTagOrEmpty(this.rl).contains(type);
+        }
+
+        public ResourceLocation location() {
+            return this.rl;
+        }
+         *///?}
+        //? if >=1.16.2 && <1.18.2 {
         /*private final net.minecraftforge.common.Tags.IOptionalNamedTag<EntityType<?>> tag;
 
         private EntityTypeTag(net.minecraftforge.common.Tags.IOptionalNamedTag<EntityType<?>> tag) {

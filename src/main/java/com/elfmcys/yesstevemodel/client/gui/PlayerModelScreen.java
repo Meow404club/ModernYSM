@@ -57,6 +57,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.sounds.SoundEvents;
+//? if >=1.16.2
 import net.minecraft.util.FormattedCharSequence;
 import org.apache.commons.lang3.StringUtils;
 import rip.ysm.gpu.GpuCapability;
@@ -790,7 +791,11 @@ moveCursorToEnd();;
         if (localPlayer != null) {
             double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
             // 1.21.6+ RenderSystem.enableScissor 删 → GuiGraphics 剪裁（GUI 坐标）
-            //? if <21.6
+            //? if <1.16.2 {
+            /*org.lwjgl.opengl.GL11.glEnable(org.lwjgl.opengl.GL11.GL_SCISSOR_TEST);
+            org.lwjgl.opengl.GL11.glScissor((int) ((this.guiLeft + 5) * guiScale), (int) (Minecraft.getInstance().getWindow().getHeight() - ((this.guiTop + 200) * guiScale)), (int) (125.0d * guiScale), (int) (171.0d * guiScale));*/
+            //?}
+            //? if >=1.16.2 && <21.6
             RenderSystem.enableScissor((int) ((this.guiLeft + 5) * guiScale), (int) (Minecraft.getInstance().getWindow().getHeight() - ((this.guiTop + 200) * guiScale)), (int) (125.0d * guiScale), (int) (171.0d * guiScale));
             //? if >=21.6
             /*guiGraphics.graphics().enableScissor(this.guiLeft + 5, this.guiTop + 200, this.guiLeft + 5 + 125, this.guiTop + 200 + 171);*/
@@ -820,11 +825,31 @@ moveCursorToEnd();;
             guiGraphics.pose().popPose();
             //? if >=21.6
             /*guiGraphics.pose().popMatrix();*/
-            //? if <21.6
+            //? if <1.16.2
+            /*org.lwjgl.opengl.GL11.glDisable(org.lwjgl.opengl.GL11.GL_SCISSOR_TEST);*/
+            //? if >=1.16.2 && <21.6
             RenderSystem.disableScissor();
             //? if >=21.6
             /*guiGraphics.graphics().disableScissor();*/
             PlayerCapability.get(localPlayer).ifPresent(cap -> {
+                // 1.16.1 无 FormattedCharSequence → <1.16.2 段 List<FormattedText> 形（语义等价）
+                //? if <1.16.2 {
+                /*List<net.minecraft.network.chat.FormattedText> listSplit = this.font.split(FormattedText.of(ClientModelManager.getModelContext(cap.getModelId()).map(it -> {
+                    Metadata metadata2 = it.getModelData().getExtraInfo();
+                    if (metadata2 != null) {
+                        return ModelMetadataPresenter.getLocalizedModelString(it, "metadata.name", metadata2.getName());
+                    }
+                    return StringPool.EMPTY;
+                }).filter(charSequence -> {
+                    return StringUtils.isNoneBlank(charSequence);
+                }).orElse(FileTypeUtil.getNameWithoutArchiveExtension(cap.getModelId()))), 125);
+                int lineY = this.guiTop + 205;
+                for (net.minecraft.network.chat.FormattedText formattedCharSequence : listSplit) {
+                    guiGraphics.drawString(this.font, formattedCharSequence, this.guiLeft + ((135 - this.font.width(formattedCharSequence)) / 2), lineY, 15986656);
+                    lineY += 10;
+                }*/
+                //?}
+                //? if >=1.16.2 {
                 List<FormattedCharSequence> listSplit = this.font.split(FormattedText.of(ClientModelManager.getModelContext(cap.getModelId()).map(it -> {
                     Metadata metadata2 = it.getModelData().getExtraInfo();
                     if (metadata2 != null) {
@@ -839,6 +864,7 @@ moveCursorToEnd();;
                     guiGraphics.drawString(this.font, formattedCharSequence, this.guiLeft + ((135 - this.font.width(formattedCharSequence)) / 2), lineY, 15986656);
                     lineY += 10;
                 }
+                //?}
             });
         }
     }

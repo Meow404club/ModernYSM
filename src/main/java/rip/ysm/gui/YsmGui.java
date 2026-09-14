@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.resources.ResourceLocation;
+//? if >=1.16.2
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.network.chat.Component;
 
@@ -138,7 +139,54 @@ public final class YsmGui {
         net.minecraft.client.gui.GuiComponent.fill(this.pose, minX, minY, maxX, maxY, color);
     }
 
-    public void drawString(Font font, Component text, int x, int y, int color, boolean shadow) {
+     *///?}
+    // FormattedCharSequence 1.16.2 才有（1.16.1 vanilla 无此类，官方 1161 client.txt 零命中）：
+    // <1.16.2 段用 FormattedText 等价形态（1.16.1 Font.draw/drawShadow/split/width 的
+    // FormattedText 重载与 Screen.renderTooltip(PoseStack,List,x,y) 均在，官方 1161 实证）；
+    // >=1.16.2 段保持原形。1.16.5 生成树两侧同活、成员序不变=逐字节等价。
+    // 1.16.1 GuiComponent.drawString/drawCenteredString 为非静态实例方法（1.16.5 起静态，
+    // 官方 1161 mojmap jar javap 实证）→ <1.16.2 段直调 Font.draw/drawShadow（语义等价：
+    // 1.16.5 静态 GuiComponent.drawString 即 drawShadow 委托）。
+    //? if <1.16.2 && <1.20 {
+    /*public void drawString(Font font, Component text, int x, int y, int color, boolean shadow) {
+        if (shadow) {
+            font.drawShadow(this.pose, text, (float) x, (float) y, color);
+        } else {
+            font.draw(this.pose, text, (float) x, (float) y, color);
+        }
+    }
+
+    public void drawString(Font font, String text, int x, int y, int color, boolean shadow) {
+        if (shadow) {
+            font.drawShadow(this.pose, text, (float) x, (float) y, color);
+        } else {
+            font.draw(this.pose, text, (float) x, (float) y, color);
+        }
+    }
+
+    public void drawCenteredString(Font font, Component text, int x, int y, int color) {
+        font.drawShadow(this.pose, text, (float) (x - font.width(text) / 2), (float) y, color);
+    }
+
+    public void drawCenteredString(Font font, String text, int x, int y, int color) {
+        font.drawShadow(this.pose, text, (float) (x - font.width(text) / 2), (float) y, color);
+    }
+
+    public void drawString(Font font, net.minecraft.network.chat.FormattedText text, int x, int y, int color, boolean shadow) {
+        if (shadow) {
+            font.drawShadow(this.pose, text, (float) x, (float) y, color);
+        } else {
+            font.draw(this.pose, text, (float) x, (float) y, color);
+        }
+    }
+
+    public void drawCenteredString(Font font, net.minecraft.network.chat.FormattedText text, int x, int y, int color) {
+        font.drawShadow(this.pose, text, (float) (x - font.width(text) / 2), (float) y, color);
+    }
+
+     *///?}
+    //? if >=1.16.2 && <1.20 {
+    /*public void drawString(Font font, Component text, int x, int y, int color, boolean shadow) {
         if (shadow) {
             net.minecraft.client.gui.GuiComponent.drawString(this.pose, font, text, x, y, color);
         } else {
@@ -176,7 +224,9 @@ public final class YsmGui {
         font.drawShadow(this.pose, text, (float) (x - font.width(text) / 2), (float) y, color);
     }
 
-    public void renderOutline(int x, int y, int width, int height, int color) {
+     *///?}
+    //? if <1.20 {
+    /*public void renderOutline(int x, int y, int width, int height, int color) {
         // 按 1.20.1 GuiGraphics.renderOutline 几何：上下整行 + 左右中间列
         this.fill(x, y, x + width, y + 1, color);
         this.fill(x, y + height - 1, x + width, y + height, color);
@@ -194,7 +244,30 @@ public final class YsmGui {
         GradientFiller.gradient(this.pose, minX, minY, maxX, maxY, colorFrom, colorTo);
     }
 
-    public void enableScissor(int minX, int minY, int maxX, int maxY) {
+     *///?}
+    // scissor：1.16.1 无 GlStateManager._enableScissorTest/_scissorBox/RenderSystem.enableScissor
+    //（1.16.2+ 实证）→ GL11 直调；坐标数学与 >=1.16.2 段一致（1.16.5 _scissorBox=直透 GL20.glScissor，
+    // vanilla-mc-1165 GlStateManager.java:162-165 实证，无额外翻转）。
+    //? if <1.16.2 && <1.20 {
+    /*public void enableScissor(int minX, int minY, int maxX, int maxY) {
+        com.mojang.blaze3d.platform.Window window = Minecraft.getInstance().getWindow();
+        int windowHeight = window.getHeight();
+        double scale = window.getGuiScale();
+        int x = (int) ((double) minX * scale);
+        int y = (int) ((double) windowHeight - (double) maxY * scale);
+        int w = Math.max(0, (int) ((double) (maxX - minX) * scale));
+        int h = Math.max(0, (int) ((double) (maxY - minY) * scale));
+        org.lwjgl.opengl.GL11.glEnable(org.lwjgl.opengl.GL11.GL_SCISSOR_TEST);
+        org.lwjgl.opengl.GL11.glScissor(x, y, w, h);
+    }
+
+    public void disableScissor() {
+        org.lwjgl.opengl.GL11.glDisable(org.lwjgl.opengl.GL11.GL_SCISSOR_TEST);
+    }
+
+     *///?}
+    //? if >=1.16.2 && <1.20 {
+    /*public void enableScissor(int minX, int minY, int maxX, int maxY) {
         // 照抄 1.20.1 GuiGraphics.applyScissor 数学（GUI 坐标 → GL 窗口坐标 Y 翻转）
         com.mojang.blaze3d.platform.Window window = Minecraft.getInstance().getWindow();
         int windowHeight = window.getHeight();
@@ -211,7 +284,9 @@ public final class YsmGui {
         com.mojang.blaze3d.platform.GlStateManager._disableScissorTest();
     }
 
-    public void hLine(int minX, int maxX, int y, int color) {
+     *///?}
+    //? if <1.20 {
+    /*public void hLine(int minX, int maxX, int y, int color) {
         // 1.16.5 GuiComponent.hLine/vLine 为 protected 实例方法（javap）→ 包内子类桥
         GradientFiller.hLineBridge(this.pose, minX, maxX, y, color);
     }
@@ -220,7 +295,26 @@ public final class YsmGui {
         GradientFiller.vLineBridge(this.pose, x, minY, maxY, color);
     }
 
-    public void drawWordWrap(Font font, net.minecraft.network.chat.FormattedText text, int x, int y, int width, int color) {
+     *///?}
+    //? if <1.16.2 && <1.20 {
+    /*public void drawWordWrap(Font font, net.minecraft.network.chat.FormattedText text, int x, int y, int width, int color) {
+        java.util.List<net.minecraft.network.chat.FormattedText> lines = font.split(text, width);
+        int lineY = y;
+        for (net.minecraft.network.chat.FormattedText line : lines) {
+            font.drawShadow(this.pose, line, x, lineY, color);
+            lineY += 9;
+        }
+    }
+
+    public void renderTooltip(Font font, java.util.List<net.minecraft.network.chat.FormattedText> lines, int mouseX, int mouseY) {
+        // 1.16.1 Screen.renderTooltip(PoseStack, List, x, y)（官方 1161 client.txt :132 实证，
+        // 元素为 FormattedText 代）
+        Minecraft.getInstance().screen.renderTooltip(this.pose, lines, mouseX, mouseY);
+    }
+
+     *///?}
+    //? if >=1.16.2 && <1.20 {
+    /*public void drawWordWrap(Font font, net.minecraft.network.chat.FormattedText text, int x, int y, int width, int color) {
         // 按 1.20.1 GuiGraphics.drawWordWrap 实现（Font.split + 逐行 drawShadow，含末行阴影去重）
         java.util.List<net.minecraft.util.FormattedCharSequence> lines = font.split(text, width);
         int lineY = y;
@@ -236,9 +330,25 @@ public final class YsmGui {
         Minecraft.getInstance().screen.renderTooltip(this.pose, lines, mouseX, mouseY);
     }
 
-    // 5 参版（GuiGraphics 默认带阴影语义）：String/Component 走 GuiComponent.drawString（恒 shadow），
-    // FormattedCharSequence 1.16.5 无静态重载 → drawShadow 等价
-    public void drawString(Font font, Component text, int x, int y, int color) {
+     *///?}
+    // 5 参版（GuiGraphics 默认带阴影语义）：<1.16.2 直调 Font.drawShadow（同上静态方法缺席）；
+    // >=1.16.2 String/Component 走 GuiComponent.drawString（恒 shadow）。
+    //? if <1.16.2 && <1.20 {
+    /*public void drawString(Font font, Component text, int x, int y, int color) {
+        font.drawShadow(this.pose, text, (float) x, (float) y, color);
+    }
+
+    public void drawString(Font font, String text, int x, int y, int color) {
+        font.drawShadow(this.pose, text, (float) x, (float) y, color);
+    }
+
+    public void drawString(Font font, net.minecraft.network.chat.FormattedText text, int x, int y, int color) {
+        font.drawShadow(this.pose, text, (float) x, (float) y, color);
+    }
+
+     *///?}
+    //? if >=1.16.2 && <1.20 {
+    /*public void drawString(Font font, Component text, int x, int y, int color) {
         net.minecraft.client.gui.GuiComponent.drawString(this.pose, font, text, x, y, color);
     }
 
@@ -250,7 +360,9 @@ public final class YsmGui {
         font.drawShadow(this.pose, text, (float) x, (float) y, color);
     }
 
-    public void renderScreenBackground(net.minecraft.client.gui.screens.Screen screen) {
+     *///?}
+    //? if <1.20 {
+    /*public void renderScreenBackground(net.minecraft.client.gui.screens.Screen screen) {
         // Screen.renderBackground(PoseStack) 1.16.5~1.19.4 存活（1182/1192/1194:452）
         screen.renderBackground(this.pose);
     }
@@ -258,11 +370,30 @@ public final class YsmGui {
     // GuiGraphics.renderComponentTooltip 的版本中性入口（Screen 渲染 tooltip 用）。
     // Screen.renderComponentTooltip(PoseStack, List<Component>, x, y) 4 参全版本存活
     //（1165:126/1182:183/1192:182/1194:250）。
-    public void renderScreenComponentTooltip(net.minecraft.client.gui.screens.Screen screen, Font font, List<Component> lines, int mouseX, int mouseY) {
+     *///?}
+    // renderComponentTooltip 1.16.1 无（1.16.5 Screen.java:126 起）→ 1.16.1 走
+    // Screen.renderTooltip(PoseStack, List, x, y)（官方 1161 client.txt :132 实证；元素
+    // FormattedText，Component 即其子代，raw List 传入行为等价）。scissorBox 静态版同 GL11 直调。
+    //? if <1.16.2 && <1.20 {
+    /*public void renderScreenComponentTooltip(net.minecraft.client.gui.screens.Screen screen, Font font, List<Component> lines, int mouseX, int mouseY) {
+        screen.renderTooltip(this.pose, (java.util.List) lines, mouseX, mouseY);
+    }
+
+    public static void enableScissorBox(int x, int y, int width, int height) {
+        org.lwjgl.opengl.GL11.glEnable(org.lwjgl.opengl.GL11.GL_SCISSOR_TEST);
+        org.lwjgl.opengl.GL11.glScissor(x, y, width, height);
+    }
+
+    public static void disableScissorBox() {
+        org.lwjgl.opengl.GL11.glDisable(org.lwjgl.opengl.GL11.GL_SCISSOR_TEST);
+    }
+
+     *///?}
+    //? if >=1.16.2 && <1.20 {
+    /*public void renderScreenComponentTooltip(net.minecraft.client.gui.screens.Screen screen, Font font, List<Component> lines, int mouseX, int mouseY) {
         screen.renderComponentTooltip(this.pose, lines, mouseX, mouseY);
     }
 
-    // 已处于窗口像素坐标的裸 scissor（1.20.1 = RenderSystem.enableScissor）。
     public static void enableScissorBox(int x, int y, int width, int height) {
         com.mojang.blaze3d.systems.RenderSystem.enableScissor(x, y, width, height);
     }
@@ -271,7 +402,9 @@ public final class YsmGui {
         com.mojang.blaze3d.systems.RenderSystem.disableScissor();
     }
 
-    // 1.16.5 GuiComponent.fillGradient(PoseStack,...)/hLine/vLine 为 protected（实例 1.16.5~1.19.2、
+     *///?}
+    //? if <1.20 {
+    /*// 1.16.5 GuiComponent.fillGradient(PoseStack,...)/hLine/vLine 为 protected（实例 1.16.5~1.19.2、
     // static 1.19.4：1194 GuiComponent.java:37/47/114）→ 包内子类桥，INSTANCE 调用对两种形态均合法
     // （JLS 6.6.2：protected 实例成员经限定名访问要求限定方为访问所在类的子类，故桥方法内置）
     private static final class GradientFiller extends net.minecraft.client.gui.GuiComponent {

@@ -60,6 +60,10 @@ public class CustomFishingHookRenderer {
         float anglerEye;
         EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         Options options = entityRenderDispatcher.options;
+        // 1.16.1 无 Options.getCameraType（CameraUtil <1.16.2 反射分支承接）
+        //? if <1.16.2
+        /*if (options == null || !com.elfmcys.yesstevemodel.util.CameraUtil.isFirstPersonView() || player != Minecraft.getInstance().player) {*/
+        //? if >=1.16.2
         if (options == null || !options.getCameraType().isFirstPerson() || player != Minecraft.getInstance().player) {
             anglerX = (Mth.lerp(partialTick, player.xo, player.getX()) - (dCos * handOffset)) - (dSin * 0.8d);
             anglerY = ((player.yo + player.getEyeHeight()) + ((player.getY() - player.yo) * partialTick)) - 0.45d;

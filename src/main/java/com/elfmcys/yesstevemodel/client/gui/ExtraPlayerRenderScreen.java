@@ -18,6 +18,7 @@ import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+//? if >=1.16.2
 import net.minecraft.util.FormattedCharSequence;
 //? if >=1.21 {
 /*import com.elfmcys.yesstevemodel.util.YsmFrame;*/
@@ -130,10 +131,18 @@ public class ExtraPlayerRenderScreen extends Screen {
         guiGraphics.fillGradient(boxLeft - this.offsetX, boxTop - this.offsetX, boxLeft + this.offsetX, boxTop + this.offsetX, -16711777, -16711777);
         guiGraphics.fillGradient(boxRight - this.offsetX, boxBottom - this.offsetX, boxRight + this.offsetX, boxBottom + this.offsetX, -16777057, -16777057);
         int tipY = 15;
+        //? if <1.16.2 {
+        /*for (net.minecraft.network.chat.FormattedText formattedCharSequence : this.font.split(YsmText.translatable("gui.yes_steve_model.extra_player_render.tips"), 500)) {
+            guiGraphics.drawString(this.font, formattedCharSequence, (this.width - 15) - this.font.width(formattedCharSequence), tipY, 16777215);
+            tipY += 10;
+        }*/
+        //?}
+        //? if >=1.16.2 {
         for (FormattedCharSequence formattedCharSequence : this.font.split(YsmText.translatable("gui.yes_steve_model.extra_player_render.tips"), 500)) {
             guiGraphics.drawString(this.font, formattedCharSequence, (this.width - 15) - this.font.width(formattedCharSequence), tipY, 16777215);
             tipY += 10;
         }
+        //?}
         //? if <21.6
         guiGraphics.pose().popPose();
         //? if >=21.6

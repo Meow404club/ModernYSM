@@ -65,6 +65,7 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.sounds.SoundEvents;
+//? if >=1.16.2
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -798,6 +799,9 @@ public class AnimationRouletteScreen extends Screen {
         }
         Iterator it = listSplit.iterator();
         while (it.hasNext()) {
+            //? if <1.16.2
+            /*guiGraphics.drawCenteredString(this.font, (net.minecraft.network.chat.FormattedText) it.next(), x, lineY, 15986656);*/
+            //? if >=1.16.2
             guiGraphics.drawCenteredString(this.font, (FormattedCharSequence) it.next(), x, lineY, 15986656);
             lineY += 9;
         }

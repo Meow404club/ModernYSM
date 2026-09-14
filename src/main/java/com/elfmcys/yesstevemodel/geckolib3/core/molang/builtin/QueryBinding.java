@@ -12,6 +12,7 @@ import com.elfmcys.yesstevemodel.geckolib3.core.molang.context.IContext;
 import com.elfmcys.yesstevemodel.geckolib3.util.MolangUtils;
 import com.elfmcys.yesstevemodel.geckolib3.core.EntityFrameStateTracker;
 import com.elfmcys.yesstevemodel.util.CameraUtil;
+//? if >=1.16.2
 import net.minecraft.client.CameraType;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
@@ -89,6 +90,10 @@ public class QueryBinding extends ContextBinding {
         entityVar("vertical_speed", QueryBinding::getVerticalSpeed);
         entityVar("walk_distance", ctx -> ctx.entity().moveDist);
         entityVar("has_rider", ctx -> ctx.entity().isVehicle());
+        // 1.16.1 无 CameraType（CameraUtil <1.16.2 反射分支 ordinal 同构：0=第一人称）
+        //? if <1.16.2
+        /*entityVar("is_first_person", ctx -> CameraUtil.getCameraType(ctx) == 0);*/
+        //? if >=1.16.2
         entityVar("is_first_person", ctx -> CameraUtil.getCameraType(ctx) == CameraType.FIRST_PERSON.ordinal());
         entityVar("is_in_water", ctx -> ctx.entity().isInWater());
         // 1.21.5 Entity.isInWaterRainOrBubble 删除（21.5 Entity 无此方法，21.4 Entity.java:1304 尚在；

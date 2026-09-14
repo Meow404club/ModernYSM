@@ -11,6 +11,7 @@ import net.minecraft.client.gui.Font;
 import rip.ysm.gui.YsmGui;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+//? if >=1.16.2
 import net.minecraft.util.FormattedCharSequence;
 import org.apache.commons.lang3.StringUtils;
 import rip.ysm.gui.ModernModelInfoScreen;
@@ -63,12 +64,22 @@ public final class AuthorRow extends OptionRow<Object> {
         }
         int commentY = getY() + 17;
         if (StringUtils.isNotBlank(comment)) {
+            //? if <1.16.2 {
+            /*List<net.minecraft.network.chat.FormattedText> lines = font.split(YsmGui.text(comment), maxTextW);
+            int max = Math.min(lines.size(), 2);
+            for (int i = 0; i < max; i++) {
+                g.drawString(font, lines.get(i), tx, commentY, 0xFFCCCCCC, false);
+                commentY += 10;
+            }*/
+            //?}
+            //? if >=1.16.2 {
             List<FormattedCharSequence> lines = font.split(YsmGui.text(comment), maxTextW);
             int max = Math.min(lines.size(), 2);
             for (int i = 0; i < max; i++) {
                 g.drawString(font, lines.get(i), tx, commentY, 0xFFCCCCCC, false);
                 commentY += 10;
             }
+            //?}
         }
 
         hoveredContactIndex = -1;

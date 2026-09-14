@@ -479,7 +479,11 @@ public class YSMBinding extends ContextBinding {
         // 1.20.1 getBiome 返回 Holder<Biome>（unwrapKey/tags）↔ 1.16.5 getBiome 返回 Biome 本体；
         // 1.16.5 轴：dump name 走 level.getBiomeName(pos)（Optional<ResourceLocation>），tag 信息 1.16.5
         // biome 无标签 API（ITag 体系不在 Biome 上）→ 省略该行（debug dump 输出项，行为差见回报）
-        //? if <1.18 {
+        //? if <1.16.2 {
+        /*// net.minecraft.data.BuiltinRegistries 1.16.2 才有（1.16.1 走 Registry.BIOME.getKey，官方 1161 实证）
+        ResourceLocation biomeName = net.minecraft.core.Registry.BIOME.getKey(context.entity().level.getBiome(context.entity().blockPosition()));*/
+        //?}
+        //? if >=1.16.2 && <1.18 {
         /*ResourceLocation biomeName = net.minecraft.data.BuiltinRegistries.BIOME.getKey(context.entity().level.getBiome(context.entity().blockPosition()));
         if (biomeName != null) {
             context.logWarningComponent(YsmText.literal("Name ").append(copyOnClickTextCompat(biomeName.toString())));

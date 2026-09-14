@@ -28,6 +28,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+//? if >=1.16.2
 import net.minecraft.util.FormattedCharSequence;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
@@ -177,6 +178,9 @@ public class ModelInfoScreen extends Screen {
             int lineOffset = 0;
             Iterator it = this.font.split(YsmText.literal(ModelMetadataPresenter.getLocalizedModelString(this.renderContext, "metadata.tips", metadata2.getTips())), 270).iterator();
             while (it.hasNext()) {
+                //? if <1.16.2
+                /*guiGraphics.drawString(this.font, (net.minecraft.network.chat.FormattedText) it.next(), this.guiLeft + 30, this.guiTop + 154 + lineOffset, -1);*/
+                //? if >=1.16.2
                 guiGraphics.drawString(this.font, (FormattedCharSequence) it.next(), this.guiLeft + 30, this.guiTop + 154 + lineOffset, -1);
                 Objects.requireNonNull(this.font);
                 lineOffset += 9;

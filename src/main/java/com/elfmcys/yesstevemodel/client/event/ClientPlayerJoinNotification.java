@@ -110,6 +110,9 @@ public final class ClientPlayerJoinNotification {
         ClientModelManager.runPendingModelCallback();
         notified = true;
         if (!YesSteveModel.isAvailable()) {
+//? if neoforge
+/*            ClientModelManager.sendUnavailableMessage();*/
+//? if forge
             YesSteveModel.sendUnavailableMessage();
             return;
         }

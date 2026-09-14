@@ -275,11 +275,12 @@ public class PlayerTextureScreen extends Screen {
 
     public void renderTexturePreview(YsmGui guiGraphics, int scissorX, int scissorY, int scissorWidth, int scissorHeight, float partialTick) {
         // 1.21.6+ RenderSystem.enableScissor 删 → GuiGraphics 剪裁（GUI 坐标=窗口坐标/guiScale 翻转 Y）
-        //? if <1.16.2 {
+        // scissor 系 API vanilla 1.16.4 才有（javap 实证）→ <1.16.4 走 GL11 直调
+        //? if <1.16.4 {
         /*org.lwjgl.opengl.GL11.glEnable(org.lwjgl.opengl.GL11.GL_SCISSOR_TEST);
         org.lwjgl.opengl.GL11.glScissor(scissorX, scissorY, scissorWidth, scissorHeight);*/
         //?}
-        //? if >=1.16.2 && <21.6
+        //? if >=1.16.4 && <21.6
         RenderSystem.enableScissor(scissorX, scissorY, scissorWidth, scissorHeight);
         //? if >=21.6 {
         /*double ysmGuiScale = Minecraft.getInstance().getWindow().getGuiScale();
@@ -294,9 +295,9 @@ public class PlayerTextureScreen extends Screen {
             this.modelHolder.initModelWithTexture(this.modelId, cap.getCurrentTextureName());
             ModelPreviewRenderer.renderEntityPreview(this.guiLeft + 149.5f + 40.0f + this.offsetX, this.guiTop + 117.5f + 80.0f + this.offsetY, this.zoom, this.pitch, this.yaw, partialTick, this.modelHolder, RendererManager.getPlayerRenderer(), this.showGround);
         });
-        //? if <1.16.2
+        //? if <1.16.4
         /*org.lwjgl.opengl.GL11.glDisable(org.lwjgl.opengl.GL11.GL_SCISSOR_TEST);*/
-        //? if >=1.16.2 && <21.6
+        //? if >=1.16.4 && <21.6
         RenderSystem.disableScissor();
         //? if >=21.6
         /*guiGraphics.graphics().disableScissor();*/

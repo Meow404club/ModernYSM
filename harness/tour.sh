@@ -51,6 +51,13 @@ case "$VERSION" in
     SERVER_DIR="$ROOT/versions/$VERSION/run/server"
     CLIENT_DIR="$ROOT/versions/$VERSION/run/client"
     ;;
+  # M3 平铺批一/批二 forge 十四线（<1.17 unimined=build.unimined.gradle.kts、1.17~1.20
+  # legacyforge=build.forge.gradle.kts；runs.gameDirectory 同约定 run/server、run/client）
+  1.16.1-forge|1.16.2-forge|1.16.3-forge|1.16.4-forge|\
+1.17.1-forge|1.18-forge|1.18.1-forge|1.18.2-forge|1.19-forge|1.19.1-forge|1.19.2-forge|1.19.3-forge|1.19.4-forge|1.20-forge)
+    SERVER_DIR="$ROOT/versions/$VERSION/run/server"
+    CLIENT_DIR="$ROOT/versions/$VERSION/run/client"
+    ;;
   1.20.4-neoforge|1.20.6-neoforge|1.21.1-neoforge|21.3-neoforge|21.4-neoforge|21.5-neoforge|21.8-neoforge|21.10-neoforge|21.11-neoforge|26.1.2-neoforge|26.2-neoforge)
     SERVER_DIR="$ROOT/versions/$VERSION/run/server"
     CLIENT_DIR="$ROOT/versions/$VERSION/run/client"

@@ -244,10 +244,12 @@ public final class YsmGui {
     }
 
      *///?}
-    // scissor：1.16.1 无 GlStateManager._enableScissorTest/_scissorBox/RenderSystem.enableScissor
-    //（1.16.2+ 实证）→ GL11 直调；坐标数学与 >=1.16.2 段一致（1.16.5 _scissorBox=直透 GL20.glScissor，
+    // scissor：GlStateManager._enableScissorTest/_scissorBox/RenderSystem.enableScissor 是
+    // vanilla 1.16.4 才有（javap 实证：1.16.2/1.16.3 的 RenderSystem/GlStateManager 均无
+    // scissor 系方法，1.16.4 齐备；1.16.1 亦无）→ <1.16.4 全段 GL11 直调；坐标数学与
+    // >=1.16.4 段一致（1.16.5 _scissorBox=直透 GL20.glScissor，
     // vanilla-mc-1165 GlStateManager.java:162-165 实证，无额外翻转）。
-    //? if <1.16.2 && <1.20 {
+    //? if <1.16.4 && <1.20 {
     /*public void enableScissor(int minX, int minY, int maxX, int maxY) {
         com.mojang.blaze3d.platform.Window window = Minecraft.getInstance().getWindow();
         int windowHeight = window.getHeight();
@@ -265,7 +267,7 @@ public final class YsmGui {
     }
 
      *///?}
-    //? if >=1.16.2 && <1.20 {
+    //? if >=1.16.4 && <1.20 {
     /*public void enableScissor(int minX, int minY, int maxX, int maxY) {
         // 照抄 1.20.1 GuiGraphics.applyScissor 数学（GUI 坐标 → GL 窗口坐标 Y 翻转）
         com.mojang.blaze3d.platform.Window window = Minecraft.getInstance().getWindow();
@@ -388,7 +390,24 @@ public final class YsmGui {
     }
 
      *///?}
-    //? if >=1.16.2 && <1.20 {
+    // scissorBox 静态版分界同前：RenderSystem.enableScissor 1.16.4 才有 → 1.16.2/1.16.3 的
+    // renderComponentTooltip 已在（与 >=1.16.4 段同款）但 scissor 走 GL11 直调（javap 实证）。
+    //? if >=1.16.2 && <1.16.4 {
+    /*public void renderScreenComponentTooltip(net.minecraft.client.gui.screens.Screen screen, Font font, List<Component> lines, int mouseX, int mouseY) {
+        screen.renderComponentTooltip(this.pose, lines, mouseX, mouseY);
+    }
+
+    public static void enableScissorBox(int x, int y, int width, int height) {
+        org.lwjgl.opengl.GL11.glEnable(org.lwjgl.opengl.GL11.GL_SCISSOR_TEST);
+        org.lwjgl.opengl.GL11.glScissor(x, y, width, height);
+    }
+
+    public static void disableScissorBox() {
+        org.lwjgl.opengl.GL11.glDisable(org.lwjgl.opengl.GL11.GL_SCISSOR_TEST);
+    }
+
+     *///?}
+    //? if >=1.16.4 && <1.20 {
     /*public void renderScreenComponentTooltip(net.minecraft.client.gui.screens.Screen screen, Font font, List<Component> lines, int mouseX, int mouseY) {
         screen.renderComponentTooltip(this.pose, lines, mouseX, mouseY);
     }

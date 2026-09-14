@@ -31,8 +31,15 @@ public final class CameraUtil {
     }
 
     private static int thirdPersonView() {
+        // 审查修正（rv-m3b2c1b）：反射失败时 THIRD_PERSON_VIEW=null，getInt 直接触发 NPE 且
+        // 未被下方 catch 覆盖 → HUD 渲染线程崩溃；补 null 守卫走同款降级（=1 非第一人称，
+        // ExtraPlayerOverlay 守卫跳过渲染）。仅 <1.16.2 存储块，其余线字节码零影响。
+        java.lang.reflect.Field field = THIRD_PERSON_VIEW;
+        if (field == null) {
+            return 1;
+        }
         try {
-            return THIRD_PERSON_VIEW.getInt(Minecraft.getInstance());
+            return field.getInt(Minecraft.getInstance());
         } catch (IllegalAccessException e) {
             return 1;
         }

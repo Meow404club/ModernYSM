@@ -236,9 +236,9 @@ public class YSMBinding extends ContextBinding {
         abstractArrowEntityVar("on_ground_time", ctx -> ((ProjectileStateAccessor) ctx.entity()).getInGroundTime());
         // >=21.3 ProjectileStateAccessor.isInGround 被 Mixin 丢弃（与目标 protected 同签名，
         // AbstractArrowEntityMixin 头注）→ inGroundTime>0 近似（滞后一 tick，功能债）
-        //? if <21.3
+        //? if <21.2
         abstractArrowEntityVar("in_ground", ctx -> ((ProjectileStateAccessor) ctx.entity()).isInGround());
-        //? if >=21.3
+        //? if >=21.2
         /*abstractArrowEntityVar("in_ground", ctx -> ((ProjectileStateAccessor) ctx.entity()).getInGroundTime() > 0);*/
         abstractArrowEntityVar("is_spectral_arrow", ctx -> ctx.entity() instanceof SpectralArrow);
         abstractArrowEntityVar("shoot_item_id", ctx -> ((ProjectileStateAccessor) ctx.entity()).getOwnerItemId());

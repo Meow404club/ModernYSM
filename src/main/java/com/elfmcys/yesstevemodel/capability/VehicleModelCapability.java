@@ -15,10 +15,9 @@ public class VehicleModelCapability {
     public static Optional<VehicleModelCapability> get(Entity entity) {
         //? if neoforge
         /*return java.util.Optional.ofNullable(entity.getCapability(VehicleModelCapabilityProvider.VEHICLE_MODEL_CAP));*/
-        //? if forge
-        //? if <1.16.2
+        //? if forge && <1.16.2
         /*return java.util.Optional.ofNullable(entity.getCapability(VehicleModelCapabilityProvider.VEHICLE_MODEL_CAP).orElse(null));*/
-        //? if >=1.16.2
+        //? if forge && >=1.16.2
         return entity.getCapability(VehicleModelCapabilityProvider.VEHICLE_MODEL_CAP).resolve();
     }
 

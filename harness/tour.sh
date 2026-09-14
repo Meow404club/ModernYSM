@@ -62,6 +62,11 @@ case "$VERSION" in
     SERVER_DIR="$ROOT/versions/$VERSION/run/server"
     CLIENT_DIR="$ROOT/versions/$VERSION/run/client"
     ;;
+  # M3 批二 c-2：neoforge 补线五线（build.moddev.gradle.kts 同构）
+  1.21-neoforge|21.2-neoforge|21.6-neoforge|21.7-neoforge|21.9-neoforge)
+    SERVER_DIR="$ROOT/versions/$VERSION/run/server"
+    CLIENT_DIR="$ROOT/versions/$VERSION/run/client"
+    ;;
   *)
     echo "[tour] unknown version line: $VERSION" >&2
     exit 1

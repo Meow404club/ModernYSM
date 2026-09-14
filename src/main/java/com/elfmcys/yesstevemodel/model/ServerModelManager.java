@@ -387,12 +387,12 @@ public final class ServerModelManager {
             YesSteveModel.LOGGER.warn("Failed to remove stale builtins", e);
         }
          *///?} else {
-            //? if >=21.10 {
+            //? if >=21.9 {
             /*// 1.21.10 IModFile 瘦身：findResource/getSecureJar 删（TmpProbe 编译实证）→
             // getFilePath 自解析（jar/dir 双形），功能等价原 findResource+Files.walk
             ysmExtractBuiltinsFromModFile();
             *///?}
-            //? if <21.10 {
+            //? if <21.9 {
             try {
                 Path assetsBuiltin = Optional.ofNullable(ModList.get().getModFileById(YesSteveModel.MOD_ID))
                         .map(IModFileInfo::getFile)
@@ -449,7 +449,7 @@ public final class ServerModelManager {
         //?}
     }
 
-    //? if >=21.10 {
+    //? if >=21.9 {
     /*private static void ysmExtractBuiltinsFromModFile() {
         IModFileInfo modFileInfo = ModList.get().getModFileById(YesSteveModel.MOD_ID);
         if (modFileInfo == null || modFileInfo.getFile() == null) {
@@ -1648,9 +1648,9 @@ public final class ServerModelManager {
     // authlib 7（21.10+）GameProfile 记录化：getName() → name()（2110 Minecraft.java:796
     // gameprofile.name() 实证）；表达式位不可内嵌条件块 → 收编 helper
     private static String ysmProfileName(ServerPlayer player) {
-        //? if >=21.10
+        //? if >=21.9
         /*return player.getGameProfile().name();*/
-        //? if <21.10
+        //? if <21.9
         return player.getGameProfile().getName();
     }
 
@@ -1837,7 +1837,7 @@ public final class ServerModelManager {
                     //? if >=1.19.1 && <1.19.2 {
                     /*connection.send((Packet<?>) obj, net.minecraft.network.PacketSendListener.thenRun(() -> atomicInteger.set(1)));
                      *///?}
-                    //? if >=1.19.2 && <21.8 {
+                    //? if >=1.19.2 && <21.6 {
                     connection.send((Packet<?>) obj, new PacketSendListener() {
                         public void onSuccess() {
                             atomicInteger.set(1);
@@ -1851,9 +1851,9 @@ public final class ServerModelManager {
                         }
                     });
                     //?}
-                    // 1.21.8 PacketSendListener 类化（静态工具）→ 匿名回调改裸 ChannelFutureListener
-                    //（成功置 1 / 失败置 -1，语义等价）
-                    //? if >=21.8 {
+                    // 1.21.6 PacketSendListener 类化（静态工具，21.6 PacketSendListener.java:13 thenRun）
+                    // → 匿名回调改裸 ChannelFutureListener（成功置 1 / 失败置 -1，语义等价）
+                    //? if >=21.6 {
                     /*connection.send((Packet<?>) obj, future -> {
                         if (future.isSuccess()) {
                             atomicInteger.set(1);

@@ -41,7 +41,7 @@ public class AbstractArrowEntityMixin implements ProjectileStateAccessor {
     // ⚠ @Unique isInGround() 与目标 protected isInGround() 同签名 → Mixin 丢弃
     //（21.10/21.11 runClient WARN 实证 "Discarding @Unique public method isInGround"）→
     // >=21.3 接口方法永不满足，调用方（YSMBinding/ProjectileAnimationPredicate）>=21.3 门控绕行
-    //? if <21.3 {
+    //? if <21.2 {
     @Shadow
     public boolean inGround;
     //?}
@@ -51,9 +51,9 @@ public class AbstractArrowEntityMixin implements ProjectileStateAccessor {
     @Override
     @Unique
     public boolean isInGround() {
-        //? if >=21.3
+        //? if >=21.2
         /*return this.inGroundTime > 0;*/
-        //? if <21.3
+        //? if <21.2
         return this.inGround;
     }
 

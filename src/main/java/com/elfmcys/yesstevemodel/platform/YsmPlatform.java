@@ -54,17 +54,17 @@ public final class YsmPlatform {
     public static Dist getEnv() {
         // 1.21.10 loader 字段 dist/production 方法化（neoforge-21.10.64 ModConfigSpec.java:919
         // isProduction()/SelfTest.java:35 getDist() 实证）
-        //? if >=21.10
+        //? if >=21.9
         /*return FMLEnvironment.getDist();*/
-        //? if <21.10
+        //? if <21.9
         return FMLEnvironment.dist;
     }
 
     /** 原 Platform.isDevelopmentEnvironment：dev 运行时为 true（生产为 false）。 */
     public static boolean isDevelopmentEnvironment() {
-        //? if >=21.10
+        //? if >=21.9
         /*return !FMLEnvironment.isProduction();*/
-        //? if <21.10
+        //? if <21.9
         return !FMLEnvironment.production;
     }
 

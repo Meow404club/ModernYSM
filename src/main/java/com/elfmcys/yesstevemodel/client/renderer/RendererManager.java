@@ -135,14 +135,32 @@ public class RendererManager {
         // vanilla-1.21.3 EntityRendererProvider.java:35 实证）
         //? if >=1.19.2 && <1.21.2
         EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemRenderer(), Minecraft.getInstance().getBlockRenderer(), entityRenderDispatcher.getItemInHandRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), Minecraft.getInstance().font);
-        //? if >=21.3 && <21.4
+        //? if >=21.2 && <21.4
         /*EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemRenderer(), Minecraft.getInstance().getMapRenderer(), Minecraft.getInstance().getBlockRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), Minecraft.getInstance().getEquipmentModels(), Minecraft.getInstance().font);*/
         // 1.21.4 Context：ItemRenderer→ItemModelResolver、EquipmentModelSet→EquipmentAssetManager
         //（vanilla-1.21.4 EntityRendererProvider.java:38-48）；EquipmentAssetManager 无
         // Minecraft getter（vanilla 本地构造+注册重载，:530-531 同款）
-        //? if >=21.4 && <21.9 {
+        //? if >=21.4 && <21.6 {
         /*net.minecraft.client.resources.model.EquipmentAssetManager ysmEquipmentAssets = new net.minecraft.client.resources.model.EquipmentAssetManager();
         ((net.minecraft.server.packs.resources.ReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener(ysmEquipmentAssets);
+        EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemModelResolver(), Minecraft.getInstance().getMapRenderer(), Minecraft.getInstance().getBlockRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), ysmEquipmentAssets, Minecraft.getInstance().font);*/
+        //?}
+        // 1.21.6 起运行期 registerReloadListener 抛 UnsupportedOperationException
+        //（listeners 集合在 AddClientReloadListenerEvent 后冻结，21.6 runClient 崩溃实证）
+        // → 反射取 vanilla Minecraft 自建并注册的实例（21.6 Minecraft.java:545 构造，
+        // 挂在 EntityRenderDispatcher.equipmentAssets 私有字段 :81；neoforge 全链 mojmap
+        // 字面名即真名）。字段缺失兜底=孤儿实例（装备资产空、装备层退化，功能差入债）。
+        // 块内容注释态存储（1201 vcs 直编原文铁律），活跃线剥壳展开
+        //? if >=21.6 && <21.9 {
+        /*net.minecraft.client.resources.model.EquipmentAssetManager ysmEquipmentAssets;
+        try {
+            java.lang.reflect.Field ysmEquipmentField = net.minecraft.client.renderer.entity.EntityRenderDispatcher.class.getDeclaredField("equipmentAssets");
+            ysmEquipmentField.setAccessible(true);
+            ysmEquipmentAssets = (net.minecraft.client.resources.model.EquipmentAssetManager) ysmEquipmentField.get(entityRenderDispatcher);
+        } catch (ReflectiveOperationException e) {
+            YesSteveModel.LOGGER.warn("[YSM] equipmentAssets reflection fallback (orphan instance, equipment layer degraded)", e);
+            ysmEquipmentAssets = new net.minecraft.client.resources.model.EquipmentAssetManager();
+        }
         EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemModelResolver(), Minecraft.getInstance().getMapRenderer(), Minecraft.getInstance().getBlockRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), ysmEquipmentAssets, Minecraft.getInstance().font);*/
         //?}
         // 1.21.9 Context 10 参：+AtlasManager（Minecraft.getAtlasManager）+PlayerSkinRenderCache

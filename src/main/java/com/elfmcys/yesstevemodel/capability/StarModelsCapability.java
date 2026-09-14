@@ -21,10 +21,9 @@ public class StarModelsCapability {
     public static Optional<StarModelsCapability> get(Player player) {
         //? if neoforge
         /*return java.util.Optional.ofNullable(player.getCapability(StarModelsCapabilityProvider.STAR_MODELS_CAP));*/
-        //? if forge
-        //? if <1.16.2
+        //? if forge && <1.16.2
         /*return java.util.Optional.ofNullable(player.getCapability(StarModelsCapabilityProvider.STAR_MODELS_CAP).orElse(null));*/
-        //? if >=1.16.2
+        //? if forge && >=1.16.2
         return player.getCapability(StarModelsCapabilityProvider.STAR_MODELS_CAP).resolve();
     }
 

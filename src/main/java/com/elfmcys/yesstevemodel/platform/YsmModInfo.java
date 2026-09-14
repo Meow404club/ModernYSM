@@ -68,7 +68,7 @@ public final class YsmModInfo {
             return Optional.empty();
         }
          *///?}
-        //? if >=1.17 && <21.10 {
+        //? if >=1.17 && <21.9 {
         IModFileInfo fileInfo = ModList.get().getModFileById(info.getModId());
         if (fileInfo == null || fileInfo.getFile() == null) {
             return Optional.empty();
@@ -76,7 +76,7 @@ public final class YsmModInfo {
         Path resolved = fileInfo.getFile().findResource(String.join("/", path));
         return Files.exists(resolved) ? Optional.of(resolved) : Optional.empty();
         //?}
-        //? if >=21.10 {
+        //? if >=21.9 {
         /*// 1.21.10 IModFile 瘦身：findResource/getSecureJar 删（TmpProbe 编译实证）→
         // getFilePath 自解析；dir 形态（dev 运行）全等价，jar 形态因 zipFs 生命周期暂回
         // empty（功能债入账）

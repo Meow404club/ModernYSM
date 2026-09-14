@@ -148,20 +148,43 @@ val imageStreamEmbedJars: Set<File> = imageStreamEmbed.files
 sourceSets.main {
     java {
         // 基础树按代分挂（见下方链尾注记）：21.5 线挂 1215（= neoforge ∪ neoforge-1205 的
-        // 1.21.5 代副本）、21.8 线挂 1218（= 1215 ∪ 1213 的 1.21.8 代副本）、21.10 线挂 2110、
-        // 21.11+/26.x 线挂 2111，防同 FQCN 双份类定义
-        if (stonecutter.eval(stonecutter.current.version, "<21.8")) {
-            if (stonecutter.eval(stonecutter.current.version, "<21.5")) {
-                srcDir(rootProject.file("src/neoforge/java"))
-            } else {
-                srcDir(rootProject.file("src/neoforge-1215/java"))
-            }
-        } else if (stonecutter.eval(stonecutter.current.version, "<21.10")) {
+        // 1.21.5 代副本）、21.6~21.9 线挂 1218（= 1215 ∪ 1213 的 1.21.8 代副本；21.6/21.7
+        // 并入本分支见下方批二 c-2 注）、21.10 线挂 2110、21.11+/26.x 线挂 2111，
+        // 防同 FQCN 双份类定义
+        if (stonecutter.eval(stonecutter.current.version, "<21.5")) {
+            srcDir(rootProject.file("src/neoforge/java"))
+        } else if (stonecutter.eval(stonecutter.current.version, "<21.6")) {
+            srcDir(rootProject.file("src/neoforge-1215/java"))
+        } else if (stonecutter.eval(stonecutter.current.version, "<21.9")) {
+            // 21.6/21.7 并入 1218 分支（批二 c-2 实证 21.6.20-beta/21.7.25-beta-sources）：
+            // vanilla/neoforge API 面与 21.8 同形——EventBusSubscriber 无 bus、
+            // RenderLevelStageEvent 子事件类形、getShaderTexture 返 GpuTextureView、
+            // getShaderFog 返 GpuBufferSlice、createTexture 七参、PacketSendListener 类化、
+            // ServerPlayer.level() 直返 ServerLevel（serverLevel 删）。唯网络分发面在
+            // 21.6 断裂（无 client.network.ClientPacketDistributor，PacketDistributor
+            // .sendToServer 21.7 才删）→ YSMChannelImpl 拆出独立网络树 per-线挂载
+            //（同 FQCN 文件无法按线 exclude——exclude 相对路径双杀同名 RAW 文件），
+            // 下方 net 树挂载注。
             srcDir(rootProject.file("src/neoforge-1218/java"))
+            if (stonecutter.eval(stonecutter.current.version, "<21.7")) {
+                // net16 = 1215 版 YSMChannelImpl（PacketDistributor.sendToServer 形，21.6 有）
+                srcDir(rootProject.file("src/neoforge-net16/java"))
+            } else {
+                // net18 = 1218 版 YSMChannelImpl（client.network.ClientPacketDistributor 形，
+                // 21.7 起；21.7/21.8）
+                srcDir(rootProject.file("src/neoforge-net18/java"))
+            }
         } else if (stonecutter.eval(stonecutter.current.version, "<21.11")) {
             // 2110 树 = 1218 的 1.21.10 代副本。分裂动因（neoforge-21.10.64-sources 实证）：
             // RenderLevelStageEvent 删 AfterBlockEntities 子事件类（RenderFirstPlayerForgeHook）、
-            // PlayerRenderer → AvatarRenderer 改名（PlayerRenderStateEntityCache）
+            // PlayerRenderer → AvatarRenderer 改名（PlayerRenderStateEntityCache）。
+            // 21.9 并入本分支（批二 c-2 实证 21.9.16-beta-sources）：上述 21.10 断裂点 21.9
+            // 已生效（AfterBlockEntities 零命中/AvatarRenderer 在/Level.isClientSide private 化
+            // +isClientSide() 访问器），且 GUI/FML 面（GuiGraphics.renderOutline 删、
+            // GameProfile name()/id()、FMLEnvironment.dist/production 删、IModFile.findResource
+            // 删、GuiElementRenderState.buildVertices 单参化）与 21.10 同形（共享源条件
+            // 21.10→21.9 移位）；21.9 renderLevel 仍 21.8 形（WorldRendererMixin >=21.8 && <21.10
+            // 分支编译实证）
             srcDir(rootProject.file("src/neoforge-2110/java"))
         } else {
             // 2111 树 = 2110 的 1.21.11 代副本：net.minecraft.resources.ResourceLocation →
@@ -179,9 +202,10 @@ sourceSets.main {
             srcDir(rootProject.file("src/neoforge-1206/java"))
             srcDir(rootProject.file("src/neoforge-pre1213/java"))
         } else if (stonecutter.eval(stonecutter.current.version, "<1.21.2")) {
-            // 1211 树 = 1.21.1 分歧（LivingShieldBlockEvent、ItemAbilities 更名，
-            // neoforge-1.21.1 实证）；shim 整树副本（ResourceLocation 私有构造 /
-            // isValidResourceLocation 删除 → Rl/parse，2 文件已修），不挂原 shim 防 RAW 双份
+            // 1.21/1.21.1（批二 c-2 注：1.21 缩写轴新线与本分支同形——renderstate 包
+            // 21.3 才有，1213 树不可用）：1205 树 + 1211 树（1.21.1 分歧：
+            // LivingShieldBlockEvent、ItemAbilities 更名）+ pre1213 树；
+            // shim 挂 1211 副本（见下方 shim 块）
             srcDir(rootProject.file("src/neoforge-1205/java"))
             srcDir(rootProject.file("src/neoforge-1211/java"))
             srcDir(rootProject.file("src/neoforge-pre1213/java"))
@@ -193,20 +217,36 @@ sourceSets.main {
             // ToolActionBridgeImpl 双参 onEntitySwing / 1211 同形桥副本：ShieldBlock 冷却与
             // BufferBuilder 桥）；shim 沿用 1211 副本（1.21.2+ ResourceLocation 面与 1.21.1
             // 同形，21.3 编译实证）
+            // 21.2（MC 1.21.2）混合形态（批二 c-2 实证 21.2.1-beta-sources）：vanilla 侧
+            // render-state 化/ClientInput/inGround 封装已与 21.3 同形（1213 树可用），但
+            // neoforge 侧 net.neoforged.neoforge.client.renderstate 包与
+            // RegisterRenderStateModifiersEvent 21.3 才引入 → 1213 版
+            // PlayerRenderStateEntityCache 不可用：剔除后挂 212 小树（异包 event212 孪生 +
+            // PlayerRenderStateStashMixin 在 vanilla PlayerRenderer.extractRenderState
+            // stash 实体，mixins.json 条目经 processResources per-line 注入；exclude 相对
+            // 路径双杀同名 RAW 文件，故 212 版必须异包——批二 a「异包策略」先例）
+            if (stonecutter.current.version == "21.2") {
+                exclude(
+                    "com/elfmcys/yesstevemodel/platform/neoforge/event/PlayerRenderStateEntityCache.java",
+                    "com/elfmcys/yesstevemodel/platform/neoforge/event/ReplacePlayerRenderForgeHook.java",
+                )
+                srcDir(rootProject.file("src/neoforge-212/java"))
+            }
             srcDir(rootProject.file("src/neoforge-1205/java"))
             srcDir(rootProject.file("src/neoforge-1213/java"))
-        } else if (stonecutter.eval(stonecutter.current.version, "<21.8")) {
+        } else if (stonecutter.eval(stonecutter.current.version, "<21.6")) {
             // 21.5：1215 树 = (neoforge ∪ neoforge-1205) 1.21.5 代副本（已在上方基础挂载处挂载）。
             // 分裂动因：CompoundTag.getCompound Optional 化（ForgeCapabilityHooks）与
             // KeyModifier.getActiveModifier 删除（KeyMappingFactoryImpl）在 RAW 树无条件下不可
             // 两代共存（同 FQCN 二选一挂载防双份类定义）；1213 树 21.5 编译零残差，继续共用。
             srcDir(rootProject.file("src/neoforge-1213/java"))
         } else {
-            // 21.8+：1218/2110/2111 基础树 = (1215 ∪ 1213) 的各代副本，上方基础挂载已含本段
-            // 平台树全部类，不再重复挂载（21.8 同目录二次挂载会触发 sourcesJar 重复条目）
-            // 分裂动因：EventBusSubscriber 删 bus 属性（PlayerRenderStateEntityCache）、
-            // RenderLevelStageEvent 拆子事件类（RenderFirstPlayerForgeHook）、
-            // PacketDistributor.sendToServer→ClientPacketDistributor（YSMChannelImpl）
+            // 21.6~21.9：1218 树（含网络树 net16/net18）已在上方基础挂载处挂载，本段
+            // （1205/1206/1211/pre1213/1213/1215）不再挂载（21.6/21.7 与 21.8 vanilla/neoforge
+            // 同形实证见上方分支注；二次挂载会触发 sourcesJar 重复条目）
+            // 1218 分裂动因（21.6 起逐项前移实证）：EventBusSubscriber 删 bus 属性、
+            // RenderLevelStageEvent 拆子事件类、PacketDistributor.sendToServer→
+            // ClientPacketDistributor（21.7）、GPU 面六点分界 21.8→21.6（见共享源条件注）
         }
         // shim：<1.21 挂原件；1.21+ 挂整树副本（ResourceLocation 私有构造 /
         // isValidResourceLocation 删除 → Rl/parse，2 文件已修，RAW 无条件化能力）；
@@ -396,6 +436,9 @@ tasks.named<ProcessResources>("processResources") {
     // 表（2026-09-13 实拉，26.1 与本机 vanilla-mc/26.1 version.json pack_version
     // resource_major=84 互证）：1.21.3=42 / 1.21.4=46 / 1.21.5=55 / 1.21.8=64 /
     // 1.21.10=69 / 1.21.11=75 / 26.1.2=84 / 26.2=88
+    // 批二 c-2（2026-09-14 同表实拉）：1.20.2=18 / 1.20.3=22（1.20.3~1.20.4 同档）/
+    // 1.20.5=32（1.20.5~1.20.6 同档）/ 1.21=34（1.21~1.21.1 同档）/ 21.2=42（1.21.2~1.21.3
+    // 同档）/ 21.6=63 / 21.7=64（1.21.7~1.21.8 同档）/ 21.9=69（1.21.9~1.21.10 同档）
     val packFormat = mapOf(
         "1.20.4" to 22,
         "1.20.6" to 32,
@@ -408,6 +451,14 @@ tasks.named<ProcessResources>("processResources") {
         "21.11" to 75,
         "26.1.2" to 84,
         "26.2" to 88,
+        "1.20.2" to 18,
+        "1.20.3" to 22,
+        "1.20.5" to 32,
+        "1.21" to 34,
+        "21.2" to 42,
+        "21.6" to 63,
+        "21.7" to 64,
+        "21.9" to 69,
     )[mcVersion] ?: 15
     filesMatching("pack.mcmeta") {
         filter { line: String -> line.replace("\"pack_format\": 15", "\"pack_format\": $packFormat") }
@@ -422,10 +473,19 @@ tasks.named<ProcessResources>("processResources") {
         val dropBufferBuilderMixin = stonecutter.eval(stonecutter.current.version, ">=1.21")
         // 配置缓存铁律：条件在配置期物化为局部量，filter 内不可捕 stonecutter 脚本对象
         val dropRenderSystemAccessor = stonecutter.eval(stonecutter.current.version, ">=21.6")
+        // 21.2 混合形态：render-state 实体 stash mixin 注入（src/neoforge-212 小树配套，
+        // 见 sourceSets 挂载注）
+        val stash212 = stonecutter.current.version == "21.2"
         filesMatching("*.mixins.json") {
             filter { line: String ->
                 var out = line.replace("\"JAVA_17\"", "\"JAVA_21\"")
                     .replace("\"client.ArrowEntityAccessor\"", "\"client.ArrowPotionAccessor\"")
+                if (stash212) {
+                    out = out.replace(
+                        "\"client.BufferSourceMixin\"",
+                        "\"client.BufferSourceMixin\", \"client.PlayerRenderStateStashMixin\""
+                    )
+                }
                 if (dropRenderSystemAccessor) {
                     // 1.21.9 RenderSystem.shaderLightDirections 改 GpuBufferSlice → accessor 失效，
                     // 注冊表剔除（GpuRenderPath.refreshLights 已有默认平行光兜底）

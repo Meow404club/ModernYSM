@@ -95,7 +95,16 @@ public abstract class YsmWidget extends AbstractWidget {
         this.renderWidget(new YsmGui(poseStack), mouseX, mouseY, partialTick);
     }
      *///?}
-    //? if >=1.20 {
+    // forge 46（1.20）renderWidget 为 public abstract（1.20-forge merged jar javap 实证），
+    // forge 47（1.20.1）起回落 protected abstract（1201 merged jar javap 实证）→ 1.20 专属段
+    // 须 public 覆写（protected 降权编译错），>=1.20.1 保持 protected
+    //? if >=1.20 && <1.20.1 {
+    /*@Override
+    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+     *///?}
+    //? if >=1.20.1 {
     @Override
     protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);

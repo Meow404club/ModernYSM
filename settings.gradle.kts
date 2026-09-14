@@ -85,19 +85,20 @@ stonecutter {
         vers("26.1.2-neoforge", "26.1.2").buildscript = "build.moddev.gradle.kts"
         vers("26.2-neoforge", "26.2").buildscript = "build.moddev.gradle.kts"
 
-        // M3 批二 c-2：neoforge beta/ga 补线八线（1.20.2/1.20.3 Java 17 + 1.20.5~21.9 Java 21）。
+        // M3 批二 c-2：neoforge beta/ga 补线五线（1.21/21.2/21.6/21.7/21.9 全 Java 21）。
         // 版本号取官方 maven metadata 冻结快照（tmp/harvest/m3-matrix/maven-metadata.xml，
-        // 任务卡给定 tile）：1.20.2=20.2.93(ga) / 1.20.3=20.3.8-beta / 1.20.5=20.5.21-beta /
-        // 1.21=21.0.167(ga) / 21.2=21.2.1-beta / 21.6=21.6.20-beta / 21.7=21.7.25-beta /
-        // 21.9=21.9.16-beta。版本 ID 分段沿现役约定：<1.21 用全称（"1.21" 落 <1.21.2 分支
-        // =1.21.1 同形），21.x 缩写（21.2 落 <21.5=21.3 同形、21.6/21.7 落 <21.8=21.5 同形、
-        // 21.9 落 <21.10=21.8 同形）。
-        // ⚠ POC 注记：20.2.93/20.3.8-beta/20.5.21-beta 无 Gradle .module 元数据
-        //（maven.neoforged.net 目录 404 实证 2026-09-14），MDG capability 解析是否可行
-        // 见任务卡 POC 判定；判负线注册随判负报告处置。
-        vers("1.20.2-neoforge", "1.20.2").buildscript = "build.moddev.gradle.kts"
-        vers("1.20.3-neoforge", "1.20.3").buildscript = "build.moddev.gradle.kts"
-        vers("1.20.5-neoforge", "1.20.5").buildscript = "build.moddev.gradle.kts"
+        // 任务卡给定 tile）：1.21=21.0.167(ga) / 21.2=21.2.1-beta / 21.6=21.6.20-beta /
+        // 21.7=21.7.25-beta / 21.9=21.9.16-beta。版本 ID 沿批二 b 缩写约定：
+        // 21.2 落 <21.5 分支=21.3 同形、21.6/21.7 落 <21.8=21.5 同形、21.9 落
+        // <21.10=21.8 同形；1.21 用全称落 <1.21.2 分支=1.21.1 同形——零新机制，
+        // 全部落既有分代树分支。
+        // ⚠ POC 判负记录（2026-09-14，任务卡 POC 条款）：1.20.2=20.2.93 / 1.20.3=20.3.8-beta /
+        // 1.20.5=20.5.21-beta 三线官方 maven 无 Gradle .module 元数据（目录 404 实证，
+        // 构件仅 pom/userdev/universal/sources/installer），Gradle 从 POM 推导的 variant
+        // 不携带 capability，MDG 解析必失败。实跑证据：:1.20.2/1.20.3/1.20.5-neoforge:
+        // compileJava 三线同报 "Unable to find a variant with the requested capability:
+        // coordinates 'net.neoforged:neoforge-moddev-bundle'"（零新机制不可修复，注册撤除；
+        // 预案二=NFRT 直驱另立项，见判负报告）。
         vers("1.21-neoforge", "1.21").buildscript = "build.moddev.gradle.kts"
         vers("21.2-neoforge", "21.2").buildscript = "build.moddev.gradle.kts"
         vers("21.6-neoforge", "21.6").buildscript = "build.moddev.gradle.kts"

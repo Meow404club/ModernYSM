@@ -396,6 +396,9 @@ tasks.named<ProcessResources>("processResources") {
     // 表（2026-09-13 实拉，26.1 与本机 vanilla-mc/26.1 version.json pack_version
     // resource_major=84 互证）：1.21.3=42 / 1.21.4=46 / 1.21.5=55 / 1.21.8=64 /
     // 1.21.10=69 / 1.21.11=75 / 26.1.2=84 / 26.2=88
+    // 批二 c-2（2026-09-14 同表实拉）：1.20.2=18 / 1.20.3=22（1.20.3~1.20.4 同档）/
+    // 1.20.5=32（1.20.5~1.20.6 同档）/ 1.21=34（1.21~1.21.1 同档）/ 21.2=42（1.21.2~1.21.3
+    // 同档）/ 21.6=63 / 21.7=64（1.21.7~1.21.8 同档）/ 21.9=69（1.21.9~1.21.10 同档）
     val packFormat = mapOf(
         "1.20.4" to 22,
         "1.20.6" to 32,
@@ -408,6 +411,14 @@ tasks.named<ProcessResources>("processResources") {
         "21.11" to 75,
         "26.1.2" to 84,
         "26.2" to 88,
+        "1.20.2" to 18,
+        "1.20.3" to 22,
+        "1.20.5" to 32,
+        "1.21" to 34,
+        "21.2" to 42,
+        "21.6" to 63,
+        "21.7" to 64,
+        "21.9" to 69,
     )[mcVersion] ?: 15
     filesMatching("pack.mcmeta") {
         filter { line: String -> line.replace("\"pack_format\": 15", "\"pack_format\": $packFormat") }

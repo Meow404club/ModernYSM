@@ -296,7 +296,11 @@ tasks {
     // 的类型名引用不值得逐行条件化 → 生成树一次性语义等价改写，共享源零搅动、在产线零接触
     //（任务只在 >=21.11 线注册）。生成树由 stonecutterGenerate 重刷时恢复 RL 名，本任务幂等重写；
     // RAW 源集（平台/compat shim 树）绕开 stonecutter，走 2111 分代副本（见 sourceSets 挂载注）。
-    if (stonecutter.eval(stonecutter.current.version, ">=21.8")) {
+    // @OnlyIn 剥离门分代（m3-neoforge-server-dist-fix）：21.7（loader 9.0.14）起 OnlyInWarningsHandler
+    // 把 mod 类 @OnlyIn 记为 ERROR（专用服 ERROR 流+client 阻断警告屏，21.7 runServer 复现实证），
+    // 与 21.8（loader 9.0.18 同款警告屏）同代 → 剥离门从 >=21.8 下探 >=21.7；<=21.6 线
+    // RuntimeDistCleaner 成员剥离仍在（loader jar 实证），@OnlyIn 是专用服保护面，注解必须保留
+    if (stonecutter.eval(stonecutter.current.version, ">=21.7")) {
         val genJavaDir = layout.buildDirectory.dir("generated/stonecutter/main/java")
         // 配置缓存铁律：doLast 只可捕获局部 String/Provider，stonecutter 脚本对象引用不可序列化
         val curVersion = stonecutter.current.version

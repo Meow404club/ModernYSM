@@ -16,9 +16,13 @@ import rip.ysm.api.client.HudOverlay;
 /**
  * 1.16.5 HUD 原生注册路径（gate-compat 遗留的 RegisterGuiOverlaysEvent 无宿主问题的收口）：
  * 1.20.1 挂 RegisterGuiOverlaysEvent.registerAbove(VanillaGuiOverlay.DEBUG_TEXT.id(),...)（mod bus，
- * 见 ForgeClientSetupHooks）↔ 1.16.5 挂 Forge 总线 RenderGameOverlayEvent.Post(ElementType.DEBUG)——
- * 事件在原版 DEBUG 层绘制后触发，语义等价"DEBUG_TEXT 层之上"（javap 实证 forge-1.16.5-36.2.39 mojmap jar：
- * RenderGameOverlayEvent.getMatrixStack()/getPartialTicks()/getWindow()，ElementType.DEBUG 存在）。
+ * 见 ForgeClientSetupHooks）↔ 1.16.5 挂 Forge 总线 RenderGameOverlayEvent.Post(ElementType.ALL)——
+ * 选层依据（forge-1.16.x ForgeIngameGui 实证）：DEBUG 层被 options.renderDebug（F3）门控
+ *（renderHUDText:611）HUD 常态不触发；post(ALL, mStack) 是 ForgeIngameGui.render 末尾
+ *（gui.render 收尾、Screen 子通道之前）的无条件每帧触发点——实体绘制所需 GL 状态在此
+ * 已收敛（纸娃娃为实体 RenderType 绘制，依赖该时点状态），故取 ALL 而非 DEBUG/TEXT。
+ * post(ALL) 发的是普通 Post 实例，Post 订阅照常接收。
+ * （javap 实证 forge-1.16.5-36.2.39 mojmap jar：getMatrixStack()/getPartialTicks()/getWindow()。）
  * <p>1.20.1 轴：本类保留但无 @SubscribeEvent 处理器（方法整段注释态），Forge 总线扫描空类为 no-op，
  * 不会与 RegisterGuiOverlaysEvent 路径双画。
  */
@@ -34,7 +38,7 @@ public final class ForgeHudOverlayEvents {
         if (!YesSteveModel.isAvailable()) {
             return;
         }
-        if (event.getType() != RenderGameOverlayEvent.ElementType.DEBUG) {
+        if (event.getType() != RenderGameOverlayEvent.ElementType.ALL) {
             return;
         }
         Minecraft minecraft = Minecraft.getInstance();

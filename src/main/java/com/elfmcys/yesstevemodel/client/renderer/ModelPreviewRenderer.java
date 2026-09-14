@@ -707,39 +707,59 @@ public final class ModelPreviewRenderer {
     }
 
     // 纸娃娃
-    // GuiGraphics 为 1.20+；1.16.5 变体直接吃 PoseStack（HUD 调用方随 GUI/HUD 卡适配），
-    // 渲染管线语义一致：push 自身变换栈 → 相机四元数 → dispatcher.render → endBatch
+    // GuiGraphics 为 1.20+；1.16.5 变体直接吃 PoseStack（HUD 调用方=ExtraPlayerOverlay，
+    // Screen 调用方=ExtraPlayerRenderScreen 拖拽预览）。
+    // 配方=vanilla-mc-1165 InventoryScreen.renderEntityInInventory:101-138 的镜像（runClient
+    // 截图实证：原版生存背包纸娃娃在本环境正常渲染，本方法与其同配方后亦正常）：
+    // RenderSystem.translatef z 必须取 1050、poseStack.translate z 必须取 +1000——
+    // GUI 正交 near=1000/far=3000（GameRenderer.render）下 eye_z≈-1950→clip≈-0.05，
+    // 早于 HUD 的全屏元素已写深度≈0.5，取值更深（如 z=0/500 → clip≥+0.5 → 深度 0.75）
+    // 会被深度测试挡掉（首版 z=0/500 纸娃娃不可见、同点位原版可见的对照实证）。
+    // 其余逐 API 实证：Quaternion(Vector3f,float,boolean) 构造/mul/conj、
+    // overrideCameraOrientation（EntityRenderDispatcher:214）、Lighting.setupForFlatItems/
+    // setupFor3DItems（blaze3d.platform.Lighting:33/37）、renderBuffers().bufferSource().endBatch。
+    // zDepth 参数在 <1.17 轴不参与映射（原版定数优先），仅保签名双轴一致。
     //? if <1.17 {
-    // public static void renderPlayerOverlay(PoseStack poseStack, LocalPlayer localPlayer, double x, double y, float scale, float yawOffset, int zDepth, float partialTick) {
-    //     setExtraPlayerMode(true);
-    //     RenderSystem.pushMatrix();
-    //     RenderSystem.translatef((float) (x + (scale * 0.5d)), (float) (y + (scale * 2.0f)), 0.0f);
-    //     RenderSystem.scalef(1.0f, 1.0f, -1.0f);
-    //     poseStack.pushPose();
-    //     poseStack.translate(0.0f, 0.0f, -zDepth);
-    //     poseStack.scale(scale, scale, scale);
-    //     com.mojang.math.Quaternion rotationZ = new com.mojang.math.Quaternion(com.mojang.math.Vector3f.ZP, 180.1f, true);
-    //     com.mojang.math.Quaternion rotationY = new com.mojang.math.Quaternion(com.mojang.math.Vector3f.YP, (Mth.lerp(partialTick, localPlayer.yBodyRotO, localPlayer.yBodyRot) + yawOffset) - 180.0f, true);
-    //     rotationZ.mul(rotationY);
-    //     poseStack.mulPose(rotationZ);
-    //     Lighting.setupForFlatItems();
-    //     EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
-    //     rotationY.conj();
-    //     entityRenderDispatcher.overrideCameraOrientation(rotationY);
-    //     entityRenderDispatcher.setRenderShadow(false);
-    //     RenderCompat.runAsFancy(() -> {
-    //         entityRenderDispatcher.render(localPlayer, 0.0d, 0.0d, 0.0f, 0.0f, partialTick, poseStack, Minecraft.getInstance().renderBuffers().bufferSource(), 15728880);
-    //     });
-    //     Minecraft.getInstance().renderBuffers().bufferSource().endBatch();
-    //     entityRenderDispatcher.setRenderShadow(true);
-    //     poseStack.popPose();
-    //     RenderSystem.popMatrix();
-    //     Lighting.setupFor3DItems();
-    //     setExtraPlayerMode(false);
-    // }
-    //? }
+    /*public static void renderPlayerOverlay(PoseStack poseStack, LocalPlayer localPlayer, double x, double y, float scale, float yawOffset, int zDepth, float partialTick) {
+        setExtraPlayerMode(true);
+        RenderSystem.pushMatrix();
+        RenderSystem.translatef((float) (x + (scale * 0.5d)), (float) (y + (scale * 2.0d)), 1050.0f);
+        RenderSystem.scalef(1.0f, 1.0f, -1.0f);
+        poseStack.pushPose();
+        poseStack.translate(0.0d, 0.0d, 1000.0d);
+        poseStack.scale(scale, scale, scale);
+        com.mojang.math.Quaternion rotationZ = new com.mojang.math.Quaternion(com.mojang.math.Vector3f.ZP, 180.1f, true);
+        com.mojang.math.Quaternion rotationY = new com.mojang.math.Quaternion(com.mojang.math.Vector3f.YP, (Mth.lerp(partialTick, localPlayer.yBodyRotO, localPlayer.yBodyRot) + yawOffset) - 180.0f, true);
+        rotationZ.mul(rotationY);
+        poseStack.mulPose(rotationZ);
+        Lighting.setupForFlatItems();
+        EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
+        rotationY.conj();
+        entityRenderDispatcher.overrideCameraOrientation(rotationY);
+        entityRenderDispatcher.setRenderShadow(false);
+        // HUD 语境雾残留（事件点实测）：GL_FOG 关但世界雾参数残留——mode=GL_EXP2(2049)、
+        // density 残留、start=132/end=176。实体 RenderType setupRenderState 会 enableFog，
+        // eye_z≈-1950 在 GL_EXP2 下雾因子 exp(-(density·z)²)=0 → 整模被雾成天空色
+        //（对天空不可见；像素回读实证 px=雾色×光照）。指数雾只认 density 不认 start/end
+        //（fogStart/End 压平无效——首版修复踩坑实证）→ 绘制前置 density=0（雾因子=1），画后还原。
+        java.nio.FloatBuffer fogBuf = java.nio.ByteBuffer.allocateDirect(4).order(java.nio.ByteOrder.nativeOrder()).asFloatBuffer();
+        org.lwjgl.opengl.GL11.glGetFloatv(org.lwjgl.opengl.GL11.GL_FOG_DENSITY, (java.nio.FloatBuffer) fogBuf.clear());
+        float fogDensityBackup = fogBuf.get(0);
+        org.lwjgl.opengl.GL11.glFogf(org.lwjgl.opengl.GL11.GL_FOG_DENSITY, 0.0f);
+        RenderCompat.runAsFancy(() -> {
+            entityRenderDispatcher.render(localPlayer, 0.0d, 0.0d, 0.0f, 0.0f, partialTick, poseStack, Minecraft.getInstance().renderBuffers().bufferSource(), 15728880);
+        });
+        Minecraft.getInstance().renderBuffers().bufferSource().endBatch();
+        org.lwjgl.opengl.GL11.glFogf(org.lwjgl.opengl.GL11.GL_FOG_DENSITY, fogDensityBackup);
+        entityRenderDispatcher.setRenderShadow(true);
+        poseStack.popPose();
+        RenderSystem.popMatrix();
+        Lighting.setupFor3DItems();
+        setExtraPlayerMode(false);
+    }
+     *///?}
     // 中段（1.17~1.19.2）：getModelViewStack(PoseStack)+mojang Quaternion（1192 PoseStack.mulPose(Quaternion):46）；
-    // 1.16.5 走上方 pushMatrix 版（现役产物形态不变）
+    // 1.16.5 走上方 pushMatrix 版
     //? if >=1.17 && <1.19.4 {
     /*public static void renderPlayerOverlay(PoseStack poseStack, LocalPlayer localPlayer, double x, double y, float scale, float yawOffset, int zDepth, float partialTick) {
         setExtraPlayerMode(true);

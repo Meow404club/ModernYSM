@@ -201,6 +201,14 @@ sourceSets.main {
             srcDir(rootProject.file("src/neoforge-1205/java"))
             srcDir(rootProject.file("src/neoforge-1206/java"))
             srcDir(rootProject.file("src/neoforge-pre1213/java"))
+        } else if (stonecutter.eval(stonecutter.current.version, "<1.21.2")) {
+            // 1.21/1.21.1（批二 c-2 注：1.21 缩写轴新线与本分支同形——renderstate 包
+            // 21.3 才有，1213 树不可用）：1205 树 + 1211 树（1.21.1 分歧：
+            // LivingShieldBlockEvent、ItemAbilities 更名）+ pre1213 树；
+            // shim 挂 1211 副本（见下方 shim 块）
+            srcDir(rootProject.file("src/neoforge-1205/java"))
+            srcDir(rootProject.file("src/neoforge-1211/java"))
+            srcDir(rootProject.file("src/neoforge-pre1213/java"))
         } else if (stonecutter.eval(stonecutter.current.version, "<21.5")) {
             // 1.21.2~1.21.4：1205 树跨代同形部分（MobEffect/FirstPlayer/HandRender 钩子、
             // 网络与能力桥、ArrowPotionAccessor——ReplacePlayerRenderForgeHook 已移出至

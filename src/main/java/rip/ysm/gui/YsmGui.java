@@ -559,7 +559,23 @@ public final class YsmGui {
     //?}
     //? if >=21.6 {
     /*public void blit(ResourceLocation atlas, int x, int y, int renderWidth, int renderHeight, float uOffset, float vOffset, int uWidth, int vHeight, int textureWidth, int textureHeight) {
+        ysmEnsureTextureView(atlas);
         this.graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, atlas, x, y, uOffset, vOffset, uWidth, vHeight, renderWidth, renderHeight, textureWidth, textureHeight);
+    }*/
+    //?}
+
+    // 1.21.6 纹理惰性视图（批二 c-2 21.6 线）：register/未 load 纹理的 getTextureView 抛
+    // IllegalStateException（AuthorRow 头像/包图标 runClient 崩溃实证）→ blit 前预检，
+    // 未就绪同帧 registerAndLoad 补载（SimpleTexture 静态资源同步可用）。
+    // 已注册的 OuterFileTexture 走自身 doLoad（textureView 在 doLoad 内创建），不触发本补载
+    //? if >=21.6 {
+    /*private void ysmEnsureTextureView(ResourceLocation atlas) {
+        net.minecraft.client.renderer.texture.AbstractTexture ysmTex = Minecraft.getInstance().getTextureManager().getTexture(atlas);
+        try {
+            ysmTex.getTextureView();
+        } catch (IllegalStateException e) {
+            Minecraft.getInstance().getTextureManager().registerAndLoad(atlas, new net.minecraft.client.renderer.texture.SimpleTexture(atlas));
+        }
     }*/
     //?}
 
@@ -593,6 +609,7 @@ public final class YsmGui {
     //?}
     //? if >=21.6 {
     /*public void blit(ResourceLocation atlas, int x, int y, float uOffset, float vOffset, int width, int height, int textureWidth, int textureHeight) {
+        ysmEnsureTextureView(atlas);
         this.graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, atlas, x, y, uOffset, vOffset, width, height, textureWidth, textureHeight);
     }*/
     //?}
@@ -816,9 +833,23 @@ public final class YsmGui {
 
     /** Screen.renderBackground(GuiGraphics) 的版本中性入口。 */
     public void renderScreenBackground(net.minecraft.client.gui.screens.Screen screen) {
-        //? if neoforge
+        // 1.21.6 GUI 渲染重构：blur 每帧限一次（GuiRenderState.blurBeforeThisStratum
+        // "Can only blur once per frame"，21.6 runClient DisclaimerScreen 崩溃实证）——
+        // YSM 屏叠加在 vanilla 屏/同帧双屏时 Screen.renderBackground 的 blurred 背景二调必炸
+        // → 21.6~21.9 退化为半透明遮罩 fill（视觉近似暗化背景）；21.10 起 vanilla 调用面
+        // 不再触发该限制（现役 21.10/21.11/26.x runClient 走查实证），分支保持原样
+        //（互斥兄弟行条件平铺：铁律禁 else 链与存储态嵌套标记；fill 为注释态存储，
+        // 1201 vcs 直编原文铁律——非活跃内容不得以裸码存在于原文）
+        //? if >=21.6 && <21.10 {
+        /*this.graphics.fill(0, 0, screen.width, screen.height, 0xB8101010);*/
+        //?}
+        //? if neoforge && <21.6
         /*screen.renderBackground(this.graphics, 0, 0, 0);*/
-        //? if forge
+        //? if neoforge && >=21.10
+        /*screen.renderBackground(this.graphics, 0, 0, 0);*/
+        //? if forge && <21.6
+        screen.renderBackground(this.graphics);
+        //? if forge && >=21.10
         screen.renderBackground(this.graphics);
     }
 

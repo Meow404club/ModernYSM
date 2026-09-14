@@ -70,6 +70,8 @@ public class OuterFileTexture extends AbstractTexture implements ITextureMap {
             // Supplier/String 双形）；1.21.8 分界证伪（原注释 DynamicTexture.java:42 为 21.8 行号）
             //? if >=21.6 {
             /*this.texture = RenderSystem.getDevice().createTexture(() -> "ysm_outer_file_texture", 5, TextureFormat.RGBA8, width, height, 1, 1);
+            this.texture.setTextureFilter(com.mojang.blaze3d.textures.FilterMode.NEAREST, false);
+            this.textureView = RenderSystem.getDevice().createTextureView(this.texture);
             RenderSystem.getDevice().createCommandEncoder().writeToTexture(this.texture, imageIn);*/
             //?}
         } catch (IOException e) {

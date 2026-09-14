@@ -56,14 +56,14 @@ public class WorldRendererMixin {
     /*@Inject(method = {"renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V"}, at = {@At("HEAD")})
     private void renderLevel(com.mojang.blaze3d.resource.GraphicsResourceAllocator resourceAllocator, net.minecraft.client.DeltaTracker deltaTracker, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, CallbackInfo ci) {
      *///?}
-    //? if >=21.4 && <21.8 {
+    //? if >=21.4 && <21.6 {
     /*@Inject(method = {"renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V"}, at = {@At("HEAD")})
     private void renderLevel(com.mojang.blaze3d.resource.GraphicsResourceAllocator resourceAllocator, net.minecraft.client.DeltaTracker deltaTracker, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, CallbackInfo ci) {
      *///?}
     // 1.21.6+ renderLevel 头参换代（GraphicsResourceAllocator/GpuBufferSlice/Vector4f，
     // 2111 LevelRenderer.java:461-472 实证；21.8 为 9 参（单 Matrix4f 对）、21.10 起 10 参）
     // 且 FogRenderer.setupColor At 锚点不可恃 → 语义改 HEAD/TAIL 包夹（首尾置位/复位）
-    //? if >=21.8 && <21.10 {
+    //? if >=21.6 && <21.10 {
     /*@Inject(method = {"renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;Z)V"}, at = {@At("HEAD")})
     private void renderLevel(com.mojang.blaze3d.resource.GraphicsResourceAllocator resourceAllocator, net.minecraft.client.DeltaTracker deltaTracker, boolean renderBlockOutline, Camera camera, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, com.mojang.blaze3d.buffers.GpuBufferSlice bufferSlice, org.joml.Vector4f fogColor, boolean renderSky, CallbackInfo ci) {
         if (YesSteveModel.isAvailable()) {
@@ -112,11 +112,11 @@ public class WorldRendererMixin {
     /*@Inject(method = {"renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V"}, at = {@At("TAIL")})
     private void renderLevelPost(com.mojang.blaze3d.resource.GraphicsResourceAllocator resourceAllocator, net.minecraft.client.DeltaTracker deltaTracker, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, CallbackInfo ci) {
      *///?}
-    //? if >=21.4 && <21.8 {
+    //? if >=21.4 && <21.6 {
     /*@Inject(method = {"renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V"}, at = {@At("TAIL")})
     private void renderLevelPost(com.mojang.blaze3d.resource.GraphicsResourceAllocator resourceAllocator, net.minecraft.client.DeltaTracker deltaTracker, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, CallbackInfo ci) {
      *///?}
-    //? if >=21.8 && <21.10 {
+    //? if >=21.6 && <21.10 {
     /*@Inject(method = {"renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;Z)V"}, at = {@At("TAIL")})
     private void renderLevelPost(com.mojang.blaze3d.resource.GraphicsResourceAllocator resourceAllocator, net.minecraft.client.DeltaTracker deltaTracker, boolean renderBlockOutline, Camera camera, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, com.mojang.blaze3d.buffers.GpuBufferSlice bufferSlice, org.joml.Vector4f fogColor, boolean renderSky, CallbackInfo ci) {
         if (YesSteveModel.isAvailable()) {

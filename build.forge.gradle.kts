@@ -12,7 +12,11 @@ group = property("maven_group") as String
 //  - <1.19.3：MC 不内置 JOML（1.19.3 才内置）→ 编译期 implementation + 产物内嵌
 //  - <1.20  ：共享源第三方 compat 树按 1.20.1 口径编写且零条件 → 整体闸门（同 1.16.5 先例）
 //  - <1.18  ：1.17.1 运行时是 Java 16 → JitPack ImageStream（major 61）不可内嵌，改源码 vendor
-val pre120 = stonecutter.eval(stonecutter.current.version, "<1.20")
+// 资源口径替换上界：<1.20.1（含 1.20 线）。1.20 专属教训：原 "<1.20" 把 1.20 线排除在
+// mods.toml loaderVersion 参数化外——forge 46 的 javafml=46 拒载 [47,) 声明
+//（"Missing language javafml version [47,) wanted by main, found 46"，1.20 tour 实证），
+// 生产 jar 同样拒载；1.20.1 线必须继续跳过（在产线产物零字节变化红线）
+val pre120 = stonecutter.eval(stonecutter.current.version, "<1.20.1")
 val pre1193 = stonecutter.eval(stonecutter.current.version, "<1.19.3")
 val pre118 = stonecutter.eval(stonecutter.current.version, "<1.18")
 // Forge 自带 MixinExtras 自 40.3.0 起（=1.18.2 线，批一 run_fixes 实证 split-package 边界）：
@@ -141,6 +145,12 @@ legacyForge {
         minecraftVersion = mc
     }
 
+    // 1.18/1.18.1 dev run 专属：forge 39 的 securejarhandler 读 IMPL_LOOKUP 需显式开模块
+    //（"java.base does not open java.lang.invoke to module cpw.mods.securejarhandler"，
+    // 1.18.1 tour 实证；forge 40+ 自带解法不透传）。仅 run 配置，零产物影响。
+    val securejarhandlerOpens = stonecutter.eval(stonecutter.current.version, ">=1.18") &&
+            stonecutter.eval(stonecutter.current.version, "<1.18.2")
+
     runs {
         // client/server 分目录：默认同 run/ 会双进程互写 logs/latest.log。
         // 与 1.16.5 线（unimined run/server、run/client）约定统一，
@@ -148,10 +158,12 @@ legacyForge {
         register("client") {
             gameDirectory = file("run/client")
             client()
+            if (securejarhandlerOpens) jvmArguments.addAll(listOf("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=cpw.mods.securejarhandler"))
         }
         register("server") {
             gameDirectory = file("run/server")
             server()
+            if (securejarhandlerOpens) jvmArguments.addAll(listOf("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=cpw.mods.securejarhandler"))
         }
     }
 

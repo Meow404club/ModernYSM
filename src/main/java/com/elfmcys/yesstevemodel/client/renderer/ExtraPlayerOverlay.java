@@ -9,6 +9,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import net.minecraft.client.player.LocalPlayer;
+import com.elfmcys.yesstevemodel.util.CameraUtil;
 import rip.ysm.api.client.HudOverlay;
 //? if >=1.21 {
 /*import com.elfmcys.yesstevemodel.util.YsmFrame;*/
@@ -17,8 +18,25 @@ import rip.ysm.api.client.HudOverlay;
 public class ExtraPlayerOverlay implements HudOverlay {
     // <1.20 轴：主体与 >=1.20 分支同构，首参双轴 PoseStack↔GuiGraphics；
     // 实现委托 ModelPreviewRenderer.renderPlayerOverlay（<1.17 pushMatrix 变体 /
-    // >=1.17 getModelViewStack 变体，per-axis 分代见该文件）
-    //? if <1.20 {
+    // >=1.17 getModelViewStack 变体，per-axis 分代见该文件）。
+    // 第三人称判定双拆：Options.getCameraType() 1.16.1 无（CameraType 1.16.2 引入）→
+    // <1.16.2 走 CameraUtil.isFirstPersonView()（field_71467_ac 反射门面，1.16.1 修绿卡
+    // 已建）；拆分必须是顶层兄弟块（存储块内 //? 指令对 scanner 不可见）。
+    //? if <1.16.2 && <1.20 {
+    /*@Override
+    public void render(PoseStack poseStack, Font font, float partialTick, int screenWidth, int screenHeight) {
+        Minecraft minecraft;
+        LocalPlayer localPlayer;
+        if (ExtraPlayerRenderConfig.DISABLE_PLAYER_RENDER.get() || (localPlayer = (minecraft = Minecraft.getInstance()).player) == null || (minecraft.screen instanceof ExtraPlayerRenderScreen)) {
+            return;
+        }
+        if (ExtraPlayerRenderConfig.DISABLE_PLAYER_RENDER_THIRD_PERSON.get() && minecraft.options != null && !CameraUtil.isFirstPersonView()) {
+            return;
+        }
+        ModelPreviewRenderer.renderPlayerOverlay(poseStack, localPlayer, ExtraPlayerRenderConfig.PLAYER_POS_X.get(), ExtraPlayerRenderConfig.PLAYER_POS_Y.get(), ExtraPlayerRenderConfig.PLAYER_SCALE.get().floatValue(), ExtraPlayerRenderConfig.PLAYER_YAW_OFFSET.get().floatValue(), -500, minecraft.getFrameTime());
+    }
+     *///?}
+    //? if >=1.16.2 && <1.20 {
     /*@Override
     public void render(PoseStack poseStack, Font font, float partialTick, int screenWidth, int screenHeight) {
         Minecraft minecraft;

@@ -27,12 +27,7 @@ public interface ScreenAccessor {
     @Accessor("renderables")
     List<Widget> ysm$getRenderables();
      *///?}
-    // 1.19.3：Widget 改名 Renderable（1.19.3 merged jar 实证）
-    //? if >=1.19.3 && <1.19.3 {
-    /*
-    @Accessor("renderables")
-    List<Renderable> ysm$getRenderables();
-     *///?}
+    // 1.19.3：Widget 改名 Renderable（1.19.3 merged jar 实证），由上方 >=1.19.3 活跃块承接
     //? if <1.17 {
     /*@Accessor("buttons")
     List<Widget> ysm$getRenderables();

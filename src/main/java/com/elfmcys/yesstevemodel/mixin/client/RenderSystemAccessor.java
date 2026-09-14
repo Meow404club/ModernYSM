@@ -35,18 +35,8 @@ public interface RenderSystemAccessor {
     }
 }
  *///?}
-// 1.19.3：shaderLightDirections 字段在但元素类型已切 org.joml.Vector3f（1.19.3 merged jar
-// javap 实证）→ accessor 泛型签名须同步 JOML
-//? if >=1.19.3 && <1.19.3 {
-/*
-@Mixin(RenderSystem.class)
-public interface RenderSystemAccessor {
-    @Accessor("shaderLightDirections")
-    static org.joml.Vector3f[] ysm$getShaderLightDirections() {
-        return null;
-    }
-}
- *///?}
+// 1.19.3 起 shaderLightDirections 元素类型已切 org.joml.Vector3f（1.19.3 merged jar javap 实证），
+// 与上方 >=1.19.3 活跃块同一 JOML 签名，1.19.3 由该活跃块直接覆盖（审查修正：恒假冗余块删除）
 //? if <1.17 {
 /*public final class RenderSystemAccessor {
     private RenderSystemAccessor() {

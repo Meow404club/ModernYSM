@@ -119,25 +119,6 @@ public final class YsmTag {
             return this.tag.location();
         }
         //?}
-        //? if >=1.19.3 && <1.19.3 {
-        /*private final net.minecraft.tags.TagKey<Item> tag;
-
-        private ItemTag(net.minecraft.tags.TagKey<Item> tag) {
-            this.tag = tag;
-        }
-
-        static ItemTag of(ResourceLocation rl) {
-            return new ItemTag(net.minecraft.tags.TagKey.create(net.minecraft.core.registries.Registries.ITEM, rl));
-        }
-
-        public boolean matches(ItemStack stack) {
-            return stack.is(this.tag);
-        }
-
-        public ResourceLocation location() {
-            return this.tag.location();
-        }
-         *///?}
     }
 
     /** 实体类型标签句柄（opaque）。 */
@@ -226,25 +207,6 @@ public final class YsmTag {
             return this.tag.location();
         }
         //?}
-        //? if >=1.19.3 && <1.19.3 {
-        /*private final net.minecraft.tags.TagKey<EntityType<?>> tag;
-
-        private EntityTypeTag(net.minecraft.tags.TagKey<EntityType<?>> tag) {
-            this.tag = tag;
-        }
-
-        static EntityTypeTag of(ResourceLocation rl) {
-            return new EntityTypeTag(net.minecraft.tags.TagKey.create(net.minecraft.core.registries.Registries.ENTITY_TYPE, rl));
-        }
-
-        public boolean matches(EntityType<?> type) {
-            return type.is(this.tag);
-        }
-
-        public ResourceLocation location() {
-            return this.tag.location();
-        }
-         *///?}
     }
 
     public static ItemTag itemTag(ResourceLocation rl) {

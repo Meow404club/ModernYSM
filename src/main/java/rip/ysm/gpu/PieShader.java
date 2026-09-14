@@ -29,9 +29,7 @@ public final class PieShader {
         //? if >1.17 {
         //? if <1.18
         /*RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);*/
-        //? if >=1.18.2 && <1.18.2
-        /*RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);*/
-        //? if >=1.18.2 && <21.5
+        //? if >=1.18 && <21.5
         RenderSystem.assertOnRenderThreadOrInit();
         // 1.21.5 删 OrInit 形（21.5 RenderSystem 仅 assertOnRenderThread:109）
         //? if >=21.5

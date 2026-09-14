@@ -50,6 +50,14 @@ public class YSMTickableSoundInstance extends AbstractTickableSoundInstance impl
     }
      *///?}
 
+    // IAudioPlayer 撞名修复：接口方法改名 hasStopped（isStopped 撞 vanilla 名被 reobf 错映射，
+    // 见 IAudioPlayer 注释）。两轴都有 isStopped 可委托（<1.17=上方自定义状态位，
+    // >=1.17=vanilla AbstractTickableSoundInstance），虚分派到 YSMSoundInstance 的流感知覆写。
+    @Override
+    public boolean hasStopped() {
+        return isStopped();
+    }
+
     public void tick() {
         this.volume = (this.targetVolume * GeneralConfig.SOUND_VOLUME.get().floatValue()) / 100.0f;
         if (YsmEntity.isRemoved(this.entity)) {

@@ -29,9 +29,9 @@ public class YSMMessageFormatter {
 
     public static boolean isCurrentClientPlayer(Entity entity) {
         // 1.21.10 authlib 7 GameProfile 记录化：getId() → id()（2110 Minecraft.java:796 同代实证）
-        //? if neoforge && >=21.10
+        //? if neoforge && >=21.9
         /*return entity != null && !PlatformAPI.isServer() && entity.getUUID().equals(Minecraft.getInstance().getGameProfile().id());*/
-        //? if neoforge && <21.10
+        //? if neoforge && <21.9
         /*return entity != null && !PlatformAPI.isServer() && entity.getUUID().equals(Minecraft.getInstance().getGameProfile().getId());*/
         //? if forge
         return entity != null && !PlatformAPI.isServer() && entity.getUUID().equals(Minecraft.getInstance().getUser().getGameProfile().getId());

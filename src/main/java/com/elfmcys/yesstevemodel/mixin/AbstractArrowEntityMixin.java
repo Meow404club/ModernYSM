@@ -3,11 +3,11 @@ package com.elfmcys.yesstevemodel.mixin;
 import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.util.StringPool;
 import com.elfmcys.yesstevemodel.util.accessors.ProjectileStateAccessor;
-//? if >=1.19.4 {
+//? if >=1.19.3 {
 import net.minecraft.core.registries.BuiltInRegistries;
 //?}
 // 1.16.5~1.19.2 走 Registry.ITEM（DefaultedRegistry，getKey 同语义；1165 Registry.java:140/1182:204）
-//? if <1.19.4 {
+//? if <1.19.3 {
 import net.minecraft.core.Registry;
 //?}
 import net.minecraft.resources.ResourceLocation;
@@ -74,7 +74,7 @@ public class AbstractArrowEntityMixin implements ProjectileStateAccessor {
         ResourceLocation key;
         // 1.16.5 无 BuiltInRegistries（1.19.3+），等价入口 Registry.ITEM（1.16.5 Registry.java:140，
         // DefaultedRegistry<Item>）；getKey 语义一致
-        //? if >=1.19.4 {
+        //? if >=1.19.3 {
         if (YesSteveModel.isAvailable() && (entity instanceof LivingEntity) && (key = BuiltInRegistries.ITEM.getKey(((LivingEntity) entity).getMainHandItem().getItem())) != null) {
         //?} else {
         /*if (YesSteveModel.isAvailable() && (entity instanceof LivingEntity) && (key = Registry.ITEM.getKey(((LivingEntity) entity).getMainHandItem().getItem())) != null) {

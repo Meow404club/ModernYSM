@@ -63,10 +63,10 @@ public static final RegistryObject<SoundEvent> CUSTOM_SOUND = REGISTER.register(
             //? if <1.17 {
             /*() -> new SoundEvent(new ResourceLocation(YesSteveModel.MOD_ID, "custom"))*/
             //?}
-            //? if >=1.17 && <1.19.4 {
+            //? if >=1.17 && <1.19.3 {
             /*() -> new SoundEvent(new ResourceLocation(YesSteveModel.MOD_ID, "custom"))*/
             //?}
-            //? if >=1.19.4 {
+            //? if >=1.19.3 {
             //? if >=1.21
             /*() -> SoundEvent.createFixedRangeEvent(ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "custom"), 16.0f)*/
             //? if <1.21

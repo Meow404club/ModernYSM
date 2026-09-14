@@ -108,7 +108,7 @@ public final class FileTypeUtil {
                         }
                     }
                      *///?}
-                    //? if >=1.18.2 && <1.19.4 {
+                    //? if >=1.18.2 && <1.19.3 {
                     /*
                     // Registries/BuiltInRegistries 1.19.4 起；1.18.2~1.19.2 用 Registry 静态字段（1192 Registry.java:190/143 形）
                     net.minecraft.tags.TagKey<EntityType<?>> tagKey = net.minecraft.tags.TagKey.create(net.minecraft.core.Registry.ENTITY_TYPE_REGISTRY, resourceLocation);
@@ -116,7 +116,7 @@ public final class FileTypeUtil {
                         holderSet.forEach(holder -> holder.unwrapKey().ifPresent(rk -> hashSet.add(ysmKeyString(rk))))
                     );
                      *///?}
-                    //? if >=1.19.4 {
+                    //? if >=1.19.3 {
                     net.minecraft.tags.TagKey<EntityType<?>> tagKey = net.minecraft.tags.TagKey.create(net.minecraft.core.registries.Registries.ENTITY_TYPE, resourceLocation);
                     // 1.21.2 Registry.getTag(TagKey) 删除 → HolderGetter.get(TagKey)（同 Optional<Named> 返回）
                     //? if <1.21.2 {

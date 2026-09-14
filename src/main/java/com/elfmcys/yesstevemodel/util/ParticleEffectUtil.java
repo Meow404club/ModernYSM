@@ -26,10 +26,10 @@ import net.minecraft.world.entity.Entity;
 //? if <1.17 {
 /*import java.util.Random;
  *///?}
-//? if >=1.17 && <1.19.2 {
+//? if >=1.17 && <1.19 {
 /*import net.minecraft.world.level.levelgen.RandomSource;
  *///?}
-//? if >=1.19.2 {
+//? if >=1.19 {
 import net.minecraft.util.RandomSource;
 //?}
 import net.minecraft.world.entity.player.Player;
@@ -100,10 +100,10 @@ public class ParticleEffectUtil {
             /*return ParticleArgument.readParticle(new StringReader(particleId));
              *///?}
             // readParticle 双参（HolderLookup）1.19.4 起；1.17~1.19.2 单参（1192 ParticleArgument.java:43）
-            //? if >=1.17 && <1.19.4 {
+            //? if >=1.17 && <1.19.3 {
             /*return ParticleArgument.readParticle(new StringReader(particleId));
              *///?}
-            //? if >=1.19.4 && <1.20.5 {
+            //? if >=1.19.3 && <1.20.5 {
             return ParticleArgument.readParticle(new StringReader(particleId), net.minecraft.core.registries.BuiltInRegistries.PARTICLE_TYPE.asLookup());
             //?}
             // 1.20.5+ 收 HolderLookup.Provider（vanilla-1.20.6 ParticleArgument.java:57）；spawn 只在

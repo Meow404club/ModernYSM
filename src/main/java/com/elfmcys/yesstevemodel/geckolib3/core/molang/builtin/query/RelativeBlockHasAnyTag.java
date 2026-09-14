@@ -5,11 +5,11 @@ package com.elfmcys.yesstevemodel.geckolib3.core.molang.builtin.query;
 // import net.minecraft.tags.Tag;
 //? }
 // Registries 常量类 1.19.3+；1.17~1.19.2 用 Registry.BLOCK_REGISTRY（1182 Registry.java 实证）
-//? if >=1.18.2 && <1.19.4 {
+//? if >=1.18.2 && <1.19.3 {
 /*import net.minecraft.tags.TagKey;
 import net.minecraft.core.Registry;
  *///?}
-//? if >=1.19.4 {
+//? if >=1.19.3 {
 import net.minecraft.tags.TagKey;
 import net.minecraft.core.registries.Registries;
 //?}
@@ -39,12 +39,12 @@ public class RelativeBlockHasAnyTag extends EntityFunction {
                 // return true;
             //? if <1.18.2
             // }
-            //? if >=1.18.2 && <1.19.4 {
+            //? if >=1.18.2 && <1.19.3 {
             /*if (block.is(TagKey.create(net.minecraft.core.Registry.BLOCK_REGISTRY, key))) {
                 return true;
             }
              *///?}
-            //? if >=1.19.4 {
+            //? if >=1.19.3 {
             if (block.is(TagKey.create(Registries.BLOCK, key))) {
                 return true;
             }

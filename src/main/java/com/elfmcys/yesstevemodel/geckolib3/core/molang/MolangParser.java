@@ -9,7 +9,7 @@ import com.elfmcys.yesstevemodel.geckolib3.core.molang.value.MolangValue;
 import com.elfmcys.yesstevemodel.molang.MolangEngine;
 import com.elfmcys.yesstevemodel.molang.parser.ParseException;
 import com.elfmcys.yesstevemodel.util.log.ChatLogger;
-//? if <1.19.2 {
+//? if <1.19 {
 // import net.minecraft.network.chat.TranslatableComponent;
 //? } else {
 //? }
@@ -35,9 +35,9 @@ public class MolangParser {
         } catch (Exception e) {
             if (AnimationDebugOverlay.isDebugActive()) {
                 YesSteveModel.LOGGER.error("Failed to parse molang expression: {}\n{}", e.getMessage(), molangExpression);
-                //? if <1.19.2
+                //? if <1.19
                 // ChatLogger.INSTANCE.logComponent(new TranslatableComponent("error.yes_steve_model.parse_molang_exp").append(e.getMessage()).append("\n----------------------\n").append(molangExpression.replace("\r\n", "\n").replace("\r", "\n")).append("\n----------------------"));
-                //? if >=1.19.2
+                //? if >=1.19
                 ChatLogger.INSTANCE.logComponent(Component.translatable("error.yes_steve_model.parse_molang_exp").append(e.getMessage()).append("\n----------------------\n").append(molangExpression.replace("\r\n", "\n").replace("\r", "\n")).append("\n----------------------"));
             } else {
                 YesSteveModel.LOGGER.debug("Failed to parse molang expression: {}\n{}", e.getMessage(), molangExpression);

@@ -222,12 +222,12 @@ public class QueryBinding extends ContextBinding {
         int i = 0;
         for (EquipmentSlot equipmentSlot : EquipmentSlot.values()) {
             // EquipmentSlot.isArmor() 1.19.4 起（1194 EquipmentSlot.java:43；1182/1192 无）→
-            // <1.19.4 用 getType()==ARMOR（等价展开）
+            // <1.19.3 用 getType()==ARMOR（等价展开）
             //? if <1.17
             // if (equipmentSlot.getType() == EquipmentSlot.Type.ARMOR && !CosmeticArmorHelper.getArmorItem(entity, equipmentSlot).isEmpty()) {
-            //? if >=1.17 && <1.19.4
+            //? if >=1.17 && <1.19.3
             /*if (equipmentSlot.getType() == EquipmentSlot.Type.ARMOR && !CosmeticArmorHelper.getArmorItem(entity, equipmentSlot).isEmpty()) {*/
-            //? if >=1.19.4
+            //? if >=1.19.3
             if (equipmentSlot.isArmor() && !CosmeticArmorHelper.getArmorItem(entity, equipmentSlot).isEmpty()) {
                 i++;
             }

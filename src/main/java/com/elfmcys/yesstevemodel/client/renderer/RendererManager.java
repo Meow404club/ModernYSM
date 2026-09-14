@@ -152,8 +152,12 @@ public class RendererManager {
         ((net.minecraft.server.packs.resources.ReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener(ysmEquipmentAssets);
         EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemModelResolver(), Minecraft.getInstance().getMapRenderer(), Minecraft.getInstance().getBlockRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), ysmEquipmentAssets, Minecraft.getInstance().getAtlasManager(), Minecraft.getInstance().font, Minecraft.getInstance().playerSkinRenderCache());*/
         //?}
-        //? if <1.19.2
+        // 1.18.x Context 五参（七参 1.19.0 起：+BlockRenderDispatcher +ItemInHandRenderer）
+        //? if <1.19
         /*EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), Minecraft.getInstance().font);*/
+        //? if >=1.19 && <1.19.2 {
+        /*EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemRenderer(), Minecraft.getInstance().getBlockRenderer(), new net.minecraft.client.renderer.ItemInHandRenderer(Minecraft.getInstance(), entityRenderDispatcher, Minecraft.getInstance().getItemRenderer()), resourceManager, Minecraft.getInstance().getEntityModels(), Minecraft.getInstance().font);*/
+        //?}
         playerRenderer = new CustomPlayerRenderer(context);
         projectileRenderer = new ProjectileRenderer(context);
         handRenderer = new HandItemRenderer();

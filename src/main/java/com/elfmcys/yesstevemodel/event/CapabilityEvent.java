@@ -60,11 +60,11 @@ import net.minecraft.world.entity.projectile.Projectile;
 /*import net.neoforged.neoforge.event.TickEvent;*/
 //? if forge
 import net.minecraftforge.event.TickEvent;
-//? if >=1.19.2 && neoforge
+//? if >=1.19 && neoforge
 /*import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;*/
-//? if >=1.19.2 && forge
+//? if >=1.19 && forge
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
-//? if <1.19.2 {
+//? if <1.19 {
 /*// 事件名反向差：1.16.x 为 EntityJoinWorldEvent（1.19+ 才改名 JoinLevel），javap 实证
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;*/
 //?}
@@ -154,7 +154,7 @@ public final class CapabilityEvent {
         });
     }
 
-    //? if >=1.19.2 {
+    //? if >=1.19 {
     @SubscribeEvent
     public static void onEntityJoinLevel(EntityJoinLevelEvent event) {
         onEntityJoin(event.getEntity());
@@ -218,9 +218,9 @@ public final class CapabilityEvent {
         /*onServerTickEnd(net.minecraftforge.fmllegacy.server.ServerLifecycleHooks.getCurrentServer());*/
         //? if >=1.18 && <1.18.2
         /*onServerTickEnd(net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer());*/
-        //? if >=1.18.2 && <1.19.2
+        //? if >=1.18.2 && <1.19
         /*onServerTickEnd(net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer());*/
-        //? if >=1.19.2
+        //? if >=1.19
         onServerTickEnd(event.getServer());
     }
     //? }

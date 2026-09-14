@@ -82,12 +82,12 @@ public final class YsmGui {
     //?}
 
     /**
-     * 版本中性文本工厂：Component.literal/translatable 静态工厂 1.19.2 引入
+     * 版本中性文本工厂：Component.literal/translatable 静态工厂 1.19.0 引入（f119 Component.java:126/130 实证）
      * （1192 Component.java:144/152，接口 static 隐 public；1182 无）↔
      * 1.16.5~1.18.2 new TextComponent/TranslatableComponent。
      */
     public static net.minecraft.network.chat.MutableComponent text(String s) {
-        //? if <1.19.2 {
+        //? if <1.19 {
         /*return new net.minecraft.network.chat.TextComponent(s);
          *///?} else {
         return Component.literal(s);
@@ -95,18 +95,17 @@ public final class YsmGui {
     }
 
     public static net.minecraft.network.chat.MutableComponent trans(String key, Object... args) {
-        //? if <1.19.2 {
+        //? if <1.19 {
         /*return new net.minecraft.network.chat.TranslatableComponent(key, args);
          *///?} else {
         return Component.translatable(key, args);
         //?}
     }
 
-    /** 版本中性 Button 工厂：1.19.4+ Button.builder().bounds().build()（1194 Button.java:17，
-     * 6 参构造降 protected :21）↔ 1.16.5~1.19.2 new Button(x,y,w,h,msg,onPress)
-     *（1165:12/1182:15/1192:18 public 6 参；多行 onPress lambda 各版同构）。 */
+    /** 版本中性 Button 工厂：1.19.3 起 6 参构造删除仅余 Builder（1.19.3 merged jar 实证）↔
+     * 1.16.5~1.19.2 new Button(x,y,w,h,msg,onPress)（多行 onPress lambda 各版同构）。 */
     public static net.minecraft.client.gui.components.Button button(int x, int y, int width, int height, net.minecraft.network.chat.Component message, net.minecraft.client.gui.components.Button.OnPress onPress) {
-        //? if <1.19.4 {
+        //? if <1.19.3 {
         /*return new net.minecraft.client.gui.components.Button(x, y, width, height, message, onPress);
          *///?} else {
         return net.minecraft.client.gui.components.Button.builder(message, onPress).bounds(x, y, width, height).build();

@@ -108,9 +108,9 @@ public class YSMBinding extends ContextBinding {
         var("dimension_name", ctx -> ctx.level().dimension().location().toString());
         // getFps() 1.18+（1.16.5 为 fpsString 字段/无取值器）：帧率不显示数字时 1.16.5 退化 parse fpsString
         // getFps 1.19.4+（1192 merged jar 无此方法，仅 fpsString 字段）：中段+1.16.5 降级 0
-        //? if <1.19.4
+        //? if <1.19.3
         /*var("fps", ctx -> 0);*/
-        //? if >=1.19.4
+        //? if >=1.19.3
         var("fps", ctx -> Minecraft.getInstance().getFps());
         var("time_delta", ctx -> ctx.geoInstance().getPositionTracker().getTimeDelta() / 20.0f);
         entityVar("ground_speed2", YSMBinding::getGroundSpeed2);
@@ -351,14 +351,14 @@ public class YSMBinding extends ContextBinding {
         return false;
     }
 
-    /** ComponentUtils.copyOnClickText 1.19.4+（1192 sources 零命中）：<1.19.4 原串直返
+    /** ComponentUtils.copyOnClickText 1.19.4+（1192 sources 零命中）：<1.19.3 原串直返
      *（丢点击复制修饰，仅 debug dump 输出，行为差见回报）。 */
-    //? if <1.19.4 {
+    //? if <1.19.3 {
     /*private static net.minecraft.network.chat.Component copyOnClickTextCompat(String str) {
         return YsmText.literal(str);
     }
      *///?}
-    //? if >=1.19.4 {
+    //? if >=1.19.3 {
     private static net.minecraft.network.chat.Component copyOnClickTextCompat(String str) {
         return net.minecraft.network.chat.ComponentUtils.copyOnClickText(str);
     }
@@ -501,7 +501,7 @@ public class YSMBinding extends ContextBinding {
          */
         //?}
         // 1.18.2~1.19.2：Holder 体系已在（1182 Level.getBiome 返回 Holder），实体访问器为 getLevel()
-        //? if >=1.18.2 && <1.19.4 {
+        //? if >=1.18.2 && <1.19.3 {
         /*
         Holder<Biome> biome = context.entity().getLevel().getBiome(context.entity().blockPosition());
         biome.unwrapKey().ifPresent(resourceKey -> {
@@ -511,7 +511,7 @@ public class YSMBinding extends ContextBinding {
             context.logWarningComponent(YsmText.literal("Tag ").append(copyOnClickTextCompat(tagKey.location().toString())));
         });
          *///?}
-        //? if >=1.19.4 && <1.20 {
+        //? if >=1.19.3 && <1.20 {
         /*
         Holder<Biome> biome = context.entity().getLevel().getBiome(context.entity().blockPosition());
         biome.unwrapKey().ifPresent(resourceKey -> {
@@ -537,15 +537,15 @@ public class YSMBinding extends ContextBinding {
         BlockPos blockPosBlockPosition = entity.blockPosition();
                 //? if <1.18.2
         /*return entity.level.canSeeSky(blockPosBlockPosition) && entity.level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, blockPosBlockPosition).getY() <= blockPosBlockPosition.getY();*/
-        //? if >=1.18.2 && <1.19.4
+        //? if >=1.18.2 && <1.19.3
         /*return entity.getLevel().canSeeSky(blockPosBlockPosition) && entity.getLevel().getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, blockPosBlockPosition).getY() <= blockPosBlockPosition.getY();*/
-        //? if >=1.19.4 && <1.20
+        //? if >=1.19.3 && <1.20
         /*return entity.getLevel().canSeeSky(blockPosBlockPosition) && entity.getLevel().getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, blockPosBlockPosition).getY() <= blockPosBlockPosition.getY();*/
         //? if >=1.20
         return entity.level().canSeeSky(blockPosBlockPosition) && entity.level().getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, blockPosBlockPosition).getY() <= blockPosBlockPosition.getY();
     }
 
-    //? if <1.19.4
+    //? if <1.19.3
     /*private static final String[] PARROT_VARIANT_NAMES = {"red_blue", "blue", "green", "yellow_blue", "silver"};
 
     private static String getParrotVariantName(int variant) {
@@ -571,9 +571,9 @@ public class YSMBinding extends ContextBinding {
         }).map(entityType2 -> {
             // Parrot.Variant 内枚举 1.18+（1.16.5 javap 无）：变体名序 vanilla 同源，1.16.5 走名字表
         // Parrot.Variant 1.19.4+（1192 merged jar 无 Variant 内类）：中段+1.16.5 走名字表
-        //? if <1.19.4
+        //? if <1.19.3
         /*return getParrotVariantName(shoulderEntityLeft.getInt("Variant"));*/
-        //? if >=1.19.4 && <21.5
+        //? if >=1.19.3 && <21.5
         return Parrot.Variant.byId(shoulderEntityLeft.getInt("Variant")).name().toLowerCase(Locale.ENGLISH);
         //? if >=21.5
         /*return Parrot.Variant.byId(shoulderEntityLeft.getIntOr("Variant", 0)).name().toLowerCase(Locale.ENGLISH);*/

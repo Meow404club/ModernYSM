@@ -19,11 +19,12 @@ import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import rip.ysm.gui.YsmGui;
 import com.mojang.blaze3d.vertex.PoseStack;
-//? if <1.19.4 {
+//? if <1.19.3 {
 /*import com.mojang.math.Quaternion;
 import com.mojang.math.Vector3f;
  *///?}
-//? if >=1.19.4 {
+// 1.19.3 vanilla 切 JOML：Axis 枚举 + org.joml.Quaternionf（1.19.3 merged jar 实证）
+//? if >=1.19.3 {
 import com.mojang.math.Axis;
 import org.joml.Quaternionf;
 //?}
@@ -263,7 +264,7 @@ public class ModelSettingsScreen extends OptionScreen {
 
         // 旋转四元数：1.16.5~1.19.2 = mojang Quaternion/Vector3f.rotationDegrees（1192:193）；
         // 1.19.3+ = Axis 枚举 + JOML Quaternionf
-        //? if <1.19.4 {
+        //? if <1.19.3 {
         /*Quaternion rotationZ = Vector3f.ZP.rotationDegrees(180.0f);
         Quaternion rotationX = Vector3f.XP.rotationDegrees(-10.0f + pitch);
         rotationZ.mul(rotationX);
@@ -320,10 +321,10 @@ public class ModelSettingsScreen extends OptionScreen {
         //? if <1.17 {
         /*rotationX.conj();
          *///?}
-        //? if >=1.17 && <1.19.4 {
+        //? if >=1.17 && <1.19.3 {
         /*rotationX.conj();
          *///?}
-        //? if >=1.19.4 {
+        //? if >=1.19.3 {
         rotationX.conjugate();
         //?}
         //? if <21.9

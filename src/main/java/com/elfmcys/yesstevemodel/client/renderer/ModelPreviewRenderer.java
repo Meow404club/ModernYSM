@@ -40,7 +40,7 @@ import org.joml.Quaternionf;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-//? if >=1.19.4 {
+//? if >=1.19.3 {
 import com.mojang.math.Axis;
 //? }
 // Axis（1.19.3+）在 1.16.5 以 com.mojang.math.Vector3f/Quaternion 轴角构造等价表达
@@ -109,18 +109,18 @@ public final class ModelPreviewRenderer {
                 float bodyRotation = CustomVehicleRenderer.getBodyRotation(vehicle, Mth.lerp(partialTick, vehicle.yRotO, vehicle.getYRot()), partialTick);
                 //? if <1.17
                 // poseStack.mulPose(com.mojang.math.Vector3f.YP.rotationDegrees(180.0f - bodyRotation));
-                //? if >=1.17 && <1.19.4
+                //? if >=1.17 && <1.19.3
                 /*poseStack.mulPose(com.mojang.math.Vector3f.YP.rotationDegrees(180.0f - bodyRotation));*/
-                //? if >=1.19.4
+                //? if >=1.19.3
                 poseStack.mulPose(Axis.YP.rotationDegrees(180.0f - bodyRotation));
                 RenderUtils.prepMatrixForLocator(poseStack, list);
                 //? if <1.17
                 // poseStack.mulPose(com.mojang.math.Vector3f.YN.rotationDegrees(180.0f - bodyRotation));
-                //? if >=1.17 && <1.19.4
+                //? if >=1.17 && <1.19.3
                 /*poseStack.mulPose(com.mojang.math.Vector3f.YN.rotationDegrees(180.0f - bodyRotation));*/
-                //? if >=1.19.4
+                //? if >=1.19.3
                 poseStack.mulPose(Axis.YN.rotationDegrees(180.0f - bodyRotation));
-                //? if neoforge && >=1.19.4 && <1.20.5
+                //? if neoforge && >=1.19.3 && <1.20.5
                 /*double myRidingOffset = (-vehicle.getMyRidingOffset(entity)) - entity.getMyRidingOffset(vehicle);*/
                 // 1.20.5+ 骑乘偏移 API：getMyRidingOffset(Entity) 删 → getVehicleAttachmentPoint(Entity)=Vec3
                 //（vanilla-1.20.6 Entity.java:1877），预览取 y 分量（视觉近似，差异已入接续账）
@@ -178,12 +178,12 @@ public final class ModelPreviewRenderer {
         //? } else {
         // 中段 mojang Quaternion（rotationDegrees 返回值 1192 Vector3f.java:192）/ 1.19.4+ JOML Quaternionf，
         // else 体（活跃区）内用行条件段化（块条件嵌套会闭合外层，YsmTag 实测）
-        //? if >=1.17 && <1.19.4
+        //? if >=1.17 && <1.19.3
         /*com.mojang.math.Quaternion rotationZ = com.mojang.math.Vector3f.ZP.rotationDegrees(180.0f);
         com.mojang.math.Quaternion rotationX = com.mojang.math.Vector3f.XP.rotationDegrees((-10.0f) + pitch);*/
-        //? if >=1.19.4
+        //? if >=1.19.3
         Quaternionf rotationZ = Axis.ZP.rotationDegrees(180.0f);
-        //? if >=1.19.4
+        //? if >=1.19.3
         Quaternionf rotationX = Axis.XP.rotationDegrees((-10.0f) + pitch);
         //? }
         rotationZ.mul(rotationX);
@@ -227,9 +227,9 @@ public final class ModelPreviewRenderer {
         EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         //? if <1.17
         // rotationX.conj();
-        //? if >=1.17 && <1.19.4
+        //? if >=1.17 && <1.19.3
         /*rotationX.conj();*/
-        //? if >=1.19.4
+        //? if >=1.19.3
         rotationX.conjugate();
         //? if <21.9
         entityRenderDispatcher.overrideCameraOrientation(rotationX);
@@ -244,9 +244,9 @@ public final class ModelPreviewRenderer {
             if (animationTracker.isCurrentAnimation("sleep")) {
                 //? if <1.17
                 // poseStack.mulPose(com.mojang.math.Vector3f.YP.rotationDegrees(yaw - 90.0f));
-                //? if >=1.17 && <1.19.4
+                //? if >=1.17 && <1.19.3
                 /*poseStack.mulPose(com.mojang.math.Vector3f.YP.rotationDegrees(yaw - 90.0f));*/
-                //? if >=1.19.4
+                //? if >=1.19.3
                 poseStack.mulPose(Axis.YP.rotationDegrees(yaw - 90.0f));
                 poseStack.translate(0.5d, 0.5625d, 0.0d);
                 livingEntity.setPose(Pose.SLEEPING);
@@ -327,20 +327,20 @@ public final class ModelPreviewRenderer {
         // com.mojang.math.Quaternion rotationZ = new com.mojang.math.Quaternion(com.mojang.math.Vector3f.ZP, 180.0f, true);
         // rotationZ.mul(new com.mojang.math.Quaternion(com.mojang.math.Vector3f.XP, (-10.0f) + pitch, true));
         //? } else {
-        //? if >=1.17 && <1.19.4
+        //? if >=1.17 && <1.19.3
         /*com.mojang.math.Quaternion rotationZ = com.mojang.math.Vector3f.ZP.rotationDegrees(180.0f);
         rotationZ.mul(com.mojang.math.Vector3f.XP.rotationDegrees((-10.0f) + pitch));*/
-        //? if >=1.19.4
+        //? if >=1.19.3
         Quaternionf rotationZ = Axis.ZP.rotationDegrees(180.0f);
-        //? if >=1.19.4
+        //? if >=1.19.3
         rotationZ.mul(Axis.XP.rotationDegrees((-10.0f) + pitch));
         //? }
         poseStack.mulPose(rotationZ);
         //? if <1.17
         // poseStack.mulPose(com.mojang.math.Vector3f.YP.rotationDegrees(yaw + 180.0f));
-        //? if >=1.17 && <1.19.4
+        //? if >=1.17 && <1.19.3
         /*poseStack.mulPose(com.mojang.math.Vector3f.YP.rotationDegrees(yaw + 180.0f));*/
-        //? if >=1.19.4
+        //? if >=1.19.3
         poseStack.mulPose(Axis.YP.rotationDegrees(yaw + 180.0f));
         poseStack.translate(-0.5d, 0.0d, 0.5d);
         Minecraft.getInstance().getBlockRenderer().renderSingleBlock(Blocks.RED_BED.defaultBlockState(), poseStack, bufferSource, 15728880, OverlayTexture.NO_OVERLAY);
@@ -355,20 +355,20 @@ public final class ModelPreviewRenderer {
         // com.mojang.math.Quaternion rotationZ = new com.mojang.math.Quaternion(com.mojang.math.Vector3f.ZP, 180.0f, true);
         // rotationZ.mul(new com.mojang.math.Quaternion(com.mojang.math.Vector3f.XP, (-10.0f) + pitch, true));
         //? } else {
-        //? if >=1.17 && <1.19.4
+        //? if >=1.17 && <1.19.3
         /*com.mojang.math.Quaternion rotationZ = com.mojang.math.Vector3f.ZP.rotationDegrees(180.0f);
         rotationZ.mul(com.mojang.math.Vector3f.XP.rotationDegrees((-10.0f) + pitch));*/
-        //? if >=1.19.4
+        //? if >=1.19.3
         Quaternionf rotationZ = Axis.ZP.rotationDegrees(180.0f);
-        //? if >=1.19.4
+        //? if >=1.19.3
         rotationZ.mul(Axis.XP.rotationDegrees((-10.0f) + pitch));
         //? }
         poseStack.mulPose(rotationZ);
         //? if <1.17
         // poseStack.mulPose(com.mojang.math.Vector3f.YP.rotationDegrees(yaw));
-        //? if >=1.17 && <1.19.4
+        //? if >=1.17 && <1.19.3
         /*poseStack.mulPose(com.mojang.math.Vector3f.YP.rotationDegrees(yaw));*/
-        //? if >=1.19.4
+        //? if >=1.19.3
         poseStack.mulPose(Axis.YP.rotationDegrees(yaw));
         poseStack.translate(-1.5d, -1.0d, -2.5d);
 
@@ -450,11 +450,11 @@ public final class ModelPreviewRenderer {
         poseStack.pushPose();
         //? if <1.17
         // poseStack.mulPose(com.mojang.math.Vector3f.YP.rotationDegrees(yaw));
-        //? if >=1.17 && <1.19.4
+        //? if >=1.17 && <1.19.3
         /*poseStack.mulPose(com.mojang.math.Vector3f.YP.rotationDegrees(yaw));*/
-        //? if >=1.19.4
+        //? if >=1.19.3
         poseStack.mulPose(Axis.YP.rotationDegrees(yaw));
-        //? if neoforge && >=1.19.4 && <1.20.5
+        //? if neoforge && >=1.19.3 && <1.20.5
         /*entityRenderDispatcher.render(vehicleEntity, 0.0d, (-vehicleEntity.getMyRidingOffset(riderEntity) - riderEntity.getMyRidingOffset(vehicleEntity)), 0.0d, 0.0f, partialTick, poseStack, bufferSource, 15728880);*/
         //? if neoforge && >=1.20.5 && <1.21.2
         /*entityRenderDispatcher.render(vehicleEntity, 0.0d, (-vehicleEntity.getVehicleAttachmentPoint(riderEntity).y - riderEntity.getVehicleAttachmentPoint(vehicleEntity).y), 0.0d, 0.0f, partialTick, poseStack, bufferSource, 15728880);*/
@@ -462,11 +462,11 @@ public final class ModelPreviewRenderer {
         // vanilla-1.21.3 EntityRenderDispatcher.java:148 公有 render 八参）
         //? if neoforge && >=1.21.2
         /*entityRenderDispatcher.render(vehicleEntity, 0.0d, (-vehicleEntity.getVehicleAttachmentPoint(riderEntity).y - riderEntity.getVehicleAttachmentPoint(vehicleEntity).y), 0.0d, partialTick, poseStack, bufferSource, 15728880);*/
-        // forge<1.19.4 分支（基线=无条件行；4e0a2d9 分支化时漏掉 <1.19.4 段导致
+        // forge<1.19.3 分支（基线=无条件行；4e0a2d9 分支化时漏掉 <1.19.3 段导致
         // 1.16.5~1.19.2 载具预览 render 丢失——1.16.5 产物 javap 对比实证，此处补回）
-        //? if forge && <1.19.4
+        //? if forge && <1.19.3
         /*entityRenderDispatcher.render(vehicleEntity, 0.0d, (-vehicleEntity.getPassengersRidingOffset()) - riderEntity.getMyRidingOffset(), 0.0d, 0.0f, partialTick, poseStack, bufferSource, 15728880);*/
-        //? if forge && >=1.19.4
+        //? if forge && >=1.19.3
         entityRenderDispatcher.render(vehicleEntity, 0.0d, (-vehicleEntity.getPassengersRidingOffset()) - riderEntity.getMyRidingOffset(), 0.0d, 0.0f, partialTick, poseStack, bufferSource, 15728880);
         poseStack.popPose();
     }
@@ -509,12 +509,12 @@ public final class ModelPreviewRenderer {
         // com.mojang.math.Quaternion rotationZ = new com.mojang.math.Quaternion(com.mojang.math.Vector3f.ZP, 180.0f, true);
         // com.mojang.math.Quaternion rotationX = new com.mojang.math.Quaternion(com.mojang.math.Vector3f.XP, disablePreviewRotation ? 0.0f : -10.0f, true);
         //? } else {
-        //? if >=1.17 && <1.19.4
+        //? if >=1.17 && <1.19.3
         /*com.mojang.math.Quaternion rotationZ = com.mojang.math.Vector3f.ZP.rotationDegrees(180.0f);
         com.mojang.math.Quaternion rotationX = com.mojang.math.Vector3f.XP.rotationDegrees(disablePreviewRotation ? 0.0f : -10.0f);*/
-        //? if >=1.19.4
+        //? if >=1.19.3
         Quaternionf rotationZ = Axis.ZP.rotationDegrees(180.0f);
-        //? if >=1.19.4
+        //? if >=1.19.3
         Quaternionf rotationX = Axis.XP.rotationDegrees(disablePreviewRotation ? 0.0f : -10.0f);
         //? }
         rotationZ.mul(rotationX);
@@ -608,9 +608,9 @@ public final class ModelPreviewRenderer {
             float vehicleYaw = vehicle.getYRot();
             //? if <1.17
             // poseStack.mulPose(com.mojang.math.Vector3f.YP.rotationDegrees(vehicleYaw - previewYaw));
-            //? if >=1.17 && <1.19.4
+            //? if >=1.17 && <1.19.3
             /*poseStack.mulPose(com.mojang.math.Vector3f.YP.rotationDegrees(vehicleYaw - previewYaw));*/
-            //? if >=1.19.4
+            //? if >=1.19.3
             poseStack.mulPose(Axis.YP.rotationDegrees(vehicleYaw - previewYaw));
             livingEntity.yHeadRot = vehicleYaw;
             livingEntity.yHeadRotO = vehicleYaw;
@@ -624,9 +624,9 @@ public final class ModelPreviewRenderer {
         EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         //? if <1.17
         // rotationX.conj();
-        //? if >=1.17 && <1.19.4
+        //? if >=1.17 && <1.19.3
         /*rotationX.conj();*/
-        //? if >=1.19.4
+        //? if >=1.19.3
         rotationX.conjugate();
         //? if <21.9
         entityRenderDispatcher.overrideCameraOrientation(rotationX);
@@ -762,7 +762,7 @@ public final class ModelPreviewRenderer {
      *///?}
     // 中段（1.17~1.19.2）：getModelViewStack(PoseStack)+mojang Quaternion（1192 PoseStack.mulPose(Quaternion):46）；
     // 1.16.5 走上方 pushMatrix 版
-    //? if >=1.17 && <1.19.4 {
+    //? if >=1.17 && <1.19.3 {
     /*public static void renderPlayerOverlay(PoseStack poseStack, LocalPlayer localPlayer, double x, double y, float scale, float yawOffset, int zDepth, float partialTick) {
         setExtraPlayerMode(true);
         PoseStack modelViewStack = RenderSystem.getModelViewStack();
@@ -799,7 +799,7 @@ public final class ModelPreviewRenderer {
     }
      *///?}
     // 1.19.4：Axis 枚举 + JOML Quaternionf（1.19.3 JOML 内置，mulPose(Quaternionf)）
-    //? if >=1.19.4 && <1.20 {
+    //? if >=1.19.3 && <1.20 {
     /*
     public static void renderPlayerOverlay(PoseStack poseStack, LocalPlayer localPlayer, double x, double y, float scale, float yawOffset, int zDepth, float partialTick) {
         setExtraPlayerMode(true);

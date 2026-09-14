@@ -56,12 +56,12 @@ public final class Pie {
         float rectW = (outerRadius + pad) * 2.0f;
         float rectH = (outerRadius + pad) * 2.0f;
 
-        //? if >=1.19.4 {
+        //? if >=1.19.3 {
         RenderSystem.getProjectionMatrix().mul(RenderSystem.getModelViewMatrix(), mvpScratch);
         mvpScratch.mul(pose.last().pose());
         mvpScratch.get(mvpFloats);
         //?}
-        //? if >=1.17 && <1.19.4 {
+        //? if >=1.17 && <1.19.3 {
         /*
         // 1.17~1.19.2 矩阵源为 mojang → MatrixBridge 转 JOML（proj×mv×pose 数学不变）
         com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.projectionMatrix().mul(com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.modelViewMatrix(), mvpScratch);

@@ -53,10 +53,15 @@ public final class RenderFirstPlayerForgeHook {
         // 1.18.0 getter 已改名（forge-1.18.x sources：getPoseStack/getMultiBufferSource/getPackedLight/getPartialTicks）
         RenderFirstPlayerBackground.onRenderHand(event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight(), event.getPartialTicks());
          *///?}
-        //? if >=1.18.2 && <1.19.2 {
+        //? if >=1.18.2 && <1.19 {
         /*
-        // 1182 RenderHandEvent.getPartialTicks（:70）；getPartialTick 1.19.3+ 改名
+        // 1182 RenderHandEvent.getPartialTicks（:70）
         RenderFirstPlayerBackground.onRenderHand(event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight(), event.getPartialTicks());
+         *///?}
+        //? if >=1.19 && <1.19.2 {
+        /*
+        // 1.19.0 getPartialTicks 已改名 getPartialTick（f119 RenderHandEvent.java:96 实证）
+        RenderFirstPlayerBackground.onRenderHand(event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight(), event.getPartialTick());
          *///?}
         //? if >=1.19.2 {
         RenderFirstPlayerBackground.onRenderHand(event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight(), event.getPartialTick());

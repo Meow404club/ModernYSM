@@ -133,7 +133,7 @@ public final class MatrixBridge {
     // JOML set(a,b,v) 直写 mem[a*4+b]=m{a}{b}（digits=列,行）→ 恒等拷贝循环沿用 1165 已证形态。
     // Matrix3f 1.17~1.19.2 有 public store(FloatBuffer)（1192 Matrix3f.java:420，9 值），
     // 免 1165 的反射读 field 路径。
-    //? if >=1.17 && <1.19.4 {
+    //? if >=1.17 && <1.19.3 {
     /*public static Matrix4f pose(PoseStack.Pose pose) {
         return fromMoj(pose.pose());
     }
@@ -171,7 +171,8 @@ public final class MatrixBridge {
     }
 
      *///?}
-    //? if >=1.19.4 {
+    // 1.19.3 vanilla 切 JOML（PoseStack.Pose.pose() 返回 org.joml.Matrix4f）→ >=1.19.3 段直用
+    //? if >=1.19.3 {
     public static Matrix4f pose(PoseStack.Pose pose) {
         return pose.pose();
     }

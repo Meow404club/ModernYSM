@@ -19,8 +19,8 @@ public abstract class YsmSliderButton extends AbstractSliderButton {
     }
 
     // 1.16.5~1.19.2 AbstractSliderButton 无 getX/getY（x/y 为 public 字段，1192 AbstractWidget.java:25-26），
-    // 补桥接；1.19.4+ 侧父类自带同名方法（1194:315+），桥接注释态
-    //? if <1.19.4 {
+    // 补桥接；1.19.3 起 x/y 私有化且父类自带同名方法（1.19.3 merged jar 实证），桥接注释态
+    //? if <1.19.3 {
     /*public int getX() {
         return this.x;
     }

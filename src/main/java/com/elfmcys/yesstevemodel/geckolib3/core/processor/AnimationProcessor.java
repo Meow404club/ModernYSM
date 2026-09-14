@@ -32,12 +32,12 @@ import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 // import net.minecraft.world.level.levelgen.RandomSource;
 // import net.minecraft.world.level.levelgen.WorldgenRandom;
 //? }
-//? if >=1.18.2 && <1.19.2 {
+//? if >=1.18.2 && <1.19 {
 // import net.minecraft.world.level.levelgen.RandomSource;
 // import net.minecraft.world.level.levelgen.RandomSupport;
 // import net.minecraft.world.level.levelgen.XoroshiroRandomSource;
 //? }
-//? if >=1.19.2 {
+//? if >=1.19 {
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.levelgen.RandomSupport;
 import net.minecraft.world.level.levelgen.XoroshiroRandomSource;
@@ -86,10 +86,10 @@ public class AnimationProcessor<TEntity extends Entity> {
     /*// 1.18.0 WorldgenRandom 构造已改收 RandomSource（1.17.1 收 long seed）
     private final RandomSource random = new WorldgenRandom(new net.minecraft.world.level.levelgen.LegacyRandomSource(System.nanoTime()));*/
     //? }
-    //? if >=1.18.2 && <1.19.2 {
+    //? if >=1.18.2 && <1.19 {
     /*private final RandomSource random = new XoroshiroRandomSource(System.nanoTime());*/
     //? }
-    //? if >=1.19.2 {
+    //? if >=1.19 {
     private final RandomSource random = new XoroshiroRandomSource(RandomSupport.generateUniqueSeed());
     //?}
 

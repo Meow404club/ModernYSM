@@ -38,8 +38,18 @@ public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity>
     // }
     //? } else {
     public CustomPlayerArmorLayer(EntityRendererProvider.Context context) {
-        //? if <1.19.2
+        //? if <1.18
         /*this.itemRenderer = new ItemInHandRenderer(net.minecraft.client.Minecraft.getInstance());*/
+        //? if >=1.18 && <1.19 {
+        /*// 1.18.x ItemInHandRenderer 单参 (Minecraft)（三参 1.19.0 起，f119 实证）
+        this.itemRenderer = new ItemInHandRenderer(net.minecraft.client.Minecraft.getInstance());*/
+        //?}
+        //? if >=1.19 && <1.19.2 {
+        /*// 1.19.0 ItemInHandRenderer 三参构造（f119 sources 实证）
+        this.itemRenderer = new ItemInHandRenderer(net.minecraft.client.Minecraft.getInstance(),
+                net.minecraft.client.Minecraft.getInstance().getEntityRenderDispatcher(),
+                net.minecraft.client.Minecraft.getInstance().getItemRenderer());*/
+        //?}
         //? if >=1.19.2 && <1.21.2
         this.itemRenderer = context.getItemInHandRenderer();
         // 1.21.2 Context 删 getItemInHandRenderer → GameRenderer 公有字段
@@ -70,9 +80,13 @@ public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity>
         // getEquipmentSlot()（1194 ArmorItem.java:128）
         //? if <1.17
         // return (item instanceof ArmorItem) && ((ArmorItem) item).getSlot() == EquipmentSlot.HEAD;
-        //? if >=1.17 && <1.19.4
+        //? if >=1.17 && <1.19.3
         /*return (item instanceof ArmorItem) && ((ArmorItem) item).getSlot() == EquipmentSlot.HEAD;*/
-        //? if >=1.19.4 && <1.21.2
+        //? if >=1.19.3 && <1.20 {
+        /*// 1.19.3 IForgeItem.getEquipmentSlot 尚未带参（1.20 起收 ItemStack），ArmorItem.getSlot 同判
+        return (item instanceof ArmorItem) && ((ArmorItem) item).getSlot() == EquipmentSlot.HEAD;*/
+        //?}
+        //? if >=1.20 && <1.21.2
         return (item instanceof ArmorItem) && ((ArmorItem) item).getEquipmentSlot() == EquipmentSlot.HEAD;
         // 1.21.2 槽位查询改 IItemExtension.getEquipmentSlot(ItemStack)（ArmorItem 无参形删除）
         //? if >=21.3 && <21.5

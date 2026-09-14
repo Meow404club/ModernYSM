@@ -96,9 +96,14 @@ public final class YsmEntity {
         //? if <1.17 {
         /*return entity.animationSpeedOld + (entity.animationSpeed - entity.animationSpeedOld) * partialTick;
          *///?}
-        //? if >=1.17 && <1.19.4 {
+        //? if >=1.17 && <1.19.3 {
         /*return entity.animationSpeedOld + (entity.animationSpeed - entity.animationSpeedOld) * partialTick;
          *///?}
+        // 1.19.3 无 WalkAnimationState（1.19.2/1.19.4 有，异常代差，merged jar 实证）→
+        // 与 <1.19.4 同走 animationSpeed 手工展开
+        //? if >=1.19.3 && <1.19.4 {
+        /*return entity.animationSpeedOld + (entity.animationSpeed - entity.animationSpeedOld) * partialTick;*/
+        //?}
         //? if >=1.19.4 {
         return entity.walkAnimation.speed(partialTick);
         //?}

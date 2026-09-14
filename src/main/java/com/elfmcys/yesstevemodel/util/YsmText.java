@@ -20,9 +20,9 @@ public final class YsmText {
     }
 
     public static MutableComponent literal(String s) {
-        // Component.literal/translatable 接口静态工厂 1.19.2 起（1192 Component.java:144/152；
+        // Component.literal/translatable 接口静态工厂 1.19.0 起（f119 Component.java:126/130 实证；
         // 1182 无）→ 1.16.5~1.18.2 用 TextComponent/TranslatableComponent 构造
-        //? if <1.19.2 {
+        //? if <1.19 {
         /*return new net.minecraft.network.chat.TextComponent(s);
          *///?} else {
         return Component.literal(s);
@@ -30,7 +30,7 @@ public final class YsmText {
     }
 
     public static MutableComponent translatable(String key, Object... args) {
-        //? if <1.19.2 {
+        //? if <1.19 {
         /*return new net.minecraft.network.chat.TranslatableComponent(key, args);
          *///?} else {
         return Component.translatable(key, args);

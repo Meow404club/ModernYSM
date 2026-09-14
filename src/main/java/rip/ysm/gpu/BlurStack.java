@@ -125,12 +125,12 @@ public final class BlurStack {
         frameCounter++;
         BlurShader.captureScreen(frameCounter);
 
-        //? if >=1.19.4 {
+        //? if >=1.19.3 {
         RenderSystem.getProjectionMatrix().mul(RenderSystem.getModelViewMatrix(), mvpScratch);
         mvpScratch.mul(pose.last().pose());
         mvpScratch.get(mvpFloats);
         //?}
-        //? if >=1.17 && <1.19.4 {
+        //? if >=1.17 && <1.19.3 {
         /*
         // 1.17~1.19.2 RenderSystem/PoseStack 产出 mojang 矩阵 → MatrixBridge 恒等拷贝转 JOML
         com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.projectionMatrix().mul(com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge.modelViewMatrix(), mvpScratch);

@@ -82,6 +82,16 @@ stonecutter {
         vers("21.8-neoforge", "21.8").buildscript = "build.moddev.gradle.kts"
         vers("21.10-neoforge", "21.10").buildscript = "build.moddev.gradle.kts"
         vers("21.11-neoforge", "21.11").buildscript = "build.moddev.gradle.kts"
+
+        // M3 26.x 适配：26.1/26.1.1 两线注册（Java 25，piston-meta version_manifest_v2
+        // 2026-09-15 实拉：26.1/26.1.1/26.1.2/26.2 均 release，java_version=25）。
+        // 26.x 制式=完整 MC 版本+build：26.1 是独立 MC 版本线非 26.1.2 旧构建，
+        // deps.minecraft 用 MC 真身版本串（"26.1"/"26.1.1"）；neoforge tile 取
+        // tmp/harvest/m3-matrix/maven-metadata.xml 枚举快照该线最新：
+        //   26.1=26.1.0.19-beta（该线止于 beta）/ 26.1.1=26.1.1.15-beta（同）。
+        // 批二 b 的 26.1.2/26.2 park 随本卡解除（注册保留+构建注释+债入账三件套）。
+        vers("26.1-neoforge", "26.1").buildscript = "build.moddev.gradle.kts"
+        vers("26.1.1-neoforge", "26.1.1").buildscript = "build.moddev.gradle.kts"
         vers("26.1.2-neoforge", "26.1.2").buildscript = "build.moddev.gradle.kts"
         vers("26.2-neoforge", "26.2").buildscript = "build.moddev.gradle.kts"
 

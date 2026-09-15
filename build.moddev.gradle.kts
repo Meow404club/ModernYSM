@@ -397,6 +397,9 @@ tasks.withType<JavaCompile>().configureEach {
         v26 -> 25
         else -> 21
     }
+    // 临时调试 aid：javac 默认 100 错截断帽（批二 b 26.1.2 实测 103/234 记录差异根因），
+    // 26.x 适配期放开看全错误谱——适配完成后撤除
+    if (v26) options.compilerArgs.addAll(listOf("-Xmaxerrs", "5000", "-Xmaxwarns", "5000"))
 }
 
 tasks.named<ProcessResources>("processResources") {
@@ -443,6 +446,8 @@ tasks.named<ProcessResources>("processResources") {
     // 批二 c-2（2026-09-14 同表实拉）：1.20.2=18 / 1.20.3=22（1.20.3~1.20.4 同档）/
     // 1.20.5=32（1.20.5~1.20.6 同档）/ 1.21=34（1.21~1.21.1 同档）/ 21.2=42（1.21.2~1.21.3
     // 同档）/ 21.6=63 / 21.7=64（1.21.7~1.21.8 同档）/ 21.9=69（1.21.9~1.21.10 同档）
+    // 26.x 适配（2026-09-15 同表实拉）：26.1=84 / 26.1.1=84（wiki 表 84.0 档跨
+    // 26.1~26.1.2 全线，与 MC 26.1 client version.json resource_major=84 互证）/ 26.2=88
     val packFormat = mapOf(
         "1.20.4" to 22,
         "1.20.6" to 32,
@@ -453,6 +458,8 @@ tasks.named<ProcessResources>("processResources") {
         "21.8" to 64,
         "21.10" to 69,
         "21.11" to 75,
+        "26.1" to 84,
+        "26.1.1" to 84,
         "26.1.2" to 84,
         "26.2" to 88,
         "1.20.2" to 18,

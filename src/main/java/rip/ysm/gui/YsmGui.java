@@ -884,8 +884,10 @@ public final class YsmGui {
         *///?}
         //? if <21.9
         this.graphics.renderOutline(x, y, width, height, color);
+        // 1.20.1 vcs 直编原文铁律：本行只属 >=21.11 生成线，必须存储态（审查修正
+        // 2026-09-15——裸活动行使 1.20.1 原文双调 renderOutline，javap 对拍实证）
         //? if >=21.11 && <26
-        this.graphics.renderOutline(x, y, width, height, color);
+        /*this.graphics.renderOutline(x, y, width, height, color);*/
         // 26.1 改名 outline（GuiGraphicsExtractor.java:211，几何同形=fill 四边）
         //? if >=26
         /*this.graphics.outline(x, y, width, height, color);*/

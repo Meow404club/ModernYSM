@@ -94,6 +94,14 @@
 - runServer 全谱审计 14/16 Done(（26.1.2/26.2=compileJava 移包定性归 26.x 卡）；21.7/21.9 补齐真 tour 证据
 - 审查修正 aaf7796：YsmGui blur fill 门 <21.10 扩 <21.11——21.10 史上首次真 GUI 走查即崩（批二c-2 的"21.10 无限制"声称系误证，批二b 证据为陈旧 jar 主菜单图）；>=21.11 vanilla renderBackground 分支仍未走查（debt-216-blur-degraded 勘误在案，26.x tour 首踩）
 - 双在产线终验：1201 2918=2918/1165 2872=2872 条目全同，CRC 差类 javap 去 LNT 全 SAME（注释位移噪声）；教训沉淀：BUILD SUCCESSFUL ≠ 走查通过（必须 grep Done(+数 png）
+
+## 1.20.1 渲染双根因修复（tasks.debug-1201-windows-gpu，已合入 dev=7715a44，2026-09-15）
+- 用户 Windows 真机报告模型全不渲染（纸娃娃正常/模型卡坏/世界坏；兼容渲染器救世界不救模型卡）→ 两层根因：
+- ①**模型卡预览从未参与编译**（所有环境，非 Windows 专属）：1201 vcs 直通线直编 src/main 原文，`//? if`+`// 代码` 行形式恒死注释（生成树不消费）——ModelPreviewRenderer 预览配方块从没进产物，画原点被 scissor 裁掉；纸娃娃是裸码所以正常。**教训（新铁律）：1201 应活的代码必须裸码或块形式，行条件+注释形式在根节点恒死**；同模式死行全仓 7 文件全转裸码（6 文件+GeckoProjectileEntity tickModel 防御），顺修投射物 12s NPE。审查逐文件核 1165 生成树+产物 javap：FALSE 线操作码零差（唯一有意变更为防御性 tickModel）
+- ②**世界全黑=光影包双失败**（仅真 GPU 显形，llvmpipe 假阴性全绿）：Oculus/Iris 在用时 IrisRenderPath 直绘，Iris 管线内 getShader() 返回包装 shader+G-buffer 绑定、真驱动画空但恒 return true 吞回退；回退链 SIMD 直写在 Embeddium BufferBuilder 下也坏（模型巨大化）→双失败必黑。修复=943ff31 光影包在场时回退 CPU 缓冲（官方 IrisApi 检测，无光影包场景零变化；IrisRenderPath 实现保留+勿删标记）——**止血**，真修=debt-iris-shader-compat（1201 线真修+D4/D2/D3，保性能重推导）
+- 前情：首派 debugger 排查 62de96e..4fd6c87 窗口**无代码回归**（jar 首尾对拍+audit 零 BROKEN+四场景 llvmpipe 全绿）——回归假设被证伪，用户情报（仅 Windows 复现）转出真凶
+- 新原则：**llvmpipe 盲区**——渲染路径改动真 GPU 未验证前不得视为已验证；Windows 回测是渲染/兼容卡验收硬项
+- FPM/RealCamera 修复卡已按用户裁决叫停销毁（4d6a2c5 随 worktree 销毁）：其症状观测疑全为 GPU bug 下游症状，1.20.1 修好后重做诊断；FPM 系路径冻结（debt-onrenderhand-iscanceled-frozen）
 - 批二 c-2（待发）：neoforge 8 条（1.20.2 POC/1.20.3 POC/1.20.5/1.21/1.21.2/1.21.6/1.21.7/21.9）
 - 全谱 37 线；semver 铁律（stonecutter 版本 ID 数值比较，分代用 <21.5/>=21.5 风格）与 vcs 直通铁律（1.20.1 根活动节点，21 轴门控必须存储态）为平铺期两大新沉淀
 - 2a：1.20.4（20.4.x stable）/1.20.6（20.6.x）/1.21.1（21.1.x）——moddev 构建线首次建立（MDG neoforge），Java 17/21/21

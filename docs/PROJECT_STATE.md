@@ -87,6 +87,13 @@
 - **审查证伪三项运行期声称**（同根=dev 存量 server-dist 缺口，非本卡引入）：21.9 runServer NCDFE 崩（sendUnavailableMessage @OnlyIn 门 `neoforge && <21.9` 遗留，21.9 落 >=21.9 掉出 DistCleaner 保护）、21.7 loader10 警告屏阻断、21.8"复验"实为崩溃误读 BUILD SUCCESSFUL；21.10/21.11/26.x 现役线推定同病（runServer 从未真验过）。**教训：BUILD SUCCESSFUL ≠ 走查通过，必须 grep `Done(`+日志内容+数 png**。候选卡 tasks.m3-neoforge-server-dist-fix（P1，发布卡前必修，动共享源须重做双在产线终验）
 - 方法学新沉淀：等价基线法成立（同环境构建基线 src/main 对照）+ 生成树活跃代码对比法强于 javap（可精确定位泄漏行）；slashblade 双 jar classpath flaky 属环境级既有问题
 - 批二 c-2 遗留环境卡：unimined 线 dev-run 三症（1.16.2 mixin Re-entrance/1.16.3-4 SecureJarHandler NSME/1.16.1 进世界断连）；批二c1b 遗留债 debt-forge-linegen（1.18.1 RenderArmEvent 存在被 >=1.18.2 门排外，一行可修）
+
+## server-dist 修复卡（tasks.m3-neoforge-server-dist-fix，已合入 dev=7e5a2d9，2026-09-15）
+- 机制级诊断（审查独立反编译复证）：新版 loader（21.7/21.8=9.0.14、21.9+=10.0.14）已删 RuntimeDistCleaner 成员剥离，仅存 NeoForgeDevDistCleaner 掩码，@OnlyIn 失去保护力；崩溃=HotSpot 类校验期形参收窄解析（LocalPlayer 实参→Player 形参触发层级加载 CNFE），三路径 YSMForge <init>:48/NetworkHandler register(6)/(8)；instanceof/checkcast 不触发
+- 修复：>=21.7 专用服 client 引用结构性隔离（主体移仅 client 加载的 ClientModelManager）+ rlToIdentifier 剥离门 >=21.8 下探 >=21.7 + 21.11/21.9 运行时存量断裂修
+- runServer 全谱审计 14/16 Done(（26.1.2/26.2=compileJava 移包定性归 26.x 卡）；21.7/21.9 补齐真 tour 证据
+- 审查修正 aaf7796：YsmGui blur fill 门 <21.10 扩 <21.11——21.10 史上首次真 GUI 走查即崩（批二c-2 的"21.10 无限制"声称系误证，批二b 证据为陈旧 jar 主菜单图）；>=21.11 vanilla renderBackground 分支仍未走查（debt-216-blur-degraded 勘误在案，26.x tour 首踩）
+- 双在产线终验：1201 2918=2918/1165 2872=2872 条目全同，CRC 差类 javap 去 LNT 全 SAME（注释位移噪声）；教训沉淀：BUILD SUCCESSFUL ≠ 走查通过（必须 grep Done(+数 png）
 - 批二 c-2（待发）：neoforge 8 条（1.20.2 POC/1.20.3 POC/1.20.5/1.21/1.21.2/1.21.6/1.21.7/21.9）
 - 全谱 37 线；semver 铁律（stonecutter 版本 ID 数值比较，分代用 <21.5/>=21.5 风格）与 vcs 直通铁律（1.20.1 根活动节点，21 轴门控必须存储态）为平铺期两大新沉淀
 - 2a：1.20.4（20.4.x stable）/1.20.6（20.6.x）/1.21.1（21.1.x）——moddev 构建线首次建立（MDG neoforge），Java 17/21/21

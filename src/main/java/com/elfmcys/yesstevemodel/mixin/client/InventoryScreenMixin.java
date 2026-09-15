@@ -36,7 +36,7 @@ public class InventoryScreenMixin {
     // 1.20.2+（neoforge 三线）：bounding box 扩为 x1,y1,x2,y2 五 int + scale/angleX/angleY 三 float。
     // 注释态包裹：1.20.1 vcs 直通编译原文，裸 @Inject 会被 mixin AP 解析 1.20.2+ 签名失败
     //（d8fcfbd 回归实证）；其余 <1.19.3 块同款注释态先例
-    //? if neoforge && >=1.20 {
+    //? if neoforge && >=1.20 && <26 {
     /*@Inject(at = {@At("HEAD")}, method = {"renderEntityInInventoryFollowsMouse(Lnet/minecraft/client/gui/GuiGraphics;IIIIIFFFLnet/minecraft/world/entity/LivingEntity;)V"})
     private static void renderEntityInInventoryFollowsAnglePreNeo(GuiGraphics guiGraphics, int x, int y, int x2, int y2, int scale, float angleXComponent, float angleYComponent, float partialTicks, LivingEntity entity, CallbackInfo ci) {
         ModelPreviewRenderer.setPreviewMode(true);
@@ -44,6 +44,21 @@ public class InventoryScreenMixin {
 
     @Inject(at = {@At("RETURN")}, method = {"renderEntityInInventoryFollowsMouse(Lnet/minecraft/client/gui/GuiGraphics;IIIIIFFFLnet/minecraft/world/entity/LivingEntity;)V"})
     private static void renderEntityInInventoryFollowsAnglePostNeo(GuiGraphics guiGraphics, int x, int y, int x2, int y2, int scale, float angleXComponent, float angleYComponent, float partialTicks, LivingEntity entity, CallbackInfo ci) {
+        ModelPreviewRenderer.setPreviewMode(false);
+    }
+     *///?}
+    // 26.x：方法改名 renderEntityInInventoryFollowsMouse → extractEntityInInventoryFollowsMouse
+    //（26.1.2 InventoryScreen.java:105，参数形同构 GuiGraphics;IIIIIFFFLivingEntity;——
+    // GuiGraphics 由生成树规则改写 GuiGraphicsExtractor）。HEAD/RETURN 双 @Inject 语义不变：
+    // 包裹 vanilla 玩家模型 extract，置预览模式标志位。
+    //? if neoforge && >=26 {
+    /*@Inject(at = {@At("HEAD")}, method = {"extractEntityInInventoryFollowsMouse(Lnet/minecraft/client/gui/GuiGraphics;IIIIIFFFLnet/minecraft/world/entity/LivingEntity;)V"})
+    private static void renderEntityInInventoryFollowsAnglePreNeo26(GuiGraphics guiGraphics, int x, int y, int x2, int y2, int scale, float angleXComponent, float angleYComponent, float partialTicks, LivingEntity entity, CallbackInfo ci) {
+        ModelPreviewRenderer.setPreviewMode(true);
+    }
+
+    @Inject(at = {@At("RETURN")}, method = {"extractEntityInInventoryFollowsMouse(Lnet/minecraft/client/gui/GuiGraphics;IIIIIFFFLnet/minecraft/world/entity/LivingEntity;)V"})
+    private static void renderEntityInInventoryFollowsAnglePostNeo26(GuiGraphics guiGraphics, int x, int y, int x2, int y2, int scale, float angleXComponent, float angleYComponent, float partialTicks, LivingEntity entity, CallbackInfo ci) {
         ModelPreviewRenderer.setPreviewMode(false);
     }
      *///?}

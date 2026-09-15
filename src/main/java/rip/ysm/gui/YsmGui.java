@@ -907,18 +907,17 @@ public final class YsmGui {
         // vanilla 后景 API，债 debt-216-blur-degraded）
         //（互斥兄弟行条件平铺：铁律禁 else 链与存储态嵌套标记；fill 为注释态存储，
         // 1201 vcs 直编原文铁律——非活跃内容不得以裸码存在于原文）
-        //? if >=21.6 && <21.11 {
+        //? if >=21.6 && <26 {
         /*this.graphics.fill(0, 0, screen.width, screen.height, 0xB8101010);*/
         //?}
         //? if neoforge && <21.6
         /*screen.renderBackground(this.graphics, 0, 0, 0);*/
-        //? if neoforge && >=21.11 && <26
-        /*screen.renderBackground(this.graphics, 0, 0, 0);*/
-        // 26.x：Screen.renderBackground 删 → extractBackground（vanilla-26.1 Screen.java:376，
-        // 内含 extractBlurredBackground 的 blurBeforeThisStratum——blur 每帧一次限制是否
-        // 复现归 26.x tour 实测，崩则按 aaf7796 同款降级并申报）
+        // 26.x：extractBackground 同样命中 blur 每帧一次限制（26.1.2 tour 首跑
+        // DisclaimerScreen 渲染即崩 "Can only blur once per frame" 实证，与 21.6 同病灶
+        // ——GuiGraphicsExtractor.blurBeforeThisStratum 机制延续）→ fill 门扩至 <26，
+        // 26.x 暂走半透明遮罩降级（视觉差入债 debt-216-blur-degraded 扩展申报）
         //? if neoforge && >=26
-        /*screen.extractBackground(this.graphics, 0, 0, 0);*/
+        /*this.graphics.fill(0, 0, screen.width, screen.height, 0xB8101010);*/
         //? if forge && <21.6
         screen.renderBackground(this.graphics);
         //? if forge && >=21.10

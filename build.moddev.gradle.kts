@@ -469,6 +469,7 @@ tasks.named<ProcessResources>("processResources") {
     // 同档）/ 21.6=63 / 21.7=64（1.21.7~1.21.8 同档）/ 21.9=69（1.21.9~1.21.10 同档）
     // 26.x 适配（2026-09-15 同表实拉）：26.1=84 / 26.1.1=84（wiki 表 84.0 档跨
     // 26.1~26.1.2 全线，与 MC 26.1 client version.json resource_major=84 互证）/ 26.2=88
+    val is26Pack = stonecutter.eval(stonecutter.current.version, ">=26")
     val packFormat = mapOf(
         "1.20.4" to 22,
         "1.20.6" to 32,
@@ -493,7 +494,16 @@ tasks.named<ProcessResources>("processResources") {
         "21.9" to 69,
     )[mcVersion] ?: 15
     filesMatching("pack.mcmeta") {
-        filter { line: String -> line.replace("\"pack_format\": 15", "\"pack_format\": $packFormat") }
+        // 26.x：PackFormat 新制——pack_format 声明 >lastPreMinorVersion(81) 时强制
+        // min_format/max_format 双字段（26.1.2 PackFormat.java:159-166 validate + 26.1
+        // tour 首跑 server JsonParseException 实证）→ 改双 int 字段声明
+        filter { line: String ->
+            if (is26Pack) {
+                line.replace("\"pack_format\": 15", "\"min_format\": $packFormat,\n        \"max_format\": $packFormat")
+            } else {
+                line.replace("\"pack_format\": 15", "\"pack_format\": $packFormat")
+            }
+        }
     }
     // mixins.json compatibilityLevel：1.20.4 产物 Java 17 字节码 → 保持 JAVA_17；
     // 1.20.6/1.21.1 产物 Java 21 字节码 + Java 21 运行时 → JAVA_17 声明双不符，替换为 JAVA_21

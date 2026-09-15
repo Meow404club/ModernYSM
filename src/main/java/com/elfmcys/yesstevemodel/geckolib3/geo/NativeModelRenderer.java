@@ -65,7 +65,12 @@ public class NativeModelRenderer {
             }
         }
 
-        if (NativeLibLoader.isLoaded() && !GeneralConfig.USE_COMPATIBILITY_RENDERER.get()) { // WIP: SIMD MODEL RENDER
+        // debug-1201-windows-gpu: 带光影包（Iris 分支回退后落到此处）时不再走 SIMD native 直写——
+        // Embeddium 改造的 BufferBuilder 下 native 直写渲染损坏（llvmpipe 实证：世界内模型巨大化+全黑），
+        // 用户真机默认配置世界全黑亦与该链路相符。带光影包改走 CPU 缓冲路径（原版管线，Iris 兼容，
+        // compat 渲染器同链已实证可见）；无光影包场景 SIMD 行为不变。
+        boolean cpuBufferFallback = OculusCompat.isShaderPackInUse();
+        if (NativeLibLoader.isLoaded() && !GeneralConfig.USE_COMPATIBILITY_RENDERER.get() && !cpuBufferFallback) { // WIP: SIMD MODEL RENDER
             nativeRenderModel(
                     buffer,
                     pose,

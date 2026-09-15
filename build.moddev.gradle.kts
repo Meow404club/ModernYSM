@@ -191,6 +191,14 @@ sourceSets.main {
             // Identifier 全树改名（同包同 API，neoforge-21.11.45-sources 实证）+ Arrow 族
             // 移 projectile.arrow 子包（ArrowPotionAccessor 目标）
             srcDir(rootProject.file("src/neoforge-2111/java"))
+            if (v26) {
+                // 26.x 分歧（neoforge-26.1 RenderLevelStageEvent 实证）：删 AfterEntities 子事件
+                // → RenderFirstPlayerForgeHook 走 2610 孪生小树取 AfterOpaqueFeatures。
+                // 异包 event26x 原因（212 树先例）：exclude 按相对路径双杀同名 RAW 文件，
+                // 孪生必须异包；@EventBusSubscriber 注解自注册，包名无关。
+                exclude("com/elfmcys/yesstevemodel/platform/neoforge/event/RenderFirstPlayerForgeHook.java")
+                srcDir(rootProject.file("src/neoforge-2610/java"))
+            }
         }
         if (pre1205) {
             srcDir(rootProject.file("src/neoforge-1204/java"))
@@ -305,6 +313,7 @@ tasks {
         // 配置缓存铁律：doLast 只可捕获局部 String/Provider，stonecutter 脚本对象引用不可序列化
         val curVersion = stonecutter.current.version
         val is21_11 = stonecutter.eval(stonecutter.current.version, ">=21.11")
+        val is26 = stonecutter.eval(stonecutter.current.version, ">=26")
         val rlToIdentifier = register<org.gradle.api.DefaultTask>("rlToIdentifier") {
             dependsOn("stonecutterGenerate")
             mustRunAfter("stonecutterGenerate")
@@ -333,6 +342,21 @@ tasks {
                         rules.add(Regex("\\bResourceLocation\\b") to "Identifier")
                         rules.add(Regex("\\bRenderType\\.(armorCutoutNoCull|entityCutoutNoCullZOffset|entityCutoutNoCull|entitySolid|entityTranslucentEmissive|entityTranslucent|lineStrip|outline)\\(")
                             to "net.minecraft.client.renderer.rendertype.RenderTypes.$1(")
+                    }
+                    if (is26) {
+                        // 26.1 GUI 换代（vanilla-26.1 实证）：net.minecraft.client.gui.GuiGraphics 类
+                        // 删除，同包改名 GuiGraphicsExtractor（extract 模型；Screen.render→
+                        // extractRenderState/AbstractWidget.renderWidget→extractWidgetRenderState
+                        // 等方法面换代在共享源分代，见各 GUI 文件）。纯类型名机械改写同 Identifier 先例。
+                        rules.add(Regex("\\bGuiGraphics\\b") to "GuiGraphicsExtractor")
+                        // render-state 包整体搬家：net.minecraft.client.gui.render.state →
+                        // net.minecraft.client.renderer.state.gui（GuiElementRenderState.java 包声明实证；
+                        // neoforge-26.1 GuiGraphicsExtractor patch 的 submitGuiElementRenderState
+                        // 签名同步新包，方法名不变）
+                        rules.add(Regex("net\\.minecraft\\.client\\.gui\\.render\\.state\\.") to "net.minecraft.client.renderer.state.gui.")
+                        // 26.1 RenderTypes 工厂更名：entityCutoutNoCull → entityCutout
+                        //（26.1 RenderTypes.java:451；本条须排在 is21_11 FQN 改写规则之后）
+                        rules.add(Regex("RenderTypes\\.entityCutoutNoCull\\(") to "RenderTypes.entityCutout(")
                     }
                     root.walkTopDown().filter { it.isFile && it.extension == "java" }.forEach { f ->
                         val text = f.readText()

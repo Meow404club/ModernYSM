@@ -540,15 +540,24 @@ moveCursorToEnd();;
         this.renderedModelKeys = new ArrayList<>(this.sortedModelKeys);
     }
 
-    //? if >=1.20 {
+    //? if >=1.20 && <26 {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.render(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
-    //?} else {
+    //?}
+    //? if <1.20 {
     /*@Override
     public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
         this.render(new YsmGui(poseStack), mouseX, mouseY, partialTick);
+    }
+     *///?}
+    // 26.x GUI 换代：Screen.render → extractRenderState（vanilla-26.1 Screen.java:116；
+    // GuiGraphics 同代改名 GuiGraphicsExtractor，由 rlToIdentifier 生成树规则统一改写）
+    //? if >=26 {
+    /*@Override
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        this.render(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
      *///?}
 
@@ -561,8 +570,11 @@ moveCursorToEnd();;
         /*this.searchBox.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
         //? if >=1.17 && <1.20
         /*this.searchBox.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
-        //? if >=1.20
+        //? if >=1.20 && <26
         this.searchBox.render(guiGraphics.graphics(), mouseX, mouseY, partialTick);
+        // 26.x：render → extractRenderState（vanilla-26.1 Screen/AbstractWidget 换代）
+        //? if >=26
+        /*this.searchBox.extractRenderState(guiGraphics.graphics(), mouseX, mouseY, partialTick);*/
         //? if >=1.21
         /*renderModelPreview(guiGraphics, mouseX, mouseY, YsmFrame.partialTick(this.minecraft));*/
         //? if <1.21
@@ -603,8 +615,11 @@ moveCursorToEnd();;
         /*super.render(guiGraphics.pose(), hoverX, hoverY, partialTick);*/
         //? if >=1.17 && <1.20
         /*super.render(guiGraphics.pose(), hoverX, hoverY, partialTick);*/
-        //? if >=1.20
+        //? if >=1.20 && <26
         super.render(guiGraphics.graphics(), hoverX, hoverY, partialTick);
+        // 26.x：render → extractRenderState（vanilla-26.1 Screen/AbstractWidget 换代）
+        //? if >=26
+        /*super.extractRenderState(guiGraphics.graphics(), hoverX, hoverY, partialTick);*/
         ((ScreenAccessor) this).ysm$getRenderables().stream().filter(renderable -> {
             return renderable instanceof IconButton;
         }).forEach(renderable2 -> {

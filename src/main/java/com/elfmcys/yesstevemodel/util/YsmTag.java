@@ -200,7 +200,11 @@ public final class YsmTag {
         }
 
         public boolean matches(EntityType<?> type) {
+            // 26.x：EntityType.is(TagKey) 删 → Holder.is（26.1 EntityType.java:1593 builtInRegistryHolder）
+            //? if <26
             return type.is(this.tag);
+            //? if >=26
+            /*return type.builtInRegistryHolder().is(this.tag);*/
         }
 
         public ResourceLocation location() {

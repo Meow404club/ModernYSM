@@ -26,7 +26,13 @@ import net.minecraft.client.renderer.MultiBufferSource;
 /*import net.minecraft.client.renderer.rendertype.RenderType;*/
 //? if <21.11
 import net.minecraft.client.renderer.RenderType;
+//? if <26 {
 import net.minecraft.client.renderer.entity.ItemRenderer;
+//?}
+// 26.x：ItemRenderer 类删；getFoilBuffer 同签名迁 ItemFeatureRenderer
+//? if >=26 {
+/*import net.minecraft.client.renderer.feature.ItemFeatureRenderer;
+ *///?}
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
@@ -134,8 +140,10 @@ public class CustomPlayerElytraLayer extends GeoLayerRenderer<CustomPlayerEntity
             //? if >=1.21 && <21.9
             /*this.elytraModel.renderToBuffer(poseStack, ItemRenderer.getArmorFoilBuffer(bufferSource, RenderType.armorCutoutNoCull(cloakTextureLocation), stack.hasFoil()), packedLightIn, OverlayTexture.NO_OVERLAY, -1);*/
             // 1.21.9 getArmorFoilBuffer → getFoilBuffer（ItemRenderer.java:67 四参，语义同形）
-            //? if >=21.9
+            //? if >=21.9 && <26
             /*this.elytraModel.renderToBuffer(poseStack, ItemRenderer.getFoilBuffer(bufferSource, RenderType.armorCutoutNoCull(cloakTextureLocation), false, stack.hasFoil()), packedLightIn, OverlayTexture.NO_OVERLAY, -1);*/
+            //? if >=26
+            /*this.elytraModel.renderToBuffer(poseStack, ItemFeatureRenderer.getFoilBuffer(bufferSource, net.minecraft.client.renderer.rendertype.RenderTypes.armorCutoutNoCull(cloakTextureLocation), false, stack.hasFoil()), packedLightIn, OverlayTexture.NO_OVERLAY, -1);*/
             //? if <1.21
             this.elytraModel.renderToBuffer(poseStack, ItemRenderer.getArmorFoilBuffer(bufferSource, RenderType.armorCutoutNoCull(cloakTextureLocation), false, stack.hasFoil()), packedLightIn, OverlayTexture.NO_OVERLAY, 1.0f, 1.0f, 1.0f, 1.0f);
             poseStack.popPose();

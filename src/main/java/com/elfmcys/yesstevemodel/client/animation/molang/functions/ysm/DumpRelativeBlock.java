@@ -26,10 +26,16 @@ public class DumpRelativeBlock extends EntityFunction {
         /*net.minecraft.tags.BlockTags.getAllTags().getMatchingTags(blockState.getBlock()).forEach(tagRl ->
             context.entity().logWarningComponent(YsmText.literal("Tag ").append(copyOnClickTextCompat(tagRl.toString()))));*/
         //?}
-        //? if >=1.18.2 {
+        //? if >=1.18.2 && <26 {
         blockState.getTags().forEach(tagKey -> {
             context.entity().logWarningComponent(YsmText.literal("Tag ").append(copyOnClickTextCompat(tagKey.location().toString())));
         });
+        //?}
+        // 26.x：BlockState.getTags 删 → block.builtInRegistryHolder().tags()（26.1 Block.java:581）
+        //? if >=26 {
+        /*blockState.getBlock().builtInRegistryHolder().tags().forEach(tagKey -> {
+            context.entity().logWarningComponent(YsmText.literal("Tag ").append(copyOnClickTextCompat(tagKey.location().toString())));
+        });*/
         //?}
         return null;
     }

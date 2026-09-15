@@ -169,7 +169,7 @@ public class RendererManager {
         // 冻结，21.9 tour 首跑 crash-2026-09-15_07.44.49 RendererManager:170 实证）→ 同款反射取
         // vanilla 自建实例（21.9 EntityRenderDispatcher.java:62 equipmentAssets 字段实证）；
         // 字段缺失兜底=孤儿实例（装备资产空、装备层退化，功能差入债）
-        //? if >=21.9 {
+        //? if >=21.9 && <26 {
         /*net.minecraft.client.resources.model.EquipmentAssetManager ysmEquipmentAssets;
         try {
             java.lang.reflect.Field ysmEquipmentField = net.minecraft.client.renderer.entity.EntityRenderDispatcher.class.getDeclaredField("equipmentAssets");
@@ -181,6 +181,27 @@ public class RendererManager {
         }
         EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemModelResolver(), Minecraft.getInstance().getMapRenderer(), Minecraft.getInstance().getBlockRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), ysmEquipmentAssets, Minecraft.getInstance().getAtlasManager(), Minecraft.getInstance().font, Minecraft.getInstance().playerSkinRenderCache());*/
         //?}
+        // 26.x Context 10 参换代（26.1 EntityRendererProvider.java:42-58）：+BlockModelResolver
+        //（第 2 参；Minecraft 私有字段无访问器→反射同 equipmentAssets 先例）、去 BlockRenderDispatcher、
+        // playerSkinRenderCache() 同形。blockModelResolver 反射失败兜底=按 vanilla 同法
+        // new BlockModelResolver(modelManager)（私有实例不参与逐帧 update，手持方块渲染退化，入债）
+        //? if >=26 {
+        /*net.minecraft.client.resources.model.EquipmentAssetManager ysmEquipmentAssets;
+        net.minecraft.client.renderer.block.BlockModelResolver ysmBlockModelResolver;
+        try {
+            java.lang.reflect.Field ysmEquipmentField = net.minecraft.client.renderer.entity.EntityRenderDispatcher.class.getDeclaredField("equipmentAssets");
+            ysmEquipmentField.setAccessible(true);
+            ysmEquipmentAssets = (net.minecraft.client.resources.model.EquipmentAssetManager) ysmEquipmentField.get(entityRenderDispatcher);
+            java.lang.reflect.Field ysmBmrField = net.minecraft.client.Minecraft.class.getDeclaredField("blockModelResolver");
+            ysmBmrField.setAccessible(true);
+            ysmBlockModelResolver = (net.minecraft.client.renderer.block.BlockModelResolver) ysmBmrField.get(Minecraft.getInstance());
+        } catch (ReflectiveOperationException e) {
+            YesSteveModel.LOGGER.warn("[YSM] equipmentAssets/blockModelResolver reflection fallback (orphan instances, equipment/block-in-hand layer degraded)", e);
+            ysmEquipmentAssets = new net.minecraft.client.resources.model.EquipmentAssetManager();
+            ysmBlockModelResolver = new net.minecraft.client.renderer.block.BlockModelResolver(Minecraft.getInstance().getModelManager());
+        }
+        EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, ysmBlockModelResolver, Minecraft.getInstance().getItemModelResolver(), Minecraft.getInstance().getMapRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), ysmEquipmentAssets, Minecraft.getInstance().getAtlasManager(), Minecraft.getInstance().font, Minecraft.getInstance().playerSkinRenderCache());
+         *///?}
         // 1.18.x Context 五参（七参 1.19.0 起：+BlockRenderDispatcher +ItemInHandRenderer）
         //? if <1.19
         /*EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), Minecraft.getInstance().font);*/

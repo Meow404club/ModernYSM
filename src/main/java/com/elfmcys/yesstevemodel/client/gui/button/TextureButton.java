@@ -66,7 +66,7 @@ public class TextureButton extends YsmButton {
     }
     //?}
     // 1.21.11 AbstractButton.renderWidget final 化 → renderContents（2111 AbstractWidget.java 实证）
-    //? if >=21.11 {
+    //? if >=21.11 && <26 {
     /*
     @Override
     public void renderContents(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {

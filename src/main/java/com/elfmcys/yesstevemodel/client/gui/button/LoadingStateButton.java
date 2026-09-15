@@ -28,7 +28,7 @@ public class LoadingStateButton extends YsmButton {
     }
     //?}
     // 1.21.11 AbstractButton.renderWidget final 化 → renderContents
-    //? if >=21.11 {
+    //? if >=21.11 && <26 {
     /*
     @Override
     public void renderContents(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {

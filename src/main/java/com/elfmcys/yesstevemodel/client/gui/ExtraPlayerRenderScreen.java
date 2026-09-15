@@ -92,15 +92,24 @@ public class ExtraPlayerRenderScreen extends Screen {
         //?}
     }
 
-    //? if >=1.20 {
+    //? if >=1.20 && <26 {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.render(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
-    //?} else {
+    //?}
+    //? if <1.20 {
     /*@Override
     public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
         this.render(new YsmGui(poseStack), mouseX, mouseY, partialTick);
+    }
+     *///?}
+    // 26.x GUI 换代：Screen.render → extractRenderState（vanilla-26.1 Screen.java:116；
+    // GuiGraphics 同代改名 GuiGraphicsExtractor，由 rlToIdentifier 生成树规则统一改写）
+    //? if >=26 {
+    /*@Override
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        this.render(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
      *///?}
 
@@ -159,8 +168,11 @@ public class ExtraPlayerRenderScreen extends Screen {
         /*super.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
         //? if >=1.17 && <1.20
         /*super.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
-        //? if >=1.20
+        //? if >=1.20 && <26
         super.render(guiGraphics.graphics(), mouseX, mouseY, partialTick);
+        // 26.x：render → extractRenderState（vanilla-26.1 Screen/AbstractWidget 换代）
+        //? if >=26
+        /*super.extractRenderState(guiGraphics.graphics(), mouseX, mouseY, partialTick);*/
     }
 
     // 1.21.9+ 输入事件对象化（GuiEventListener: mouseClicked(MouseButtonEvent,boolean)/

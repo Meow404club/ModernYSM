@@ -104,11 +104,20 @@ public abstract class YsmWidget extends AbstractWidget {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
      *///?}
-    //? if >=1.20.1 {
+    //? if >=1.20.1 && <26 {
     @Override
     protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
+    //?}
+    // 26.x GUI 换代：AbstractWidget.renderWidget → extractWidgetRenderState
+    //（vanilla-26.1 AbstractWidget.java:89 protected abstract；GuiGraphics 同代改名
+    // GuiGraphicsExtractor，生成树后处理统一改写）
+    //? if >=26 {
+    /*@Override
+    protected void extractWidgetRenderState(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }*/
     //?}
 
     /** 版本中性自绘主体（子类唯一入口）。 */

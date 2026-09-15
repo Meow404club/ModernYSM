@@ -121,12 +121,19 @@ public final class YsmGui {
     }
 
      *///?}
-    //? if >=1.20 {
+    //? if >=1.20 && <26 {
     public void renderWidget(YsmWidget widget, int mouseX, int mouseY, float partialTick) {
         widget.render(this.graphics, mouseX, mouseY, partialTick);
     }
 
     //?}
+    // 26.x：AbstractWidget.render 删 → extractRenderState（vanilla-26.1 AbstractWidget.java:59 public final）
+    //? if >=26 {
+    /*public void renderWidget(YsmWidget widget, int mouseX, int mouseY, float partialTick) {
+        widget.extractRenderState(this.graphics, mouseX, mouseY, partialTick);
+    }
+
+     *///?}
 
     //? if <1.20 {
     /*public void fill(int minX, int minY, int maxX, int maxY, int color) {
@@ -740,16 +747,28 @@ public final class YsmGui {
 
     /** 水平/垂直线（GuiGraphics.hLine/vLine 对位）。 */
     public void hLine(int minX, int maxX, int y, int color) {
+        //? if <26
         this.graphics.hLine(minX, maxX, y, color);
+        // 26.1 改名 horizontalLine（GuiGraphicsExtractor.java:163）
+        //? if >=26
+        /*this.graphics.horizontalLine(minX, maxX, y, color);*/
     }
 
     public void vLine(int x, int minY, int maxY, int color) {
+        //? if <26
         this.graphics.vLine(x, minY, maxY, color);
+        // 26.1 改名 verticalLine（GuiGraphicsExtractor.java:173）
+        //? if >=26
+        /*this.graphics.verticalLine(x, minY, maxY, color);*/
     }
 
     /** 按宽折行多行文本（GuiGraphics.drawWordWrap 对位）。 */
     public void drawWordWrap(Font font, net.minecraft.network.chat.FormattedText text, int x, int y, int width, int color) {
+        //? if <26
         this.graphics.drawWordWrap(font, text, x, y, width, color);
+        // 26.1 改名 textWithWordWrap（GuiGraphicsExtractor.java:277，参序同形）
+        //? if >=26
+        /*this.graphics.textWithWordWrap(font, text, x, y, width, color);*/
     }
 
     /** 带 z 序的渐变/纹理绘制（1.20.1 GuiGraphics z 重载；<1.20 无 z 轴 → 落回 0 层，绘制顺序不变）。 */
@@ -782,39 +801,75 @@ public final class YsmGui {
     }
 
     public void drawString(Font font, Component text, int x, int y, int color, boolean shadow) {
+        //? if <26
         this.graphics.drawString(font, text, x, y, color, shadow);
+        // 26.1 改名 text（GuiGraphicsExtractor.java:235-260 重载族同形）
+        //? if >=26
+        /*this.graphics.text(font, text, x, y, color, shadow);*/
     }
 
     public void drawString(Font font, String text, int x, int y, int color, boolean shadow) {
+        //? if <26
         this.graphics.drawString(font, text, x, y, color, shadow);
+        // 26.1 改名 text（GuiGraphicsExtractor.java:235-260 重载族同形）
+        //? if >=26
+        /*this.graphics.text(font, text, x, y, color, shadow);*/
     }
 
     public void drawString(Font font, FormattedCharSequence text, int x, int y, int color, boolean shadow) {
+        //? if <26
         this.graphics.drawString(font, text, x, y, color, shadow);
+        // 26.1 改名 text（GuiGraphicsExtractor.java:235-260 重载族同形）
+        //? if >=26
+        /*this.graphics.text(font, text, x, y, color, shadow);*/
     }
 
     public void drawString(Font font, Component text, int x, int y, int color) {
+        //? if <26
         this.graphics.drawString(font, text, x, y, color);
+        // 26.1 改名 text（GuiGraphicsExtractor.java:235-260 重载族同形）
+        //? if >=26
+        /*this.graphics.text(font, text, x, y, color);*/
     }
 
     public void drawString(Font font, String text, int x, int y, int color) {
+        //? if <26
         this.graphics.drawString(font, text, x, y, color);
+        // 26.1 改名 text（GuiGraphicsExtractor.java:235-260 重载族同形）
+        //? if >=26
+        /*this.graphics.text(font, text, x, y, color);*/
     }
 
     public void drawString(Font font, FormattedCharSequence text, int x, int y, int color) {
+        //? if <26
         this.graphics.drawString(font, text, x, y, color);
+        // 26.1 改名 text（GuiGraphicsExtractor.java:235-260 重载族同形）
+        //? if >=26
+        /*this.graphics.text(font, text, x, y, color);*/
     }
 
     public void drawCenteredString(Font font, Component text, int x, int y, int color) {
+        //? if <26
         this.graphics.drawCenteredString(font, text, x, y, color);
+        // 26.1 改名 centeredText（GuiGraphicsExtractor.java:264-273）
+        //? if >=26
+        /*this.graphics.centeredText(font, text, x, y, color);*/
     }
 
     public void drawCenteredString(Font font, String text, int x, int y, int color) {
+        //? if <26
         this.graphics.drawCenteredString(font, text, x, y, color);
+        // 26.1 改名 centeredText（GuiGraphicsExtractor.java:264-273）
+        //? if >=26
+        /*this.graphics.centeredText(font, text, x, y, color);*/
     }
 
     public void drawCenteredString(Font font, FormattedCharSequence text, int x, int y, int color) {
+        //? if <26
         this.graphics.drawCenteredString(font, text, x, y, color);
+        // 26.1 改名 centeredText（GuiGraphicsExtractor.java:264-273）
+        //? if >=26
+        /*this.graphics.centeredText(font, text, x, y, color);*/
     }
 
     public void renderOutline(int x, int y, int width, int height, int color) {
@@ -827,8 +882,13 @@ public final class YsmGui {
         this.graphics.fill(x + width - 1, y + 1, x + width, y + height - 1, color);
         return;
         *///?}
-        //? if <21.9 || >=21.11
+        //? if <21.9
         this.graphics.renderOutline(x, y, width, height, color);
+        //? if >=21.11 && <26
+        this.graphics.renderOutline(x, y, width, height, color);
+        // 26.1 改名 outline（GuiGraphicsExtractor.java:211，几何同形=fill 四边）
+        //? if >=26
+        /*this.graphics.outline(x, y, width, height, color);*/
     }
 
     /** Screen.renderBackground(GuiGraphics) 的版本中性入口。 */
@@ -852,8 +912,13 @@ public final class YsmGui {
         //?}
         //? if neoforge && <21.6
         /*screen.renderBackground(this.graphics, 0, 0, 0);*/
-        //? if neoforge && >=21.11
+        //? if neoforge && >=21.11 && <26
         /*screen.renderBackground(this.graphics, 0, 0, 0);*/
+        // 26.x：Screen.renderBackground 删 → extractBackground（vanilla-26.1 Screen.java:376，
+        // 内含 extractBlurredBackground 的 blurBeforeThisStratum——blur 每帧一次限制是否
+        // 复现归 26.x tour 实测，崩则按 aaf7796 同款降级并申报）
+        //? if neoforge && >=26
+        /*screen.extractBackground(this.graphics, 0, 0, 0);*/
         //? if forge && <21.6
         screen.renderBackground(this.graphics);
         //? if forge && >=21.10

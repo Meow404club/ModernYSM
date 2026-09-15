@@ -30,7 +30,7 @@ public final class ReplacePlayerRenderForgeHook {
         // 1.21.10 RenderPlayerEvent.Pre.getMultiBufferSource 删（submit 换代）→ renderBuffers 即时缓冲
         // 1.21.10 Pre 事件头参去 packedLight（2110 RenderLivingEvent.java:98 同构）→
         // 全亮常量替代（事件仅作取消闸，不参与实际置光）
-        if (ReplacePlayerRenderEvent.onRenderPlayerPre(player, event.getPartialTick(), event.getPoseStack(), net.minecraft.client.Minecraft.getInstance().renderBuffers().bufferSource(), net.minecraft.client.renderer.LightTexture.FULL_BRIGHT)) {
+        if (ReplacePlayerRenderEvent.onRenderPlayerPre(player, event.getPartialTick(), event.getPoseStack(), net.minecraft.client.Minecraft.getInstance().renderBuffers().bufferSource(), 15728880 /* LightTexture.FULL_BRIGHT（26.x 类删，常量字面量版本中立；26.1 LightCoordsUtil.FULL_BRIGHT 同值） */)) {
             event.setCanceled(true);
         }
     }

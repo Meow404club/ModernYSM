@@ -7,7 +7,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
+//? if <26 {
 import net.minecraft.client.renderer.LightTexture;
+//?}
 //? if <1.19.3 {
 /*import com.mojang.math.Matrix4f;
 *///?}

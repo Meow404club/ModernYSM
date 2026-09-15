@@ -46,9 +46,17 @@ public class DumpEquippedItem extends LivingEntityFunction {
         }
          *///?}
         //? if >=1.18.2 {
+        //? if <26 {
         stack.getTags().forEach(tagKey -> {
             context.entity().logWarningComponent(YsmText.literal("Tag ").append(copyOnClickTextCompat(tagKey.location().toString())));
         });
+        //?}
+        // 26.x：ItemStack.getTags 删 → typeHolder().tags()（26.1 ItemStack.java:351 Holder<Item>）
+        //? if >=26 {
+        /*stack.typeHolder().tags().forEach(tagKey -> {
+            context.entity().logWarningComponent(YsmText.literal("Tag ").append(copyOnClickTextCompat(tagKey.location().toString())));
+        });*/
+        //?}
         // 1.20.5+ enchantments 数据组件化：getEnchantmentTags 删除（vanilla-1.20.6 ItemStack 无此方法）
         // → getEnchantments()=ItemEnchantments（keySet Holder<Enchantment>/getLevel，1.20.6:72/116）
         //? if >=1.18.2 && <1.20.5 {

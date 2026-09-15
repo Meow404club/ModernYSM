@@ -70,7 +70,7 @@ public class GeckoVehicleEntity extends GeoEntity<Entity> {
         //? if <1.18.2
         // this.vehicleModel = modelAssembly.getVehicleModels().get(net.minecraft.world.entity.EntityType.getKey(this.entity.getType()));
         //? if >=1.18.2 && <21.11
-        // this.vehicleModel = modelAssembly.getVehicleModels().get(this.entity.getType().builtInRegistryHolder().key().location());
+        this.vehicleModel = modelAssembly.getVehicleModels().get(this.entity.getType().builtInRegistryHolder().key().location());
         //? if >=21.11
         // this.vehicleModel = modelAssembly.getVehicleModels().get(this.entity.getType().builtInRegistryHolder().key().identifier());
     }

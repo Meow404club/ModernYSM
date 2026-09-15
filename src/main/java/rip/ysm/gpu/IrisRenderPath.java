@@ -36,6 +36,8 @@ import java.nio.ByteBuffer;
 //?}
 
 public final class IrisRenderPath {
+    // debug-1201-windows-gpu: 见 tryRenderModern 顶部注记——真机回归通过后置 false 恢复
+    private static final boolean DISABLED_PENDING_REAL_GPU_VALIDATION = true;
     private static final float[] modelViewScratch = new float[16];
 
 
@@ -55,6 +57,14 @@ public final class IrisRenderPath {
     // oculus 系 compat 包也被 1.16.5 sourceSet 排除——记录功能差，渲染回退 geckolib3 原路径）
     //? if >1.17 && <1.21.2 {
     private static boolean tryRenderModern(GeoModel model, PoseStack.Pose pose, float[] boneParams, int renderPartMask, int packedLight, int packedOverlay, float r, float g, float b, float a, ResourceLocation textureLocation) {
+        // debug-1201-windows-gpu: 真实 GPU（用户 AMD RX 7900 XT / Win11 Adrenalin 26.8.1）上本路径
+        // 世界内全黑——直绘取 RenderSystem.getShader() 在 Iris 管线内是 Iris 包装 shader + G-buffer
+        // FBO 绑定，驱动相关地画空却恒 return true 吞掉回退（llvmpipe 软件渲染同路径可见，属宽容）。
+        // 回退 native SIMD 缓冲路径（原版管线 = Iris 兼容，compat 渲染器同链已实证可见）。
+        // GL43 compute 直绘待真机回归验证后再恢复，勿删下方实现。
+        if (DISABLED_PENDING_REAL_GPU_VALIDATION) {
+            return false;
+        }
         if (!GpuCapability.isAvailable()) return false;
         if (!BoneXformCompute.ensureCompiled()) return false;
         if (model.bakedBones == null || model.bakedBones.isEmpty()) return false;

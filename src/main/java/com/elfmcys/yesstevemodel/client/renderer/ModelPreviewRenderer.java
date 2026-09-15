@@ -142,9 +142,9 @@ public final class ModelPreviewRenderer {
         //? if <1.17
         // RenderSystem.pushMatrix();
         //? if >=1.17 && <1.20.5
-        // PoseStack modelViewStack = RenderSystem.getModelViewStack();
+        PoseStack modelViewStack = RenderSystem.getModelViewStack();
         //? if >=1.17 && <1.20.5
-        // modelViewStack.pushPose();
+        modelViewStack.pushPose();
         //? if >=1.20.5
         /*Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();*/
         //? if >=1.20.5
@@ -154,15 +154,15 @@ public final class ModelPreviewRenderer {
         //? if <1.17
         // RenderSystem.scalef(1.0f, 1.0f, -1.0f);
         //? if >=1.17 && <1.20.5
-        // modelViewStack.translate(x, y, 1250.0d);
+        modelViewStack.translate(x, y, 1250.0d);
         //? if >=1.17 && <1.20.5
-        // modelViewStack.scale(1.0f, 1.0f, -1.0f);
+        modelViewStack.scale(1.0f, 1.0f, -1.0f);
         //? if >=1.20.5
         /*modelViewStack.translate((float) x, (float) y, 1250.0f);*/
         //? if >=1.20.5
         /*modelViewStack.scale(1.0f, 1.0f, -1.0f);*/
         //? if >=1.17
-        // RenderCompat.applyModelViewMatrix();
+        RenderCompat.applyModelViewMatrix();
 
         PoseStack poseStack = new PoseStack();
         poseStack.translate(0.0d, 0.0d, 1000.0d);
@@ -221,7 +221,7 @@ public final class ModelPreviewRenderer {
         //? if <1.17
         // Lighting.setupForFlatItems();
         //? if >=1.17 && <21.6
-        // Lighting.setupForEntityInInventory();
+        Lighting.setupForEntityInInventory();
         EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         //? if <1.17
         // rotationX.conj();
@@ -305,11 +305,11 @@ public final class ModelPreviewRenderer {
         //? if <1.17
         // RenderSystem.popMatrix();
         //? if >=1.17 && <1.20.5
-        // modelViewStack.popPose();
+        modelViewStack.popPose();
         //? if >=1.20.5
         /*modelViewStack.popMatrix();*/
         //? if >=1.17
-        // RenderCompat.applyModelViewMatrix();
+        RenderCompat.applyModelViewMatrix();
         //? if <21.6
         Lighting.setupFor3DItems();
         // 1.21.6+ Lighting 静态置光删（UBO 化）→ no-op
@@ -488,9 +488,9 @@ public final class ModelPreviewRenderer {
         //? if <1.17
         // RenderSystem.pushMatrix();
         //? if >=1.17 && <1.20.5
-        // PoseStack modelViewStack = RenderSystem.getModelViewStack();
+        PoseStack modelViewStack = RenderSystem.getModelViewStack();
         //? if >=1.17 && <1.20.5
-        // modelViewStack.pushPose();
+        modelViewStack.pushPose();
         //? if >=1.20.5
         /*Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();*/
         //? if >=1.20.5
@@ -500,15 +500,15 @@ public final class ModelPreviewRenderer {
         //? if <1.17
         // RenderSystem.scalef(1.0f, 1.0f, -1.0f);
         //? if >=1.17 && <1.20.5
-        // modelViewStack.translate(x, y, 1050.0d);
+        modelViewStack.translate(x, y, 1050.0d);
         //? if >=1.17 && <1.20.5
-        // modelViewStack.scale(1.0f, 1.0f, -1.0f);
+        modelViewStack.scale(1.0f, 1.0f, -1.0f);
         //? if >=1.20.5
         /*modelViewStack.translate((float) x, (float) y, 1050.0f);*/
         //? if >=1.20.5
         /*modelViewStack.scale(1.0f, 1.0f, -1.0f);*/
         //? if >=1.17
-        // RenderCompat.applyModelViewMatrix();
+        RenderCompat.applyModelViewMatrix();
 
         PoseStack poseStack = new PoseStack();
         poseStack.translate(0.0d, disablePreviewRotation ? 5.5d : 0.0d, 1000.0d);
@@ -628,7 +628,7 @@ public final class ModelPreviewRenderer {
         //? if <1.17
         // Lighting.setupForFlatItems();
         //? if >=1.17 && <21.6
-        // Lighting.setupForEntityInInventory();
+        Lighting.setupForEntityInInventory();
         EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         //? if <1.17
         // rotationX.conj();
@@ -705,11 +705,11 @@ public final class ModelPreviewRenderer {
         //? if <1.17
         // RenderSystem.popMatrix();
         //? if >=1.17 && <1.20.5
-        // modelViewStack.popPose();
+        modelViewStack.popPose();
         //? if >=1.20.5
         /*modelViewStack.popMatrix();*/
         //? if >=1.17
-        // RenderCompat.applyModelViewMatrix();
+        RenderCompat.applyModelViewMatrix();
         //? if <21.6
         Lighting.setupFor3DItems();
         // 1.21.6+ Lighting 静态置光删（UBO 化）→ no-op
@@ -878,7 +878,7 @@ public final class ModelPreviewRenderer {
         //? if <1.17
         // Lighting.setupForFlatItems();
         //? if >=1.17 && <21.6
-        // Lighting.setupForEntityInInventory();
+        Lighting.setupForEntityInInventory();
         EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         rotationY.conjugate();
         entityRenderDispatcher.overrideCameraOrientation(rotationY);

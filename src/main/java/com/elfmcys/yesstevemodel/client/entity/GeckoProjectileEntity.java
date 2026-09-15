@@ -60,7 +60,7 @@ public class GeckoProjectileEntity extends GeoEntity<Projectile> {
         //? if <1.18.2
         // this.projectileModelContext = modelAssembly.getProjectileModels().get(net.minecraft.world.entity.EntityType.getKey(this.entity.getType()));
         //? if >=1.18.2 && <21.11
-        // this.projectileModelContext = modelAssembly.getProjectileModels().get(this.entity.getType().builtInRegistryHolder().key().location());
+        this.projectileModelContext = modelAssembly.getProjectileModels().get(this.entity.getType().builtInRegistryHolder().key().location());
         //? if >=21.11
         // this.projectileModelContext = modelAssembly.getProjectileModels().get(this.entity.getType().builtInRegistryHolder().key().identifier());
     }
@@ -69,6 +69,21 @@ public class GeckoProjectileEntity extends GeoEntity<Projectile> {
     public void clearModel() {
         super.clearModel();
         this.projectileModelContext = null;
+    }
+
+    @Override
+    public void tickModel() {
+        // debug-1201-windows-gpu: 模型换代窗口期 projectileModelContext 可为 null 而 renderShape
+        // 已被上一次刷新重建为非 null，refreshModel 会带着 null context 走到
+        // initAnimationControllers(getAnimationProcessor()) → NPE 崩游戏（prod 实证：带投射物的
+        // 世界进世界后必崩）。自愈：从当前 renderShape 重取 bundle；取不到则跳过本拍。
+        if (this.projectileModelContext == null && getRenderShape() != null) {
+            onModelLoaded(getRenderShape().context);
+        }
+        if (this.projectileModelContext == null) {
+            return;
+        }
+        super.tickModel();
     }
 
     @Override

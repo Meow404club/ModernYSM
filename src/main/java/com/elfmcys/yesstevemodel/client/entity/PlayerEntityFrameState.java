@@ -96,7 +96,7 @@ public class PlayerEntityFrameState extends LivingEntityFrameState<Player> {
             //? if <1.17
             // return this.entity.abilities.flying;
             //? if >=1.17
-            // return this.entity.getAbilities().flying;
+            return this.entity.getAbilities().flying;
         }
         return this.isFlying;
     }

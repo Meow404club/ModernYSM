@@ -116,7 +116,7 @@ public abstract class GeoEntityRenderer<TEntity extends Entity, T extends Animat
                 //? if >=1.17 && <1.19.3
                 /*poseStack.mulPose(com.mojang.math.Vector3f.YP.rotationDegrees(180.0f - f));*/
                 //? if >=1.19.3
-                // poseStack.mulPose(Axis.YP.rotationDegrees(180.0f - f));
+                poseStack.mulPose(Axis.YP.rotationDegrees(180.0f - f));
                 renderWithBoneAndRenderType(model, t, f2, renderType, poseStack, multiBufferSource, 0, null, i, packOverlayCoords(entity, 0.0f), color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, color.getAlpha() / 255.0f);
                 poseStack.popPose();
             }

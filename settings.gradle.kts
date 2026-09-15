@@ -89,7 +89,14 @@ stonecutter {
         // deps.minecraft 用 MC 真身版本串（"26.1"/"26.1.1"）；neoforge tile 取
         // tmp/harvest/m3-matrix/maven-metadata.xml 枚举快照该线最新：
         //   26.1=26.1.0.19-beta（该线止于 beta）/ 26.1.1=26.1.1.15-beta（同）。
-        // 批二 b 的 26.1.2/26.2 park 随本卡解除（注册保留+构建注释+债入账三件套）。
+        // 批二 b 的 26.1.2 park 随本卡解除。26.1/26.1.1/26.1.2 三线 compileJava+build 绿。
+        // ⚠ 26.2 二次 park（本卡 2026-09-15 实证，任务卡"TextureFormat 移包系同类打法"预期被
+        // 证伪）：26.2 是第二波渲染换代——MultiBufferSource/RenderBuffers 全删（vanilla-26.2
+        // patched sources 零引用），立即模式缓冲被 submit-dag（SubmitNodeCollector/
+        // OrderedSubmitNodeCollector/CustomGeometryRenderer）取代；TextureFormat→
+        // com.mojang.blaze3d.GpuFormat.RGBA8_UNORM、setScreen→gui.setScreen。移植面
+        // =36 共享文件+4 RAW+12 处 getBuffer 立即绘制（geckolib3/SIMD 路径在内），独立一卡。
+        // 注册保留+债入账（tasks.feature-debts.debt-26x-adaptation）。
         vers("26.1-neoforge", "26.1").buildscript = "build.moddev.gradle.kts"
         vers("26.1.1-neoforge", "26.1.1").buildscript = "build.moddev.gradle.kts"
         vers("26.1.2-neoforge", "26.1.2").buildscript = "build.moddev.gradle.kts"

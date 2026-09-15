@@ -421,9 +421,6 @@ tasks.withType<JavaCompile>().configureEach {
         v26 -> 25
         else -> 21
     }
-    // 临时调试 aid：javac 默认 100 错截断帽（批二 b 26.1.2 实测 103/234 记录差异根因），
-    // 26.x 适配期放开看全错误谱——适配完成后撤除
-    if (v26) options.compilerArgs.addAll(listOf("-Xmaxerrs", "5000", "-Xmaxwarns", "5000"))
 }
 
 tasks.named<ProcessResources>("processResources") {

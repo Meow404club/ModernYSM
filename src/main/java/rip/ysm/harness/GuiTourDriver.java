@@ -125,7 +125,11 @@ public final class GuiTourDriver {
                 if (++titleTicks >= CONNECT_DELAY_TICKS) {
                     connectToServer(mc);
                 }
-            } else if (mc.player != null && mc.level != null && mc.screen == null) {
+            } else if (mc.player != null && mc.level != null
+                    // 21.9 实证修正：mod 首次 join 的 Disclaimer/PlayerModel 自动开屏可能早于
+                    // 任何 screen==null tick（旧条件 screen==null 在 21.9 永假 → world 永不标），
+                    // 改为排除 vanilla 加载屏即视为已入世界（harness 类，生产 jar 排除）
+                    && !(mc.screen instanceof net.minecraft.client.gui.screens.LevelLoadingScreen)) {
                 // 注意：勿加 getHealth()>0 之类判定——join 瞬间客户端 health sync 未到
                 // （getHealth()==0）会永久阻断 mark（M2.5 实证）；死亡由上方 respawn 兜底
                 joined = true;

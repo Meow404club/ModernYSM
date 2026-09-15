@@ -166,6 +166,25 @@ if grep -q '^onboardAccessibility:' "$OPT" 2>/dev/null; then
 else
   echo 'onboardAccessibility:false' >> "$OPT"
 fi
+
+# neoforge 21.7+ dev 默认开 B3D 校验层（NeoForgeClientConfig.enableB3DValidationLayer
+# 默认值 = !FMLLoader.isProduction()，dev=true）——GpuTexture 全被 ValidationGpuTexture
+# 包裹，本 mod 原生渲染路径 GpuRenderPath 的 GlTexture.glId() 直转在 dev 必 CCE
+#（21.7 tour 首跑 crash-2026-09-15_07.12.39-client.txt 实证；生产该层默认关，路径合法）。
+# tour 预写 client config 关闭校验层=dev 模拟生产 GL 设备面。幂等：有则改、无则加。
+case "$VERSION" in
+  21.*-neoforge)
+    NCFG="$CLIENT_DIR/config/neoforge-client.toml"
+    mkdir -p "$CLIENT_DIR/config"
+    touch "$NCFG"
+    if grep -q '^enableB3DValidationLayer' "$NCFG" 2>/dev/null; then
+      sed -i 's/^enableB3DValidationLayer.*/enableB3DValidationLayer=false/' "$NCFG"
+    else
+      printf 'enableB3DValidationLayer=false\n' >> "$NCFG"
+    fi
+    ;;
+esac
+
 rm -f "$CLIENT_DIR/harness.armed" "$CLIENT_DIR/cmd.txt" "$CLIENT_DIR/harness.ready"
 : > "$OUT/client.log"
 setsid sh gradlew $GRADLE_CLIENT --no-daemon --no-configuration-cache > "$OUT/client.log" 2>&1 &

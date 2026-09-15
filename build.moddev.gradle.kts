@@ -503,6 +503,9 @@ tasks.named<ProcessResources>("processResources") {
     if (!pre1205) {
         // 配置缓存铁律：lambda 内只引任务配置块局部 val（stonecutter 是脚本对象引用）
         val dropBufferBuilderMixin = stonecutter.eval(stonecutter.current.version, ">=1.21")
+        // 26.x 产物 Java 25 字节码（major 69 实测）→ 声明 JAVA_25（26.x 运行时 mixin=
+        // fabric sponge-mixin 0.17.3+mixin.0.8.7，userdev config.json 实证）
+        val is26 = stonecutter.eval(stonecutter.current.version, ">=26")
         // 配置缓存铁律：条件在配置期物化为局部量，filter 内不可捕 stonecutter 脚本对象
         val dropRenderSystemAccessor = stonecutter.eval(stonecutter.current.version, ">=21.6")
         // 21.2 混合形态：render-state 实体 stash mixin 注入（src/neoforge-212 小树配套，
@@ -510,7 +513,7 @@ tasks.named<ProcessResources>("processResources") {
         val stash212 = stonecutter.current.version == "21.2"
         filesMatching("*.mixins.json") {
             filter { line: String ->
-                var out = line.replace("\"JAVA_17\"", "\"JAVA_21\"")
+                var out = line.replace("\"JAVA_17\"", if (is26) "\"JAVA_25\"" else "\"JAVA_21\"")
                     .replace("\"client.ArrowEntityAccessor\"", "\"client.ArrowPotionAccessor\"")
                 if (stash212) {
                     out = out.replace(

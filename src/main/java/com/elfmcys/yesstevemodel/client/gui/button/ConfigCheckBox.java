@@ -64,12 +64,20 @@ public class ConfigCheckBox extends StateSwitchingButton implements ISpecialWidg
 
     // 渲染钩子三段：StateSwitchingButton.renderWidget(PoseStack) 1.19.4 起（1194:44）/
     // renderButton(PoseStack) 1.16.5~1.19.2（1192 StateSwitchingButton.java:50）/ GuiGraphics 1.20 起
-    //? if >=1.20 {
+    //? if >=1.20 && <26 {
     @Override
     public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
     //?}
+    // 26.x：抽象钩子改名（vanilla-26.1 AbstractWidget.java:89）
+    //? if >=26 {
+    /*
+    @Override
+    public void extractWidgetRenderState(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+    *///?}
     //? if >=1.19.4 && <1.20 {
     /*
     @Override

@@ -135,12 +135,20 @@ public class ModernAnimationRouletteScreen extends Screen {
         this.renderRoot(new YsmGui(pose), mouseX, mouseY, partialTick);
     }
      *///?}
-     //? if >=1.20 {
+     //? if >=1.20 && <26 {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderRoot(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
      //?}
+    // 26.x GUI 换代：Screen.render → extractRenderState（vanilla-26.1 Screen.java:116）
+    //? if >=26 {
+    /*@Override
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderRoot(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+     *///?}
+
 
     private void renderRoot(YsmGui g, int mouseX, int mouseY, float partialTick) {
         if (GeneralConfig.BLUR_GUI != null && GeneralConfig.BLUR_GUI.get()) collectAndFlushBlur(g);
@@ -158,8 +166,11 @@ public class ModernAnimationRouletteScreen extends Screen {
         //? if >=1.17 && <1.20 {
         /*super.render(g.pose(), mouseX, mouseY, partialTick);
          *///?}
-        //? if >=1.20 {
-        super.render(g.graphics(), mouseX, mouseY, partialTick);
+        //? if >=1.20 && <26 {
+                super.render(g.graphics(), mouseX, mouseY, partialTick);
+        //?}
+        //? if >=26 {
+        /*        super.extractRenderState(g.graphics(), mouseX, mouseY, partialTick);*/
         //?}
     }
 
@@ -534,7 +545,13 @@ public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
     private void navigateToSubmenu(String value) {
         if (navigationStack.size() > 5) {
             LocalPlayer p = Minecraft.getInstance().player;
-            if (p != null) p.displayClientMessage(YsmGui.trans("gui.yes_steve_model.roulette.too_long"), false);
+            if (p != null) {
+                //? if <26
+                p.displayClientMessage(YsmGui.trans("gui.yes_steve_model.roulette.too_long"), false);
+                // 26.x：displayClientMessage 删（26.1 Player.java:1320）
+                //? if >=26
+                /*p.sendSystemMessage(YsmGui.trans("gui.yes_steve_model.roulette.too_long"));*/
+            }
             return;
         }
         String sub = value.substring(1);
@@ -565,7 +582,10 @@ public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
             PlayerCapability.get(player).ifPresent(cap -> cap.requestModelSwitch(key));
         }
         if (player != null && GeneralConfig.PRINT_ANIMATION_ROULETTE_MSG.get()) {
+            //? if <26
             player.displayClientMessage(YsmGui.trans("message.yes_steve_model.model.animation_roulette.play", key), false);
+            //? if >=26
+            /*player.sendSystemMessage(YsmGui.trans("message.yes_steve_model.model.animation_roulette.play", key));*/
         }
         Minecraft.getInstance().setScreen(null);
     }

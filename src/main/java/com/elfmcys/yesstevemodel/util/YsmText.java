@@ -60,8 +60,12 @@ public final class YsmText {
         //? if <1.19.2 {
         /*player.displayClientMessage(msg, false);*/
         //?}
-        //? if >=1.21.2 {
+        //? if >=1.21.2 && <26 {
         /*player.displayClientMessage(msg, false);*/
+        //?}
+        // 26.x：displayClientMessage 删 → sendSystemMessage（26.1 Player.java:1320）
+        //? if >=26 {
+        /*player.sendSystemMessage(msg);*/
         //?}
     }
 

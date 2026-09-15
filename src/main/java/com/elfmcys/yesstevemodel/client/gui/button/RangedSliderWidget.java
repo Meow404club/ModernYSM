@@ -207,12 +207,20 @@ public class RangedSliderWidget extends YsmSliderButton {
         return i * 20;
     }
 
-    //? if >=1.20 {
+    //? if >=1.20 && <26 {
     @Override
     public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
     //?}
+    // 26.x：抽象钩子改名（vanilla-26.1 AbstractWidget.java:89）
+    //? if >=26 {
+    /*
+    @Override
+    public void extractWidgetRenderState(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+    *///?}
     //? if >=1.19.4 && <1.20 {
     /*
     @Override

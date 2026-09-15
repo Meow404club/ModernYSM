@@ -394,12 +394,20 @@ public class AnimationRouletteScreen extends Screen {
                 NetworkHandler.sendToServer(new C2SRequestExecuteMolangPacket(str2, this.animatableModel.getEntity().getId()));
             }
         }) {
-            //? if >=1.20 {
+            //? if >=1.20 && <26 {
             @Override
             public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
                 this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
             }
             //?}
+            // 26.x：抽象钩子改名（vanilla-26.1 AbstractWidget.java:89）
+            //? if >=26 {
+            /*
+            @Override
+            public void extractWidgetRenderState(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+                this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
+            }
+            *///?}
             //? if >=1.19.4 && <1.20 {
             /*
             @Override
@@ -442,7 +450,7 @@ public class AnimationRouletteScreen extends Screen {
         return value;
     }
 
-    //? if >=1.20 {
+    //? if >=1.20 && <26 {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         // 1.21.5+ 扇形绘制需原生 GuiGraphics（drawSpecial）——render 链上游暂存
@@ -451,11 +459,23 @@ public class AnimationRouletteScreen extends Screen {
     }
 
     private GuiGraphics ysmRawGuiGraphics;
-    //?} else {
+    //?}
+    //? if <1.20 {
     /*@Override
     public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
         this.render(new YsmGui(poseStack), mouseX, mouseY, partialTick);
     }
+     *///?}
+    // 26.x GUI 换代：Screen.render → extractRenderState（vanilla-26.1 Screen.java:116；原生图形
+    // 暂存语义保留——RouletteFanState 提交经 neoforge patch 的 submitGuiElementRenderState）
+    //? if >=26 {
+    /*@Override
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        this.ysmRawGuiGraphics = graphics;
+        this.render(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+
+    private GuiGraphicsExtractor ysmRawGuiGraphics;
      *///?}
 
     public void render(YsmGui guiGraphics, int mouseX, int mouseY, float partialTick) {
@@ -470,8 +490,11 @@ public class AnimationRouletteScreen extends Screen {
             if (!(renderable instanceof ISpecialWidget)) {
                 //? if <1.20
                 /*renderable.render(guiGraphics.pose(), mouseX, mouseY, partialTick);*/
-                //? if >=1.20
+                //? if >=1.20 && <26
                 renderable.render(guiGraphics.graphics(), mouseX, mouseY, partialTick);
+                // 26.x：render → extractRenderState（vanilla-26.1 Screen/AbstractWidget 换代）
+                //? if >=26
+                /*renderable.extractRenderState(guiGraphics.graphics(), mouseX, mouseY, partialTick);*/
             }
         }
         guiGraphics.enableScissor(0, this.centerY - 46, this.width, this.centerY + 110);
@@ -492,8 +515,10 @@ public class AnimationRouletteScreen extends Screen {
             if (renderable2 instanceof ISpecialWidget) {
                 //? if <1.20
                 /*renderable2.render(guiGraphics.pose(), mouseX, scrolledMouseY, partialTick);*/
-                //? if >=1.20
+                //? if >=1.20 && <26
                 renderable2.render(guiGraphics.graphics(), mouseX, scrolledMouseY, partialTick);
+                //? if >=26
+                /*renderable2.extractRenderState(guiGraphics.graphics(), mouseX, scrolledMouseY, partialTick);*/
             }
         }
         //? if <21.6

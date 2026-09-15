@@ -143,8 +143,13 @@ public final class ClientSetupEvent {
         }
         //? if <1.16.2
         /*net.minecraftforge.fml.DeferredWorkQueue.runLater(ClientSetupEvent::checkNativeInitialization);*/
-        //? if >=1.16.2
+        //? if <26
         event.enqueueWork(ClientSetupEvent::checkNativeInitialization);
+        // 26.x：loader 11 DeferredWorkQueue 改 modloading-sync-worker 线程执行（无 GL 上下文，
+        // 26.1.2 tour 首跑 FATAL nglGetIntegerv 实证）→ GL 探针移交渲染线程首帧执行
+        //（execute 入渲染任务队列，语义同=失败抛 RuntimeException，仅时点后移）
+        //? if >=26
+        /*net.minecraft.client.Minecraft.getInstance().execute(ClientSetupEvent::checkNativeInitialization);*/
     }
 
     public static Object nativeClientInit() {

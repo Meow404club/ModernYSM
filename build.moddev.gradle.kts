@@ -191,6 +191,14 @@ sourceSets.main {
             // Identifier 全树改名（同包同 API，neoforge-21.11.45-sources 实证）+ Arrow 族
             // 移 projectile.arrow 子包（ArrowPotionAccessor 目标）
             srcDir(rootProject.file("src/neoforge-2111/java"))
+            if (v26) {
+                // 26.x 分歧（neoforge-26.1 RenderLevelStageEvent 实证）：删 AfterEntities 子事件
+                // → RenderFirstPlayerForgeHook 走 2610 孪生小树取 AfterOpaqueFeatures。
+                // 异包 event26x 原因（212 树先例）：exclude 按相对路径双杀同名 RAW 文件，
+                // 孪生必须异包；@EventBusSubscriber 注解自注册，包名无关。
+                exclude("com/elfmcys/yesstevemodel/platform/neoforge/event/RenderFirstPlayerForgeHook.java")
+                srcDir(rootProject.file("src/neoforge-2610/java"))
+            }
         }
         if (pre1205) {
             srcDir(rootProject.file("src/neoforge-1204/java"))
@@ -305,6 +313,7 @@ tasks {
         // 配置缓存铁律：doLast 只可捕获局部 String/Provider，stonecutter 脚本对象引用不可序列化
         val curVersion = stonecutter.current.version
         val is21_11 = stonecutter.eval(stonecutter.current.version, ">=21.11")
+        val is26 = stonecutter.eval(stonecutter.current.version, ">=26")
         val rlToIdentifier = register<org.gradle.api.DefaultTask>("rlToIdentifier") {
             dependsOn("stonecutterGenerate")
             mustRunAfter("stonecutterGenerate")
@@ -333,6 +342,21 @@ tasks {
                         rules.add(Regex("\\bResourceLocation\\b") to "Identifier")
                         rules.add(Regex("\\bRenderType\\.(armorCutoutNoCull|entityCutoutNoCullZOffset|entityCutoutNoCull|entitySolid|entityTranslucentEmissive|entityTranslucent|lineStrip|outline)\\(")
                             to "net.minecraft.client.renderer.rendertype.RenderTypes.$1(")
+                    }
+                    if (is26) {
+                        // 26.1 GUI 换代（vanilla-26.1 实证）：net.minecraft.client.gui.GuiGraphics 类
+                        // 删除，同包改名 GuiGraphicsExtractor（extract 模型；Screen.render→
+                        // extractRenderState/AbstractWidget.renderWidget→extractWidgetRenderState
+                        // 等方法面换代在共享源分代，见各 GUI 文件）。纯类型名机械改写同 Identifier 先例。
+                        rules.add(Regex("\\bGuiGraphics\\b") to "GuiGraphicsExtractor")
+                        // render-state 包整体搬家：net.minecraft.client.gui.render.state →
+                        // net.minecraft.client.renderer.state.gui（GuiElementRenderState.java 包声明实证；
+                        // neoforge-26.1 GuiGraphicsExtractor patch 的 submitGuiElementRenderState
+                        // 签名同步新包，方法名不变）
+                        rules.add(Regex("net\\.minecraft\\.client\\.gui\\.render\\.state\\.") to "net.minecraft.client.renderer.state.gui.")
+                        // 26.1 RenderTypes 工厂更名：entityCutoutNoCull → entityCutout
+                        //（26.1 RenderTypes.java:451；本条须排在 is21_11 FQN 改写规则之后）
+                        rules.add(Regex("RenderTypes\\.entityCutoutNoCull\\(") to "RenderTypes.entityCutout(")
                     }
                     root.walkTopDown().filter { it.isFile && it.extension == "java" }.forEach { f ->
                         val text = f.readText()
@@ -443,6 +467,9 @@ tasks.named<ProcessResources>("processResources") {
     // 批二 c-2（2026-09-14 同表实拉）：1.20.2=18 / 1.20.3=22（1.20.3~1.20.4 同档）/
     // 1.20.5=32（1.20.5~1.20.6 同档）/ 1.21=34（1.21~1.21.1 同档）/ 21.2=42（1.21.2~1.21.3
     // 同档）/ 21.6=63 / 21.7=64（1.21.7~1.21.8 同档）/ 21.9=69（1.21.9~1.21.10 同档）
+    // 26.x 适配（2026-09-15 同表实拉）：26.1=84 / 26.1.1=84（wiki 表 84.0 档跨
+    // 26.1~26.1.2 全线，与 MC 26.1 client version.json resource_major=84 互证）/ 26.2=88
+    val is26Pack = stonecutter.eval(stonecutter.current.version, ">=26")
     val packFormat = mapOf(
         "1.20.4" to 22,
         "1.20.6" to 32,
@@ -453,6 +480,8 @@ tasks.named<ProcessResources>("processResources") {
         "21.8" to 64,
         "21.10" to 69,
         "21.11" to 75,
+        "26.1" to 84,
+        "26.1.1" to 84,
         "26.1.2" to 84,
         "26.2" to 88,
         "1.20.2" to 18,
@@ -465,7 +494,16 @@ tasks.named<ProcessResources>("processResources") {
         "21.9" to 69,
     )[mcVersion] ?: 15
     filesMatching("pack.mcmeta") {
-        filter { line: String -> line.replace("\"pack_format\": 15", "\"pack_format\": $packFormat") }
+        // 26.x：PackFormat 新制——pack_format 声明 >lastPreMinorVersion(81) 时强制
+        // min_format/max_format 双字段（26.1.2 PackFormat.java:159-166 validate + 26.1
+        // tour 首跑 server JsonParseException 实证）→ 改双 int 字段声明
+        filter { line: String ->
+            if (is26Pack) {
+                line.replace("\"pack_format\": 15", "\"min_format\": $packFormat,\n        \"max_format\": $packFormat")
+            } else {
+                line.replace("\"pack_format\": 15", "\"pack_format\": $packFormat")
+            }
+        }
     }
     // mixins.json compatibilityLevel：1.20.4 产物 Java 17 字节码 → 保持 JAVA_17；
     // 1.20.6/1.21.1 产物 Java 21 字节码 + Java 21 运行时 → JAVA_17 声明双不符，替换为 JAVA_21
@@ -475,6 +513,9 @@ tasks.named<ProcessResources>("processResources") {
     if (!pre1205) {
         // 配置缓存铁律：lambda 内只引任务配置块局部 val（stonecutter 是脚本对象引用）
         val dropBufferBuilderMixin = stonecutter.eval(stonecutter.current.version, ">=1.21")
+        // 26.x 产物 Java 25 字节码（major 69 实测）→ 声明 JAVA_25（26.x 运行时 mixin=
+        // fabric sponge-mixin 0.17.3+mixin.0.8.7，userdev config.json 实证）
+        val is26 = stonecutter.eval(stonecutter.current.version, ">=26")
         // 配置缓存铁律：条件在配置期物化为局部量，filter 内不可捕 stonecutter 脚本对象
         val dropRenderSystemAccessor = stonecutter.eval(stonecutter.current.version, ">=21.6")
         // 21.2 混合形态：render-state 实体 stash mixin 注入（src/neoforge-212 小树配套，
@@ -482,7 +523,7 @@ tasks.named<ProcessResources>("processResources") {
         val stash212 = stonecutter.current.version == "21.2"
         filesMatching("*.mixins.json") {
             filter { line: String ->
-                var out = line.replace("\"JAVA_17\"", "\"JAVA_21\"")
+                var out = line.replace("\"JAVA_17\"", if (is26) "\"JAVA_25\"" else "\"JAVA_21\"")
                     .replace("\"client.ArrowEntityAccessor\"", "\"client.ArrowPotionAccessor\"")
                 if (stash212) {
                     out = out.replace(

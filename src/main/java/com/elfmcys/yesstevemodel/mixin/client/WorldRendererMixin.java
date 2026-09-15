@@ -7,7 +7,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
+//? if <26 {
 import net.minecraft.client.renderer.LightTexture;
+//?}
 //? if <1.19.3 {
 /*import com.mojang.math.Matrix4f;
 *///?}
@@ -74,7 +76,7 @@ public class WorldRendererMixin {
             EntityRenderCache.tick(deltaTracker.getGameTimeDeltaPartialTick(false));
         }
      *///?}
-    //? if >=21.9 {
+    //? if >=21.9 && <26 {
     /*@Inject(method = {"renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;Z)V"}, at = {@At("HEAD")})
     private void renderLevel(com.mojang.blaze3d.resource.GraphicsResourceAllocator resourceAllocator, net.minecraft.client.DeltaTracker deltaTracker, boolean renderBlockOutline, Camera camera, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, Matrix4f fogMatrix, com.mojang.blaze3d.buffers.GpuBufferSlice bufferSlice, org.joml.Vector4f fogColor, boolean renderSky, CallbackInfo ci) {
         if (YesSteveModel.isAvailable()) {
@@ -82,6 +84,14 @@ public class WorldRendererMixin {
             EntityRenderCache.tick(deltaTracker.getGameTimeDeltaPartialTick(false));
         }
      *///?}
+
+    // 26.x renderLevel 再换代（26.1.2 LevelRenderer.java:465-475）：Camera→CameraRenderState、
+    // 去 projectionMatrix（Matrix4fc 单矩阵）、+ChunkSectionsToRender；块只供 @Inject+签名开头，
+    // 方法体由下方共享裸尾承接（同 21.10 形结构）
+    //? if >=26 {
+    /*@Inject(method = {"renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/renderer/state/level/CameraRenderState;Lorg/joml/Matrix4fc;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;ZLnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;)V"}, at = {@At("HEAD")})
+    private void renderLevel26(com.mojang.blaze3d.resource.GraphicsResourceAllocator resourceAllocator, net.minecraft.client.DeltaTracker deltaTracker, boolean renderOutline, net.minecraft.client.renderer.state.level.CameraRenderState cameraState, org.joml.Matrix4fc modelViewMatrix, com.mojang.blaze3d.buffers.GpuBufferSlice terrainFog, org.joml.Vector4f fogColor, boolean shouldRenderSky, net.minecraft.client.renderer.chunk.ChunkSectionsToRender chunkSectionsToRender, CallbackInfo ci) {*/
+    //?}
         if (YesSteveModel.isAvailable()) {
             ModelPreviewRenderer.setFirstPersonMode(true);
             //? if <1.21
@@ -90,6 +100,7 @@ public class WorldRendererMixin {
             /*EntityRenderCache.tick(deltaTracker.getGameTimeDeltaPartialTick(false));*/
         }
     }
+
 
     //? if <1.17 {
     /*@Inject(method = {"renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lcom/mojang/math/Matrix4f;)V"}, at = {@At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/RenderType;entitySolid(Lnet/minecraft/resources/ResourceLocation;)Lnet/minecraft/client/renderer/RenderType;")})
@@ -127,7 +138,7 @@ public class WorldRendererMixin {
             ModelPreviewRenderer.setFirstPersonMode(false);
         }
      *///?}
-    //? if >=21.9 {
+    //? if >=21.9 && <26 {
     /*@Inject(method = {"renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;Z)V"}, at = {@At("TAIL")})
     private void renderLevelPost(com.mojang.blaze3d.resource.GraphicsResourceAllocator resourceAllocator, net.minecraft.client.DeltaTracker deltaTracker, boolean renderBlockOutline, Camera camera, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, Matrix4f fogMatrix, com.mojang.blaze3d.buffers.GpuBufferSlice bufferSlice, org.joml.Vector4f fogColor, boolean renderSky, CallbackInfo ci) {
         if (YesSteveModel.isAvailable()) {
@@ -135,6 +146,10 @@ public class WorldRendererMixin {
             ModelPreviewRenderer.setFirstPersonMode(false);
         }
      *///?}
+    //? if >=26 {
+    /*@Inject(method = {"renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/renderer/state/level/CameraRenderState;Lorg/joml/Matrix4fc;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;ZLnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;)V"}, at = {@At("TAIL")})
+    private void renderLevelPost26(com.mojang.blaze3d.resource.GraphicsResourceAllocator resourceAllocator, net.minecraft.client.DeltaTracker deltaTracker, boolean renderOutline, net.minecraft.client.renderer.state.level.CameraRenderState cameraState, org.joml.Matrix4fc modelViewMatrix, com.mojang.blaze3d.buffers.GpuBufferSlice terrainFog, org.joml.Vector4f fogColor, boolean shouldRenderSky, net.minecraft.client.renderer.chunk.ChunkSectionsToRender chunkSectionsToRender, CallbackInfo ci) {*/
+    //?}
         if (YesSteveModel.isAvailable()) {
             EntityRenderCache.clear();
             ModelPreviewRenderer.setFirstPersonMode(false);

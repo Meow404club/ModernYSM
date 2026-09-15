@@ -341,7 +341,11 @@ public final class ModelPreviewRenderer {
         //? if >=1.19.3
         poseStack.mulPose(Axis.YP.rotationDegrees(yaw + 180.0f));
         poseStack.translate(-0.5d, 0.0d, 0.5d);
+        //? if <26
         Minecraft.getInstance().getBlockRenderer().renderSingleBlock(Blocks.RED_BED.defaultBlockState(), poseStack, bufferSource, 15728880, OverlayTexture.NO_OVERLAY);
+        // 26.x：BlockRenderDispatcher.renderSingleBlock 全套删（26.1 块渲染改
+        // BlockModelRenderState/model-set 制，vanilla-26.1 无 renderSingleBlock 符号）
+        // → 床型预览装饰 no-op（功能债 debt-26x）
     }
 
     private static void renderGroundPreview(float scale, float pitch, float yaw, MultiBufferSource.BufferSource bufferSource) {
@@ -373,18 +377,24 @@ public final class ModelPreviewRenderer {
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                 poseStack.translate(0.0f, 0.0f, 1.0f);
+                //? if <26
                 Minecraft.getInstance().getBlockRenderer().renderSingleBlock(Blocks.GRASS_BLOCK.defaultBlockState(), poseStack, bufferSource, 15728880, OverlayTexture.NO_OVERLAY);
+                // 26.x：renderSingleBlock 删 → 草方块地面预览 no-op（功能债 debt-26x）
             }
             poseStack.translate(1.0f, 0.0f, -3.0f);
         }
 
         poseStack.translate(-1.0f, 1.0f, 1.0f);
-        //? if neoforge
+        //? if neoforge && <26
         /*Minecraft.getInstance().getBlockRenderer().renderSingleBlock(Blocks.SHORT_GRASS.defaultBlockState(), poseStack, bufferSource, 15728880, OverlayTexture.NO_OVERLAY);*/
-        //? if forge
+        // 26.x：renderSingleBlock 删 → 短草预览 no-op（功能债 debt-26x）
+        //? if forge && <26
         Minecraft.getInstance().getBlockRenderer().renderSingleBlock(Blocks.GRASS.defaultBlockState(), poseStack, bufferSource, 15728880, OverlayTexture.NO_OVERLAY);
+        // 26.x：renderSingleBlock 删 → 草丛预览 no-op（功能债 debt-26x；forge 行 26.x 无注册线，守卫简化）
         poseStack.translate(0.0f, 0.0f, 1.0f);
+        //? if <26
         Minecraft.getInstance().getBlockRenderer().renderSingleBlock(Blocks.RED_TULIP.defaultBlockState(), poseStack, bufferSource, 15728880, OverlayTexture.NO_OVERLAY);
+        // 26.x：renderSingleBlock 删 → 红郁金香预览 no-op（功能债 debt-26x）
     }
 
     // 1.21.9+ dispatcher.render 直绘删（render-dag 换代）→ 载具动画预览降级 no-op

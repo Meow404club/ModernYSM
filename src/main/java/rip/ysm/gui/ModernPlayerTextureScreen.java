@@ -252,7 +252,7 @@ public class ModernPlayerTextureScreen extends OptionScreen {
         for (IconButton btn : icons) drawIcon(g, btn);
     }
      *///?}
-     //? if >=1.20 {
+     //? if >=1.20 && <26 {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         hoveredIcon = null;
@@ -267,6 +267,23 @@ public class ModernPlayerTextureScreen extends OptionScreen {
         for (IconButton btn : icons) drawIcon(g, btn);
     }
      //?}
+    // 26.x GUI 换代：Screen.render → extractRenderState（vanilla-26.1 Screen.java:116；
+    // 本屏不经 facade render，super.render 直调同步换代）
+    //? if >=26 {
+    /*@Override
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        hoveredIcon = null;
+        for (IconButton btn : icons) {
+            if (btn.contains(mouseX, mouseY)) {
+                hoveredIcon = btn;
+                break;
+            }
+        }
+        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
+        YsmGui g = new YsmGui(graphics);
+        for (IconButton btn : icons) drawIcon(g, btn);
+    }
+     *///?}
 
     private void drawIcon(YsmGui g, IconButton btn) {
         boolean hover = btn == hoveredIcon;

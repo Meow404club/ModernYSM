@@ -59,12 +59,21 @@ public class QueryBinding extends ContextBinding {
         var("head_y_rotation", ctx -> ctx.data().headPitch);
         // 1.21.11 Level.getMoonPhase 删（月相改 EnvironmentAttributes 探针，SkyRenderState.moonPhase
         // 枚举化）→ 按默认主世界公式 dayTime/24000%8 折算，维度感知差异入功能债
-        //? if >=21.11
+        //? if >=21.11 && <26
         /*var("moon_phase", ctx -> (int) (ctx.level().getDayTime() / 24000L % 8L));*/
+        // 26.x：Level.getDayTime 删 → getOverworldClockTime（26.1 Level.java:797/892 同义 "day time"）
+        //? if >=26
+        /*var("moon_phase", ctx -> (int) (ctx.level().getOverworldClockTime() / 24000L % 8L));*/
         //? if <21.11
         var("moon_phase", ctx -> ctx.level().getMoonPhase());
+        //? if <26
         var("time_of_day", ctx -> MolangUtils.normalizeTime(ctx.level().getDayTime()));
+        //? if >=26
+        /*var("time_of_day", ctx -> MolangUtils.normalizeTime(ctx.level().getOverworldClockTime()));*/
+        //? if <26
         var("time_stamp", ctx -> ctx.level().getDayTime());
+        //? if >=26
+        /*var("time_stamp", ctx -> ctx.level().getOverworldClockTime());*/
         var("delta_time", ctx -> ctx.geoInstance().getPositionTracker().getTimeDelta() / 20.0f);
 
         entityVar("yaw_speed", QueryBinding::getYawSpeed);

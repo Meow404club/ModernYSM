@@ -99,7 +99,12 @@ public class AnimationDebugOverlay {
             MutableComponent mutableComponentAppend = YsmGui.trans("message.yes_steve_model.model.debug_animation.true").append(" -> ");
             Component customName = entity.getCustomName();
             Objects.requireNonNull(entity);
+            //? if <26
             localPlayer.displayClientMessage(mutableComponentAppend.append(customName != null ? customName : entity.getDisplayName()), false);
+            // 26.x：Player.displayClientMessage 删（26.1 Player.java:1320 sendSystemMessage）
+            //? if >=26
+            /*localPlayer.sendSystemMessage(mutableComponentAppend.append(customName != null ? customName : entity.getDisplayName()));*/
+
         }
     }
 
@@ -112,7 +117,12 @@ public class AnimationDebugOverlay {
             activeModel = null;
             LocalPlayer localPlayer = Minecraft.getInstance().player;
             if (localPlayer != null) {
+                //? if <26
                 localPlayer.displayClientMessage(YsmGui.trans("message.yes_steve_model.model.debug_animation.false"), false);
+                // 26.x：Player.displayClientMessage 删（26.1 Player.java:1320 sendSystemMessage）
+                //? if >=26
+                /*localPlayer.sendSystemMessage(YsmGui.trans("message.yes_steve_model.model.debug_animation.false"));*/
+
             }
         }
     }

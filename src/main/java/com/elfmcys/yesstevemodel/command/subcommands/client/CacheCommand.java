@@ -25,14 +25,23 @@ public class CacheCommand {
             return 0;
         }
 
+        //? if <26
         player.displayClientMessage(YSMMessageFormatter.withPrefix(YsmText.literal("开始解析并导出客户端缓存模型...")), false);
+        //? if >=26
+        /*player.sendSystemMessage(YSMMessageFormatter.withPrefix(YsmText.literal("开始解析并导出客户端缓存模型...")));*/
 
         ClientModelManager.exportAllCachedModels(null, exportResult -> {
             if (exportResult.getMessage() != null) {
-                player.displayClientMessage(YSMMessageFormatter.withPrefix(exportResult.getMessage()), false);
+                //? if <26
+        player.displayClientMessage(YSMMessageFormatter.withPrefix(exportResult.getMessage()), false);
+        //? if >=26
+        /*player.sendSystemMessage(YSMMessageFormatter.withPrefix(exportResult.getMessage()));*/
             }
             if (exportResult.isSuccess()) {
-                player.displayClientMessage(YsmText.translatable("commands.yes_steve_model.export.success", exportResult.getFilePath()), false);
+                //? if <26
+        player.displayClientMessage(YsmText.translatable("commands.yes_steve_model.export.success", exportResult.getFilePath()), false);
+        //? if >=26
+        /*player.sendSystemMessage(YsmText.translatable("commands.yes_steve_model.export.success", exportResult.getFilePath()));*/
             }
         });
 

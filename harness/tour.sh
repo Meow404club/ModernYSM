@@ -58,12 +58,17 @@ case "$VERSION" in
     SERVER_DIR="$ROOT/versions/$VERSION/run/server"
     CLIENT_DIR="$ROOT/versions/$VERSION/run/client"
     ;;
-  1.20.4-neoforge|1.20.6-neoforge|1.21.1-neoforge|21.3-neoforge|21.4-neoforge|21.5-neoforge|21.8-neoforge|21.10-neoforge|21.11-neoforge|26.1.2-neoforge|26.2-neoforge)
+  1.20.4-neoforge|1.20.6-neoforge|1.21.1-neoforge|21.3-neoforge|21.4-neoforge|21.5-neoforge|21.8-neoforge|21.10-neoforge|21.11-neoforge)
     SERVER_DIR="$ROOT/versions/$VERSION/run/server"
     CLIENT_DIR="$ROOT/versions/$VERSION/run/client"
     ;;
   # M3 批二 c-2：neoforge 补线五线（build.moddev.gradle.kts 同构）
   1.21-neoforge|21.2-neoforge|21.6-neoforge|21.7-neoforge|21.9-neoforge)
+    SERVER_DIR="$ROOT/versions/$VERSION/run/server"
+    CLIENT_DIR="$ROOT/versions/$VERSION/run/client"
+    ;;
+  # M3 26.x 适配：26.x 四线（build.moddev.gradle.kts 同构，Java 25）
+  26.1-neoforge|26.1.1-neoforge|26.1.2-neoforge|26.2-neoforge)
     SERVER_DIR="$ROOT/versions/$VERSION/run/server"
     CLIENT_DIR="$ROOT/versions/$VERSION/run/client"
     ;;
@@ -171,9 +176,11 @@ fi
 # 默认值 = !FMLLoader.isProduction()，dev=true）——GpuTexture 全被 ValidationGpuTexture
 # 包裹，本 mod 原生渲染路径 GpuRenderPath 的 GlTexture.glId() 直转在 dev 必 CCE
 #（21.7 tour 首跑 crash-2026-09-15_07.12.39-client.txt 实证；生产该层默认关，路径合法）。
+# 26.x 同款（neoforge-26.1/26.2.x NeoForgeClientConfig.java:78 define("enableB3DValidationLayer",
+# !FMLEnvironment.isProduction()) 实证）→ case 扩 26.*-neoforge。
 # tour 预写 client config 关闭校验层=dev 模拟生产 GL 设备面。幂等：有则改、无则加。
 case "$VERSION" in
-  21.*-neoforge)
+  21.*-neoforge|26.*-neoforge)
     NCFG="$CLIENT_DIR/config/neoforge-client.toml"
     mkdir -p "$CLIENT_DIR/config"
     touch "$NCFG"

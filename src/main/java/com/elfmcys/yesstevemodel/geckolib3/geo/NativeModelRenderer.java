@@ -11,7 +11,13 @@ import com.elfmcys.yesstevemodel.util.log.ChatLogger;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+//? if <26 {
 import net.minecraft.client.renderer.LightTexture;
+//?}
+// 26.x：LightTexture 删，pack 语义迁 LightCoordsUtil（26.1 LightCoordsUtil.java:8）
+//? if >=26 {
+/*import net.minecraft.util.LightCoordsUtil;
+ *///?}
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -151,7 +157,10 @@ public class NativeModelRenderer {
             localBoneMat.normal(localNormalMat);
             globalNormalMat.set(rootNormalMC).mul(localNormalMat);
 
+            //? if <26
             int currentPackedLight = bone.glow ? LightTexture.pack(15, 15) : packedLight;
+            //? if >=26
+            /*int currentPackedLight = bone.glow ? LightCoordsUtil.pack(15, 15) : packedLight;*/
 
             for (GeoModel.BakedCube cube : bone.cubes) {
                 for (GeoModel.BakedQuad quad : cube.quads) {

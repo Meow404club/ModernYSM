@@ -45,10 +45,18 @@ public class FlatIconButton extends AbstractWidget implements ISpecialWidget {
     //?}
     // FlatIconButton 直extends AbstractWidget：1.21.11 其抽象钩子仍名 renderWidget
     //（2111 AbstractWidget.java:89）→ 恢复同名覆写
-    //? if >=21.11 {
+    //? if >=21.11 && <26 {
     /*
     @Override
     public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
+    }
+    *///?}
+    // 26.x：AbstractWidget 抽象钩子改名 extractWidgetRenderState（vanilla-26.1 AbstractWidget.java:89）
+    //? if >=26 {
+    /*
+    @Override
+    public void extractWidgetRenderState(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderWidget(new YsmGui(graphics), mouseX, mouseY, partialTick);
     }
     *///?}

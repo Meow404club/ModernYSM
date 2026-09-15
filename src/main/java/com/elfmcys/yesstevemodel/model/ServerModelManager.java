@@ -451,21 +451,43 @@ public final class ServerModelManager {
 
     //? if >=21.9 {
     /*private static void ysmExtractBuiltinsFromModFile() {
-        IModFileInfo modFileInfo = ModList.get().getModFileById(YesSteveModel.MOD_ID);
-        if (modFileInfo == null || modFileInfo.getFile() == null) {
-            return;
-        }
-        Path modPath = modFileInfo.getFile().getFilePath();
-        try {
-            if (Files.isDirectory(modPath)) {
-                ysmCopyBuiltinTree(modPath.resolve("assets/" + YesSteveModel.MOD_ID + "/builtin"));
-            } else if (Files.isRegularFile(modPath)) {
-                try (java.nio.file.FileSystem zipFs = java.nio.file.FileSystems.newFileSystem(modPath, (ClassLoader) null)) {
-                    ysmCopyBuiltinTree(zipFs.getPath("assets/" + YesSteveModel.MOD_ID + "/builtin"));
+        // 21.9 dev 实证（tour crash-2026-09-15_08.10.44 顺藤）：getModFileById 只回首个 mod file
+        //（dev=classes 目录，无 assets）→ 生产单 jar 形才正确。MDG dev 把 classes/resources 两根
+        // 都挂成 mod file → 遍历全部同 modid 的 mod file，逐根 dir/jar 双形探测 assets/builtin。
+        for (IModFileInfo modFileInfo : ModList.get().getModFiles()) {
+            boolean ours = false;
+            for (net.neoforged.neoforgespi.language.IModInfo modInfo : modFileInfo.getMods()) {
+                if (YesSteveModel.MOD_ID.equals(modInfo.getModId())) {
+                    ours = true;
+                    break;
                 }
             }
+            if (!ours || modFileInfo.getFile() == null) {
+                continue;
+            }
+            Path modPath = modFileInfo.getFile().getFilePath();
+            try {
+                if (Files.isDirectory(modPath)) {
+                    ysmCopyBuiltinTree(modPath.resolve("assets/" + YesSteveModel.MOD_ID + "/builtin"));
+                } else if (Files.isRegularFile(modPath)) {
+                    try (java.nio.file.FileSystem zipFs = java.nio.file.FileSystems.newFileSystem(modPath, (ClassLoader) null)) {
+                        ysmCopyBuiltinTree(zipFs.getPath("assets/" + YesSteveModel.MOD_ID + "/builtin"));
+                    }
+                }
+            } catch (Exception e) {
+                YesSteveModel.LOGGER.error("Failed to extract builtin models", e);
+            }
+        }
+        // 21.9 dev 兜底：MDG 新形态 run 把 resources 根留在外层 -cp（21.9 client.log:290
+        // classpath 实证）而不进模块层 mod file → 模块层路径全空时用 system classloader
+        // 直取 assets/builtin 目录（生产该 cp 无 mod 内容，返回 null 天然跳过）
+        try {
+            java.net.URL builtinUrl = ClassLoader.getSystemResource("assets/" + YesSteveModel.MOD_ID + "/builtin");
+            if (builtinUrl != null && "file".equals(builtinUrl.getProtocol())) {
+                ysmCopyBuiltinTree(java.nio.file.Paths.get(builtinUrl.toURI()));
+            }
         } catch (Exception e) {
-            YesSteveModel.LOGGER.error("Failed to extract builtin models", e);
+            YesSteveModel.LOGGER.warn("Failed to extract builtin models from system classpath", e);
         }
     }
 

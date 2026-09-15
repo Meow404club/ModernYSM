@@ -11,6 +11,8 @@ import com.elfmcys.yesstevemodel.util.YsmText;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import com.elfmcys.yesstevemodel.NativeLibLoader;
 import com.elfmcys.yesstevemodel.YesSteveModel;
+import com.elfmcys.yesstevemodel.capability.AuthModelsCapability;
+import com.elfmcys.yesstevemodel.capability.StarModelsCapability;
 import com.elfmcys.yesstevemodel.capability.PlayerCapability;
 import com.elfmcys.yesstevemodel.client.gui.IGuiWidget;
 import com.elfmcys.yesstevemodel.client.gui.metadata.ModelDisplayAssets;
@@ -117,6 +119,41 @@ public class ClientModelManager {
     private static final ConcurrentLinkedQueue<Pair<ModelAssembly, String>> pendingModelQueue = new ConcurrentLinkedQueue<>();
     private static final WeakHashMap<IGuiWidget, Object> guiWidgets = new WeakHashMap<>();
     private static final SyncStatus syncState = new SyncStatus();
+
+    // server-dist 缺口修复（neoforge >=21.7 mask era）：YesSteveModel 被 dedicated server
+    // mod 构造链加载（YesSteveModelForge.<init> → init()），原 sendUnavailableMessage 方法体的
+    // Minecraft/LocalPlayer 引用在类链接期被解析（LocalPlayer 实参收窄到 YsmText.sendSystemMessage
+    // 的 Player 形参，校验器加载 LocalPlayer 层级），NeoForgeDevDistCleaner 掩码类 CNFE
+    //（21.7/21.9 runServer 实证：Attempted to load class LocalPlayer，YesSteveModelForge.<init>:48）。
+    // 方法结构性隔离至本类（仅 client 路径加载；调用方 ClientPlayerJoinNotification/PlayerModelToggleKey
+    // 均在 client 包）；forge 维持原 YesSteveModel 方法不动（双在产线 javap 零差口径）。
+    // 同病灶（21.9 runServer 实证 NetworkHandler.init register(6) 行）：S2C payload 注册使
+    // S2CSyncAuthModelsPacket/S2CSyncStarModelsPacket 在专用服加载，其 handleCapability 原体
+    // LocalPlayer 到 Player 的收窄入参同样在类校验期炸掩码类，主体一并隔离至此（委托签名全公共
+    // 类型，packet 类校验零 client 解析）。
+    // 块内注释会被 stonecutter 剥前缀变代码（批一教训），解释文字全部置于块外。
+    //? if neoforge {
+    /*public static void sendUnavailableMessage() {
+        LocalPlayer localPlayer = Minecraft.getInstance().player;
+        if (localPlayer != null) {
+            YsmText.sendSystemMessage(localPlayer, YesSteveModel.getUnavailableComponent());
+        }
+    }*/
+
+    /*public static void handleAuthModelsSync(Set<String> authModels) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.player != null) {
+            AuthModelsCapability.get(minecraft.player).ifPresent(cap -> cap.setAuthModels(authModels));
+        }
+    }*/
+
+    /*public static void handleStarModelsSync(Set<String> starModels) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.player != null) {
+            StarModelsCapability.get(minecraft.player).ifPresent(cap -> cap.setStarModels(starModels));
+        }
+    }*/
+    //?}
     private static boolean isOysmServer = false;
     private static boolean allowUpload = false;
 

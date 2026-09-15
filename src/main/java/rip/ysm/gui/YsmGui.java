@@ -836,16 +836,23 @@ public final class YsmGui {
         // 1.21.6 GUI 渲染重构：blur 每帧限一次（GuiRenderState.blurBeforeThisStratum
         // "Can only blur once per frame"，21.6 runClient DisclaimerScreen 崩溃实证）——
         // YSM 屏叠加在 vanilla 屏/同帧双屏时 Screen.renderBackground 的 blurred 背景二调必炸
-        // → 21.6~21.9 退化为半透明遮罩 fill（视觉近似暗化背景）；21.10 起 vanilla 调用面
-        // 不再触发该限制（现役 21.10/21.11/26.x runClient 走查实证），分支保持原样
+        // → 21.6~21.10 退化为半透明遮罩 fill（视觉近似暗化背景）。分界勘误（审查修正
+        // 2026-09-15）：原「21.10 起 vanilla 调用面无此限制（现役走查实证）」系误证——
+        // 批二 b 的 21.10 证据仅为陈旧 jar 主菜单截图（未触 YsmGui 后景面）；21.10 首次
+        // 真 GUI 走查（m3-neoforge-server-dist-fix 门禁）在 DisclaimerScreen 渲染即崩
+        // 同款 blur 二调（crash-2026-09-15_11.45.51：YsmGui.renderScreenBackground →
+        // Screen.renderBackground → renderBlurredBackground → blurBeforeThisStratum
+        // IllegalStateException），与 21.6 同病灶 → fill 门扩至 <21.11，vanilla 分支
+        // 收窄 >=21.11（21.11+ 仅 compileJava 实证、从未走查，恢复条件不变=逐屏改用
+        // vanilla 后景 API，债 debt-216-blur-degraded）
         //（互斥兄弟行条件平铺：铁律禁 else 链与存储态嵌套标记；fill 为注释态存储，
         // 1201 vcs 直编原文铁律——非活跃内容不得以裸码存在于原文）
-        //? if >=21.6 && <21.10 {
+        //? if >=21.6 && <21.11 {
         /*this.graphics.fill(0, 0, screen.width, screen.height, 0xB8101010);*/
         //?}
         //? if neoforge && <21.6
         /*screen.renderBackground(this.graphics, 0, 0, 0);*/
-        //? if neoforge && >=21.10
+        //? if neoforge && >=21.11
         /*screen.renderBackground(this.graphics, 0, 0, 0);*/
         //? if forge && <21.6
         screen.renderBackground(this.graphics);

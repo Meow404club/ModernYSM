@@ -68,9 +68,18 @@ public class OuterFileTexture extends AbstractTexture implements ITextureMap {
             //?}
             // 1.21.6 createTexture 七参形（usage flags, depth, mips——21.6 GpuDevice.java:29 实证，
             // Supplier/String 双形）；1.21.8 分界证伪（原注释 DynamicTexture.java:42 为 21.8 行号）
-            //? if >=21.6 {
+            // 1.21.11 GpuTexture.setTextureFilter 删（neoforge-21.11.45-sources GpuTexture.java
+            // 零 filter 方法，过滤改由 GpuSampler+GpuDevice.createSampler 承担）——>=21.11 剥离
+            // 该行（纹理 NEAREST 采样让位管线默认，功能差入债）；setTextureFilter 分界实证：
+            // 21.9/21.10 runServer 全过 vs 21.11 compileJava 找不到符号（server-audit 取证）
+            //? if >=21.6 && <21.11 {
             /*this.texture = RenderSystem.getDevice().createTexture(() -> "ysm_outer_file_texture", 5, TextureFormat.RGBA8, width, height, 1, 1);
             this.texture.setTextureFilter(com.mojang.blaze3d.textures.FilterMode.NEAREST, false);
+            this.textureView = RenderSystem.getDevice().createTextureView(this.texture);
+            RenderSystem.getDevice().createCommandEncoder().writeToTexture(this.texture, imageIn);*/
+            //?}
+            //? if >=21.11 {
+            /*this.texture = RenderSystem.getDevice().createTexture(() -> "ysm_outer_file_texture", 5, TextureFormat.RGBA8, width, height, 1, 1);
             this.textureView = RenderSystem.getDevice().createTextureView(this.texture);
             RenderSystem.getDevice().createCommandEncoder().writeToTexture(this.texture, imageIn);*/
             //?}

@@ -1,6 +1,7 @@
 package com.elfmcys.yesstevemodel.client.input;
 
 import com.elfmcys.yesstevemodel.YesSteveModel;
+import com.elfmcys.yesstevemodel.client.ClientModelManager;
 import com.elfmcys.yesstevemodel.client.gui.DisclaimerScreen;
 import com.elfmcys.yesstevemodel.client.gui.ExtraPlayerConfigScreen;
 import com.elfmcys.yesstevemodel.client.gui.PlayerModelScreen;
@@ -51,6 +52,9 @@ public final class PlayerModelToggleKey {
     private static void onKeyInput(int action, int keyCode, int scanCode) {
         if (InputUtil.isPlayerReady() && action == 1 && InputUtil.isKeyPressed(keyCode, scanCode, KEY_MAPPING)) {
             if (!YesSteveModel.isAvailable()) {
+//? if neoforge
+/*                ClientModelManager.sendUnavailableMessage();*/
+//? if forge
                 YesSteveModel.sendUnavailableMessage();
                 return;
             }

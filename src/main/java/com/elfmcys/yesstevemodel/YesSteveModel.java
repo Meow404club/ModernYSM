@@ -91,18 +91,23 @@ public class YesSteveModel {
 
     // 原 fabric @Environment(EnvType.CLIENT) → Forge @OnlyIn 等价替换：
     // 专用服剥离本方法（调用方均在 client 包，见 ClientPlayerJoinNotification/PlayerModelToggleKey）
-    //? if neoforge && <21.9 {
+    // server-dist 缺口修复：neoforge 本方法结构性隔离至 client.ClientModelManager——21.7 起
+    // RuntimeDistCleaner 成员剥离废除，@OnlyIn 失去保护力，方法体 Minecraft/LocalPlayer 引用
+    // 在类链接期解析 → dedicated server CNFE（21.7/21.9 runServer 实证）；forge 保留原方法。
+    // 注解门 >=1.20.1 && <1.20.4 仅命中 1.20.1 线：1201 vcs 直通按原文编译裸行，注解必须
+    // 保持基线原位（字节码零差口径）；其余 stonecutter 线（1165 等基线本就无注解）整块剥除
+//? if >=1.20.1 && <1.20.4 {
     @OnlyIn(Dist.CLIENT)
-    //?}
-    //? if forge {
-    /*    @OnlyIn(Dist.CLIENT)*/
-    //?}
+//?}
+//? if forge {
+/*    @OnlyIn(Dist.CLIENT)*/
     public static void sendUnavailableMessage() {
         LocalPlayer localPlayer = Minecraft.getInstance().player;
         if (localPlayer != null) {
             YsmText.sendSystemMessage(localPlayer, getUnavailableComponent());
         }
     }
+//?}
 
     public static Component getUnavailableComponent() {
         return NativeLibLoader.getErrorComponent();

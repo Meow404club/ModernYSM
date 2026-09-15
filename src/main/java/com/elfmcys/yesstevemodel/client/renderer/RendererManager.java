@@ -165,9 +165,20 @@ public class RendererManager {
         //?}
         // 1.21.9 Context 10 参：+AtlasManager（Minecraft.getAtlasManager）+PlayerSkinRenderCache
         //（Minecraft.playerSkinRenderCache()，2110 EntityRendererProvider.java:42-51 实证）
+        // 21.9 同 21.6：运行期 registerReloadListener 抛 UnsupportedOperationException（listeners
+        // 冻结，21.9 tour 首跑 crash-2026-09-15_07.44.49 RendererManager:170 实证）→ 同款反射取
+        // vanilla 自建实例（21.9 EntityRenderDispatcher.java:62 equipmentAssets 字段实证）；
+        // 字段缺失兜底=孤儿实例（装备资产空、装备层退化，功能差入债）
         //? if >=21.9 {
-        /*net.minecraft.client.resources.model.EquipmentAssetManager ysmEquipmentAssets = new net.minecraft.client.resources.model.EquipmentAssetManager();
-        ((net.minecraft.server.packs.resources.ReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener(ysmEquipmentAssets);
+        /*net.minecraft.client.resources.model.EquipmentAssetManager ysmEquipmentAssets;
+        try {
+            java.lang.reflect.Field ysmEquipmentField = net.minecraft.client.renderer.entity.EntityRenderDispatcher.class.getDeclaredField("equipmentAssets");
+            ysmEquipmentField.setAccessible(true);
+            ysmEquipmentAssets = (net.minecraft.client.resources.model.EquipmentAssetManager) ysmEquipmentField.get(entityRenderDispatcher);
+        } catch (ReflectiveOperationException e) {
+            YesSteveModel.LOGGER.warn("[YSM] equipmentAssets reflection fallback (orphan instance, equipment layer degraded)", e);
+            ysmEquipmentAssets = new net.minecraft.client.resources.model.EquipmentAssetManager();
+        }
         EntityRendererProvider.Context context = new EntityRendererProvider.Context(entityRenderDispatcher, Minecraft.getInstance().getItemModelResolver(), Minecraft.getInstance().getMapRenderer(), Minecraft.getInstance().getBlockRenderer(), resourceManager, Minecraft.getInstance().getEntityModels(), ysmEquipmentAssets, Minecraft.getInstance().getAtlasManager(), Minecraft.getInstance().font, Minecraft.getInstance().playerSkinRenderCache());*/
         //?}
         // 1.18.x Context 五参（七参 1.19.0 起：+BlockRenderDispatcher +ItemInHandRenderer）

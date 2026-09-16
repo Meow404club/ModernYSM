@@ -125,6 +125,12 @@
 - **结构边界（与官方 YSMCompat 同款）**：顶部矢量/前向 UV 仅探针路径可读（VertexData.normal，YSMCompat:95-96 重渲染采样）；骨驱动路径以模型轴替代，朝向微调走 offsets yaw/pitch/roll（已消费、已进数值打点）
 - **数值验收（审查亲算+独立新证）**：GPU 格 Δ=(−0.080,0,−0.149)=R·(z,y,x)·scale 逐分量吻合+euler roll=90；compat 稳态 (0.057,0.003,−0.160) 三分量全吻合（含 1° pitch 项）；审查另起两个不同 yaw spawn 独立采样复核命中；打点限频 3+每 600 帧不刷屏；**用户验收纪律=数值行对照，禁看图**
 - 回测注意：用户当前 bindRotation=false，官方门下朝向本就不进视图——验证朝向需先设 true（roll=90 应见视图滚转）
+
+## RC UV 表面点锚点（tasks.diag-rc-preview-anchor-mismatch，已合入 dev=e17ad83，2026-09-16）
+- 用户最终报告：相机位置与绑定 GUI 预览**从来没对上过**（跨所有修复轮次）→ 深析坐实**双重根因**：①锚点语义违例——RC 全链（GUI 预览 ModelAnalyser:333-367/探针 RealCameraCore:153-177/函数契约）锚点=UV 命中面重心插值表面点，旧 B1 喂骨 cube 中心（Trissy 量化：posUV=Head 颅 cube north 面中心，表面点距骨中心 3.5px=0.219 块鼻尖向，随姿态摆动）；②offsets 消费帧错位——computeCamera 位移方向由 feed 的 forward/upward 装配，骨轴帧≠GUI 面法线帧
+- **修复 cfffa66=方案 A（UV→网格查询）逐字对齐探针**：UV-in-quad 判定（Polygon+1e6 量化同款）+重心插值+命中面法线做 forward/upward+骨变换链同渲染（prepMatrixForBone 祖先链）；/16 烘焙陷阱规避（RawFace.positions 已块级不再除）；quad 命中按（模型，target）弱引用缓存一次构建、每帧 3 查+9 乘微秒级、不进 GL GPU 天然兼容；UV 无命中→骨轴兜底
+- 审查独立复算：python 复刻烘焙链+UV 命中+重心插值，staticSurface(px)=(0.000,35.825,-3.500) 逐位一致；**动画形变边界=无**（三路径动画输入均为同一 matrixData 骨矩阵，无骨变换外顶点形变——方案 A 与渲染顶点数学等价）；Trissy posUV 在 388 骨中唯一命中 Head north
+- 观测层小缺陷（下轮修）：logAllowed 共享计数器奇偶相位可致 uv 行沉默（bind 行 fwd/up 精确正交=UV 存活判据）；ponytail 可收 12 行
 - 批二 c-2（待发）：neoforge 8 条（1.20.2 POC/1.20.3 POC/1.20.5/1.21/1.21.2/1.21.6/1.21.7/21.9）
 - 全谱 37 线；semver 铁律（stonecutter 版本 ID 数值比较，分代用 <21.5/>=21.5 风格）与 vcs 直通铁律（1.20.1 根活动节点，21 轴门控必须存储态）为平铺期两大新沉淀
 - 2a：1.20.4（20.4.x stable）/1.20.6（20.6.x）/1.21.1（21.1.x）——moddev 构建线首次建立（MDG neoforge），Java 17/21/21

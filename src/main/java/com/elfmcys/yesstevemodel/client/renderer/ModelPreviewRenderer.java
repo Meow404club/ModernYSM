@@ -3,6 +3,9 @@ package com.elfmcys.yesstevemodel.client.renderer;
 import rip.ysm.util.RenderCompat;
 import com.elfmcys.yesstevemodel.capability.VehicleCapability;
 import com.elfmcys.yesstevemodel.capability.PlayerCapability;
+//? if >=26.1 && <26.2
+/*import com.elfmcys.yesstevemodel.platform.neoforge.firstperson.FirstPersonCompat;*/
+//? if <26.1 || >=26.2
 import rip.ysm.compat.firstperson.FirstPersonCompat;
 import rip.ysm.compat.oculus.OculusCompat;
 import rip.ysm.compat.touhoulittlemaid.TouhouLittleMaidCompat;

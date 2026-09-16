@@ -232,6 +232,22 @@ public final class GpuRenderPath {
             }
         }
 
+        // fix-fpm-hide-path-matrix：GPU 路径实测剔除打点——draw 后 SSBO 仍在绑定时回读每骨
+        // BoneDataOut.isHidden（stride 144，字节偏移 128），数 GPU 侧真实被折叠的骨数。
+        // 打点位置自证路径归属（GpuRenderPath 内=GPU compute 蒙皮真实生效），debug 开关默认关。
+        if (com.elfmcys.yesstevemodel.geckolib3.geo.NativeModelRenderer.shouldLogHideMatrix()) {
+            java.nio.ByteBuffer ssboRead = java.nio.ByteBuffer.allocateDirect(mesh.boneCount * 144).order(java.nio.ByteOrder.nativeOrder());
+            GL15.glGetBufferSubData(GL43.GL_SHADER_STORAGE_BUFFER, 0L, ssboRead);
+            int ssboHiddenBones = 0;
+            // BoneDataOut 布局：transform[16](64B)+normal[16](64B)+packedLight(128)+isHidden(132)+pad(136..140)
+            for (int i = 0; i < mesh.boneCount; i++) {
+                if (ssboRead.getInt(i * 144 + 132) != 0) ssboHiddenBones++;
+            }
+            String line = com.elfmcys.yesstevemodel.geckolib3.geo.NativeModelRenderer.hideStatsLine(
+                    "gpu", model, boneParams, String.format("ssboHiddenBones=%d drawCount=%d", ssboHiddenBones, drawCount));
+            System.out.println(line);
+        }
+
         GL43.glBindBufferBase(GL43.GL_SHADER_STORAGE_BUFFER, BoneSkinShader.ssbo, 0);
         GL15.glBindBuffer(GL43.GL_SHADER_STORAGE_BUFFER, 0);
         GlStateManager._glUseProgram(0);

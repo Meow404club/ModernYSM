@@ -102,6 +102,14 @@
 - 前情：首派 debugger 排查 62de96e..4fd6c87 窗口**无代码回归**（jar 首尾对拍+audit 零 BROKEN+四场景 llvmpipe 全绿）——回归假设被证伪，用户情报（仅 Windows 复现）转出真凶
 - 新原则：**llvmpipe 盲区**——渲染路径改动真 GPU 未验证前不得视为已验证；Windows 回测是渲染/兼容卡验收硬项
 - FPM/RealCamera 修复卡已按用户裁决叫停销毁（4d6a2c5 随 worktree 销毁）：其症状观测疑全为 GPU bug 下游症状，1.20.1 修好后重做诊断；FPM 系路径冻结（debt-onrenderhand-iscanceled-frozen）
+
+## FPM/RC 兼容修复（tasks.diag-fpm-rc-symptom-matrix → tasks.fix-fpm-rc，已合入 dev=18a91f7，2026-09-16）
+- **重诊断**（渲染修复后，用户症状矩阵驱动，七格 llvmpipe 实证）：FPM=隐藏旗标烤入 boneParams offset9/10，native 只消费 offset10、**CPU 路径可见性判定被注释**（兼容开全不隐）；FPM 只隐 allHeadBone 子树；RC=世界内绑定失败链（initialize 每帧重置 active→computeCamera 失败→2 帧翻假→MixinCamera 早退 vanilla 眼位="滞留身后看背影"）；GUI 矢量只需 weakAvailable≠相机可用
+- **逆向反转**：用户授权逆向官方 YSM 2.6.5-1.20.1（tmp/harvest/ysm1201-reverse/），coder 逐行证伪研究卡初读——官方 eval 含 `!event.isFirstPerson()` 门（与我方逐字同构）、offset=ViewLocator 骨属性×scale 动态式（24.0F 仅兜底）、官方异步同硬编码——**OpenYSM 的 FPM 兼容代码本就是官方忠实镜像**，F2①②③ 按"机制对齐官方"跳过=正确执行（审查独立裁决维持）；研究卡 decoded_recipe 三条作废
+- **落地三笔**：F1=CPU 恢复 offset9/10 消费（镜像 native dllmain.cpp:667/725/1250，scale AND→OR 官方对齐）修"兼容开全不隐"；B1=RealCameraApiBinder 反射软注册 registerFunction(priority 1000) 骨骼直产 BindResult **挂用户选中 target**（offsets/bindConfig 生效=GUI 手动覆盖保留）+available 屏蔽探针（rc 格 Binding failed 2→0，相机走 bindConfig 微调位）；R3=ModelViewScreen 打开期间强制 CPU 管线（GPU 格 GUI UV 可读）+四端 shim（1165/1211/2111）
+- **Trissy 颈判据更正**（用户亲验截图）：颈立方虽在 AllHead 子树外，F1 落地后颈正确隐藏；官方 1.20.1 同机制同表现——用户"闭源 YSM 头颈全剔"参照来自 26.1.2（官方 26.x submit 期隐头新机制，PR #659），26.x 路线另立卡不可平移 1.20.1
+- 已知边界：RC+FPM 同开时 AllHead 旗标双写路径（render-thread/烘焙-worker）无锁，与官方同代一致，渲染实证正确
+- 官方 YSM 逆向授权与边界（用户 2026-09-15/16）：FPM 方向允许逆向取机制参考，实现自研；身份独立不整体对齐
 - 批二 c-2（待发）：neoforge 8 条（1.20.2 POC/1.20.3 POC/1.20.5/1.21/1.21.2/1.21.6/1.21.7/21.9）
 - 全谱 37 线；semver 铁律（stonecutter 版本 ID 数值比较，分代用 <21.5/>=21.5 风格）与 vcs 直通铁律（1.20.1 根活动节点，21 轴门控必须存储态）为平铺期两大新沉淀
 - 2a：1.20.4（20.4.x stable）/1.20.6（20.6.x）/1.21.1（21.1.x）——moddev 构建线首次建立（MDG neoforge），Java 17/21/21

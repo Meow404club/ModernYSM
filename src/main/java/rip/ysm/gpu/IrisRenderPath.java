@@ -1,6 +1,7 @@
 package rip.ysm.gpu;
 
 import rip.ysm.util.RenderCompat;
+import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
 // 1.21.5 GlStateManager 迁移 platform→opengl 包
 //? if <21.5
@@ -29,15 +30,17 @@ import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL43;
+import com.elfmcys.yesstevemodel.config.GeneralConfig;
 import rip.ysm.compat.oculus.OculusCompat;
 
 import java.nio.ByteBuffer;
 //?}
 
 public final class IrisRenderPath {
-    // debug-1201-windows-gpu: 见 tryRenderModern 顶部注记——真机回归通过后置 false 恢复
-    private static final boolean DISABLED_PENDING_REAL_GPU_VALIDATION = true;
+    // 数值打点限频（3+600 风格）：前 3 次必打，之后每 600 次 1 条
+    private static int irisDbgDrawCount = 0;
     private static final float[] modelViewScratch = new float[16];
 
 
@@ -57,12 +60,15 @@ public final class IrisRenderPath {
     // oculus 系 compat 包也被 1.16.5 sourceSet 排除——记录功能差，渲染回退 geckolib3 原路径）
     //? if >1.17 && <1.21.2 {
     private static boolean tryRenderModern(GeoModel model, PoseStack.Pose pose, float[] boneParams, int renderPartMask, int packedLight, int packedOverlay, float r, float g, float b, float a, ResourceLocation textureLocation) {
-        // debug-1201-windows-gpu: 真实 GPU（用户 AMD RX 7900 XT / Win11 Adrenalin 26.8.1）上本路径
-        // 世界内全黑——直绘取 RenderSystem.getShader() 在 Iris 管线内是 Iris 包装 shader + G-buffer
-        // FBO 绑定，驱动相关地画空却恒 return true 吞掉回退（llvmpipe 软件渲染同路径可见，属宽容）。
-        // 回退 native SIMD 缓冲路径（原版管线 = Iris 兼容，compat 渲染器同链已实证可见）。
-        // GL43 compute 直绘待真机回归验证后再恢复，勿删下方实现。
-        if (DISABLED_PENDING_REAL_GPU_VALIDATION) {
+        // iris-1201-experimental 实验支线：默认关=与 debug-1201-windows-gpu 暂停门行为逐分支等价
+        // （同样 return false 回退 CPU 缓冲路径，零 GL 调用）。开关开=加固后直绘：
+        // ① IrisVertexFormats.ENTITY 兼容扩展 VAO（GpuMesh.ensureIrisBuffers，属性 7/8/9 补齐）
+        // ② compute 后追加 GL_SHADER_STORAGE|GL_BUFFER_UPDATE barrier
+        // ③ shader.apply() 后显式 glUseProgram 重绑（对抗 ExtendedShader.lastApplied 跨 pass 缓存：
+        //    ExtendedShader.java:138-141 同实例跳过 glUseProgram，而我方 compute 收尾 _glUseProgram(0)
+        //    ——同 shader 连续画第 2+ 个实体时 draw 落在 program 0）
+        // 真机 GO/NO-GO 由用户 Windows（AMD）回测裁决，llvmpipe 绿不作依据。
+        if (!GeneralConfig.USE_GPU_IRIS_DIRECT.get()) {
             return false;
         }
         if (!GpuCapability.isAvailable()) return false;
@@ -101,7 +107,12 @@ public final class IrisRenderPath {
 
         GL43.glDispatchCompute(BoneXformCompute.dispatchGroupCount(mesh.vertexCount), 1, 1);
 
-        GL43.glMemoryBarrier(GL43.GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT | GL43.GL_ELEMENT_ARRAY_BARRIER_BIT);
+        // 加固②：在 VERTEX_ATTRIB|ELEMENT 之外追加 SHADER_STORAGE|BUFFER_UPDATE barrier——
+        // SSBO 写→VA 读理论只需 VERTEX_ATTRIB_ARRAY，但 AMD Adrenalin 对
+        // SHADER_STORAGE→VERTEX_ATTRIB_ARRAY 可见性有实测缺口（debug-1201-windows-gpu 高发），
+        // belt-and-braces 补两组屏障位（对正确驱动零语义差，纯多余 fence）
+        GL43.glMemoryBarrier(GL43.GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT | GL43.GL_ELEMENT_ARRAY_BARRIER_BIT
+                | GL43.GL_SHADER_STORAGE_BARRIER_BIT | GL43.GL_BUFFER_UPDATE_BARRIER_BIT);
 
         GlStateManager._glUseProgram(0);
 
@@ -132,12 +143,36 @@ public final class IrisRenderPath {
 
         shader.apply();
 
-        GlStateManager._glBindVertexArray(mesh.xformVao());
+        // 加固③：显式重绑 program。ExtendedShader.apply() 走 lastApplied 缓存
+        // （ExtendedShader.java:138-141 lastApplied==this 则跳过 glUseProgram），本帧已画过
+        // 普通实体后再画 YSM 时（compute 收尾曾 _glUseProgram(0)），缓存命中会把 draw 留在
+        // program 0。vanilla ShaderInstance.apply 无条件重绑（ShaderInstance.java:337），对
+        // 非 Iris 包装 shader 此调用同样幂等安全。
+        GL20.glUseProgram(shader.getId());
+
+        // 加固①：切 Iris 兼容扩展 VAO（属性 0-5 同旧 xformVao，7/8/9 = iris_Entity/
+        // mc_midTexCoord/at_tangent）。无包路径（GpuRenderPath）不受影响仍用 xformVao。
+        mesh.ensureIrisBuffers();
+        GlStateManager._glBindVertexArray(mesh.irisVao());
 
         int offsetBytes = mesh.indexOffsetBytes(renderPartMask);
         int drawCount = mesh.indexDrawCount(renderPartMask);
         if (drawCount > 0) {
             GL11.glDrawElements(GL11.GL_TRIANGLES, drawCount, GL11.GL_UNSIGNED_INT, offsetBytes);
+        }
+
+        // 数值打点⑤：programId / draw framebuffer / glGetError / drawCount / VAO 属性启用掩码，
+        // 限频=前 3 次 + 每 600 次 1 条（3+600 风格）。禁看图，纯数值。
+        int glErr = GL11.glGetError();
+        int drawFbo = GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING);
+        long attrMask = 0;
+        for (int ai = 0; ai <= 10; ai++) {
+            if (GL20.glGetVertexAttribi(ai, GL20.GL_VERTEX_ATTRIB_ARRAY_ENABLED) != 0) attrMask |= 1L << ai;
+        }
+        int dbgN = ++irisDbgDrawCount;
+        if (dbgN <= 3 || dbgN % 600 == 0) {
+            YesSteveModel.LOGGER.info("[iris-exp] draw#{} programId={} fbo=0x{} glErr=0x{} drawCount={} attrMask=0x{}",
+                    dbgN, shader.getId(), Integer.toHexString(drawFbo), Integer.toHexString(glErr), drawCount, Long.toHexString(attrMask));
         }
 
         shader.clear();

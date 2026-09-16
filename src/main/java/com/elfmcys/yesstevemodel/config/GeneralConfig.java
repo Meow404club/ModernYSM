@@ -78,6 +78,11 @@ public class GeneralConfig {
     public static ForgeConfigSpec.BooleanValue USE_GPU_RENDERER;
 
     //? if neoforge
+    /*public static ModConfigSpec.BooleanValue USE_GPU_IRIS_DIRECT;*/
+    //? if forge
+    public static ForgeConfigSpec.BooleanValue USE_GPU_IRIS_DIRECT;
+
+    //? if neoforge
     /*public static ModConfigSpec.BooleanValue LAZY_MODEL_LOADING;*/
     //? if forge
     public static ForgeConfigSpec.BooleanValue LAZY_MODEL_LOADING;
@@ -186,6 +191,8 @@ public class GeneralConfig {
         USE_COMPATIBILITY_RENDERER = builder.define("UseCompatibilityRenderer", false);
         builder.comment("Test renderer.");
         USE_GPU_RENDERER = builder.define("UseGpuRenderer", true);
+        builder.comment("EXPERIMENTAL: draw YSM model directly through the Iris/Oculus shader pipeline (52B extended vertex layout). Leave OFF unless asked to test a fix; default off = identical behavior.");
+        USE_GPU_IRIS_DIRECT = builder.define("UseGpuIrisDirectRenderer", false);
         LAZY_MODEL_LOADING = builder.define("LazyModelLoading", true);
         builder.comment("Always use client-only mode");
         FORCE_CLIENT_MODE = builder.define("ForceClientMode", false);

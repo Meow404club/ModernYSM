@@ -20,11 +20,17 @@ public class FirstPersonModHide implements IValueEvaluator<Boolean, IContext<Pla
         }
         return false;*/
         //?}
-        //? if >=1.16.2 {
+        //? if (>=1.16.2 && <26.1) || >=26.2 {
         if (!ctx.animationEvent().isFirstPerson() && FirstPersonCompat.isLoaded() && CameraUtil.getCameraType(ctx) == CameraType.FIRST_PERSON.ordinal()) {
             return FirstPersonCompat.shouldHideHead();
         }
         return false;
+        //?}
+        // 26.1 三线（fpm-26x-pr659 逆向追加单）：官方 first_person_mod_hide=FPM 旗标
+        // 直读、无动画事件门（ysm2612-reverse OO00o0OOoO0oo0000oOoo0oO.java:11）；
+        // shouldHideHead()=261 孪生提取期快照，FPM 缺席/非 FP 相位恒 false 同现状。
+        //? if >=26.1 && <26.2 {
+        /*return FirstPersonCompat.shouldHideHead();*/
         //?}
     }
 }

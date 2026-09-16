@@ -288,6 +288,9 @@ sourceSets.main {
             // exclude 相对路径以各 srcDir 根为基准：2111 shim 挂载根=.../shim/rip/ysm/compat，
             // 其 firstperson 文件相对路径只有 firstperson/FirstPersonCompat.java
             exclude("firstperson/FirstPersonCompat.java")
+            // 2111 树 ReplacePlayerRenderForgeHook 同剔，换 261 孪生（异包
+            // platform/neoforge/firstperson，2610 event26x 先例）：加旗标采样链消费窗
+            exclude("com/elfmcys/yesstevemodel/platform/neoforge/event/ReplacePlayerRenderForgeHook.java")
             srcDir(rootProject.file("src/neoforge-261/java"))
         }
         // 第三方触点源码闸门 + platform/forge 树整体排除（清单与 build.forge.gradle.kts pre120

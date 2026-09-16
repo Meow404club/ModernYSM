@@ -228,17 +228,20 @@ public class NativeModelRenderer {
         float animSy = boneParams[pOffset + 7];
         float animSz = boneParams[pOffset + 8];
 
-        float unk1 = boneParams[pOffset + 9];
-        float unk2 = boneParams[pOffset + 10];
-        float unk3 = boneParams[pOffset + 11];
+        float hiddenFlag = boneParams[pOffset + 9];
+        float skipChildrenFlag = boneParams[pOffset + 10];
+        float trackFlag = boneParams[pOffset + 11];
 
-        if (unk1 != 0.0F && unk2 != 0.0F && unk3 != 0.0F) {
-            //"".hashCode();
-        }
-
-        if (animSx == 0.0f && animSy == 0.0f && animSz == 0.0f) {
+        // fix-fpm-rc F1: 恢复 offset9/10 隐藏旗标消费（原被注释），镜像 native 语义
+        //（native/openysm-cpp/dllmain.cpp:667 offset10!=0 子树跳绘；:1249-1250
+        // inheritedHidden 传播 + scale 归零 OR 判定）。父骨不可见的传播由下方
+        // visibleCache[parentIdx] 承接；Trissy AllHead.setHidden(z,z) 同置 offset9/10，
+        // 与 native 路径两态对齐（诊断账 F3）。
+        if (animSx == 0.0f || animSy == 0.0f || animSz == 0.0f) {
             isVisible = false;
-        }/* else if (unk1 == 1 || unk2 == 1) isVisible = false;*/
+        } else if (hiddenFlag != 0.0f || skipChildrenFlag != 0.0f) {
+            isVisible = false;
+        }
 
         localMat.translate(
                 (bone.pivotX - animTx) * 0.0625f,
@@ -257,7 +260,9 @@ public class NativeModelRenderer {
             localMat.scale(animSx, animSy, animSz);
         }
 
-        if (unk3 == 1.0F && stateBuffer != null && isVisible) {
+        // fix-fpm-rc F1: stateBuffer（viewLocator 跟踪位）不再受 isVisible 门控——native 侧
+        //（dllmain.cpp:725）无隐藏守卫，先写 state 后做子树跳绘，语义对齐
+        if (trackFlag == 1.0F && stateBuffer != null) {
             int offset = idx * 4;
             // bone pivot abs
             if (offset + 2 < stateBuffer.length) {

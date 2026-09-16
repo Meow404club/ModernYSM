@@ -73,17 +73,6 @@ public class NativeModelRenderer {
         if (!debugHideMatrix()) return false;
         return hideMatrixCallCounter++ % HIDE_MATRIX_LOG_INTERVAL == 0;
     }
-    // native-dll-round1 追加：光影包在场→SIMD native 的切换证据行（限频：首 3 次
-    // 每帧打，之后每 600 帧一次——照 bindLog 预算槽口径）。
-    private static int shaderpackSimdLogCount;
-
-    private static void logShaderpackSimd() {
-        shaderpackSimdLogCount++;
-        if (shaderpackSimdLogCount <= 3 || shaderpackSimdLogCount % 600 == 0) {
-            System.out.printf("[ysm] shader pack in use -> SIMD native path #%d%n", shaderpackSimdLogCount);
-        }
-    }
-
     /**
      * fix-fpm-hide-path-matrix 的 Java 侧 offset9→scale 补丁兜底已随
      * native-dll-round1 移除：native 治本落地（nComputeModelVertices 消费
@@ -167,13 +156,12 @@ public class NativeModelRenderer {
             }
         }
 
-        // debug-1201-windows-gpu: Embeddium 改造 BufferBuilder 下 native 直写损坏的
-        // 原有「带光影包强制 CPU」兜底已随 iris 直绘砍除反转（用户裁决 2026-09-17）：
-        // 光影包在场不再回退 CPU 缓冲管线，而是落 SIMD nativeRenderModel（native 端
-        // 直写+差分 harness 字节级证责）。cpuBufferFallback 仅剩 RealCamera 绑定 GUI。
-        boolean cpuBufferFallback = rcBindGuiOpen;
+        // debug-1201-windows-gpu + 用户终测裁决（2026-09-17：开了光影还是得 CPU）：
+        // 带光影包恢复回 CPU 缓冲路径（原版管线，Iris/Oculus 兼容；Embeddium 改造
+        // BufferBuilder 下 native 直写损坏——llvmpipe 实证模型巨大化+全黑）；无包场景
+        // SIMD nativeRenderModel 直写不变。rcBindGuiOpen 语义不变（绑定 GUI 读 UV）。
+        boolean cpuBufferFallback = shaderPack || rcBindGuiOpen; // shaderPack=OculusCompat.isShaderPackInUse()（:149）
         if (NativeLibLoader.isLoaded() && !GeneralConfig.USE_COMPATIBILITY_RENDERER.get() && !cpuBufferFallback) { // WIP: SIMD MODEL RENDER
-            if (shaderPack) logShaderpackSimd();
             if (debugHideMatrix()) simdHiddenStats = hiddenSubtreeStats(model, boneParams);
             nativeRenderModel(
                     buffer,

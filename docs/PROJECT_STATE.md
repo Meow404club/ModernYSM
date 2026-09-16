@@ -131,6 +131,15 @@
 - **修复 cfffa66=方案 A（UV→网格查询）逐字对齐探针**：UV-in-quad 判定（Polygon+1e6 量化同款）+重心插值+命中面法线做 forward/upward+骨变换链同渲染（prepMatrixForBone 祖先链）；/16 烘焙陷阱规避（RawFace.positions 已块级不再除）；quad 命中按（模型，target）弱引用缓存一次构建、每帧 3 查+9 乘微秒级、不进 GL GPU 天然兼容；UV 无命中→骨轴兜底
 - 审查独立复算：python 复刻烘焙链+UV 命中+重心插值，staticSurface(px)=(0.000,35.825,-3.500) 逐位一致；**动画形变边界=无**（三路径动画输入均为同一 matrixData 骨矩阵，无骨变换外顶点形变——方案 A 与渲染顶点数学等价）；Trissy posUV 在 388 骨中唯一命中 Head north
 - 观测层小缺陷（下轮修）：logAllowed 共享计数器奇偶相位可致 uv 行沉默（bind 行 fwd/up 精确正交=UV 存活判据）；ponytail 可收 12 行
+
+## RC 空间簿记修复（tasks.diag-rc-anchor-space-mismatch，已合入 dev=57bb90e，2026-09-16）
+- 用户回测新症状：正前方低头正常、**左右转头后低头错位、跳起转视角异常**——误差随 yaw/跳跃变化=空间簿记不一致
+- **M1 前提证伪（审查五环裁决成立，e6d5091 追溯）**：探针 render 调用 yaw 实参（view yaw）被渲染器无视（仅名牌 :283 用），根帧=setupRotations(lerpBodyRot)=**体转基准**；getRawPos 把 BindResult.position 直加 entityPos（无旋转）→契约空间=世界轴向、体转基准、实体脚原点——e6d5091 的 view yaw 基准 M1 为错误前提下的错误修复
+- **±50° 钳制发现**：vanilla tickHeadTurn（LivingEntity 2450-2463）站立/滞空不追平，|view−body|>50 时 yBodyRot 钳到 ±50——netHead=±50° 常态稳态=用户"转头后低头错位"主场景；正前方 netHead=0 恰好无错（假象根源）
+- **修复 dd7c8fd**：bindRootFrame 改体转基准（R(180−body)·T(0,0.01,0)·S 逐项镜像渲染链，补缺失平移）+rendererLerpBodyRot（含骑乘分支）+logSpaceDiag 双基准打点（dFinal 列=M1 旧行为对照值，非当前误差）
+- 数值：误差表 −50°→0.247 格/+50°→0.180/errY 恒 0（修复前）；审查自写独立校验器三轮复算残差 ≤9.0e-5+双 yaw spawn 独立新证；1201 jar 与声称 byte-identical（可复现构建实证）
+- 已知边界（minor 三项入账）：睡眠位姿/TLM 载具 translate 未镜像（情境态、前后行为不变）；共享计数器奇偶遗留；commit 措辞勘误
+- 回测判据：①站立转视角 >50° 后低头不再横向甩出②跳跃中转视角不穿模③正前方低头不回退；space-diag 行 fed 列=体转基准、dFinal 列=旧基准对照值
 - 批二 c-2（待发）：neoforge 8 条（1.20.2 POC/1.20.3 POC/1.20.5/1.21/1.21.2/1.21.6/1.21.7/21.9）
 - 全谱 37 线；semver 铁律（stonecutter 版本 ID 数值比较，分代用 <21.5/>=21.5 风格）与 vcs 直通铁律（1.20.1 根活动节点，21 轴门控必须存储态）为平铺期两大新沉淀
 - 2a：1.20.4（20.4.x stable）/1.20.6（20.6.x）/1.21.1（21.1.x）——moddev 构建线首次建立（MDG neoforge），Java 17/21/21

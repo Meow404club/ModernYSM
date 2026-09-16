@@ -24,6 +24,7 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 import rip.ysm.compat.oculus.OculusCompat;
 import rip.ysm.compat.optifine.OptiFineDetector;
+import rip.ysm.compat.realcamera.RealCameraCompat;
 import rip.ysm.gpu.GpuCapability;
 import rip.ysm.gpu.GpuRenderPath;
 import rip.ysm.gpu.IrisRenderPath;
@@ -44,8 +45,12 @@ public class NativeModelRenderer {
         OculusCompat.updatePBRState();
         MatrixBridge.projectionMatrix().mul(MatrixBridge.modelViewMatrix(), projectionModelViewMatrix);
         boolean isPreview = ModelPreviewRenderer.isPreview() || ModelPreviewRenderer.isExtraPlayer();
+        // fix-fpm-rc R3：RealCamera 绑定 GUI 打开期间强制 CPU 缓冲管线（原版管线顶点进
+        // MultiVertexCatcher，GUI 才读得到 UV 可选）；GPU/SIMD 直写顶点不进 catcher。
+        // 只影响 GUI 打开期间，关闭后恢复原路径（性能零损失面）。
+        boolean rcBindGuiOpen = RealCameraCompat.isBindGuiOpen();
 
-        if (textureLocation != null && NativeLibLoader.isLoaded() && !GeneralConfig.USE_COMPATIBILITY_RENDERER.get() && GeneralConfig.USE_GPU_RENDERER.get()) {
+        if (textureLocation != null && !rcBindGuiOpen && NativeLibLoader.isLoaded() && !GeneralConfig.USE_COMPATIBILITY_RENDERER.get() && GeneralConfig.USE_GPU_RENDERER.get()) {
 
             if(!GpuCapability.isAvailable())
             {
@@ -69,7 +74,7 @@ public class NativeModelRenderer {
         // Embeddium 改造的 BufferBuilder 下 native 直写渲染损坏（llvmpipe 实证：世界内模型巨大化+全黑），
         // 用户真机默认配置世界全黑亦与该链路相符。带光影包改走 CPU 缓冲路径（原版管线，Iris 兼容，
         // compat 渲染器同链已实证可见）；无光影包场景 SIMD 行为不变。
-        boolean cpuBufferFallback = OculusCompat.isShaderPackInUse();
+        boolean cpuBufferFallback = OculusCompat.isShaderPackInUse() || rcBindGuiOpen;
         if (NativeLibLoader.isLoaded() && !GeneralConfig.USE_COMPATIBILITY_RENDERER.get() && !cpuBufferFallback) { // WIP: SIMD MODEL RENDER
             nativeRenderModel(
                     buffer,
@@ -228,17 +233,20 @@ public class NativeModelRenderer {
         float animSy = boneParams[pOffset + 7];
         float animSz = boneParams[pOffset + 8];
 
-        float unk1 = boneParams[pOffset + 9];
-        float unk2 = boneParams[pOffset + 10];
-        float unk3 = boneParams[pOffset + 11];
+        float hiddenFlag = boneParams[pOffset + 9];
+        float skipChildrenFlag = boneParams[pOffset + 10];
+        float trackFlag = boneParams[pOffset + 11];
 
-        if (unk1 != 0.0F && unk2 != 0.0F && unk3 != 0.0F) {
-            //"".hashCode();
-        }
-
-        if (animSx == 0.0f && animSy == 0.0f && animSz == 0.0f) {
+        // fix-fpm-rc F1: 恢复 offset9/10 隐藏旗标消费（原被注释），镜像 native 语义
+        //（native/openysm-cpp/dllmain.cpp:667 offset10!=0 子树跳绘；:1249-1250
+        // inheritedHidden 传播 + scale 归零 OR 判定）。父骨不可见的传播由下方
+        // visibleCache[parentIdx] 承接；Trissy AllHead.setHidden(z,z) 同置 offset9/10，
+        // 与 native 路径两态对齐（诊断账 F3）。
+        if (animSx == 0.0f || animSy == 0.0f || animSz == 0.0f) {
             isVisible = false;
-        }/* else if (unk1 == 1 || unk2 == 1) isVisible = false;*/
+        } else if (hiddenFlag != 0.0f || skipChildrenFlag != 0.0f) {
+            isVisible = false;
+        }
 
         localMat.translate(
                 (bone.pivotX - animTx) * 0.0625f,
@@ -257,7 +265,9 @@ public class NativeModelRenderer {
             localMat.scale(animSx, animSy, animSz);
         }
 
-        if (unk3 == 1.0F && stateBuffer != null && isVisible) {
+        // fix-fpm-rc F1: stateBuffer（viewLocator 跟踪位）不再受 isVisible 门控——native 侧
+        //（dllmain.cpp:725）无隐藏守卫，先写 state 后做子树跳绘，语义对齐
+        if (trackFlag == 1.0F && stateBuffer != null) {
             int offset = idx * 4;
             // bone pivot abs
             if (offset + 2 < stateBuffer.length) {

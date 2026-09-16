@@ -37,6 +37,126 @@ import java.nio.IntBuffer;
 public class NativeModelRenderer {
     private static final Matrix4f projectionModelViewMatrix = new Matrix4f();
 
+    // fix-fpm-hide-path-matrix：三路径隐藏剔除数值矩阵打点开关。三通道任一启用：
+    //   1) -Dysm.debug.hideMatrix=true  2) 环境变量 YSM_DEBUG_HIDE_MATRIX
+    //   3) gameDir 下存在 ysm-debug-hide.flag 文件（与 GuiTourDriver harness.armed 同机制；
+    //      矩阵 runner 实证 gradle→MDG run JVM 的 env 传递不稳定，文件通道可靠）。
+    // 默认关=零开销；开=每 60 次渲染调用各路径各输出一行实测计数。路径归属由打点位置
+    // 自证（CPU=renderModel 内 / SIMD=submitVertices 回调 / GPU=GpuRenderPath SSBO 回读），
+    // 防止“外部判路径+回退链”再次造成归属误判（前轮伪影诊断教训）。
+    private static volatile Boolean hideMatrixCache;
+
+    static boolean debugHideMatrix() {
+        Boolean b = hideMatrixCache;
+        if (b == null) {
+            boolean on = Boolean.getBoolean("ysm.debug.hideMatrix")
+                    || System.getenv("YSM_DEBUG_HIDE_MATRIX") != null;
+            if (!on) {
+                try {
+                    // java.io.File（Java 8 口径；Path.of 是 11+，1165 线编译实证）
+                    on = new java.io.File("ysm-debug-hide.flag").exists();
+                } catch (Throwable ignored) {
+                }
+            }
+            b = on;
+            hideMatrixCache = b;
+        }
+        return b;
+    }
+
+    private static long hideMatrixCallCounter = 0;
+    // llvmpipe 矩阵轮实测：FPS 个位数时 600 次限频一轮（~50s 在世界）命中不了，降 60
+    private static final long HIDE_MATRIX_LOG_INTERVAL = 60;
+    // SIMD 统计暂存（nativeRenderModel 调用点填，submitVertices 回调读；渲染单线程）
+    static int[] simdHiddenStats;
+
+    public static boolean shouldLogHideMatrix() {
+        if (!debugHideMatrix()) return false;
+        return hideMatrixCallCounter++ % HIDE_MATRIX_LOG_INTERVAL == 0;
+    }
+    /**
+     * fix-fpm-hide-path-matrix：SIMD/GPU 加速路径的隐藏旗标兜底。
+     * 根因：offset9(HIDDEN) 只有 CPU 路径消费（renderModel/calculateBoneMatrix 的
+     * hiddenFlag 判定），SIMD native（nComputeModelVertices，只读 offset10 做子树跳绘，
+     * 隐藏骨自身几何照画）与 GPU compute 蒙皮（nComputeBoneMatrices 的
+     * selfHidden=inheritedHidden||scale==0 不含 offset9 → bone_skin.vsh isHidden 不折叠）
+     * 都丢掉了“隐藏骨自身几何”的剔除——AllHead 骨自身挂立方时即用户可见的 FPM 颈残留。
+     * Java 侧兜底：存在 offset9!=0 的骨时，做一份补丁副本把该骨 scale 槽（offset+6/7/8）
+     * 置 0——native 两条路径对 scale==0 均有“自身不输出顶点+子树跳过”的既有判定
+     * （dllmain.cpp SIMD nComputeModelVertices 的 scale 早退分支 / GPU nComputeBoneMatrices
+     * 的 selfHidden scale 判定），等价复现 CPU 路径 isVisible=false 语义。
+     * 无旗标（无 FPM 常态）零拷贝原数组返回，逐路径零行为差。
+     * 原生治本 patch（需重编 dll，另账返回）：nComputeModelVertices/nComputeBoneMatrices
+     * 读 anim[pOffset+9] 并入各自 hidden 判定。
+     */
+    static float[] hiddenPatchedBoneParams(GeoModel model, float[] boneParams) {
+        if (boneParams == null || model.bakedBones == null || model.bakedBones.isEmpty()) return boneParams;
+        int boneCount = model.bakedBones.size();
+        boolean anyHidden = false;
+        for (int i = 0; i < boneCount; i++) {
+            int p = i * 12;
+            if (p + 9 >= boneParams.length) break;
+            if (boneParams[p + 9] != 0.0f) {
+                anyHidden = true;
+                break;
+            }
+        }
+        if (!anyHidden) return boneParams;
+        float[] patched = boneParams.clone();
+        for (int i = 0; i < boneCount; i++) {
+            int p = i * 12;
+            if (p + 9 >= patched.length) break;
+            if (patched[p + 9] != 0.0f) {
+                patched[p + 6] = 0.0f;
+                patched[p + 7] = 0.0f;
+                patched[p + 8] = 0.0f;
+            }
+        }
+        return patched;
+    }
+
+    /**
+     * 隐藏子树几何统计（debug 打点用，三路径同口径）：
+     * 返回 [hiddenBones, hiddenCubes, hiddenQuads, totalQuads]。
+     * hidden 口径=offset9!=0 骨沿 parentIdx 向上传染的子孙集合（与 CPU
+     * visibleCache 承接同语义：父不可见则子不可见）。
+     */
+    static int[] hiddenSubtreeStats(GeoModel model, float[] boneParams) {
+        if (model.bakedBones == null || boneParams == null) return null;
+        int n = model.bakedBones.size();
+        java.util.BitSet hiddenSelf = new java.util.BitSet(n);
+        for (int i = 0; i < n; i++) {
+            int p = i * 12;
+            if (p + 9 >= boneParams.length) break;
+            if (boneParams[p + 9] != 0.0f) hiddenSelf.set(i);
+        }
+        int[] stats = new int[4];
+        for (int i = 0; i < n; i++) {
+            boolean hidden = false;
+            for (int j = i; j >= 0; j = model.bakedBones.get(j).parentIdx) {
+                if (hiddenSelf.get(j)) {
+                    hidden = true;
+                    break;
+                }
+            }
+            int quads = 0;
+            for (GeoModel.BakedCube cube : model.bakedBones.get(i).cubes) quads += cube.quads.size();
+            stats[3] += quads;
+            if (!hidden) continue;
+            stats[0]++;
+            stats[1] += model.bakedBones.get(i).cubes.size();
+            stats[2] += quads;
+        }
+        return stats;
+    }
+
+    public static String hideStatsLine(String path, GeoModel model, float[] boneParams, String extra) {
+        int[] stats = hiddenSubtreeStats(model, boneParams);
+        if (stats == null) return String.format("[ysm-hide-matrix] path=%s stats=unavailable %s", path, extra);
+        return String.format("[ysm-hide-matrix] path=%s hiddenBones=%d hiddenCubes=%d hiddenQuads=%d totalQuads=%d %s",
+                path, stats[0], stats[1], stats[2], stats[3], extra);
+    }
+
     public static void renderMesh(VertexConsumer buffer, PoseStack.Pose pose, GeoModel model, float[] boneParams, float[] stateBuffer, int textureIndex, int renderPartMask, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
         renderMesh(buffer, pose, model, boneParams, stateBuffer, textureIndex, renderPartMask, packedLight, packedOverlay, red, green, blue, alpha, null);
     }
@@ -59,12 +179,16 @@ public class NativeModelRenderer {
                 return;
             }
 
+            // fix-fpm-hide-path-matrix：GPU 路径（Iris compute / GpuRenderPath）隐藏旗标兜底
+            //（offset9→scale 补丁副本）。Iris 路径 1.20.1 现恒回退 CPU，喂副本零差；
+            // 未来启用时 nComputeBoneMatricesLocal 的 hidden 判定同样需要该兜底。
+            float[] gpuBoneParams = hiddenPatchedBoneParams(model, boneParams);
             if (OculusCompat.isShaderPackInUse() && !isPreview) {
-                if (IrisRenderPath.tryRender(model, pose, boneParams, renderPartMask, packedLight, packedOverlay, red, green, blue, alpha, textureLocation)) {
+                if (IrisRenderPath.tryRender(model, pose, gpuBoneParams, renderPartMask, packedLight, packedOverlay, red, green, blue, alpha, textureLocation)) {
                     return;
                 }
             } else {
-                if (GpuRenderPath.tryRender(model, pose, boneParams, stateBuffer, textureIndex, renderPartMask, packedLight, packedOverlay, red, green, blue, alpha, textureLocation)) {
+                if (GpuRenderPath.tryRender(model, pose, gpuBoneParams, stateBuffer, textureIndex, renderPartMask, packedLight, packedOverlay, red, green, blue, alpha, textureLocation)) {
                     return;
                 }
             }
@@ -76,13 +200,16 @@ public class NativeModelRenderer {
         // compat 渲染器同链已实证可见）；无光影包场景 SIMD 行为不变。
         boolean cpuBufferFallback = OculusCompat.isShaderPackInUse() || rcBindGuiOpen;
         if (NativeLibLoader.isLoaded() && !GeneralConfig.USE_COMPATIBILITY_RENDERER.get() && !cpuBufferFallback) { // WIP: SIMD MODEL RENDER
+            // fix-fpm-hide-path-matrix：SIMD 路径隐藏旗标兜底（offset9→scale 补丁副本）
+            float[] simdBoneParams = hiddenPatchedBoneParams(model, boneParams);
+            if (debugHideMatrix()) simdHiddenStats = hiddenSubtreeStats(model, simdBoneParams);
             nativeRenderModel(
                     buffer,
                     pose,
                     projectionModelViewMatrix,
                     OptiFineDetector.isOptifinePresent(),
                     model,
-                    boneParams,
+                    simdBoneParams,
                     stateBuffer,
                     textureIndex,
                     renderPartMask,
@@ -147,6 +274,39 @@ public class NativeModelRenderer {
 
         for (int i = 0; i < mesh.bakedBones.size(); i++) {
             calculateBoneMatrix(i, mesh.bakedBones, boneParams, boneLocalTransforms, boneVisible, identityMat, stateBuffer);
+        }
+
+        // fix-fpm-hide-path-matrix：CPU 路径实测剔除计数（visibleCache 已填全，打点位置自证路径归属）
+        // 注意：本方法参数表有 float b，统计块局部变量避开该名
+        if (shouldLogHideMatrix()) {
+            int visibleCubes = 0;
+            int visibleQuads = 0;
+            int hiddenInvisibleCubes = 0;
+            int[] stats = hiddenSubtreeStats(mesh, boneParams);
+            for (int i = 0; i < mesh.bakedBones.size(); i++) {
+                GeoModel.BakedBone statBone = mesh.bakedBones.get(i);
+                if (renderPartMask != 0 && statBone.partMask != renderPartMask && statBone.partMask != 3) continue;
+                int quads = 0;
+                for (GeoModel.BakedCube cube : statBone.cubes) quads += cube.quads.size();
+                if (boneVisible[i]) {
+                    visibleCubes += statBone.cubes.size();
+                    visibleQuads += quads;
+                } else if (stats != null && stats[0] > 0) {
+                    // 该骨不可见：若在隐藏子树内则计入（offset9/10/scale0 任一判定命中都算）
+                    for (int j = i; j >= 0; j = mesh.bakedBones.get(j).parentIdx) {
+                        int p = j * 12;
+                        if (p + 10 < boneParams.length
+                                && (boneParams[p + 9] != 0.0f || boneParams[p + 10] != 0.0f
+                                || boneParams[p + 6] == 0.0f || boneParams[p + 7] == 0.0f || boneParams[p + 8] == 0.0f)) {
+                            hiddenInvisibleCubes += statBone.cubes.size();
+                            break;
+                        }
+                    }
+                }
+            }
+            System.out.printf("[ysm-hide-matrix] path=cpu hiddenBones=%d hiddenCubes=%d hiddenQuads=%d totalQuads=%d visibleCubes=%d visibleQuads=%d hideCulledCubes=%d%n",
+                    stats == null ? -1 : stats[0], stats == null ? -1 : stats[1], stats == null ? -1 : stats[2],
+                    stats == null ? -1 : stats[3], visibleCubes, visibleQuads, hiddenInvisibleCubes);
         }
 
         for (int i = 0; i < mesh.bakedBones.size(); i++) {
@@ -287,6 +447,11 @@ public class NativeModelRenderer {
     private static final float[] matrixTransferArray = new float[48];
     @SuppressWarnings("unused") // TODO: native中直接往VertexConsumer中的buffer写入顶点
     public static void submitVertices(Object v, int vertexCount, ByteBuffer fBuf, ByteBuffer iBuf) {
+        // fix-fpm-hide-matrix：SIMD 路径实测输出打点（submitVertices=native 唯一回吐口，位置自证路径归属）
+        if (shouldLogHideMatrix() && simdHiddenStats != null) {
+            System.out.printf("[ysm-hide-matrix] path=simd hiddenBones=%d hiddenCubes=%d hiddenQuads=%d totalQuads=%d outputQuads=%d%n",
+                    simdHiddenStats[0], simdHiddenStats[1], simdHiddenStats[2], simdHiddenStats[3], vertexCount / 4);
+        }
         FloatBuffer f = fBuf.order(ByteOrder.nativeOrder()).asFloatBuffer();
         IntBuffer in = iBuf.order(ByteOrder.nativeOrder()).asIntBuffer();
         VertexConsumer vc = (VertexConsumer) v;

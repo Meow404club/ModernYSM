@@ -31,7 +31,9 @@ import java.nio.file.StandardOpenOption;
  *       {@code ok <name>} / {@code fail <name>} / {@code ok close}</li>
  * </ul>
  *
- * <p>连接自动发起（主菜单出现即连 localhost:25565，orchestrator 起的专用 server）；
+ * <p>连接自动发起（主菜单出现即连 localhost:25565，orchestrator 起的专用 server；
+ * 端口可经系统属性 {@code -Dopenysm.harness.port} 覆盖，默认 25565 零行为差——
+ * fix-rc-bind-target：多卡并行 harness 各用各的端口，不再互等互杀）；
  * 死亡自动重生（flat world 出生点仍可能被环境伤害打断走查）。
  * 版本差异（连接入口）用 stonecutter 条件块收口在 {@link #connectToServer}。
  */
@@ -40,6 +42,8 @@ public final class GuiTourDriver {
     private static final String CMD_FILE = "cmd.txt";
     private static final String READY_FILE = "harness.ready";
     private static final String ARMED_FILE = "harness.armed";
+    /** harness server 端口（-Dopenysm.harness.port 覆盖；默认 25565=历史值零差）。 */
+    private static final int HARNESS_PORT = Integer.getInteger("openysm.harness.port", 25565);
 
     private static Boolean armedCache;
     private static boolean joined;
@@ -203,11 +207,11 @@ public final class GuiTourDriver {
          *///?}
         //? if >=1.20 && <1.20.5 {
         net.minecraft.client.gui.screens.ConnectScreen.startConnecting(null, mc,
-                net.minecraft.client.multiplayer.resolver.ServerAddress.parseString("localhost:25565"),
+                net.minecraft.client.multiplayer.resolver.ServerAddress.parseString("localhost:" + HARNESS_PORT),
                 //? if neoforge
                 /*new net.minecraft.client.multiplayer.ServerData("harness", "localhost:25565", net.minecraft.client.multiplayer.ServerData.Type.OTHER), false);*/
                 //? if forge
-                new net.minecraft.client.multiplayer.ServerData("harness", "localhost:25565", false), false);
+                new net.minecraft.client.multiplayer.ServerData("harness", "localhost:" + HARNESS_PORT, false), false);
         //?}
         //? if >=1.20.5 {
         /*// 1.20.5+ 增第 6 参 @Nullable TransferState（vanilla-1.20.6 ConnectScreen.java:55），走查传 null

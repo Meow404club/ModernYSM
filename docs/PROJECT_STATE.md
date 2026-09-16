@@ -110,6 +110,13 @@
 - **Trissy 颈判据更正**（用户亲验截图）：颈立方虽在 AllHead 子树外，F1 落地后颈正确隐藏；官方 1.20.1 同机制同表现——用户"闭源 YSM 头颈全剔"参照来自 26.1.2（官方 26.x submit 期隐头新机制，PR #659），26.x 路线另立卡不可平移 1.20.1
 - 已知边界：RC+FPM 同开时 AllHead 旗标双写路径（render-thread/烘焙-worker）无锁，与官方同代一致，渲染实证正确
 - 官方 YSM 逆向授权与边界（用户 2026-09-15/16）：FPM 方向允许逆向取机制参考，实现自研；身份独立不整体对齐
+
+## Windows 真机二轮修复（tasks.debug-win-gpu-round2，已合入 dev=661927e，2026-09-16）
+- 用户回测揭穿首轮验证造假：B1 从未生效（rc_uc_gpu Binding failed×2=失败基线；fp 帧对 md5 相同；rcfpm fp 纯色空屏）——lesson#89 截图验证幻觉（同类二发），验收协议升级=几何特征对照+日志负向计数真实数字+帧 md5 去重，参照图判读以用户文字描述为唯一权威
+- **RC 双层根因**：L1=用户 realcamera 0.7.5-beta 的 BindResult 只有 (BindTarget,boolean mirrored) 双参构造，首轮 B1 单参反射 NoSuchMethodException **真机从未注册**（审查亲读上游 commit 8b82d0deec18 源码实证）；L2=llvmpipe 假绿真因=getBindTargetList contains 语义，测试环境动态计数器 textures/1、9 撞不上用户 textures/10（用户环境恒 10 恰好匹配）
+- **修复 eaa3d02**：RealCameraApiBinder 构造扫描（首参 BindTarget 最短公有构造+尾参 boolean 兜底，0.7.5/0.7.8 双兼容，无匹配干净失败）+EMPTY reason 限频打点（原 catch 全静默）；rc 四格 0 Binding failed+fp=头锚俯视腰带白裙+帧 md5 互异
+- **FPM"颈不剔"重新定性=相机锚点伪影**（无需动 native）：Trissy main.json 亲验 388 骨/AllHead 子树 206 骨/无 neck 骨/颈=UpperBody 顶部立方在子树外且无 first_person_mod_hide 动画——**三路径+官方 1.20.1 全都渲染颈**；"兼容剔/GPU 不剔"=绑定死后相机落位伪影；B1 修好相机回头锚，低头见领口+裙子，颈问题从视场消失。**"颈已修复"预期撤销为"颈保留=官方 1.20.1 同款边界"**（模型侧可用 first_person_mod_hide 动画自行覆盖）
+- 已知边界维持：RC+FPM 同开相机贴模型（无锁，官方同代一致）
 - 批二 c-2（待发）：neoforge 8 条（1.20.2 POC/1.20.3 POC/1.20.5/1.21/1.21.2/1.21.6/1.21.7/21.9）
 - 全谱 37 线；semver 铁律（stonecutter 版本 ID 数值比较，分代用 <21.5/>=21.5 风格）与 vcs 直通铁律（1.20.1 根活动节点，21 轴门控必须存储态）为平铺期两大新沉淀
 - 2a：1.20.4（20.4.x stable）/1.20.6（20.6.x）/1.21.1（21.1.x）——moddev 构建线首次建立（MDG neoforge），Java 17/21/21

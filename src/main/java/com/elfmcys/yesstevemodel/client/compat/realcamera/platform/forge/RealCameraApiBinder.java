@@ -47,7 +47,15 @@ import java.util.function.BiFunction;
  * (BindTarget)+setForward/setUpward 归一化（BindResult.java:18-58）；rotation 默认单位阵
  * （CameraTransform.java:13）→ available() 行列式检查天然通过；编译期 libs/ 只有 0.6.11a
  * （无 registerFunction/BindTarget，本类全反射，缺席/漂移静默禁用）。
- * <1.19.3 无 JOML PoseStack/Axis 面（impl 需要）→ no-op（RealCamera 0.7.x 也未发布该段）；
+ *
+ * <p>debug-win-gpu-round2 修正：用户真机 realcamera 0.7.5-beta-8b82d0d 的 BindResult
+ * 只有双参构造 {@code (BindTarget, boolean mirrored)}（javap 实证；getOrCreate 内部
+ * 传 iconst_0=false）——单参 getConstructor 在该版本 NoSuchMethodException → B1 从未
+ * 注册（用户机 latest.log:1484 实证）。现按「首参 BindTarget 的最短公有构造」扫描，
+ * 多出参数填缺省值（boolean=false），0.7.5~0.7.8 双形态兼容；computeBind 各 EMPTY
+ * 出口加限频 reason 打点（此前 catch 全静默，llvmpipe 恒 EMPTY 无法归因——观测缺口）。
+ *
+ * <p><1.19.3 无 JOML PoseStack/Axis 面（impl 需要）→ no-op（RealCamera 0.7.x 也未发布该段）；
  * 1.16.5 与 neoforge 线整树排除 client/compat/**（build.unimined.gradle.kts:236 /
  * build.moddev.gradle.kts:272），本文件仅 forge 中段参与编译。
  */
@@ -76,6 +84,8 @@ public final class RealCameraApiBinder {
     private static Method mConfig;
     private static Method mGetBindTargetList;
     private static Constructor<?> ctorBindResult;
+    /** 双参构造 (BindTarget, boolean mirrored) 等形态的尾参缺省值（0.7.5 getOrCreate 传 false） */
+    private static Object[] ctorTailDefaults;
     private static Method mSetPosition;
     private static Method mSetForward;
     private static Method mSetUpward;
@@ -93,7 +103,42 @@ public final class RealCameraApiBinder {
             Class<?> clsBindResult = Class.forName("com.xtracr.realcamera.api.BindResult");
             Class<?> clsBindTarget = Class.forName("com.xtracr.realcamera.config.BindTarget");
             bindResultEmpty = clsBindResult.getField("EMPTY").get(null);
-            ctorBindResult = clsBindResult.getConstructor(clsBindTarget);
+            // debug-win-gpu-round2：不锁死单参构造——0.7.5-beta 只有 (BindTarget, boolean mirrored)，
+            // 0.7.8 是 (BindTarget)。取首参 BindTarget 的最短公有构造，尾参填缺省值。
+            for (Constructor<?> c : clsBindResult.getConstructors()) {
+                Class<?>[] ps = c.getParameterTypes();
+                if (ps.length == 0 || ps[0] != clsBindTarget) {
+                    continue;
+                }
+                if (ctorBindResult == null || ps.length < ctorBindResult.getParameterTypes().length) {
+                    ctorBindResult = c;
+                }
+            }
+            if (ctorBindResult != null) {
+                Class<?>[] ps = ctorBindResult.getParameterTypes();
+                ctorTailDefaults = new Object[ps.length - 1];
+                for (int i = 1; i < ps.length; i++) {
+                    Class<?> p = ps[i];
+                    if (p == boolean.class) {
+                        ctorTailDefaults[i - 1] = Boolean.FALSE;
+                    } else if (p == int.class) {
+                        ctorTailDefaults[i - 1] = 0;
+                    } else if (p == float.class) {
+                        ctorTailDefaults[i - 1] = 0.0f;
+                    } else if (p == double.class) {
+                        ctorTailDefaults[i - 1] = 0.0d;
+                    } else if (p == long.class) {
+                        ctorTailDefaults[i - 1] = 0L;
+                    } else {
+                        ctorTailDefaults[i - 1] = null;
+                    }
+                }
+            }
+            if (ctorBindResult == null) {
+                // 干净失败：不留一个每帧 NPE 的死函数在 FUNCTIONS 里
+                throw new NoSuchMethodException(
+                        "BindResult has no public constructor with BindTarget as first parameter");
+            }
             mSetPosition = clsBindResult.getMethod("setPosition", Vec3.class);
             mSetForward = clsBindResult.getMethod("setForward", Vec3.class);
             mSetUpward = clsBindResult.getMethod("setUpward", Vec3.class);
@@ -103,7 +148,9 @@ public final class RealCameraApiBinder {
             BiFunction<Minecraft, Float, Object> fn = RealCameraApiBinder::computeBind;
             mRegisterFunction.invoke(null, BIND_PRIORITY, fn);
             MinecraftForge.EVENT_BUS.register(new HeadRestoreListener());
-            YesSteveModel.LOGGER.info("[compat] RealCamera bind function registered (bone-driven, priority {})", BIND_PRIORITY);
+            YesSteveModel.LOGGER.info(
+                    "[compat] RealCamera bind function registered (bone-driven, priority {}, ctor {})",
+                    BIND_PRIORITY, ctorBindResult == null ? "NONE" : ctorBindResult);
         } catch (Throwable t) {
             YesSteveModel.LOGGER.warn("[compat] RealCamera bind function not registered: {}", t.toString());
         }
@@ -112,28 +159,31 @@ public final class RealCameraApiBinder {
     /**
      * 绑定函数本体（RealCameraAPI.computeBindResult 每帧第一人称调用）。
      * 返回 Object=BindResult；任何失败路径返回 EMPTY 让位 UV 兜底（=不装本修复的现状行为）。
+     * 各 EMPTY 出口带 reason 限频打点（debug-win-gpu-round2：此前 catch 全静默=观测缺口，
+     * llvmpipe"恒 EMPTY"无法归因；每 reason 前排打 INFO，之后仅计数）。
      */
     private static Object computeBind(Minecraft client, Float partialTick) {
         try {
             if (!(client.getCameraEntity() instanceof Player player) || player.isSpectator()) {
-                return bindResultEmpty;
+                return empty("noCameraPlayer");
             }
             PlayerCapability cap = PlayerCapability.get(player).orElse(null);
             if (cap == null || !cap.isModelActive()) {
-                return bindResultEmpty;
+                return empty("modelInactive");
             }
             AnimatedGeoModel model = cap.getCurrentModel();
             if (model == null) {
-                return bindResultEmpty;
+                return empty("noModel");
             }
             // 用户当前选的 target（GUI activeConfigIndex 语义），无匹配=未绑定→让位
             Object target = userSelectedTarget(cap.getTextureLocation());
             if (target == null) {
-                return bindResultEmpty;
+                net.minecraft.resources.ResourceLocation tex = cap.getTextureLocation();
+                return empty("noMatchingTarget:" + (tex == null ? "null" : tex.toString()));
             }
             List<IBone> chain = viewChain(model);
             if (chain.isEmpty()) {
-                return bindResultEmpty;
+                return empty("noViewChain");
             }
             // 复刻 GeoReplacedEntityRenderer 实体渲染空间（UV 探针 dispatcher.render(entity,0,0,0)
             // 捕获即该空间，BindResult.position 为实体局部坐标，MixinCamera 经 getRawPos
@@ -153,28 +203,51 @@ public final class RealCameraApiBinder {
             Vector3f position = mat.transformPosition(centerOffset != null ? centerOffset : new Vector3f());
             Vector3f forward = mat.transformDirection(new Vector3f(MODEL_FORWARD));
             if (!finiteNonZero(position) || !finiteNonZero(forward)) {
-                return bindResultEmpty;
+                return empty("nonFiniteAnchor");
             }
             forward.normalize();
             Vector3f upward = mat.transformDirection(new Vector3f(0.0f, 1.0f, 0.0f));
             if (!finiteNonZero(upward)) {
-                return bindResultEmpty;
+                return empty("nonFiniteUpward");
             }
             upward.normalize();
             // forward/upward 近共线会让 realcamera computeCamera 的正交化退化
             if (Math.abs(forward.dot(upward)) > 0.99f) {
-                return bindResultEmpty;
+                return empty("collinearAxes");
             }
-            Object result = ctorBindResult.newInstance(target);
+            Object[] args;
+            if (ctorTailDefaults.length == 0) {
+                args = new Object[]{target};
+            } else {
+                args = new Object[1 + ctorTailDefaults.length];
+                args[0] = target;
+                System.arraycopy(ctorTailDefaults, 0, args, 1, ctorTailDefaults.length);
+            }
+            Object result = ctorBindResult.newInstance(args);
             mSetPosition.invoke(result, new Vec3(position.x(), position.y(), position.z()));
             mSetForward.invoke(result, new Vec3(forward.x(), forward.y(), forward.z()));
             mSetUpward.invoke(result, new Vec3(upward.x(), upward.y(), upward.z()));
             hideHead(model);
             return result;
         } catch (Throwable t) {
-            return bindResultEmpty;
+            return empty("exception: " + t);
         }
     }
+
+    /** EMPTY 让位 + reason 限频打点：每 reason 前 {@link #EMPTY_LOG_BUDGET} 次打 INFO，之后每 1200 帧汇报一次累计。 */
+    private static Object empty(String reason) {
+        int n = emptyReasons.merge(reason, 1, Integer::sum);
+        if (n <= EMPTY_LOG_BUDGET) {
+            YesSteveModel.LOGGER.info("[compat] RealCamera bone bind EMPTY #{} reason={}", n, reason);
+        } else if (n % EMPTY_LOG_INTERVAL == 0) {
+            YesSteveModel.LOGGER.info("[compat] RealCamera bone bind EMPTY x{} reason={}", n, reason);
+        }
+        return bindResultEmpty;
+    }
+
+    private static final int EMPTY_LOG_BUDGET = 3;
+    private static final int EMPTY_LOG_INTERVAL = 1200;
+    private static final java.util.HashMap<String, Integer> emptyReasons = new java.util.HashMap<>();
 
     /**
      * 用户当前选的 target（BindTarget）：getBindTargetList(textureId) 按 realcamera 同款

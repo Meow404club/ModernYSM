@@ -2,6 +2,7 @@ package com.elfmcys.yesstevemodel.client.compat.realcamera.platform.forge;
 
 import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.capability.PlayerCapability;
+import com.elfmcys.yesstevemodel.capability.VehicleCapability;
 import com.elfmcys.yesstevemodel.geckolib3.core.processor.IBone;
 import com.elfmcys.yesstevemodel.geckolib3.geo.animated.AnimatedGeoModel;
 import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoBone;
@@ -12,8 +13,10 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 //? }
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.MinecraftForge;
@@ -22,6 +25,7 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import rip.ysm.api.entity.EntityDataBridge;
 
@@ -113,6 +117,13 @@ import java.util.function.BiFunction;
  *
  * <p>性能：quad 命中按 (模型, target) 弱引用缓存（UV 布局=geo 决定，构建期一次 O(全 quad)），
  * 每帧 3 次缓存查 + ≤3 条骨链矩阵 + 9 顶点矩阵乘，微秒级；不渲染、不进 GL。
+ *
+ * <p><b>fix-rc-transform-matrix（本卡）</b>：M4 情境态收口——bindRootFrame 补 SLEEPING
+ * 平移+床向翻转根旋转（GeoReplacedEntityRenderer.java:230-233 + vanilla 1.20.1
+ * LivingEntityRenderer.java:193-198 逐字）与载具 expressionOffset 旋转（:235-257 逐字），
+ * 无睡眠/无载具默认路径数值零差（新分支全被条件短路）；M4-③ yaw 帧源经证明已是同帧同源
+ * （见 rendererLerpBodyRot javadoc 证明链，无代码改动）；M1 logUvHit 扩展锚骨链
+ * posY/rotX + 实时 pose（sneak 数值终审打点，限频沿用 3+600）。
  *
  * <p>结构边界（保留原声明）：TargetConfig 顶部矢量 UV（forward/upward）官方函数路径本就
  * 只能由面数据重建——本路径命中面法线即该语义的网格侧实现，非违例。
@@ -268,7 +279,7 @@ public final class RealCameraApiBinder {
             float netHeadYawDeg = basis[1];
             // diag-rc-preview-anchor-mismatch 方案 A：UV→表面点主路径（与 GUI/探针同语义锚点）
             if (mTargetConfig != null) {
-                Object uvResult = tryUvBind(model, target, viewRot, bodyRot, netHeadYawDeg, cap);
+                Object uvResult = tryUvBind(player, model, target, viewRot, bodyRot, netHeadYawDeg, cap);
                 if (uvResult != null) {
                     return uvResult;
                 }
@@ -283,7 +294,7 @@ public final class RealCameraApiBinder {
             // modelData.lerpBodyRot（体转，entityYaw 实参仅名牌消费），矩阵序 :234(R)→
             // :259 translate(0,0.01,0)→IGeoRenderer.renderEarly scale(hS,wS,hS)；契约=
             // MixinCamera.getRawPos(RealCameraCore.java:66-70) 直加 entityPos → 世界轴向脚原点空间
-            PoseStack poseStack = bindRootFrame(bodyRot, cap);
+            PoseStack poseStack = bindRootFrame(player, bodyRot, cap);
             // 盔甲层定位同源数学（CustomPlayerArmorLayer:103 prepMatrixForLocator(model.headBones())）
             RenderUtils.prepMatrixForLocator(poseStack, chain);
             org.joml.Matrix4f mat = poseStack.last().pose();
@@ -320,7 +331,7 @@ public final class RealCameraApiBinder {
             logBindSuccess(target, position, forward, upward);
             if (spaceDiagAllowed(netHeadYawDeg)) {
                 // 对照值：view-yaw 基准（M1 旧行为）独立重算——同一骨链换根帧，非恒等式推导
-                PoseStack rootAlt = bindRootFrame(viewRot, cap);
+                PoseStack rootAlt = bindRootFrame(player, viewRot, cap);
                 RenderUtils.prepMatrixForLocator(rootAlt, chain);
                 org.joml.Matrix4f matAlt = rootAlt.last().pose();
                 Vector3f altOffset = boneCubeCenterOffset(model, chain.get(chain.size() - 1));
@@ -350,7 +361,7 @@ public final class RealCameraApiBinder {
      * not-available 让位 UV 兜底；此处保底单点配置可用，位置语义不受影响）。
      */
     @Nullable
-    private static Object tryUvBind(AnimatedGeoModel model, Object target, float viewRot, float bodyRot,
+    private static Object tryUvBind(Player player, AnimatedGeoModel model, Object target, float viewRot, float bodyRot,
                                     float netHeadYawDeg, PlayerCapability cap) {
         try {
             Object cfg = mTargetConfig.invoke(target);
@@ -371,8 +382,9 @@ public final class RealCameraApiBinder {
                 bonesByName.put(bone.getName(), bone);
             }
             // 根帧与可见模型渲染链一致：180-lerpBodyRot + T(0,0.01,0) + scale（bindRootFrame，
-            // 空间簿记见类 javadoc 勘误段：探针/entityYaw 实参不决定根帧，体转才是渲染根）
-            PoseStack root = bindRootFrame(bodyRot, cap);
+            // 空间簿记见类 javadoc 勘误段：探针/entityYaw 实参不决定根帧，体转才是渲染根；
+            // 本卡起 SLEEPING/载具情境态分支同帧镜像，见 bindRootFrame javadoc）
+            PoseStack root = bindRootFrame(player, bodyRot, cap);
             Map<String, Matrix4f> frameMats = new java.util.HashMap<>();
 
             Vector3f position = surfacePoint(root, frameMats, model, bonesByName, hits[0], uv[UV_POS_U], uv[UV_POS_V]);
@@ -409,12 +421,12 @@ public final class RealCameraApiBinder {
             mSetPosition.invoke(result, new Vec3(position.x(), position.y(), position.z()));
             mSetForward.invoke(result, new Vec3(forward.x(), forward.y(), forward.z()));
             mSetUpward.invoke(result, new Vec3(upward.x(), upward.y(), upward.z()));
-            logUvHit(hits[0], uv, position);
+            logUvHit(hits[0], uv, position, player, model, bonesByName);
             logBindSuccess(target, position, forward, upward);
             if (spaceDiagAllowed(netHeadYawDeg)) {
                 // 对照值：view-yaw 基准（M1 旧行为）独立重算——同一骨链换根帧，非恒等式推导；
                 // 三字段与 fed 计算完全镜像（surfacePoint/quadDirection/boneUpAxis 同参同序）
-                PoseStack rootAlt = bindRootFrame(viewRot, cap);
+                PoseStack rootAlt = bindRootFrame(player, viewRot, cap);
                 Map<String, Matrix4f> altMats = new java.util.HashMap<>();
                 Vector3f altPos = surfacePoint(rootAlt, altMats, model, bonesByName, hits[0], uv[UV_POS_U], uv[UV_POS_V]);
                 Vector3f altFwd = quadDirection(rootAlt, altMats, model, bonesByName, hits[1] != null ? hits[1] : hits[0]);
@@ -572,6 +584,32 @@ public final class RealCameraApiBinder {
         if (cached != null) {
             return cached;
         }
+        List<String> names = bakedAncestorNames(model, boneName);
+        if (names == null) {
+            return null;
+        }
+        root.pushPose();
+        try {
+            // 根→骨逐骨 prepMatrixForBone（父变换先应用；prepMatrixForBone 与渲染
+            // calculateBoneMatrix 数学同源，见类 javadoc）
+            for (String name : names) {
+                IBone bone = bonesByName.get(name);
+                if (bone == null) {
+                    return null;
+                }
+                RenderUtils.prepMatrixForBone(root, bone);
+            }
+            Matrix4f mat = new Matrix4f(root.last().pose());
+            frameMats.put(boneName, mat);
+            return mat;
+        } finally {
+            root.popPose();
+        }
+    }
+
+    /** 锚骨祖先链名表（根→锚骨，复用 BakedBone.parentIdx，与 frameMatrix 同源）；烘焙表缺失/骨名未命中返回 null。 */
+    @Nullable
+    private static List<String> bakedAncestorNames(AnimatedGeoModel model, String boneName) {
         List<GeoModel.BakedBone> baked = model.getGeoModel().bakedBones;
         if (baked == null) {
             return null;
@@ -594,33 +632,23 @@ public final class RealCameraApiBinder {
             idx = b.parentIdx;
         }
         Collections.reverse(names);
-        root.pushPose();
-        try {
-            // 根→骨逐骨 prepMatrixForBone（父变换先应用；prepMatrixForBone 与渲染
-            // calculateBoneMatrix 数学同源，见类 javadoc）
-            for (String name : names) {
-                IBone bone = bonesByName.get(name);
-                if (bone == null) {
-                    return null;
-                }
-                RenderUtils.prepMatrixForBone(root, bone);
-            }
-            Matrix4f mat = new Matrix4f(root.last().pose());
-            frameMats.put(boneName, mat);
-            return mat;
-        } finally {
-            root.popPose();
-        }
+        return names;
     }
 
     /**
-     * UV 命中数值打点（限频与 {@link #logBindSuccess} 共享预算）：骨名 + 命中面静态几何。
+     * UV 命中数值打点（独立预算槽 {@link #uvLogAllowed}，口径同 {@link #logBindSuccess}）：
+     * 骨名 + 命中面静态几何 + 锚骨链动画值 + 实时姿态（fix-rc-transform-matrix M1 扩展，
+     * sneak 数值终审判据）。
      * staticSurface(px)=面前 3 顶点对 posUV 的重心插值 ×16 还原模型 px 坐标（positions 烘焙期
      * 已 /16；×16 仅打印可读性）——与离线脚本对 geo json 的静态展开计算直接对账
      * （Trissy 期望 posUV 面=Head north，staticSurface(px)=(0, 35.825, -3.5)）。
+     * chain[posY/rotX]=锚骨祖先链（根→锚骨）逐骨动画应用后的 posY(px)/rotX(deg)——
+     * 站/蹲两态对账链上 position 通道差（Trissy sneaking 期望 Root −10.3 + AllBody +1 =
+     * Δy −9.3px）；pose=实时 {@code player.getPose()}（M3 判读以 CROUCHING 翻转为准）。
      */
-    private static void logUvHit(QuadHit hit, float[] uv, Vector3f transformedPosition) {
-        if (!logAllowed()) {
+    private static void logUvHit(QuadHit hit, float[] uv, Vector3f transformedPosition, Player player,
+                                 AnimatedGeoModel model, Map<String, IBone> bonesByName) {
+        if (!uvLogAllowed()) {
             return;
         }
         try {
@@ -639,9 +667,22 @@ public final class RealCameraApiBinder {
             float sx = (alpha * p[0] + beta * p[3] + w * p[6]) * 16.0f;
             float sy = (alpha * p[1] + beta * p[4] + w * p[7]) * 16.0f;
             float sz = (alpha * p[2] + beta * p[5] + w * p[8]) * 16.0f;
+            StringBuilder chainDump = new StringBuilder(128);
+            List<String> chainNames = bakedAncestorNames(model, hit.boneName);
+            if (chainNames != null) {
+                for (String name : chainNames) {
+                    IBone bone = bonesByName.get(name);
+                    if (bone == null) {
+                        continue;
+                    }
+                    chainDump.append(name)
+                            .append('(').append(String.format("%.3f", bone.getPositionY())).append('/')
+                            .append(String.format("%.2f", Math.toDegrees(bone.getRotationX()))).append(") ");
+                }
+            }
             YesSteveModel.LOGGER.info(
-                    "[compat] RealCamera bone bind uv #{} bone={} quadPos0(px)=({}, {}, {}) staticSurface(px)=({}, {}, {}) renderedPos={}",
-                    bindLogCount, hit.boneName,
+                    "[compat] RealCamera bone bind uv #{} pose={} chain[posY/rotX(deg)]={} bone={} quadPos0(px)=({}, {}, {}) staticSurface(px)=({}, {}, {}) renderedPos={}",
+                    uvLogCount, player.getPose(), chainDump.toString().trim(), hit.boneName,
                     String.format("%.3f", p[0]), String.format("%.3f", p[1]), String.format("%.3f", p[2]),
                     String.format("%.3f", sx), String.format("%.3f", sy), String.format("%.3f", sz),
                     String.format("(%.4f, %.4f, %.4f)", transformedPosition.x(), transformedPosition.y(), transformedPosition.z()));
@@ -701,15 +742,27 @@ public final class RealCameraApiBinder {
     }
 
     /**
-     * 绑定成功打点限频：首 {@link #BIND_LOG_BUDGET} 帧每帧，之后每 {@link #BIND_LOG_INTERVAL} 帧一次。 */
+     * 绑定成功打点预算槽：每成功帧 +1（{@link #logBindSuccess} 消费），首
+     * {@link #BIND_LOG_BUDGET} 帧每帧，之后每 {@link #BIND_LOG_INTERVAL} 帧一次。
+     * fix-rc-transform-matrix：uv 行改独立计数 {@link #uvLogAllowed()}——旧共享计数下
+     * uv+bind 每帧双 +1，uv 恒占奇数位而 %600 周期位恒为偶数=bind 行独占周期采样、
+     * uv 行除首 3 帧外永久沉默（diag-rc-preview-anchor-mismatch 遗留建议：奇偶相位陷阱）。
+     */
     private static final int BIND_LOG_BUDGET = 3;
     private static final int BIND_LOG_INTERVAL = 600;
     private static int bindLogCount;
 
-    /** 共享打点预算槽（uv 命中行与绑定行共用同一计数，每成功帧最多消耗 2 个槽位）。 */
     private static boolean logAllowed() {
         bindLogCount++;
         return bindLogCount <= BIND_LOG_BUDGET || bindLogCount % BIND_LOG_INTERVAL == 0;
+    }
+
+    /** uv 行独立预算槽（同 3+600 口径）：每 uv 成功帧 +1，周期位不再被 bind 行抢走。 */
+    private static int uvLogCount;
+
+    private static boolean uvLogAllowed() {
+        uvLogCount++;
+        return uvLogCount <= BIND_LOG_BUDGET || uvLogCount % BIND_LOG_INTERVAL == 0;
     }
 
     /**
@@ -922,6 +975,22 @@ public final class RealCameraApiBinder {
      * 分支逐镜像 AnimatableEntity:267-279。返回 {lerpBodyRot, rawNetHeadDeg}
      * （后者=lerpHeadRot-lerpBodyRot 原始值未取负未钳制，供空间对账打点判读；
      * 进骨的是其取负钳制态 AnimatableEntity:286，与基准无关）。
+     *
+     * <p><b>fix-rc-transform-matrix M4-③ 同帧同源证明（1.20.1）</b>：审计曾疑本自算基准
+     * 与渲染消费的 eval modelData 有 partialTick 微差——实证不存在，理由链：
+     * ①formula 逐字同源（本方法 ≡ processAnimationImpl:262-287，字段同组、运算同序）；
+     * ②partialTick 同源——RealCamera 的 deltaTick=MixinGameRenderer 注入
+     * GameRenderer.renderLevel 形参（MixinGameRenderer.java:49-57），vanilla 1.20.1
+     * GameRenderer.renderLevel 把该形参<b>原样透传</b>给 levelRenderer.renderLevel
+     * （GameRenderer.java:1254→:1303），WorldRendererMixin（>=1.19.3&&<1.20.5 分支）再以
+     * 同一形参调 EntityRenderCache.tick → submitAsyncUpdate(partialTick)
+     * （EntityRenderCache.java:24-58，GeoEntity.java:216-228）——即 eval 与本函数收到
+     * <b>同一 float</b>；③EntityRenderCache.tick 是 renderLevel 内<b>每帧</b>钩子而非
+     * per-tick（审计"eval tick 时值"前提不成立），async event 在同帧 entity render 被
+     * join（GeoEntity.java:243-244）；④yBodyRot/yBodyRotO 仅在 client tick 变更，而
+     * client tick 与 renderLevel 不同相位（Minecraft.runTick 先 tick 后 render），帧内恒定。
+     * 故本自算基准 ≡ 渲染 eval modelData.lerpBodyRot（逐位），改读 eval 输出无通道且无差值
+     * ——保留公式镜像并以此证明落账，未引入死代码。
      */
     private static float[] rendererLerpBodyRot(Player player, float partialTick) {
         float lerpBodyRot = Mth.rotLerp(partialTick, player.yBodyRotO, player.yBodyRot);
@@ -942,21 +1011,77 @@ public final class RealCameraApiBinder {
     }
 
     /**
-     * 绑定根帧=可见模型/UV 探针渲染空间（diag-rc-anchor-space-mismatch 空间簿记，
-     * 矩阵序逐项镜像渲染链）：GeoReplacedEntityRenderer.java:234 setupRotations(R=
-     * mulPose(180-lerpBodyRot)，vanilla LivingEntityRenderer:187 同式) → :259
-     * translate(0,0.01,0) → IGeoRenderer.renderEarly scale（上游变量名互换原样：
-     * x/z=getHeightScale、y=getWidthScale）→ 骨链。identity PoseStack 下该空间=
-     * 世界轴向、实体脚原点——即 MixinCamera.getRawPos(RealCameraCore.java:66-70)
-     * 直加 entityPos 所要求的 BindResult 契约空间（UV 探针 RealCameraCore.computeCamera:89
-     * 空 PoseStack dispatcher.render 捕获同空间，CustomPlayerRenderer.render:88 同渲染链）。
+     * 绑定根帧=可见模型/UV 探针渲染空间（diag-rc-anchor-space-mismatch 空间簿记 + 本卡
+     * fix-rc-transform-matrix M4 情境态收口，矩阵序逐项镜像渲染链）：
+     * <ol>
+     * <li>{@code GeoReplacedEntityRenderer.java:230-233} SLEEPING 平移（根旋转之前、世界轴向）：
+     * {@code translate(-bed.stepX*eyeHeight, 0, -bed.stepZ*eyeHeight)}，eyeHeight=
+     * {@code getEyeHeight(Pose.STANDING)-0.1f}；</li>
+     * <li>{@code :234} setupRotations 的根旋转（vanilla 1.20.1 LivingEntityRenderer.java:178-199
+     * 逐项镜像）：非 SLEEPING（或死亡/旋转攻击覆盖 SLEEPING 分支时）=
+     * {@code mulPose(180-lerpBodyRot)}；SLEEPING 稳态（deathTime<=0 且非旋转攻击）=
+     * 床向翻转分支 {@code R_y(sleepDirectionToRotation(bed)|lerpBodyRot)·R_z(90)·R_y(270)}
+     * （{@code getFlipDegrees}=90，LivingEntityRenderer.java:213-215；死亡/旋转攻击期间的
+     * SLEEPING 属濒死态、RC 锚点无意义，落到 180-body 不另镜像死亡旋转）；</li>
+     * <li>{@code :235-257} 载具 expressionOffset 旋转（根旋转之后、translate(0,0.01,0) 之前）：
+     * {@code mulPose(rotateZYX(offset.z,0,offset.x).invert())}；</li>
+     * <li>{@code :259} translate(0,0.01,0) → IGeoRenderer.renderEarly scale（上游变量名互换
+     * 原样：x/z=getHeightScale、y=getWidthScale）→ 骨链。</li>
+     * </ol>
+     * identity PoseStack 下该空间=世界轴向、实体脚原点——即 MixinCamera.getRawPos
+     * (RealCameraCore.java:66-70) 直加 entityPos 所要求的 BindResult 契约空间（UV 探针
+     * RealCameraCore.computeCamera:89 空 PoseStack dispatcher.render 捕获同空间，
+     * CustomPlayerRenderer.render:88 同渲染链）。无睡眠/无载具时与旧实现逐位一致（默认路径
+     * 数值零差：新增分支全部被 pose/vehicle 条件短路）。
      */
-    private static PoseStack bindRootFrame(float lerpBodyRotDeg, PlayerCapability cap) {
+    private static PoseStack bindRootFrame(Player player, float lerpBodyRotDeg, PlayerCapability cap) {
         PoseStack root = new PoseStack();
-        root.mulPose(Axis.YP.rotationDegrees(180.0f - lerpBodyRotDeg));
+        if (player.getPose() == Pose.SLEEPING && player.getBedOrientation() != null) {
+            // GeoReplacedEntityRenderer.java:230-233 逐字（eyeHeight 语义同款）
+            float eyeHeight = player.getEyeHeight(Pose.STANDING) - 0.1f;
+            Direction bedOrientation = player.getBedOrientation();
+            root.translate((-bedOrientation.getStepX()) * eyeHeight, 0.0f, (-bedOrientation.getStepZ()) * eyeHeight);
+        }
+        if (player.getPose() == Pose.SLEEPING && player.deathTime <= 0 && !player.isAutoSpinAttack()) {
+            // vanilla 1.20.1 LivingEntityRenderer.setupRotations SLEEPING 分支逐字
+            // （:193-198：180-body 分支在 SLEEPING 时被 :178-180 跳过，改走床向翻转）
+            Direction bedOrientation = player.getBedOrientation();
+            float sleepRot = bedOrientation != null ? sleepDirectionToRotation(bedOrientation) : lerpBodyRotDeg;
+            root.mulPose(Axis.YP.rotationDegrees(sleepRot));
+            root.mulPose(Axis.ZP.rotationDegrees(90.0f));
+            root.mulPose(Axis.YP.rotationDegrees(270.0f));
+        } else {
+            root.mulPose(Axis.YP.rotationDegrees(180.0f - lerpBodyRotDeg));
+        }
+        if (player.getVehicle() != null) {
+            // GeoReplacedEntityRenderer.java:235-257 逐字（1.19.3 分支：rotateZYX(z,0,x).invert()）
+            VehicleCapability vehicleCap = VehicleCapability.get(player.getVehicle()).orElse(null);
+            if (vehicleCap != null) {
+                Vector3f expressionOffset = vehicleCap.getExpressionOffset();
+                if (expressionOffset != null) {
+                    root.mulPose(new Quaternionf().rotateZYX(expressionOffset.z(), 0.0f, expressionOffset.x()).invert());
+                }
+            }
+        }
         root.translate(0.0f, 0.01f, 0.0f);
         root.scale(cap.getHeightScale(), cap.getWidthScale(), cap.getHeightScale());
         return root;
+    }
+
+    /** vanilla 1.20.1 LivingEntityRenderer.sleepDirectionToRotation 逐字镜像（:154-168）。 */
+    private static float sleepDirectionToRotation(Direction direction) {
+        switch (direction) {
+            case SOUTH:
+                return 90.0f;
+            case WEST:
+                return 0.0f;
+            case NORTH:
+                return 270.0f;
+            case EAST:
+                return 180.0f;
+            default:
+                return 0.0f;
+        }
     }
 
     /** 空间对账打点门控：仅 |netHead|>5°（转头瞬态/移动/滞空态），前 {@link #SPACE_DIAG_BUDGET} 次每帧，之后每 {@link #SPACE_DIAG_INTERVAL} 帧一次。 */

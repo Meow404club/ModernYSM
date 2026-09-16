@@ -117,6 +117,14 @@
 - **修复 eaa3d02**：RealCameraApiBinder 构造扫描（首参 BindTarget 最短公有构造+尾参 boolean 兜底，0.7.5/0.7.8 双兼容，无匹配干净失败）+EMPTY reason 限频打点（原 catch 全静默）；rc 四格 0 Binding failed+fp=头锚俯视腰带白裙+帧 md5 互异
 - **FPM"颈不剔"重新定性=相机锚点伪影**（无需动 native）：Trissy main.json 亲验 388 骨/AllHead 子树 206 骨/无 neck 骨/颈=UpperBody 顶部立方在子树外且无 first_person_mod_hide 动画——**三路径+官方 1.20.1 全都渲染颈**；"兼容剔/GPU 不剔"=绑定死后相机落位伪影；B1 修好相机回头锚，低头见领口+裙子，颈问题从视场消失。**"颈已修复"预期撤销为"颈保留=官方 1.20.1 同款边界"**（模型侧可用 first_person_mod_hide 动画自行覆盖）
 - 已知边界维持：RC+FPM 同开相机贴模型（无锁，官方同代一致）
+
+## RC BindResult 补全（tasks.fix-rc-bindresult-completeness，已合入 dev=e6d5091，2026-09-16）
+- 用户回测：L1 生效（注册成功相机动了）但同配置与 RC+官方 YSM 错位——怀疑缺配置消费
+- **源码级翻案**：offsets/bindConfig 消费已在官方侧（BindResult.computeCamera:75-83=target 配置唯一消费点，函数/探针结果一视同仁：offsets 位移 position+=R·(z,y,x)·scale、yaw/pitch/roll rotateLocal；MixinCamera:53/57+EventHandler:17 逐轴与 rotation 门）——任务卡"缺一大堆配置消费"假设证伪
+- **真根因 M1**：我方基准帧用 bodyRot 原始值（getRawPos 局部坐标直加 entityPos 无旋转）→转头漂移+offsets 世界方向错=用户错位根因；修复=180−bodyRot→180−lerp(yRotO,yRot)（与探针 view yaw 基准同式）
+- **结构边界（与官方 YSMCompat 同款）**：顶部矢量/前向 UV 仅探针路径可读（VertexData.normal，YSMCompat:95-96 重渲染采样）；骨驱动路径以模型轴替代，朝向微调走 offsets yaw/pitch/roll（已消费、已进数值打点）
+- **数值验收（审查亲算+独立新证）**：GPU 格 Δ=(−0.080,0,−0.149)=R·(z,y,x)·scale 逐分量吻合+euler roll=90；compat 稳态 (0.057,0.003,−0.160) 三分量全吻合（含 1° pitch 项）；审查另起两个不同 yaw spawn 独立采样复核命中；打点限频 3+每 600 帧不刷屏；**用户验收纪律=数值行对照，禁看图**
+- 回测注意：用户当前 bindRotation=false，官方门下朝向本就不进视图——验证朝向需先设 true（roll=90 应见视图滚转）
 - 批二 c-2（待发）：neoforge 8 条（1.20.2 POC/1.20.3 POC/1.20.5/1.21/1.21.2/1.21.6/1.21.7/21.9）
 - 全谱 37 线；semver 铁律（stonecutter 版本 ID 数值比较，分代用 <21.5/>=21.5 风格）与 vcs 直通铁律（1.20.1 根活动节点，21 轴门控必须存储态）为平铺期两大新沉淀
 - 2a：1.20.4（20.4.x stable）/1.20.6（20.6.x）/1.21.1（21.1.x）——moddev 构建线首次建立（MDG neoforge），Java 17/21/21

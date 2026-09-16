@@ -121,9 +121,29 @@ import java.util.function.BiFunction;
  * <p><b>fix-rc-transform-matrix（本卡）</b>：M4 情境态收口——bindRootFrame 补 SLEEPING
  * 平移+床向翻转根旋转（GeoReplacedEntityRenderer.java:230-233 + vanilla 1.20.1
  * LivingEntityRenderer.java:193-198 逐字）与载具 expressionOffset 旋转（:235-257 逐字），
- * 无睡眠/无载具默认路径数值零差（新分支全被条件短路）；M4-③ yaw 帧源经证明已是同帧同源
+ * 无睡眠/无载具默认路径数值零差（新分支全部被条件短路）；M4-③ yaw 帧源经证明已是同帧同源
  * （见 rendererLerpBodyRot javadoc 证明链，无代码改动）；M1 logUvHit 扩展锚骨链
  * posY/rotX + 实时 pose（sneak 数值终审打点，限频沿用 3+600）。
+ *
+ * <p><b>fix-rc-bind-target（本卡）根因定案</b>（用户反证「锚到头发/同 quad 双骨归属/蹲下
+ * 偏高」三轮证伪，全部有离线数值证据）：①稳态锚面正确——用户真机 posUV(54.5,69.5)px
+ * 全模型<b>唯一</b>候选=Head cube0 north 脸面（Trissy main.json: uv=[51,66]+size[7,7]，
+ * 面中心 (0,35.825,-3.5)px 与真机 staticSurface 逐位一致），无 UV 重叠、无命中序歧义；
+ * ②真机日志 #1~#3 的 bone=Hair=模型加载切换瞬态（该 UV 在 Trissy 无第二候选，Hair cube19
+ * west 的 UV 区 [44,50] 不含 54.5 → 命中的是切换前另一模型实例的 quad，QUAD_HIT_CACHE
+ * 按模型实例弱引用隔离，3 帧自愈）；③「同一 quad 双骨归属」不成立——logUvHit 的 bone 与
+ * quad 同链同源（QuadHit 构造期绑定），现存日志 8 行 quad 参数与骨名一一对应；④蹲下
+ * 只降 0.18 块=Trissy 双蹲动画结构差异的<b>忠实</b>变换：移动蹲 sneak（Root posY
+ * +0.5~+1.31px 上浮+UpperBody 俯身旋转，脸点绕 pivot 净降 ~4px×height_scale0.7≈0.18 块
+ * ——手工链算 Δy=-4.1px×0.7=-2.88px 与真机 #1800 实测 -0.1801 块吻合）vs 原地蹲 sneaking
+ * （Root -10.3+AllBody +1 → Δy≈-0.41 块，M3 实测 -0.4237）；动画选择 AnimationRegister:41-42
+ * （sneak=onGround&&CROUCHING&&移动 是 sneaking 子集且先注册）与官方 ctrl.sneak/ctrl.sneaking
+ * 语义逐字一致。⑤睡眠=原版相机=RealCamera 官方门控（DisableHelper.MAIN_FEATURE
+ * 构造器硬编码 isSleeping()||isSpectator()，RealCameraCore.initialize:41 置 active=false
+ * → MixinCamera 首行短路），无配置开关，官方同款行为入账边界不修。本卡代码改动=观测
+ * 诚实性：uv 打点补 quadId/staticNormal/quadUvCenter/targetUv/uvCandidates/modelHash
+ * （锚定身份日志自证）；bind 打点补 finalUp 终态镜像（校验③：up=west 左向+roll=90°
+ * 经官方 rotateLocal 链→终态 top=(0,1,0)，产出侧无 roll 预应用、无双重 roll）。
  *
  * <p>结构边界（保留原声明）：TargetConfig 顶部矢量 UV（forward/upward）官方函数路径本就
  * 只能由面数据重建——本路径命中面法线即该语义的网格侧实现，非违例。
@@ -166,7 +186,7 @@ public final class RealCameraApiBinder {
     /** 绑定成功期间被隐藏的 AllHead 骨骼；退出第一人称/RealCamera 失效时恢复，防第三人称无头 */
     private static IBone hiddenHeadBone;
     /** diag-rc-preview-anchor-mismatch：UV→quad 命中缓存，key=(模型弱引用, target 名)；UV 布局由 geo 决定 */
-    private static final Map<AnimatedGeoModel, Map<String, QuadHit[]>> QUAD_HIT_CACHE =
+    private static final Map<AnimatedGeoModel, Map<String, QuadHit[][]>> QUAD_HIT_CACHE =
             Collections.synchronizedMap(new WeakHashMap<>());
     /** UV→quad 命中量化精度（与 realcamera BuiltIterableBuffer.findPrimitives 的 resolution 一致） */
     private static final int UV_RESOLUTION = 1000000;
@@ -372,10 +392,13 @@ public final class RealCameraApiBinder {
             for (int i = 0; i < 6; i++) {
                 uv[i] = (Float) mUvGetters[i].invoke(cfg);
             }
-            QuadHit[] hits = quadHits(model, target, uv);
-            if (hits[0] == null) {
+            // 三槽候选组：[槽][候选序]，[?][0]=首中=生效锚面（fix-rc-bind-target）
+            QuadHit[][] hitSlots = quadHits(model, target, uv);
+            QuadHit[] posCandidates = hitSlots[0];
+            if (posCandidates.length == 0) {
                 return null; // posUV 无命中：UV 布局对不上（模型/贴图布局不符）→ 骨轴兜底
             }
+            QuadHit posHit = posCandidates[0];
             // 名字→IBone 一次遍历（三槽链共享）
             Map<String, IBone> bonesByName = new java.util.HashMap<>();
             for (IBone bone : model.bones().values()) {
@@ -387,20 +410,21 @@ public final class RealCameraApiBinder {
             PoseStack root = bindRootFrame(player, bodyRot, cap);
             Map<String, Matrix4f> frameMats = new java.util.HashMap<>();
 
-            Vector3f position = surfacePoint(root, frameMats, model, bonesByName, hits[0], uv[UV_POS_U], uv[UV_POS_V]);
+            Vector3f position = surfacePoint(root, frameMats, model, bonesByName, posHit, uv[UV_POS_U], uv[UV_POS_V]);
             if (!finiteNonZero(position)) {
                 return null;
             }
             // forward：forwardUV 命中面法线；无命中退 pos 面法线（=面朝向，bindRotation 时视角贴面）
-            Vector3f forward = quadDirection(root, frameMats, model, bonesByName, hits[1] != null ? hits[1] : hits[0]);
+            Vector3f forward = quadDirection(root, frameMats, model, bonesByName,
+                    hitSlots[1].length > 0 ? hitSlots[1][0] : posHit);
             if (!finiteNonZero(forward)) {
                 return null;
             }
             forward.normalize();
             // upward：upwardUV 命中面法线；无命中退 pos 骨链 Y 轴（模型竖直轴）
-            Vector3f upward = hits[2] != null
-                    ? quadDirection(root, frameMats, model, bonesByName, hits[2])
-                    : boneUpAxis(root, frameMats, model, bonesByName, hits[0].boneName);
+            Vector3f upward = hitSlots[2].length > 0
+                    ? quadDirection(root, frameMats, model, bonesByName, hitSlots[2][0])
+                    : boneUpAxis(root, frameMats, model, bonesByName, posHit.boneName);
             if (!finiteNonZero(upward)) {
                 return null;
             }
@@ -421,18 +445,21 @@ public final class RealCameraApiBinder {
             mSetPosition.invoke(result, new Vec3(position.x(), position.y(), position.z()));
             mSetForward.invoke(result, new Vec3(forward.x(), forward.y(), forward.z()));
             mSetUpward.invoke(result, new Vec3(upward.x(), upward.y(), upward.z()));
-            logUvHit(hits[0], uv, position, player, model, bonesByName);
+            QuadHit fwdHit = hitSlots[1].length > 0 ? hitSlots[1][0] : null;
+            QuadHit upHit = hitSlots[2].length > 0 ? hitSlots[2][0] : null;
+            logUvHit(posHit, fwdHit, upHit, posCandidates.length, uv, position, player, model, bonesByName);
             logBindSuccess(target, position, forward, upward);
             if (spaceDiagAllowed(netHeadYawDeg)) {
                 // 对照值：view-yaw 基准（M1 旧行为）独立重算——同一骨链换根帧，非恒等式推导；
                 // 三字段与 fed 计算完全镜像（surfacePoint/quadDirection/boneUpAxis 同参同序）
                 PoseStack rootAlt = bindRootFrame(player, viewRot, cap);
                 Map<String, Matrix4f> altMats = new java.util.HashMap<>();
-                Vector3f altPos = surfacePoint(rootAlt, altMats, model, bonesByName, hits[0], uv[UV_POS_U], uv[UV_POS_V]);
-                Vector3f altFwd = quadDirection(rootAlt, altMats, model, bonesByName, hits[1] != null ? hits[1] : hits[0]);
-                Vector3f altUp = hits[2] != null
-                        ? quadDirection(rootAlt, altMats, model, bonesByName, hits[2])
-                        : boneUpAxis(rootAlt, altMats, model, bonesByName, hits[0].boneName);
+                Vector3f altPos = surfacePoint(rootAlt, altMats, model, bonesByName, posHit, uv[UV_POS_U], uv[UV_POS_V]);
+                Vector3f altFwd = quadDirection(rootAlt, altMats, model, bonesByName,
+                        hitSlots[1].length > 0 ? hitSlots[1][0] : posHit);
+                Vector3f altUp = hitSlots[2].length > 0
+                        ? quadDirection(rootAlt, altMats, model, bonesByName, hitSlots[2][0])
+                        : boneUpAxis(rootAlt, altMats, model, bonesByName, posHit.boneName);
                 if (altPos != null && altFwd != null && altUp != null) {
                     altFwd.normalize();
                     altUp.normalize();
@@ -452,54 +479,70 @@ public final class RealCameraApiBinder {
     private static final class QuadHit {
         final String boneName;
         final GeoModel.BakedQuad quad;
+        /** 烘焙结构坐标（bakedBones 下标 : cube 下标 : quad 下标），打点自证锚定身份用。 */
         final int bakedIdx;
+        final int cubeIdx;
+        final int quadIdx;
 
-        QuadHit(String boneName, GeoModel.BakedQuad quad, int bakedIdx) {
+        QuadHit(String boneName, GeoModel.BakedQuad quad, int bakedIdx, int cubeIdx, int quadIdx) {
             this.boneName = boneName;
             this.quad = quad;
             this.bakedIdx = bakedIdx;
+            this.cubeIdx = cubeIdx;
+            this.quadIdx = quadIdx;
         }
     }
 
+    /** 空 UV 候选槽（替代旧 null 槽语义：无命中面）。 */
+    private static final QuadHit[] NO_HIT = new QuadHit[0];
+
     /**
-     * 三槽（pos/fwd/up）UV→quad 命中，按 (模型, target) 缓存（UV 布局=geo 构建期决定，模型重载
-     * 换实例后由 WeakHashMap 失效）。槽可为 null（该 UV 无命中面）。
+     * 三槽（pos/fwd/up）UV→quad 候选命中，按 (模型, target) 缓存（UV 布局=geo 构建期决定，模型重载
+     * 换实例后由 WeakHashMap 失效）。外层 [槽]，内层数组=该 UV 的<b>全部</b>命中 quad（按烘焙遍历序，
+     * [0]=首个命中=生效锚面；fix-rc-bind-target：整组保留以打点 uvCandidates，UV 重叠时锚面
+     * 选择不再靠推断——首个命中与探针 findPrimitives 同序）。
      */
-    private static QuadHit[] quadHits(AnimatedGeoModel model, Object target, float[] uv) {
-        Map<String, QuadHit[]> perModel = QUAD_HIT_CACHE.computeIfAbsent(model, m -> new ConcurrentHashMap<>());
+    private static QuadHit[][] quadHits(AnimatedGeoModel model, Object target, float[] uv) {
+        Map<String, QuadHit[][]> perModel = QUAD_HIT_CACHE.computeIfAbsent(model, m -> new ConcurrentHashMap<>());
         String key = String.valueOf(System.identityHashCode(target)) + '@' + uv[UV_POS_U] + ',' + uv[UV_POS_V]
                 + ',' + uv[UV_FWD_U] + ',' + uv[UV_FWD_V] + ',' + uv[UV_UP_U] + ',' + uv[UV_UP_V];
-        QuadHit[] cached = perModel.get(key);
+        QuadHit[][] cached = perModel.get(key);
         if (cached != null) {
             return cached;
         }
-        QuadHit[] hits = new QuadHit[]{
-                uv[UV_POS_U] == 0.0f && uv[UV_POS_V] == 0.0f ? null : findQuadForUv(model, uv[UV_POS_U], uv[UV_POS_V]),
-                uv[UV_FWD_U] == 0.0f && uv[UV_FWD_V] == 0.0f ? null : findQuadForUv(model, uv[UV_FWD_U], uv[UV_FWD_V]),
-                uv[UV_UP_U] == 0.0f && uv[UV_UP_V] == 0.0f ? null : findQuadForUv(model, uv[UV_UP_U], uv[UV_UP_V])
+        QuadHit[][] hits = new QuadHit[][]{
+                uv[UV_POS_U] == 0.0f && uv[UV_POS_V] == 0.0f ? NO_HIT
+                        : findQuadCandidates(model, uv[UV_POS_U], uv[UV_POS_V]),
+                uv[UV_FWD_U] == 0.0f && uv[UV_FWD_V] == 0.0f ? NO_HIT
+                        : findQuadCandidates(model, uv[UV_FWD_U], uv[UV_FWD_V]),
+                uv[UV_UP_U] == 0.0f && uv[UV_UP_V] == 0.0f ? NO_HIT
+                        : findQuadCandidates(model, uv[UV_UP_U], uv[UV_UP_V])
         };
         perModel.put(key, hits);
         return hits;
     }
 
     /**
-     * UV 命中查找：遍历烘焙 quad，UV 在四顶点 UV 多边形内即命中（java.awt.Polygon + 1e6 截断
-     * 量化，与 realcamera BuiltIterableBuffer.findPrimitives:71-102 同类同精度）。遍历序=
-     * bakedBones 序=渲染 quad 提交序（NativeModelRenderer:152-204），重叠 UV 时与探针取首个
-     * 命中一致。未命中返回 null。
+     * UV 候选查找：遍历烘焙 quad，UV 在四顶点 UV 多边形内即命中（java.awt.Polygon + 1e6 截断
+     * 量化，与 realcamera BuiltIterableBuffer.findPrimitives:71-102 同类同精度）。返回<b>全部</b>
+     * 命中（烘焙序）：正常模型 UV 区不重叠=单候选；重叠 UV 时首个命中与探针一致，其余候选进
+     * 打点（fix-rc-bind-target：把「锚到哪」从推断变成日志自证）。无命中返回空数组。
      */
-    @Nullable
-    private static QuadHit findQuadForUv(AnimatedGeoModel model, float u, float v) {
+    private static QuadHit[] findQuadCandidates(AnimatedGeoModel model, float u, float v) {
         List<GeoModel.BakedBone> baked = model.getGeoModel().bakedBones;
         if (baked == null) {
-            return null;
+            return NO_HIT;
         }
         int px = (int) (UV_RESOLUTION * u);
         int pv = (int) (UV_RESOLUTION * v);
+        ArrayList<QuadHit> found = new ArrayList<>(1);
         for (int bi = 0; bi < baked.size(); bi++) {
             GeoModel.BakedBone bone = baked.get(bi);
-            for (GeoModel.BakedCube cube : bone.cubes) {
-                for (GeoModel.BakedQuad quad : cube.quads) {
+            for (int ci = 0; ci < bone.cubes.size(); ci++) {
+                GeoModel.BakedCube cube = bone.cubes.get(ci);
+                List<GeoModel.BakedQuad> quads = cube.quads;
+                for (int qi = 0; qi < quads.size(); qi++) {
+                    GeoModel.BakedQuad quad = quads.get(qi);
                     int[] us = new int[4];
                     int[] vs = new int[4];
                     for (int i = 0; i < 4; i++) {
@@ -507,12 +550,12 @@ public final class RealCameraApiBinder {
                         vs[i] = (int) (UV_RESOLUTION * quad.uvs[i * 2 + 1]);
                     }
                     if (new Polygon(us, vs, 4).contains(px, pv)) {
-                        return new QuadHit(bone.name, quad, bi);
+                        found.add(new QuadHit(bone.name, quad, bi, ci, qi));
                     }
                 }
             }
         }
-        return null;
+        return found.toArray(new QuadHit[0]);
     }
 
     /**
@@ -636,18 +679,36 @@ public final class RealCameraApiBinder {
     }
 
     /**
-     * UV 命中数值打点（独立预算槽 {@link #uvLogAllowed}，口径同 {@link #logBindSuccess}）：
-     * 骨名 + 命中面静态几何 + 锚骨链动画值 + 实时姿态（fix-rc-transform-matrix M1 扩展，
-     * sneak 数值终审判据）。
+     * UV 命中数值打点（独立预算槽 {@link #uvLogAllowed}，口径同 {@link #logBindSuccess}）。
+     *
+     * <p><b>fix-rc-bind-target 诚实性扩展</b>（用户反证「同一 quad 双骨归属/锚点系统性偏高」，
+     * 要求锚定身份日志自证而非推断）：在旧字段外新增
+     * <ul>
+     * <li>{@code quadId=bi:ci:qi}——命中 quad 的烘焙结构坐标（bakedBones/cube/quad 下标），
+     * 与 {@code bone=} 同源于 {@link QuadHit} 构造（单链，不存在二次查找错位）；</li>
+     * <li>{@code staticNormal(px)}——命中面静态法向（骨局部=模型静态空间，用户所选面朝向
+     * 直读：Trissy 脸面=(0,0,-1) north）；</li>
+     * <li>{@code quadUvCenter(px)}——命中 quad 四顶点 UV 中心 ×256；</li>
+     * <li>{@code targetUv(px)}——BindTarget 原始 posUV ×256（配置原文，用户选面身份）；</li>
+     * <li>{@code uvCandidates=N}——全模型含 posUV 的 quad 总数（&gt;1=UV 重叠，首中即探针
+     * 同序生效面，其余候选=重叠区身份需人工判读）；</li>
+     * <li>{@code modelHash}——当前 AnimatedGeoModel 实例指纹（模型切换窗口内另一模型的命中
+     * 与稳态区分：用户日志 #1-3 的 Hair 命中即模型加载瞬态，非 Trissy 上的错面）。</li>
+     * </ul>
      * staticSurface(px)=面前 3 顶点对 posUV 的重心插值 ×16 还原模型 px 坐标（positions 烘焙期
      * 已 /16；×16 仅打印可读性）——与离线脚本对 geo json 的静态展开计算直接对账
-     * （Trissy 期望 posUV 面=Head north，staticSurface(px)=(0, 35.825, -3.5)）。
-     * chain[posY/rotX]=锚骨祖先链（根→锚骨）逐骨动画应用后的 posY(px)/rotX(deg)——
-     * 站/蹲两态对账链上 position 通道差（Trissy sneaking 期望 Root −10.3 + AllBody +1 =
-     * Δy −9.3px）；pose=实时 {@code player.getPose()}（M3 判读以 CROUCHING 翻转为准）。
+     * （Trissy 实证 posUV(54.5,69.5)px 全模型唯一候选=Head cube0 north 脸面，面中心
+     * staticSurface(px)=(0, 35.825, -3.5)）。
+     * chain[posY/rotX]=锚骨祖先链（根→锚骨）逐骨动画应用后的 posY(px)/rotX(deg)；
+     * pose=实时 {@code player.getPose()}。
      */
-    private static void logUvHit(QuadHit hit, float[] uv, Vector3f transformedPosition, Player player,
+    private static void logUvHit(QuadHit hit, QuadHit fwdHit, QuadHit upHit, int posCandidateCount,
+                                 float[] uv, Vector3f transformedPosition, Player player,
                                  AnimatedGeoModel model, Map<String, IBone> bonesByName) {
+        int fwdCandidateCount = fwdHit != null ? 1 : 0;
+        int upCandidateCount = upHit != null ? 1 : 0;
+        String slotIds = (fwdHit == null ? "none" : fwdHit.boneName + ":" + fwdHit.bakedIdx + "/" + fwdHit.cubeIdx + ":" + fwdHit.quadIdx + "/n=" + fmtN(fwdHit.quad.normal))
+                + " | " + (upHit == null ? "none" : upHit.boneName + ":" + upHit.bakedIdx + "/" + upHit.cubeIdx + ":" + upHit.quadIdx + "/n=" + fmtN(upHit.quad.normal));
         if (!uvLogAllowed()) {
             return;
         }
@@ -680,15 +741,32 @@ public final class RealCameraApiBinder {
                             .append(String.format("%.2f", Math.toDegrees(bone.getRotationX()))).append(") ");
                 }
             }
+            // quad 四顶点 UV 中心 ×256（锚定身份的纹理空间坐标，与 targetUv 同尺度可直读距离）
+            float qcu = (uvArr[0] + uvArr[2] + uvArr[4] + uvArr[6]) * 0.25f;
+            float qcv = (uvArr[1] + uvArr[3] + uvArr[5] + uvArr[7]) * 0.25f;
             YesSteveModel.LOGGER.info(
-                    "[compat] RealCamera bone bind uv #{} pose={} chain[posY/rotX(deg)]={} bone={} quadPos0(px)=({}, {}, {}) staticSurface(px)=({}, {}, {}) renderedPos={}",
+                    "[compat] RealCamera bone bind uv #{} pose={} chain[posY/rotX(deg)]={} bone={} quadId={}/{}:{}"
+                            + " staticNormal(px)=({}, {}, {}) quadUvCenter(px)=({}, {}) targetUv(px)=({}, {})"
+                            + " uvCandidates={} fwdUpQuadIds=[{}] modelHash={} quadPos0(px)=({}, {}, {}) staticSurface(px)=({}, {}, {})"
+                            + " renderedPos={}",
                     uvLogCount, player.getPose(), chainDump.toString().trim(), hit.boneName,
+                    hit.bakedIdx, hit.cubeIdx, hit.quadIdx,
+                    String.format("%.3f", hit.quad.normal[0]), String.format("%.3f", hit.quad.normal[1]),
+                    String.format("%.3f", hit.quad.normal[2]),
+                    String.format("%.1f", qcu * 256.0f), String.format("%.1f", qcv * 256.0f),
+                    String.format("%.1f", uv[UV_POS_U] * 256.0f), String.format("%.1f", uv[UV_POS_V] * 256.0f),
+                    posCandidateCount, slotIds,
+                    Integer.toHexString(System.identityHashCode(model)),
                     String.format("%.3f", p[0]), String.format("%.3f", p[1]), String.format("%.3f", p[2]),
                     String.format("%.3f", sx), String.format("%.3f", sy), String.format("%.3f", sz),
                     String.format("(%.4f, %.4f, %.4f)", transformedPosition.x(), transformedPosition.y(), transformedPosition.z()));
         } catch (Throwable t) {
             YesSteveModel.LOGGER.debug("[compat] RealCamera uv hit log failed: {}", t.toString());
         }
+    }
+
+    private static String fmtN(float[] n) {
+        return String.format("(%.2f,%.2f,%.2f)", n[0], n[1], n[2]);
     }
 
     /** EMPTY 让位 + reason 限频打点：每 reason 前 {@link #EMPTY_LOG_BUDGET} 次打 INFO，之后每 1200 帧汇报一次累计。 */
@@ -808,14 +886,19 @@ public final class RealCameraApiBinder {
             float pitchDeg = (float) Math.toDegrees(Math.asin(-m21));
             float yawDeg = (float) Math.toDegrees(Math.atan2(rot.m20, rot.m22));
             float rollDeg = (float) Math.toDegrees(Math.atan2(rot.m01, rot.m11));
+            // 校验③（fix-rc-bind-target）：roll 全在消费侧（BindResult.computeCamera rotateLocal），
+            // 产出侧 feed 无预应用——镜像终态 up 列（第二列）直读「up+roll 叠加后相机顶部」：
+            // 用户 Trissy 配置（up=命中面法线 west 左向 + offsets.roll=90）期望终态 top≈世界 (0,1,0)。
+            Vector3f finalUp = new Vector3f(rot.m01, rot.m11, rot.m21);
             YesSteveModel.LOGGER.info(
-                    "[compat] RealCamera bind cfg name={} tex={} prio={} bind[X:{} Y:{} Z:{} rot:{}] offsets(scale:{}, x:{}, y:{}, z:{}, pitch:{}, yaw:{}, roll:{}) => final pos={} euler(deg yaw:{} pitch:{} roll:{})",
+                    "[compat] RealCamera bind cfg name={} tex={} prio={} bind[X:{} Y:{} Z:{} rot:{}] offsets(scale:{}, x:{}, y:{}, z:{}, pitch:{}, yaw:{}, roll:{}) => final pos={} finalUp={} euler(deg yaw:{} pitch:{} roll:{})",
                     t.getMethod("name").invoke(target), t.getMethod("textureId").invoke(target),
                     t.getMethod("priority").invoke(target),
                     b.getMethod("bindX").invoke(bindConfig), b.getMethod("bindY").invoke(bindConfig),
                     b.getMethod("bindZ").invoke(bindConfig), b.getMethod("bindRotation").invoke(bindConfig),
                     scale, ox, oy, oz, op, oyw, orl,
                     String.format(f, finalPos.x(), finalPos.y(), finalPos.z()),
+                    String.format(f, finalUp.x(), finalUp.y(), finalUp.z()),
                     String.format("%.1f", yawDeg), String.format("%.1f", pitchDeg), String.format("%.1f", rollDeg));
         } catch (Throwable t) {
             YesSteveModel.LOGGER.debug("[compat] RealCamera bind log failed: {}", t.toString());

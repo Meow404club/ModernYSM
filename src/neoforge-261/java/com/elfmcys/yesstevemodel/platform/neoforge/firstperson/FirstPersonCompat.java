@@ -111,9 +111,10 @@ public class FirstPersonCompat {
         // 探测行（ACCEPTANCE ③ 数值口径：官版 jar=isLoaded=true、has659=false）。
         // has659=false 语义（追加单微调）：stock FPM 旗标在 submit 期求值恒 down
         // →隐头不触发=官方 stock FPM 行为，非缺陷。
-        YesSteveModel.LOGGER.info("FirstPersonCompat init: isLoaded={}, has659={} ({})", IS_LOADED, HAS_PR659,
-                HAS_PR659 ? "widened FPM: extract-sampled flag drives head-hide"
-                        : "stock FPM: flag down at submit-time evaluation, head-hide off (official stock-FPM behavior)");
+        YesSteveModel.LOGGER.info("FirstPersonCompat init: isLoaded={}, has659={}{}", IS_LOADED, HAS_PR659,
+                !IS_LOADED ? " (FPM absent: compat off)"
+                        : HAS_PR659 ? " (widened FPM: extract-sampled flag drives head-hide)"
+                        : " (stock FPM: flag down at submit-time evaluation, head-hide off = official stock behavior)");
     }
 
     public static boolean isLoaded() {

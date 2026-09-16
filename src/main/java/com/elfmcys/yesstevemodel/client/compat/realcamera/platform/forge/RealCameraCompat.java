@@ -10,6 +10,10 @@ public class RealCameraCompat {
 
     public static void init() {
         IS_LOADED = ModList.get().isLoaded(MOD_ID);
+        if (IS_LOADED) {
+            // fix-fpm-rc B1：骨骼直产 BindResult 软注册（反射，缺席/漂移静默禁用）
+            RealCameraApiBinder.register();
+        }
     }
 
     public static boolean isLoaded() {
@@ -21,5 +25,10 @@ public class RealCameraCompat {
             return RealCameraChecker.isRealCameraActive();
         }
         return false;
+    }
+
+    /** fix-fpm-rc R3：绑定 GUI 打开判定（详见 RealCameraChecker.isRealCameraBindGuiOpen）。 */
+    public static boolean isBindGuiOpen() {
+        return IS_LOADED && RealCameraChecker.isRealCameraBindGuiOpen();
     }
 }

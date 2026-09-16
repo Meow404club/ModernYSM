@@ -13,4 +13,9 @@ public final class RealCameraCompat {
     public static boolean isActive() {
         return false;
     }
+
+    /** fix-fpm-rc R3：RealCamera 绑定 GUI 打开判定。mod-absent 恒 false。 */
+    public static boolean isBindGuiOpen() {
+        return false;
+    }
 }

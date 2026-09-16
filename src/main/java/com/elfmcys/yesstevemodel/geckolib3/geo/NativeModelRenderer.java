@@ -24,6 +24,7 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 import rip.ysm.compat.oculus.OculusCompat;
 import rip.ysm.compat.optifine.OptiFineDetector;
+import rip.ysm.compat.realcamera.RealCameraCompat;
 import rip.ysm.gpu.GpuCapability;
 import rip.ysm.gpu.GpuRenderPath;
 import rip.ysm.gpu.IrisRenderPath;
@@ -44,8 +45,12 @@ public class NativeModelRenderer {
         OculusCompat.updatePBRState();
         MatrixBridge.projectionMatrix().mul(MatrixBridge.modelViewMatrix(), projectionModelViewMatrix);
         boolean isPreview = ModelPreviewRenderer.isPreview() || ModelPreviewRenderer.isExtraPlayer();
+        // fix-fpm-rc R3：RealCamera 绑定 GUI 打开期间强制 CPU 缓冲管线（原版管线顶点进
+        // MultiVertexCatcher，GUI 才读得到 UV 可选）；GPU/SIMD 直写顶点不进 catcher。
+        // 只影响 GUI 打开期间，关闭后恢复原路径（性能零损失面）。
+        boolean rcBindGuiOpen = RealCameraCompat.isBindGuiOpen();
 
-        if (textureLocation != null && NativeLibLoader.isLoaded() && !GeneralConfig.USE_COMPATIBILITY_RENDERER.get() && GeneralConfig.USE_GPU_RENDERER.get()) {
+        if (textureLocation != null && !rcBindGuiOpen && NativeLibLoader.isLoaded() && !GeneralConfig.USE_COMPATIBILITY_RENDERER.get() && GeneralConfig.USE_GPU_RENDERER.get()) {
 
             if(!GpuCapability.isAvailable())
             {
@@ -69,7 +74,7 @@ public class NativeModelRenderer {
         // Embeddium 改造的 BufferBuilder 下 native 直写渲染损坏（llvmpipe 实证：世界内模型巨大化+全黑），
         // 用户真机默认配置世界全黑亦与该链路相符。带光影包改走 CPU 缓冲路径（原版管线，Iris 兼容，
         // compat 渲染器同链已实证可见）；无光影包场景 SIMD 行为不变。
-        boolean cpuBufferFallback = OculusCompat.isShaderPackInUse();
+        boolean cpuBufferFallback = OculusCompat.isShaderPackInUse() || rcBindGuiOpen;
         if (NativeLibLoader.isLoaded() && !GeneralConfig.USE_COMPATIBILITY_RENDERER.get() && !cpuBufferFallback) { // WIP: SIMD MODEL RENDER
             nativeRenderModel(
                     buffer,

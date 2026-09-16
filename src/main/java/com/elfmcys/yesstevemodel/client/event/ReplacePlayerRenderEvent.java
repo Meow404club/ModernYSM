@@ -11,6 +11,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.entity.player.Player;
+//? if >=26.1 && <26.2
+/*import com.elfmcys.yesstevemodel.platform.neoforge.firstperson.FirstPersonCompat;*/
+//? if <26.1 || >=26.2
 import rip.ysm.compat.firstperson.FirstPersonCompat;
 import rip.ysm.compat.playeranimator.PlayerAnimatorCompat;
 import rip.ysm.compat.realcamera.RealCameraCompat;

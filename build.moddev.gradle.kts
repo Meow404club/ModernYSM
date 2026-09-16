@@ -27,6 +27,10 @@ val neoMajor = (property("deps.neoforge") as String).substringBeforeLast('.')
 // stonecutter 数值段比较："26.1.2"/"26.2" 对 ">=26" 为 true、对 ">=1.21.x" 亦为 true、
 // 对 "<1.21" 为 false——条件轴不受影响
 val v26 = stonecutter.eval(stonecutter.current.version, ">=26")
+// 26.1 三线（26.1/26.1.1/26.1.2，不含 26.2——26.2 submit-dag 换代独立一卡，FPM 维持 shim）：
+// FirstPersonModel 真 compat 专属段（fpm-26x-pr659 卡A），挂 src/neoforge-261 孪生小树
+val fpm261 = stonecutter.eval(stonecutter.current.version, ">=26.1") &&
+        stonecutter.eval(stonecutter.current.version, "<26.2")
 
 // 21.3+ 线 log4j 对齐：下方 eachDependency 已把 log4j-core 钉死 2.19.0（全线，NFRT 去抖），
 // 而 1.21.4/1.21.5 vanilla 自带 log4j-api 2.22.x 与 core 2.19.0 错配 → 启动即
@@ -82,6 +86,14 @@ dependencies {
     //（forge 线的 mixinextras-forge implementation 与 1171 的 additionalRuntimeClasspath
     // 注入均不适用——neoforge 线无独立 forge 变体 jar，也不存在 split-package 问题）
     compileOnly("io.github.llamalad7:mixinextras-common:${property("deps.mixinextras")}")
+    // 26.1 三线 FirstPersonModel api 编译面（fpm-26x-pr659 卡A）：官方
+    // 2.7.2-26.1.2 neoforge jar vendor（Modrinth H5XMjpHi/fm5enNE9 实拉），仅
+    // compileOnly 不进运行时——机制同 build.forge.gradle.kts:92-94 的
+    // compileOnly(fileTree(libs))（1.20.1-forge 线 29 jar 先例），独立子目录避免
+    // 三线误吞 libs/ 根的 forge 代 jar
+    if (fpm261) {
+        compileOnly(fileTree(rootProject.file("libs/neoforge-261")))
+    }
 }
 
 neoForge {
@@ -265,6 +277,21 @@ sourceSets.main {
             srcDir(rootProject.file("src/neoforge-1211/shim/rip/ysm/compat"))
         } else {
             srcDir(rootProject.file("src/neoforge-2111/shim/rip/ysm/compat"))
+        }
+        // 26.1 三线 FirstPersonModel 真 compat（fpm-26x-pr659 卡A）：shim 的
+        // rip/ysm/compat/firstperson/FirstPersonCompat.java（恒 false）对这三线剔除，
+        // 换 src/neoforge-261 孪生小树真实现。孪生异包 platform/neoforge/firstperson
+        // （212/2610 树先例：exclude 按相对路径双杀同名 RAW 文件，孪生必须异包），
+        // 接缝消费方四文件 import 经 stonecutter 行条件交换（AuthModelsCapability 缝先例）。
+        // 本块只影响挂载表/依赖清单，零新机制。
+        if (fpm261) {
+            // exclude 相对路径以各 srcDir 根为基准：2111 shim 挂载根=.../shim/rip/ysm/compat，
+            // 其 firstperson 文件相对路径只有 firstperson/FirstPersonCompat.java
+            exclude("firstperson/FirstPersonCompat.java")
+            // 2111 树 ReplacePlayerRenderForgeHook 同剔，换 261 孪生（异包
+            // platform/neoforge/firstperson，2610 event26x 先例）：加旗标采样链消费窗
+            exclude("com/elfmcys/yesstevemodel/platform/neoforge/event/ReplacePlayerRenderForgeHook.java")
+            srcDir(rootProject.file("src/neoforge-261/java"))
         }
         // 第三方触点源码闸门 + platform/forge 树整体排除（清单与 build.forge.gradle.kts pre120
         // 块同源）。孪生走异包策略：src/neoforge/java 下 platform/neoforge 包（类名不变），

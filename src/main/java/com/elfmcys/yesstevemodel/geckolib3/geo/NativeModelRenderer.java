@@ -75,45 +75,12 @@ public class NativeModelRenderer {
         return hideMatrixCallCounter++ % HIDE_MATRIX_LOG_INTERVAL == 0;
     }
     /**
-     * fix-fpm-hide-path-matrix：SIMD/GPU 加速路径的隐藏旗标兜底。
-     * 根因：offset9(HIDDEN) 只有 CPU 路径消费（renderModel/calculateBoneMatrix 的
-     * hiddenFlag 判定），SIMD native（nComputeModelVertices，只读 offset10 做子树跳绘，
-     * 隐藏骨自身几何照画）与 GPU compute 蒙皮（nComputeBoneMatrices 的
-     * selfHidden=inheritedHidden||scale==0 不含 offset9 → bone_skin.vsh isHidden 不折叠）
-     * 都丢掉了“隐藏骨自身几何”的剔除——AllHead 骨自身挂立方时即用户可见的 FPM 颈残留。
-     * Java 侧兜底：存在 offset9!=0 的骨时，做一份补丁副本把该骨 scale 槽（offset+6/7/8）
-     * 置 0——native 两条路径对 scale==0 均有“自身不输出顶点+子树跳过”的既有判定
-     * （dllmain.cpp SIMD nComputeModelVertices 的 scale 早退分支 / GPU nComputeBoneMatrices
-     * 的 selfHidden scale 判定），等价复现 CPU 路径 isVisible=false 语义。
-     * 无旗标（无 FPM 常态）零拷贝原数组返回，逐路径零行为差。
-     * 原生治本 patch（需重编 dll，另账返回）：nComputeModelVertices/nComputeBoneMatrices
-     * 读 anim[pOffset+9] 并入各自 hidden 判定。
+     * fix-fpm-hide-path-matrix 的 Java 侧 offset9→scale 补丁兜底已随
+     * native-dll-round1 移除：native 治本落地（nComputeModelVertices 消费
+     * offset9 门控自身+子树；nComputeBoneMatrices/Local selfHidden 并入
+     * offset9），差分 harness 对拍 shipped dll 字节级零漂移 + semantic 数值格
+     * 全过 = native 单独证责。SIMD/GPU/Iris 三分派点还原直传原 buffer。
      */
-    static float[] hiddenPatchedBoneParams(GeoModel model, float[] boneParams) {
-        if (boneParams == null || model.bakedBones == null || model.bakedBones.isEmpty()) return boneParams;
-        int boneCount = model.bakedBones.size();
-        boolean anyHidden = false;
-        for (int i = 0; i < boneCount; i++) {
-            int p = i * 12;
-            if (p + 9 >= boneParams.length) break;
-            if (boneParams[p + 9] != 0.0f) {
-                anyHidden = true;
-                break;
-            }
-        }
-        if (!anyHidden) return boneParams;
-        float[] patched = boneParams.clone();
-        for (int i = 0; i < boneCount; i++) {
-            int p = i * 12;
-            if (p + 9 >= patched.length) break;
-            if (patched[p + 9] != 0.0f) {
-                patched[p + 6] = 0.0f;
-                patched[p + 7] = 0.0f;
-                patched[p + 8] = 0.0f;
-            }
-        }
-        return patched;
-    }
 
     /**
      * 隐藏子树几何统计（debug 打点用，三路径同口径）：
@@ -179,16 +146,15 @@ public class NativeModelRenderer {
                 return;
             }
 
-            // fix-fpm-hide-path-matrix：GPU 路径（Iris compute / GpuRenderPath）隐藏旗标兜底
-            //（offset9→scale 补丁副本）。Iris 路径 1.20.1 现恒回退 CPU，喂副本零差；
-            // 未来启用时 nComputeBoneMatricesLocal 的 hidden 判定同样需要该兜底。
-            float[] gpuBoneParams = hiddenPatchedBoneParams(model, boneParams);
+            // fix-fpm-hide-path-matrix 兜底已移除：native（native-dll-round1）直接消费
+            // offset9。Iris 路径 1.20.1 现恒回退 CPU；未来启用时 nComputeBoneMatricesLocal
+            // 的 hidden 判定已含 offset9。
             if (OculusCompat.isShaderPackInUse() && !isPreview) {
-                if (IrisRenderPath.tryRender(model, pose, gpuBoneParams, renderPartMask, packedLight, packedOverlay, red, green, blue, alpha, textureLocation)) {
+                if (IrisRenderPath.tryRender(model, pose, boneParams, renderPartMask, packedLight, packedOverlay, red, green, blue, alpha, textureLocation)) {
                     return;
                 }
             } else {
-                if (GpuRenderPath.tryRender(model, pose, gpuBoneParams, stateBuffer, textureIndex, renderPartMask, packedLight, packedOverlay, red, green, blue, alpha, textureLocation)) {
+                if (GpuRenderPath.tryRender(model, pose, boneParams, stateBuffer, textureIndex, renderPartMask, packedLight, packedOverlay, red, green, blue, alpha, textureLocation)) {
                     return;
                 }
             }
@@ -200,16 +166,14 @@ public class NativeModelRenderer {
         // compat 渲染器同链已实证可见）；无光影包场景 SIMD 行为不变。
         boolean cpuBufferFallback = OculusCompat.isShaderPackInUse() || rcBindGuiOpen;
         if (NativeLibLoader.isLoaded() && !GeneralConfig.USE_COMPATIBILITY_RENDERER.get() && !cpuBufferFallback) { // WIP: SIMD MODEL RENDER
-            // fix-fpm-hide-path-matrix：SIMD 路径隐藏旗标兜底（offset9→scale 补丁副本）
-            float[] simdBoneParams = hiddenPatchedBoneParams(model, boneParams);
-            if (debugHideMatrix()) simdHiddenStats = hiddenSubtreeStats(model, simdBoneParams);
+            if (debugHideMatrix()) simdHiddenStats = hiddenSubtreeStats(model, boneParams);
             nativeRenderModel(
                     buffer,
                     pose,
                     projectionModelViewMatrix,
                     OptiFineDetector.isOptifinePresent(),
                     model,
-                    simdBoneParams,
+                    boneParams,
                     stateBuffer,
                     textureIndex,
                     renderPartMask,

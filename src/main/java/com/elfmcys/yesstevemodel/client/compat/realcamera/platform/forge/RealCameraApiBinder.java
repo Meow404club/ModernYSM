@@ -13,6 +13,7 @@ import com.mojang.math.Axis;
 //? }
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.MinecraftForge;
@@ -22,6 +23,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import rip.ysm.api.entity.EntityDataBridge;
 
 import java.awt.Polygon;
 import java.lang.reflect.Constructor;
@@ -62,11 +64,21 @@ import java.util.function.BiFunction;
  * 出口加限频 reason 打点（此前 catch 全静默，llvmpipe 恒 EMPTY 无法归因——观测缺口）。
  *
  * <p>fix-rc-bindresult-completeness 修正（管线对照 0.7.5-beta commit 8b82d0deec18 亲读，
- * 行号指该 commit）：①空间基准 180-bodyRot → 180-lerp(yRotO,yRot)——探针渲染帧以
- * view yaw 为基准（RealCameraCore.java:89 dispatcher.render 的 yaw 实参），而
- * MixinCamera.getRawPos（MixinCamera.java:52-53+RealCameraCore.java:66-70）把局部坐标
- * 直接加 entityPos（无旋转），基准帧错 netHeadYaw 会让转头时绑定点绕实体原点漂移、
- * offsets 位移的世界方向随之错位（用户实测"offset/旋转未生效"的位置侧根因）。
+ * 行号指该 commit）：①空间基准修正——MixinCamera.getRawPos（MixinCamera.java:52-53+
+ * RealCameraCore.java:66-70）把 BindResult.position 直接加 entityPos（无旋转）→ 契约空间
+ * =【世界轴向、实体脚原点】偏移；探针（RealCameraCore.computeCamera:89 dispatcher.render
+ * → CustomPlayerRenderer.render:88 → renderEntityWithTexture）捕获同一渲染链顶点即该空间。
+ * <b>diag-rc-anchor-space-mismatch 勘误</b>：M1 轮把基准定为 180-lerp(yRotO,yRot)（view yaw），
+ * 依据是 dispatcher.render 的 yaw 实参——但渲染器根本不消费该实参（renderEntityWithTexture
+ * 仅转给名牌渲染，GeoReplacedEntityRenderer.java:283；模型根帧 setupRotations 用
+ * modelData.lerpBodyRot=rotLerp(pT,yBodyRotO,yBodyRot)，GeoReplacedEntityRenderer.java:234 +
+ * AnimatableEntity.java:262，vanilla LivingEntityRenderer:187 mulPose(180-yBodyRot)）。
+ * 且头旋转 netHeadYaw=lerpHeadRot-lerpBodyRot 被烤进头骨（LivingAnimatable.applyHeadTracking
+ * :71-72 setRotationX/Y）→ feed 根帧若用 view yaw 则头转被双计：pos_view=R(-netHead)·pos_correct
+ * ——正前方（netHead=0）恰好无错、转头/移动（tickHeadTurn 每 tick 只追 30%，LivingEntity:2701-2706）
+ * /滞空（身体朝移动方向）时持续偏差=用户"正前方低头正常、转头/跳跃转视角不对"的根因。
+ * 本轮根帧改 180-lerpBodyRot（体转）并与渲染链矩阵序逐项对齐
+ * （R·T(0,0.01,0)·S·[骨链]：GeoReplacedEntityRenderer.java:234→:259→IGeoRenderer.renderEarly）。
  * ②配置消费语义定案：offsets（位移+yaw/pitch/roll 旋转）与 BindConfig 逐轴门/
  * bindRotation 门均在官方侧消费——BindResult.computeCamera（BindResult.java:72-84）
  * 对函数/探针结果一视同仁，MixinCamera:53,57 与 forge EventHandler:17 读
@@ -95,8 +107,9 @@ import java.util.function.BiFunction;
  * 重心插值（VertexData.position:24-30 公式逐字）；③forward/upward=命中面法线（探针
  * :172-173 不取反、mirrored=false 同款）；④骨变换=该 quad 骨祖先链逐骨
  * RenderUtils.prepMatrixForBone（与渲染 calculateBoneMatrix:251-280 数学同源：平移合并
- * 等价+rotateZYX+scale+-pivot/16），顶点/16 后变换——根 PoseStack 180-viewRot+scale
- * 与 M1 修复保持一致。任一 UV 无命中/退化失败 → 原骨轴路径兜底（行为不回退）。
+ * 等价+rotateZYX+scale+-pivot/16），顶点/16 后变换——根帧经 diag-rc-anchor-space-mismatch
+ * 勘误为 180-lerpBodyRot+T(0,0.01,0)+scale（渲染链矩阵序，见上段勘误）。任一 UV 无命中/
+ * 退化失败 → 原骨轴路径兜底（行为不回退）。
  *
  * <p>性能：quad 命中按 (模型, target) 弱引用缓存（UV 布局=geo 决定，构建期一次 O(全 quad)），
  * 每帧 3 次缓存查 + ≤3 条骨链矩阵 + 9 顶点矩阵乘，微秒级；不渲染、不进 GL。
@@ -250,9 +263,12 @@ public final class RealCameraApiBinder {
                 return empty("noMatchingTarget:" + (tex == null ? "null" : tex.toString()));
             }
             float viewRot = Mth.rotLerp(partialTick, player.yRotO, player.getYRot());
+            float[] basis = rendererLerpBodyRot(player, partialTick);
+            float bodyRot = basis[0];
+            float netHeadYawDeg = basis[1];
             // diag-rc-preview-anchor-mismatch 方案 A：UV→表面点主路径（与 GUI/探针同语义锚点）
             if (mTargetConfig != null) {
-                Object uvResult = tryUvBind(model, target, viewRot, cap);
+                Object uvResult = tryUvBind(model, target, viewRot, bodyRot, netHeadYawDeg, cap);
                 if (uvResult != null) {
                     return uvResult;
                 }
@@ -262,15 +278,12 @@ public final class RealCameraApiBinder {
             if (chain.isEmpty()) {
                 return empty("noViewChain");
             }
-            // 复刻 GeoReplacedEntityRenderer 实体渲染空间（UV 探针 dispatcher.render(entity,0,0,0)
-            // 捕获即该空间，BindResult.position 为实体局部坐标，MixinCamera 经 getRawPos
-            // smoothedPos.add(entityPos) 落世界，realcamera-named.jar getRawPos 字节码实证）：
-            // setupRotations 180-viewYaw（探针实参=lerp(yRotO,yRot)，RealCameraCore.java:89——
-            // fix-rc-bindresult-completeness：bodyRot 帧错 netHeadYaw，转头即漂移+offsets 方向错）→
-            // renderEarly scale(hS,wS,hS)（IGeoRenderer.java:46-50）
-            PoseStack poseStack = new PoseStack();
-            poseStack.mulPose(Axis.YP.rotationDegrees(180.0f - viewRot));
-            poseStack.scale(cap.getHeightScale(), cap.getWidthScale(), cap.getHeightScale());
+            // 根帧=可见模型/UV 探针渲染空间（diag-rc-anchor-space-mismatch 空间簿记）：
+            // GeoReplacedEntityRenderer.renderEntityWithTexture:234 setupRotations 用
+            // modelData.lerpBodyRot（体转，entityYaw 实参仅名牌消费），矩阵序 :234(R)→
+            // :259 translate(0,0.01,0)→IGeoRenderer.renderEarly scale(hS,wS,hS)；契约=
+            // MixinCamera.getRawPos(RealCameraCore.java:66-70) 直加 entityPos → 世界轴向脚原点空间
+            PoseStack poseStack = bindRootFrame(bodyRot, cap);
             // 盔甲层定位同源数学（CustomPlayerArmorLayer:103 prepMatrixForLocator(model.headBones())）
             RenderUtils.prepMatrixForLocator(poseStack, chain);
             org.joml.Matrix4f mat = poseStack.last().pose();
@@ -305,6 +318,19 @@ public final class RealCameraApiBinder {
             mSetForward.invoke(result, new Vec3(forward.x(), forward.y(), forward.z()));
             mSetUpward.invoke(result, new Vec3(upward.x(), upward.y(), upward.z()));
             logBindSuccess(target, position, forward, upward);
+            if (spaceDiagAllowed(netHeadYawDeg)) {
+                // 对照值：view-yaw 基准（M1 旧行为）独立重算——同一骨链换根帧，非恒等式推导
+                PoseStack rootAlt = bindRootFrame(viewRot, cap);
+                RenderUtils.prepMatrixForLocator(rootAlt, chain);
+                org.joml.Matrix4f matAlt = rootAlt.last().pose();
+                Vector3f altOffset = boneCubeCenterOffset(model, chain.get(chain.size() - 1));
+                Vector3f altPos = matAlt.transformPosition(altOffset != null ? altOffset : new Vector3f());
+                Vector3f altFwd = matAlt.transformDirection(new Vector3f(MODEL_FORWARD));
+                altFwd.normalize();
+                Vector3f altUp = matAlt.transformDirection(new Vector3f(0.0f, 1.0f, 0.0f));
+                altUp.normalize();
+                logSpaceDiag(viewRot, bodyRot, netHeadYawDeg, position, forward, upward, altPos, altFwd, altUp, target);
+            }
             hideHead(model);
             return result;
         } catch (Throwable t) {
@@ -324,7 +350,8 @@ public final class RealCameraApiBinder {
      * not-available 让位 UV 兜底；此处保底单点配置可用，位置语义不受影响）。
      */
     @Nullable
-    private static Object tryUvBind(AnimatedGeoModel model, Object target, float viewRot, PlayerCapability cap) {
+    private static Object tryUvBind(AnimatedGeoModel model, Object target, float viewRot, float bodyRot,
+                                    float netHeadYawDeg, PlayerCapability cap) {
         try {
             Object cfg = mTargetConfig.invoke(target);
             if (cfg == null) {
@@ -343,10 +370,9 @@ public final class RealCameraApiBinder {
             for (IBone bone : model.bones().values()) {
                 bonesByName.put(bone.getName(), bone);
             }
-            // 根帧与 M1 修复一致：180-viewRot + scale(hS,wS,hS)（GeoReplacedEntityRenderer 渲染空间）
-            PoseStack root = new PoseStack();
-            root.mulPose(Axis.YP.rotationDegrees(180.0f - viewRot));
-            root.scale(cap.getHeightScale(), cap.getWidthScale(), cap.getHeightScale());
+            // 根帧与可见模型渲染链一致：180-lerpBodyRot + T(0,0.01,0) + scale（bindRootFrame，
+            // 空间簿记见类 javadoc 勘误段：探针/entityYaw 实参不决定根帧，体转才是渲染根）
+            PoseStack root = bindRootFrame(bodyRot, cap);
             Map<String, Matrix4f> frameMats = new java.util.HashMap<>();
 
             Vector3f position = surfacePoint(root, frameMats, model, bonesByName, hits[0], uv[UV_POS_U], uv[UV_POS_V]);
@@ -385,6 +411,22 @@ public final class RealCameraApiBinder {
             mSetUpward.invoke(result, new Vec3(upward.x(), upward.y(), upward.z()));
             logUvHit(hits[0], uv, position);
             logBindSuccess(target, position, forward, upward);
+            if (spaceDiagAllowed(netHeadYawDeg)) {
+                // 对照值：view-yaw 基准（M1 旧行为）独立重算——同一骨链换根帧，非恒等式推导；
+                // 三字段与 fed 计算完全镜像（surfacePoint/quadDirection/boneUpAxis 同参同序）
+                PoseStack rootAlt = bindRootFrame(viewRot, cap);
+                Map<String, Matrix4f> altMats = new java.util.HashMap<>();
+                Vector3f altPos = surfacePoint(rootAlt, altMats, model, bonesByName, hits[0], uv[UV_POS_U], uv[UV_POS_V]);
+                Vector3f altFwd = quadDirection(rootAlt, altMats, model, bonesByName, hits[1] != null ? hits[1] : hits[0]);
+                Vector3f altUp = hits[2] != null
+                        ? quadDirection(rootAlt, altMats, model, bonesByName, hits[2])
+                        : boneUpAxis(rootAlt, altMats, model, bonesByName, hits[0].boneName);
+                if (altPos != null && altFwd != null && altUp != null) {
+                    altFwd.normalize();
+                    altUp.normalize();
+                    logSpaceDiag(viewRot, bodyRot, netHeadYawDeg, position, forward, upward, altPos, altFwd, altUp, target);
+                }
+            }
             hideHead(model);
             return result;
         } catch (Throwable t) {
@@ -622,7 +664,44 @@ public final class RealCameraApiBinder {
     private static final int EMPTY_LOG_INTERVAL = 1200;
     private static final java.util.HashMap<String, Integer> emptyReasons = new java.util.HashMap<>();
 
-    /** 绑定成功打点限频：首 {@link #BIND_LOG_BUDGET} 帧每帧，之后每 {@link #BIND_LOG_INTERVAL} 帧一次。 */
+    /** target offsets 数值 {scale,x,y,z,pitch,yaw,roll}（反射缺席返回 null）。 */
+    @Nullable
+    private static float[] targetOffsets(Object target) {
+        try {
+            Object offsets = target.getClass().getMethod("offsets").invoke(target);
+            Class<?> o = offsets.getClass();
+            return new float[]{
+                    (Float) o.getMethod("getScale").invoke(offsets),
+                    (Float) o.getMethod("getX").invoke(offsets),
+                    (Float) o.getMethod("getY").invoke(offsets),
+                    (Float) o.getMethod("getZ").invoke(offsets),
+                    (Float) o.getMethod("getPitch").invoke(offsets),
+                    (Float) o.getMethod("getYaw").invoke(offsets),
+                    (Float) o.getMethod("getRoll").invoke(offsets)};
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    /** 官方消费镜像（旋转基）：正交化→列基[left|up|fwd]——BindResult.computeCamera:75-77 只读复刻。 */
+    private static org.joml.Matrix3f mirrorRotation(Vector3f forward, Vector3f upward) {
+        org.joml.Matrix3f rot = new org.joml.Matrix3f();
+        Vector3f cross = new Vector3f(upward).cross(new Vector3f(forward));
+        Vector3f up2 = new Vector3f(forward).cross(cross).normalize();
+        Vector3f left = new Vector3f(up2).cross(new Vector3f(forward));
+        rot.set(left, up2, new Vector3f(forward));
+        return rot;
+    }
+
+    /** 官方消费镜像（位置段）：position += R·(z,y,x)·scale——BindResult.computeCamera:79-80 只读复刻，旋转段 offsets(yaw/pitch/roll) 不影响 position 不在此。 */
+    private static Vector3f mirrorFinalPos(Vector3f position, Vector3f forward, Vector3f upward, float[] offs) {
+        org.joml.Matrix3f rot = mirrorRotation(forward, upward);
+        Vector3f offset = new Vector3f(offs[3], offs[2], offs[1]).mul(offs[0]).mul(rot);
+        return new Vector3f(position).add(offset);
+    }
+
+    /**
+     * 绑定成功打点限频：首 {@link #BIND_LOG_BUDGET} 帧每帧，之后每 {@link #BIND_LOG_INTERVAL} 帧一次。 */
     private static final int BIND_LOG_BUDGET = 3;
     private static final int BIND_LOG_INTERVAL = 600;
     private static int bindLogCount;
@@ -654,24 +733,21 @@ public final class RealCameraApiBinder {
                     String.format(f, upward.x(), upward.y(), upward.z()));
             Class<?> t = target.getClass();
             Object bindConfig = t.getMethod("bindConfig").invoke(target);
-            Object offsets = t.getMethod("offsets").invoke(target);
+            float[] offs = targetOffsets(target);
+            if (offs == null) {
+                return;
+            }
             Class<?> b = bindConfig.getClass();
-            Class<?> o = offsets.getClass();
-            float scale = (Float) o.getMethod("getScale").invoke(offsets);
-            float ox = (Float) o.getMethod("getX").invoke(offsets);
-            float oy = (Float) o.getMethod("getY").invoke(offsets);
-            float oz = (Float) o.getMethod("getZ").invoke(offsets);
-            float op = (Float) o.getMethod("getPitch").invoke(offsets);
-            float oyw = (Float) o.getMethod("getYaw").invoke(offsets);
-            float orl = (Float) o.getMethod("getRoll").invoke(offsets);
+            float scale = offs[0];
+            float ox = offs[1];
+            float oy = offs[2];
+            float oz = offs[3];
+            float op = offs[4];
+            float oyw = offs[5];
+            float orl = offs[6];
             // 官方消费镜像：正交化→列基[left|up|fwd]→position+=R·(z,y,x)·scale→rotateLocal(yaw,pitch,roll)
-            org.joml.Matrix3f rot = new org.joml.Matrix3f();
-            Vector3f cross = new Vector3f(upward).cross(new Vector3f(forward));
-            Vector3f up2 = new Vector3f(forward).cross(cross).normalize();
-            Vector3f left = new Vector3f(up2).cross(new Vector3f(forward));
-            rot.set(left, up2, new Vector3f(forward));
-            Vector3f offset = new Vector3f(oz, oy, ox).mul(scale).mul(rot);
-            Vector3f finalPos = new Vector3f(position).add(offset);
+            org.joml.Matrix3f rot = mirrorRotation(forward, upward);
+            Vector3f finalPos = mirrorFinalPos(position, forward, upward, offs);
             rot.rotateLocal((float) Math.toRadians(oyw), rot.m10, rot.m11, rot.m12);
             rot.rotateLocal((float) Math.toRadians(op), rot.m00, rot.m01, rot.m02);
             rot.rotateLocal((float) Math.toRadians(orl), rot.m20, rot.m21, rot.m22);
@@ -835,6 +911,97 @@ public final class RealCameraApiBinder {
 
     private static boolean finiteNonZero(Vector3f v) {
         return Float.isFinite(v.x()) && Float.isFinite(v.y()) && Float.isFinite(v.z()) && v.lengthSquared() > 1.0e-8f;
+    }
+
+    /**
+     * 渲染根帧 yaw 基准（diag-rc-anchor-space-mismatch）：与可见模型渲染根同源——
+     * GeoReplacedEntityRenderer.renderEntityWithTexture:234 的 setupRotations 实参=
+     * modelData.lerpBodyRot（AnimatableEntity.processAnimationImpl:262
+     * =Mth.rotLerp(pT,yBodyRotO,yBodyRot)），dispatcher.render 的 entityYaw（view yaw）
+     * 实参渲染器不消费（仅名牌渲染，GeoReplacedEntityRenderer.java:283）。骑乘活体载具
+     * 分支逐镜像 AnimatableEntity:267-279。返回 {lerpBodyRot, rawNetHeadDeg}
+     * （后者=lerpHeadRot-lerpBodyRot 原始值未取负未钳制，供空间对账打点判读；
+     * 进骨的是其取负钳制态 AnimatableEntity:286，与基准无关）。
+     */
+    private static float[] rendererLerpBodyRot(Player player, float partialTick) {
+        float lerpBodyRot = Mth.rotLerp(partialTick, player.yBodyRotO, player.yBodyRot);
+        float lerpHeadRot = Mth.rotLerp(partialTick, player.yHeadRotO, player.yHeadRot);
+        float netHeadYaw = lerpHeadRot - lerpBodyRot;
+        if (player.isPassenger() && player.getVehicle() instanceof LivingEntity vehicle
+                && EntityDataBridge.shouldRiderSit(player.getVehicle())) {
+            lerpBodyRot = Mth.rotLerp(partialTick, vehicle.yBodyRotO, vehicle.yBodyRot);
+            netHeadYaw = lerpHeadRot - lerpBodyRot;
+            float clampedHeadYaw = Mth.clamp(Mth.wrapDegrees(lerpHeadRot - lerpBodyRot), -85.0f, 85.0f);
+            lerpBodyRot = lerpHeadRot - clampedHeadYaw;
+            if (clampedHeadYaw * clampedHeadYaw > 2500.0f) {
+                lerpBodyRot += clampedHeadYaw * 0.2f;
+            }
+            netHeadYaw = lerpHeadRot - lerpBodyRot;
+        }
+        return new float[]{lerpBodyRot, netHeadYaw};
+    }
+
+    /**
+     * 绑定根帧=可见模型/UV 探针渲染空间（diag-rc-anchor-space-mismatch 空间簿记，
+     * 矩阵序逐项镜像渲染链）：GeoReplacedEntityRenderer.java:234 setupRotations(R=
+     * mulPose(180-lerpBodyRot)，vanilla LivingEntityRenderer:187 同式) → :259
+     * translate(0,0.01,0) → IGeoRenderer.renderEarly scale（上游变量名互换原样：
+     * x/z=getHeightScale、y=getWidthScale）→ 骨链。identity PoseStack 下该空间=
+     * 世界轴向、实体脚原点——即 MixinCamera.getRawPos(RealCameraCore.java:66-70)
+     * 直加 entityPos 所要求的 BindResult 契约空间（UV 探针 RealCameraCore.computeCamera:89
+     * 空 PoseStack dispatcher.render 捕获同空间，CustomPlayerRenderer.render:88 同渲染链）。
+     */
+    private static PoseStack bindRootFrame(float lerpBodyRotDeg, PlayerCapability cap) {
+        PoseStack root = new PoseStack();
+        root.mulPose(Axis.YP.rotationDegrees(180.0f - lerpBodyRotDeg));
+        root.translate(0.0f, 0.01f, 0.0f);
+        root.scale(cap.getHeightScale(), cap.getWidthScale(), cap.getHeightScale());
+        return root;
+    }
+
+    /** 空间对账打点门控：仅 |netHead|>5°（转头瞬态/移动/滞空态），前 {@link #SPACE_DIAG_BUDGET} 次每帧，之后每 {@link #SPACE_DIAG_INTERVAL} 帧一次。 */
+    private static final int SPACE_DIAG_BUDGET = 40;
+    private static final int SPACE_DIAG_INTERVAL = 1200;
+    private static int spaceDiagCount;
+
+    private static boolean spaceDiagAllowed(float netHeadYawDeg) {
+        if (Math.abs(netHeadYawDeg) < 5.0f) {
+            return false;
+        }
+        spaceDiagCount++;
+        return spaceDiagCount <= SPACE_DIAG_BUDGET || spaceDiagCount % SPACE_DIAG_INTERVAL == 0;
+    }
+
+    /**
+     * 空间对账数值打点：fed（当前代码基准）与对照基准（view-yaw=M1 旧行为）同骨链独立重算
+     * （调用方已算好传入），各按官方消费镜像（offsets R·(z,y,x)·scale，BindResult.java:79）
+     * 得 final，dFinal=alt−fed。判读（任务卡 c/d 判据）：修复提交 fed=体转基准=契约空间，
+     * dFinal≈−(R(−netHead)−I)·fedFinal（解析对账，随 netHead 周期性、netHead→0 时→0）；
+     * 本提交回滚（revert feed 基准）后 fed/alt 列互换。
+     */
+    private static void logSpaceDiag(float viewRot, float bodyRot, float netHead,
+            Vector3f fedPos, Vector3f fedFwd, Vector3f fedUp,
+            Vector3f altPos, Vector3f altFwd, Vector3f altUp, Object target) {
+        try {
+            float[] offs = targetOffsets(target);
+            String f = "(%.4f, %.4f, %.4f)";
+            Vector3f fedFinal = offs == null ? null : mirrorFinalPos(fedPos, fedFwd, fedUp, offs);
+            Vector3f altFinal = offs == null ? null : mirrorFinalPos(altPos, altFwd, altUp, offs);
+            String dFinal = fedFinal == null || altFinal == null ? "n/a"
+                    : String.format(f, altFinal.x() - fedFinal.x(), altFinal.y() - fedFinal.y(), altFinal.z() - fedFinal.z())
+                            + String.format(" |d|=%.4f", new Vector3f(altFinal).sub(fedFinal).length());
+            YesSteveModel.LOGGER.info(
+                    "[compat] RealCamera space-diag #{} viewYaw={} bodyYaw={} netHead={} fedPos={} altPos={} fedFinal={} altFinal={} dFinal={}",
+                    spaceDiagCount,
+                    String.format("%.2f", viewRot), String.format("%.2f", bodyRot), String.format("%.2f", netHead),
+                    String.format(f, fedPos.x(), fedPos.y(), fedPos.z()),
+                    String.format(f, altPos.x(), altPos.y(), altPos.z()),
+                    fedFinal == null ? "n/a" : String.format(f, fedFinal.x(), fedFinal.y(), fedFinal.z()),
+                    altFinal == null ? "n/a" : String.format(f, altFinal.x(), altFinal.y(), altFinal.z()),
+                    dFinal);
+        } catch (Throwable t) {
+            YesSteveModel.LOGGER.debug("[compat] RealCamera space-diag log failed: {}", t.toString());
+        }
     }
     //? }
 }

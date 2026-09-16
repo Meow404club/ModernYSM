@@ -9,6 +9,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 /*import com.mojang.blaze3d.opengl.GlStateManager;*/
 import com.mojang.blaze3d.systems.RenderSystem;
 import org.lwjgl.opengl.*;
+import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -136,7 +137,9 @@ public final class GpuMeshBuilder {
                 totalQuads += cube.quads.size();
             }
         }
-        ByteBuffer buf = ByteBuffer.allocateDirect(totalQuads * 4 * 20).order(ByteOrder.nativeOrder());
+        // LWJGL 分配器（与 GpuMesh.ensureIrisBuffers/dispose 的 MemoryUtil.memFree 生命周期配对；
+        // JDK allocateDirect 的指针交给 memFree=nje_free 域外释放，真实驱动环境必崩 hs_err jemalloc）
+        ByteBuffer buf = MemoryUtil.memAlloc(totalQuads * 4 * 20);
         for (GeoModel.BakedBone bone : model.bakedBones) {
             for (GeoModel.BakedCube cube : bone.cubes) {
                 for (GeoModel.BakedQuad quad : cube.quads) {

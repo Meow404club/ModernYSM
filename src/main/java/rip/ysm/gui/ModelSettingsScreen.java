@@ -39,7 +39,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import net.minecraft.client.gui.screens.Screen;
+//? if <26.2
 import net.minecraft.client.renderer.MultiBufferSource;
+//? if >=26.2
+/*import net.minecraft.client.renderer.SubmitNodeCollector;*/
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -331,11 +334,16 @@ public class ModelSettingsScreen extends OptionScreen {
         dispatcher.overrideCameraOrientation(rotationX);
         //? if <21.9
         dispatcher.setRenderShadow(false);
+        //? if <26.2
         MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
+        //? if >=26.2
+        /*SubmitNodeCollector bufferSource = null; // 预览面板 26.2 降级：直绘替身仅保参数类型*/
 
         try {
+            //? if <26.2 {
             RenderCompat.runAsFancy(() -> renderer.renderEntity(animatable, 0.0f, partialTick, poseStack, bufferSource, 15728880));
             bufferSource.endBatch();
+            //?}
         } finally {
             //? if <21.9
             dispatcher.setRenderShadow(true);

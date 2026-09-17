@@ -213,10 +213,16 @@ public final class GuiTourDriver {
                 mark("fail camera");
                 return;
             }
+            // 1.16.1 无 CameraType（1.16.2 引入，官方 1161 映射零命中，CameraUtil.java:14 同款实证）→
+            // 视角切换降级（1.16.x 无 GPU 路径用不到；反射兜底如需再补，勿凭记忆引 SRG 名）
+            //? if <1.16.2
+            /*mark("fail camera");*/
+            //? if >=1.16.2 {
             mc.options.setCameraType(mc.options.getCameraType().isFirstPerson()
                     ? net.minecraft.client.CameraType.THIRD_PERSON_BACK
                     : net.minecraft.client.CameraType.FIRST_PERSON);
             mark("ok camera");
+            //?}
             return;
         }
         // fix-rc-probe-diff：姿势诱导命令（RC 探针差分格：站/蹲×2/趴爬）。客户端按键注入，
@@ -282,18 +288,30 @@ public final class GuiTourDriver {
                 {"execute at @s run fill -3 ~ -40 3 ~ -2 minecraft:smooth_stone"},
         };
         for (String[] cmd : fills) {
-            mc.player.connection.sendCommand(cmd[0]);
+            sendChatCommand(mc, cmd[0]);
         }
         // 命令通道决定性诊断：say 会在服务端日志留 "[Dev] rcprobe-*" 痕迹
-        mc.player.connection.sendCommand("say rcprobe-fills-sent");
+        sendChatCommand(mc, "say rcprobe-fills-sent");
         // 直接放入 -z 隧道内（下 1 格、北移 20、面向北）：四向隧道以填充时刻位置为基准，
         // 玩家自发行走线与隧道走廊错位会全程 STANDING 走过（round3 实证）；tp 内置位消除入洞问题。
-        mc.player.connection.sendCommand("tp @s ~ ~-1 ~-20 180 0");
-        mc.player.connection.sendCommand("say rcprobe-tp-sent");
+        sendChatCommand(mc, "tp @s ~ ~-1 ~-20 180 0");
+        sendChatCommand(mc, "say rcprobe-tp-sent");
         // 延迟方块自证：fill/tp 经服务端回环，同 tick 读方块是旧值（round3 教训）
         tunnelCheckDelay = 60;
         mc.options.keyUp.setDown(true);
         mc.options.keySprint.setDown(true);
+    }
+
+    /** 1.19~1.19.2 签名代 ClientPacketListener 无 sendCommand（1192 named jar javap 实证，命令入口
+     *  移 LocalPlayer：1.19=command、1.19.1 起=commandUnsigned（1190/1191 编译实测分界））→ 分档；
+     *  1.19.3 起回归 ClientPacketListener.sendCommand。 */
+    private static void sendChatCommand(Minecraft mc, String command) {
+        //? if <1.19.1
+        /*mc.player.command(command);*/
+        //? if >=1.19.1 && <1.19.3
+        /*mc.player.commandUnsigned(command);*/
+        //? if >=1.19.3
+        mc.player.connection.sendCommand(command);
     }
 
     /** 延迟隧道自证倒计时（tick）；<0=未武装。 */

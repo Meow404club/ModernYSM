@@ -5,8 +5,12 @@ import com.mojang.blaze3d.platform.NativeImage;
 // 1.21.5 TextureUtil 类删除（21.5 sources 无 com.mojang.blaze3d.platform.TextureUtil）
 //? if <21.5
 import com.mojang.blaze3d.platform.TextureUtil;
-//? if >=21.5
+// 26.2 TextureFormat 删（com.mojang.blaze3d.textures 包清空）→ GpuFormat.RGBA8_UNORM
+//（/tmp/vanilla-262 GpuFormat.java:14 实证）
+//? if >=21.5 && <26.2
 /*import com.mojang.blaze3d.textures.TextureFormat;*/
+//? if >=26.2
+/*import com.mojang.blaze3d.GpuFormat;*/
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceMaps;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
@@ -78,8 +82,13 @@ public class OuterFileTexture extends AbstractTexture implements ITextureMap {
             this.textureView = RenderSystem.getDevice().createTextureView(this.texture);
             RenderSystem.getDevice().createCommandEncoder().writeToTexture(this.texture, imageIn);*/
             //?}
-            //? if >=21.11 {
+            //? if >=21.11 && <26.2 {
             /*this.texture = RenderSystem.getDevice().createTexture(() -> "ysm_outer_file_texture", 5, TextureFormat.RGBA8, width, height, 1, 1);
+            this.textureView = RenderSystem.getDevice().createTextureView(this.texture);
+            RenderSystem.getDevice().createCommandEncoder().writeToTexture(this.texture, imageIn);*/
+            //?}
+            //? if >=26.2 {
+            /*this.texture = RenderSystem.getDevice().createTexture(() -> "ysm_outer_file_texture", 5, GpuFormat.RGBA8_UNORM, width, height, 1, 1);
             this.textureView = RenderSystem.getDevice().createTextureView(this.texture);
             RenderSystem.getDevice().createCommandEncoder().writeToTexture(this.texture, imageIn);*/
             //?}

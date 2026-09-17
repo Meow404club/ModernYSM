@@ -145,6 +145,13 @@ public final class ModelPreviewRenderer {
 
     // 动画测试界面的模型
     public static void renderEntityPreview(float x, float y, float scale, float pitch, float yaw, float partialTick, AnimatableEntity animatableEntity, GeoReplacedEntityRenderer renderer, boolean renderGround) {
+        // 26.2 预览面板降级（debt-262，主会话裁决 2026-09-18）：renderBuffers 删+GUI extract
+        // 无自定义几何钩子 → 面板模型区 no-op（>=21.6 纸娃娃先例）。正规迁移=PiP 重构。
+        //（if(true) 形规避 javac unreachable 分析；行条件 26.2 激活）
+        //? if >=26.2
+        /*if (true) {
+            return;
+        }*/
         setPreviewMode(true);
         LivingEntity livingEntity = (LivingEntity) animatableEntity.getEntity();
         // 1.16.5 无 RenderSystem.getModelViewStack（1.17+），GL_MODELVIEW 直推
@@ -510,6 +517,11 @@ public final class ModelPreviewRenderer {
 
     // 模型预览页面
     public static <T extends LivingEntity, TAnimatable extends LivingAnimatable<T>> void renderLivingEntityPreview(float x, float y, float scale, float partialTick, TAnimatable animatable, GeoReplacedEntityRenderer<T, TAnimatable> renderer, boolean disablePreviewRotation, boolean hideEquipment) {
+        // 26.2 预览面板降级（同 renderEntityPreview 注）
+        //? if >=26.2
+        /*if (true) {
+            return;
+        }*/
         ItemStack[] savedEquipment;
         setPreviewMode(true);
         LivingEntity livingEntity = animatable.getEntity();

@@ -375,10 +375,12 @@ public final class GuiTourDriver {
                 new net.minecraft.client.multiplayer.ServerData("harness", "localhost:" + HARNESS_PORT, false), false);
         //?}
         //? if >=1.20.5 {
-        /*// 1.20.5+ 增第 6 参 @Nullable TransferState（vanilla-1.20.6 ConnectScreen.java:55），走查传 null
+        /*// 1.20.5+ 增第 6 参 @Nullable TransferState（vanilla-1.20.6 ConnectScreen.java:55），走查传 null。
+        // 26.2 修正：端口接 HARNESS_PORT（此前硬编码 25565，HARNESS_PORT 端口错开对该分支不生效，
+        // tour server 起在 25575 时客户端恒连 25565 超时——26.2 首跑实证）
         net.minecraft.client.gui.screens.ConnectScreen.startConnecting(null, mc,
-                net.minecraft.client.multiplayer.resolver.ServerAddress.parseString("localhost:25565"),
-                new net.minecraft.client.multiplayer.ServerData("harness", "localhost:25565", net.minecraft.client.multiplayer.ServerData.Type.OTHER), false, null);*/
+                net.minecraft.client.multiplayer.resolver.ServerAddress.parseString("localhost:" + HARNESS_PORT),
+                new net.minecraft.client.multiplayer.ServerData("harness", "localhost:" + HARNESS_PORT, net.minecraft.client.multiplayer.ServerData.Type.OTHER), false, null);*/
         //?}
     }
 

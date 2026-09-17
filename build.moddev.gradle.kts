@@ -529,12 +529,15 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 tasks.named<ProcessResources>("processResources") {
+    // 26.2：logoFile 弃用警告会经 ModLoadingIssue 顶起 LoadingErrorScreen（见下方 filter 注）
+    val stripLogoFile262 = stonecutter.eval(stonecutter.current.version, ">=26.2")
     val props = mapOf(
         "mod_id" to project.property("archives_name") as String,
         "mod_name" to project.property("mod_name") as String,
         "mod_version" to project.property("mod_version") as String,
         "mod_license" to project.property("mod_license") as String,
     )
+
 
     // 1.20.4 线：neoforge.mods.toml 模板 rename 回 META-INF/mods.toml（20.5 起才改名）
     if (pre1205) {
@@ -560,8 +563,14 @@ tasks.named<ProcessResources>("processResources") {
     val mcRealLocal = mcReal
     filesMatching(listOf("META-INF/neoforge.mods.toml", "META-INF/mods.toml")) {
         filter { line: String ->
-            line.replace("versionRange = \"[20.6,)\"", "versionRange = \"[$neoMajorLocal,)\"")
+            var out = line.replace("versionRange = \"[20.6,)\"", "versionRange = \"[$neoMajorLocal,)\"")
                 .replace("versionRange = \"[1.20.6,)\"", "versionRange = \"[$mcRealLocal,)\"")
+            // 26.2 ClientModLoader.java:92-102：任何 ModLoadingIssue（含 logoFile 弃用警告）
+            // 都会顶起 LoadingErrorScreen 挡住主菜单 → 26.2 改用 bannerFile（警告文案指定键）
+            if (stripLogoFile262) {
+                out = out.replace("logoFile = ", "bannerFile = ")
+            }
+            out
         }
     }
     // pack.mcmeta 资源包格式（共享源为 1.20.1 口径 15）：
@@ -631,6 +640,8 @@ tasks.named<ProcessResources>("processResources") {
         // 无本 filter，目标类缺席会运行时崩（1.20.1 红线）。锚=client.ThrowableItemProjectileAccessor
         //（前序规则不触碰该条目）
         val gpuCapture218 = stonecutter.current.version == "21.8" || stonecutter.current.version == "21.11"
+        // 26.2 BufferSourceMixin 剔除闸（render-dag 换代，见 filter 内注）
+        val stripBufferSourceMixin262 = stonecutter.eval(stonecutter.current.version, ">=26.2")
         filesMatching("*.mixins.json") {
             filter { line: String ->
                 var out = line.replace("\"JAVA_17\"", if (is26) "\"JAVA_25\"" else "\"JAVA_21\"")
@@ -640,6 +651,11 @@ tasks.named<ProcessResources>("processResources") {
                         "\"client.BufferSourceMixin\"",
                         "\"client.BufferSourceMixin\", \"client.PlayerRenderStateStashMixin\""
                     )
+                }
+                if (stripBufferSourceMixin262) {
+                    // 26.2 BufferSourceMixin 目标类（MultiBufferSource.BufferSource）删
+                    //（render-dag 换代）→ 条目按线剔除；类本体空类+MixinTweaker 双保险
+                    out = out.replace("\"client.BufferSourceMixin\", ", "")
                 }
                 if (dropRenderSystemAccessor) {
                     // 1.21.9 RenderSystem.shaderLightDirections 改 GpuBufferSlice → accessor 失效，

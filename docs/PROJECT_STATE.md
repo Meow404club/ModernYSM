@@ -3,10 +3,21 @@
 > 由主 Agent 在每次 state_update 重要变更后同步镜像。2026-09-11 全量重写（历史行漂移清理）。
 
 ## 阶段
-- phase: 架构重构（Stonecutter 迁移）——M3 全谱平铺进行中（M2 已收官）
-- done: [M0 骨架+源码合并, native 子模块, M1 八卡全过, M2 十一卡全合入, M2.5/M2.6/M2.6.1 GUI 修复链, harness ccb6b23, 内置模型同步 ce1aaf9, M3 批一 ebc4427 + 批二a a129edc + 批二b 07e171e + 批二c-1 5c5888f, M2.7 8444dbf, reobf 撞名修复 d14e610]
-- current: 批二c 剩余接手卡 m3-batch2c1b-forge-remainder 进行中（1.16.2/3/4 修绿 + 1.18/1.18.1/1.19 build 补绿 + 双在产线 javap 终验 + compatLevel 表 + 功能差入账）
-- next: 批二c-2 neoforge 八线 → 26.x 适配卡 → FPM/RealCamera 修复卡（B1）→ Iris 系保性能重推导三卡 → 生产发布卡；完整队列见 state:tasks.handoff-2026-09-14
+- phase: 架构重构（Stonecutter 迁移）——M3 全谱平铺收官；FPM/RC/iris/native 四线全清（2026-09-17）
+- done: [M0 骨架+源码合并, native 子模块, M1 八卡全过, M2 十一卡全合入, M2.5/M2.6/M2.6.1 GUI 修复链, harness ccb6b23, 内置模型同步 ce1aaf9, M3 批一 ebc4427 + 批二a a129edc + 批二b 07e171e + 批二c-1 5c5888f, M2.7 8444dbf, reobf 撞名修复 d14e610, FPM/RC 修复链 18a91f7→57bb90e, 2026-09-17 批：daff957 五卡（iris 实验支线 d4d314c/26.1 FPM 511ab9b/neoforge Iris 检测 241e683/FPM 颈隐藏 b5f3bf3/RC 变换矩阵 daff957）→ iris memFree e47beed → native 整合 87d552b → RC 锚点 d4850d6 → cleanup 3c81354 → 探针差分 96be7aa]
+- current: 无在途分支；dev 顶=96be7aa；用户终测 jar=ea519e08（3c81354，与 96be7aa 仅差 armed 门控差分工具，生产零影响）
+- next: D2（21.2~21.4 IrisRenderPath 移植）→ D3（21.8+ proj/fog 捕获复活）→ 卡B（21.2~21.8 FPM）→ 1211 带包 tour 格 → 26.1.2 tour 基线 → 26.3 适配（26.2 submit-dag 前置）→ 生产发布卡
+
+## 2026-09-17 收官纪要（四线全清）
+- **FPM 颈三路径隐藏**：根因=setHidden 双写 offset9/10，SIMD 只读 10、GPU selfHidden 不含 9；native offset9 治本+Java 兜底拆除（native 单独证责：差分 harness drift 10/10+semantic 7/7，无补丁态三路径全过）。用户真机确认剔除正常。
+- **iris 直绘终审 NO-GO**：真机二次独立失败+绘制侧打点全净（glErr=0/drawCount 正常）→ 空产出=pack 着色器内部动态 uniform（Iris 不开放、RenderDoc 才可深挖）。整路砍除（IrisRenderPath/BoneXformCompute/iris 顶点机制/配置键），实验分支入场券保留在 git 历史。
+- **有包路径定案**：光影包在场→CPU（943ff31 语义恢复；用户实测推翻 pack→SIMD 直切）。无包 SIMD/GPU 照旧。
+- **native 子模块第一轮**（openysm-align c89cb51…012316e 未 push 归用户）：offset9 治本、非树防御、92B/93B 步长裁决（shipped+Java 为基准）、假绿差分 harness 修复（heap ByteBuffer→GetDirectBufferAddress=NULL 空转）、tools/build-native.sh、六平台产物回填。JNI 12 参协议不变。
+- **RC 绑定解终审无罪**：探针真值差分（ armed 门控+审查官毒化背书）全姿势 ≤1.5px、蹲 1616 帧不放大、dStale≈0；蹲/趴感知偏差=同 json 双引擎动画求值差异（用户裁决可接受）。锚点 UV 唯一候选=脸面逐位一致；roll 链 up+翻滚→终态 top=(0,1,0) 零预应用零双重。
+- **26.1 三线 FPM 真 compat**：extract 期旗标快照（对位官方 r3 契约）+RealCamera/阴影/GUI 三排除+offset handler 对齐 ViewLocator 语义；stock FPM 降级=官方行为。
+- **1.20.1 clean**：26.1.2 四消费面字节码逐指令零漂移（审查独立复核）。
+- **教训入账**：JDK allocateDirect×LWJGL memFree 配对陷阱（KG TRAPS）、截图/工具假绿双前科（B1 帧 md5+#106 harness）、增量对≠绝对对（锚点须绝对位置断言）。
+- **归用户**：子模块 push（openysm-align 012316e）、RC 上游反馈（DisableHelper || isSpectator 应 &&，0.7.8 同病）、有包 SIMD 已撤故无真机待验项。
 
 ## ADR 摘要（decisions.adr-stonecutter-2026-09-10 + adr-m2-1165-stonecutter-entry）
 - stonecutter 0.7 + Gradle 9.2.1 单仓；路由：forge ≥1.17 → legacyforge(MDG 2.0.141)，<1.17 → unimined 1.4.1（Celeritas 生产先例）；NeoForge 1.20.5+ → moddev（M4）；1.20.1 一 jar 双跑 NeoForge 47.1

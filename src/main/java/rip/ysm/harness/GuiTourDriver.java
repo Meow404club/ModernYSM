@@ -206,6 +206,19 @@ public final class GuiTourDriver {
             mark(openScreen(mc, name) ? "ok " + name : "fail " + name);
             return;
         }
+        // d3-gpu-218-revive：第三人称切换（世界内模型可见性定点截图用——第一人称看不到
+        // 本体，GPU 路径的 in-world 渲染需要视觉证据）。harness 类，生产 jar 排除。
+        if (line.equals("camera")) {
+            if (mc.player == null || mc.options == null) {
+                mark("fail camera");
+                return;
+            }
+            mc.options.setCameraType(mc.options.getCameraType().isFirstPerson()
+                    ? net.minecraft.client.CameraType.THIRD_PERSON_BACK
+                    : net.minecraft.client.CameraType.FIRST_PERSON);
+            mark("ok camera");
+            return;
+        }
         // fix-rc-probe-diff：姿势诱导命令（RC 探针差分格：站/蹲×2/趴爬）。客户端按键注入，
         // 服务端物理一致（蹲=crouch pose 客户端判定、趴=1 格高隧道内前进触发 SWIMMING）。
         if (line.startsWith("pose ")) {

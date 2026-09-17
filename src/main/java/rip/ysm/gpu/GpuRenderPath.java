@@ -10,6 +10,11 @@ import com.mojang.blaze3d.platform.GlStateManager;
 //? if >=21.5
 /*import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.opengl.GlTexture;*/
+// 21.8 帧图：实体/手部分派发生在 RenderPass 执行窗口外（探针实证 drawFbo=0）→
+// 绘制期需显式绑主目标 FBO（GlTexture.getFbo 缓存命中 vanilla 自建 id）。仅 >=21.8 消费。
+//? if >=21.8
+/*import com.mojang.blaze3d.opengl.DirectStateAccess;
+import com.mojang.blaze3d.pipeline.RenderTarget;*/
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
@@ -201,6 +206,28 @@ public final class GpuRenderPath {
         /*int fogShape = 0;*/
         //? if >=1.18.2 && <1.21.2
         int fogShape = RenderSystem.getShaderFogShape().getIndex();
+        //?}
+
+        // 21.8 帧图：实体/手部分派发生在 RenderPass 执行窗口之外（探针实证全量 drawFbo=0），
+        // 立即直绘落在默认帧缓冲=被末帧合成覆盖。绘制期显式绑主目标 FBO（getFbo 缓存命中
+        // vanilla 自建 id，DirectStateAccess 实参仅作 factory，命中缓存不触发改实现）；
+        // 21.8- vanilla 每 pass 自绑 FBO，无需恢复。21.6/21.7 门恒关此分支不可达。
+        // create 三参化（GraphicsWorkarounds）21.9 起（21.9/26.1 DirectStateAccess.java:18
+        // 编译实证；21.8 仍两参。get(GpuDevice) 公共实例工厂）
+        //? if >=21.8 && <21.9 {
+        /*RenderTarget ysmMain = mc.getMainRenderTarget();
+        int ysmMainFbo = ((GlTexture) ysmMain.getColorTexture()).getFbo(
+                DirectStateAccess.create(GL.getCapabilities(), new java.util.HashSet<>()), ysmMain.getDepthTexture());
+        GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, ysmMainFbo);
+        GlStateManager._viewport(0, 0, ysmMain.width, ysmMain.height);*/
+        //?}
+        //? if >=21.9 {
+        /*RenderTarget ysmMain = mc.getMainRenderTarget();
+        int ysmMainFbo = ((GlTexture) ysmMain.getColorTexture()).getFbo(
+                DirectStateAccess.create(GL.getCapabilities(), new java.util.HashSet<>(),
+                        com.mojang.blaze3d.GraphicsWorkarounds.get(RenderSystem.getDevice())), ysmMain.getDepthTexture());
+        GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, ysmMainFbo);
+        GlStateManager._viewport(0, 0, ysmMain.width, ysmMain.height);*/
         //?}
 
         GlStateManager._glUseProgram(BoneSkinShader.program());

@@ -325,6 +325,19 @@ sourceSets.main {
             exclude("firstperson/FirstPersonCompat.java")
             srcDir(rootProject.file("src/neoforge-2128/java"))
         }
+        // ===== d3-gpu-218-revive：21.8/21.11 线 GPU 路径复活捕获 mixin =====
+        // vanilla 21.8 删 RenderSystem CPU 投影/雾读取（GpuBufferSlice 化）后，四个捕获
+        // mixin 在 vanilla 打包投影/雾 UBO 前的 CPU 现算点喂回 GpuCapability 捕获面
+        //（1218 证据：GameRenderer:671/FogRenderer:166→updateBuffer:213；21111：
+        // GameRenderer:771/FogRenderer:162→updateBuffer:205，两线捕获面逐参同构）。
+        // 仅挂两实证线（21.6/21.7/21.9/21.10/26.x 未实证不挂，门未捕获=保持 CPU 现状）。
+        // RAW 树绕开 stonecutter（212 树 PlayerRenderStateStashMixin 先例）；类面零
+        // vanilla 类型引用差异（org.joml/java.nio/mojmap 目标两线同名），单树双线共用，
+        // 无 Identifier 改名/RenderTypes 改写问题（后处理只走生成树，不触 RAW）。
+        // mixins.json 条目经 processResources per-line 注入（stash212 先例），见任务块尾。
+        if (stonecutter.current.version == "21.8" || stonecutter.current.version == "21.11") {
+            srcDir(rootProject.file("src/neoforge-gpu218/java"))
+        }
         // 第三方触点源码闸门 + platform/forge 树整体排除（清单与 build.forge.gradle.kts pre120
         // 块同源）。孪生走异包策略：src/neoforge/java 下 platform/neoforge 包（类名不变），
         // 接缝消费方 import 交换（transform_neoforge.py），排除 glob 不会误伤孪生：
@@ -580,6 +593,11 @@ tasks.named<ProcessResources>("processResources") {
         // 21.2 混合形态：render-state 实体 stash mixin 注入（src/neoforge-212 小树配套，
         // 见 sourceSets 挂载注）
         val stash212 = stonecutter.current.version == "21.2"
+        // d3-gpu-218-revive：21.8/21.11 线 GPU 复活捕获 mixin 注册（src/neoforge-gpu218
+        // 小树配套，挂载见 sourceSets 块）。共享 mixins.json 恒不加条目——forge vcs 直通线
+        // 无本 filter，目标类缺席会运行时崩（1.20.1 红线）。锚=client.ThrowableItemProjectileAccessor
+        //（前序规则不触碰该条目）
+        val gpuCapture218 = stonecutter.current.version == "21.8" || stonecutter.current.version == "21.11"
         filesMatching("*.mixins.json") {
             filter { line: String ->
                 var out = line.replace("\"JAVA_17\"", if (is26) "\"JAVA_25\"" else "\"JAVA_21\"")
@@ -600,6 +618,14 @@ tasks.named<ProcessResources>("processResources") {
                     // vanilla-1.21.1 BufferBuilder.java:18-31）——JNI SIMD 直传面不存在，
                     // mixin 条目移除（原生渲染按 m2 ADR 降级为 vanilla 路径，归 native 卡验收）
                     out = out.replace(", \"client.BufferBuilderMixin\"", "")
+                }
+                if (gpuCapture218) {
+                    out = out.replace(
+                        "\"client.ThrowableItemProjectileAccessor\"",
+                        "\"client.ThrowableItemProjectileAccessor\", \"client.FogUniformCaptureMixin\", " +
+                            "\"client.LevelProjectionCaptureMixin\", \"client.HudProjectionCaptureMixin\", " +
+                            "\"client.GuiProjectionCaptureMixin\""
+                    )
                 }
                 out
             }

@@ -31,6 +31,22 @@ val v26 = stonecutter.eval(stonecutter.current.version, ">=26")
 // FirstPersonModel 真 compat 专属段（fpm-26x-pr659 卡A），挂 src/neoforge-261 孪生小树
 val fpm261 = stonecutter.eval(stonecutter.current.version, ">=26.1") &&
         stonecutter.eval(stonecutter.current.version, "<26.2")
+// 21.2~21.8 七线（fpm-card-b-2128 卡B，卡A 同段降配）：FirstPersonModel 真 compat
+// 专属段，挂 src/neoforge-2128 孪生小树。三族 FPM jar（2.4.8/2.5.0/2.7.2）javap
+// 实证 WorldRendererMixin 同步开窗盖 render 期（21.9+ 才改 extract 窗口），
+// 无需 extract 快照/SetupHook
+val fpm2128 = stonecutter.eval(stonecutter.current.version, ">=21.2") &&
+        stonecutter.eval(stonecutter.current.version, "<21.9")
+// 卡B vendor 目录（compileOnly fileTree，261 卡先例）：逐线官方 jar，
+// 21.6/21.7 共用 FPM 2.5.0 单 jar（Modrinth o7XTDjvI 双 game_versions）
+val fpm2128Libs = when (stonecutter.current.version) {
+    "21.2" -> "libs/neoforge-212"
+    "21.3" -> "libs/neoforge-213"
+    "21.4" -> "libs/neoforge-214"
+    "21.5" -> "libs/neoforge-215"
+    "21.6", "21.7" -> "libs/neoforge-216217"
+    else -> "libs/neoforge-218"
+}
 
 // 21.3+ 线 log4j 对齐：下方 eachDependency 已把 log4j-core 钉死 2.19.0（全线，NFRT 去抖），
 // 而 1.21.4/1.21.5 vanilla 自带 log4j-api 2.22.x 与 core 2.19.0 错配 → 启动即
@@ -93,6 +109,12 @@ dependencies {
     // 三线误吞 libs/ 根的 forge 代 jar
     if (fpm261) {
         compileOnly(fileTree(rootProject.file("libs/neoforge-261")))
+    }
+    // 21.2~21.8 七线 FirstPersonModel api 编译面（fpm-card-b-2128 卡B）：机制同
+    // 上 fpm261 段——官方 jar 逐线 vendor（Modrinth H5XMjpHi 实拉，版本见
+    // fpm2128Libs 注），仅 compileOnly 不进运行时
+    if (fpm2128) {
+        compileOnly(fileTree(rootProject.file(fpm2128Libs)))
     }
 }
 
@@ -292,6 +314,16 @@ sourceSets.main {
             // platform/neoforge/firstperson，2610 event26x 先例）：加旗标采样链消费窗
             exclude("com/elfmcys/yesstevemodel/platform/neoforge/event/ReplacePlayerRenderForgeHook.java")
             srcDir(rootProject.file("src/neoforge-261/java"))
+        }
+        // 21.2~21.8 七线 FirstPersonModel 真 compat（fpm-card-b-2128 卡B）：机制同上
+        // fpm261 段——shim 的 firstperson/FirstPersonCompat.java（恒 false）对七线剔除，
+        // 换 src/neoforge-2128 孪生小树（异包 platform/neoforge/firstperson，与 261 孪生
+        // 同 FQCN：两段条件轴不相交，按线二选一挂载）。与 26.1 的差异：不剔
+        // ReplacePlayerRenderForgeHook（三族 FPM jar javap 实证旗标盖 render 期，
+        // 无快照采样链，既有 1213/1215/1218/212 树 hook 原样保留）。
+        if (fpm2128) {
+            exclude("firstperson/FirstPersonCompat.java")
+            srcDir(rootProject.file("src/neoforge-2128/java"))
         }
         // 第三方触点源码闸门 + platform/forge 树整体排除（清单与 build.forge.gradle.kts pre120
         // 块同源）。孪生走异包策略：src/neoforge/java 下 platform/neoforge 包（类名不变），

@@ -102,6 +102,13 @@ stonecutter {
         vers("26.1.2-neoforge", "26.1.2").buildscript = "build.moddev.gradle.kts"
         vers("26.2-neoforge", "26.2").buildscript = "build.moddev.gradle.kts"
 
+        // M3 26.3 增量适配（m3-263-increment）：26.3 线挂载（tile=26.3.0.3-beta，该线全 beta
+        // 无 stable——maven-metadata.xml:6-7,1715-1718 2026-09-16 快照 latest/release 实证；
+        // 生产发布目标仍=26.2 GA，beta 期间适配先行）。26.3=26.2 submit-dag 延续收敛非换代
+        //（tasks.m3-263-delta-survey 六项 delta：renderpearl 包迁移/OIT 进帧图/手部 API/
+        // FPM shim 档等，>=26.2 既有条件轴自动覆盖本线），零新构建机制。
+        vers("26.3-neoforge", "26.3").buildscript = "build.moddev.gradle.kts"
+
         // M3 批二 c-2：neoforge beta/ga 补线五线（1.21/21.2/21.6/21.7/21.9 全 Java 21）。
         // 版本号取官方 maven metadata 冻结快照（tmp/harvest/m3-matrix/maven-metadata.xml，
         // 任务卡给定 tile）：1.21=21.0.167(ga) / 21.2=21.2.1-beta / 21.6=21.6.20-beta /

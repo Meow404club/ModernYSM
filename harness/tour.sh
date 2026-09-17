@@ -67,8 +67,9 @@ case "$VERSION" in
     SERVER_DIR="$ROOT/versions/$VERSION/run/server"
     CLIENT_DIR="$ROOT/versions/$VERSION/run/client"
     ;;
-  # M3 26.x 适配：26.x 四线（build.moddev.gradle.kts 同构，Java 25）
-  26.1-neoforge|26.1.1-neoforge|26.1.2-neoforge|26.2-neoforge)
+  # M3 26.x 适配：26.x 线（build.moddev.gradle.kts 同构，Java 25）
+  # m3-263-increment：+26.3-neoforge（tile 26.3.0.3-beta，走查同 26.x 其余线）
+  26.1-neoforge|26.1.1-neoforge|26.1.2-neoforge|26.2-neoforge|26.3-neoforge)
     SERVER_DIR="$ROOT/versions/$VERSION/run/server"
     CLIENT_DIR="$ROOT/versions/$VERSION/run/client"
     ;;

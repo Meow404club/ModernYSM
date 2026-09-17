@@ -124,8 +124,10 @@ public class CustomPlayerItemInHandLayer extends GeoLayerRenderer<CustomPlayerEn
 
     //? if <1.19.4
     // public void renderItem(AnimatedGeoModel model, LivingEntity livingEntity, ItemStack itemStack, ItemTransforms.TransformType itemDisplayContext, HumanoidArm humanoidArm, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
-    //? if >=1.19.4 && <26.2 {
+    //? if >=1.19.4 && <26.2
     public void renderItem(AnimatedGeoModel model, LivingEntity livingEntity, ItemStack itemStack, ItemDisplayContext itemDisplayContext, HumanoidArm humanoidArm, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
+    //? if >=26.2
+    /*public void renderItem(AnimatedGeoModel model, LivingEntity livingEntity, ItemStack itemStack, ItemDisplayContext itemDisplayContext, HumanoidArm humanoidArm, PoseStack poseStack, SubmitNodeCollector multiBufferSource, int i) {*/
         if (!itemStack.isEmpty()) {
             boolean isLeftHand = humanoidArm == HumanoidArm.LEFT;
             poseStack.pushPose();
@@ -179,37 +181,6 @@ public class CustomPlayerItemInHandLayer extends GeoLayerRenderer<CustomPlayerEn
             });
         }
     }
-    //?}
-
-    // 26.2 collector 形 twin：vanilla 手持渲染 21.9+ 已功能债 no-op，本 twin 仅类型换代保编译面
-    //? if >=26.2 {
-    /*public void renderItem(AnimatedGeoModel model, LivingEntity livingEntity, ItemStack itemStack, ItemDisplayContext itemDisplayContext, HumanoidArm humanoidArm, PoseStack poseStack, SubmitNodeCollector multiBufferSource, int i) {
-        if (!itemStack.isEmpty()) {
-            boolean isLeftHand = humanoidArm == HumanoidArm.LEFT;
-            poseStack.pushPose();
-            if (!applyItemBoneTransform(humanoidArm, poseStack, model)) {
-                poseStack.translate(0.0d, -0.0625d, -0.1d);
-                poseStack.mulPose(Axis.XP.rotationDegrees(-90.0f));
-                if (SWarfareCompat.isGunItem(itemStack)) {
-                    poseStack.translate(0.1d, 0.0d, 0.0d);
-                    poseStack.scale(1.25f, 1.25f, 1.25f);
-                }
-            }
-            poseStack.popPose();
-            (isLeftHand ? model.rightHandChain() : model.leftHandChains()).forEach(list -> {
-                poseStack.pushPose();
-                if (!RenderUtils.prepMatrixForLocator(poseStack, list)) {
-                    poseStack.translate(0.0d, -0.0625d, -0.1d);
-                    poseStack.mulPose(Axis.XP.rotationDegrees(-90.0f));
-                    if (SWarfareCompat.isGunItem(itemStack)) {
-                        poseStack.scale(1.25f, 1.25f, 1.25f);
-                    }
-                }
-                poseStack.popPose();
-            });
-        }
-    }*/
-    //?}
 
     public boolean applyItemBoneTransform(HumanoidArm humanoidArm, PoseStack poseStack, AnimatedGeoModel model) {
         if (humanoidArm == HumanoidArm.LEFT) {

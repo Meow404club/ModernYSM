@@ -1,6 +1,7 @@
 package rip.ysm.gpu;
 
 import rip.ysm.util.RenderCompat;
+import com.elfmcys.yesstevemodel.client.renderer.ModelPreviewRenderer;
 import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
 import com.elfmcys.yesstevemodel.mixin.client.RenderSystemAccessor;
 // 1.21.5 GlStateManager 迁移 platform→opengl 包（vcs 直通铁律：非 1.20.1 分支源码态必须注释）
@@ -9,6 +10,11 @@ import com.mojang.blaze3d.platform.GlStateManager;
 //? if >=21.5
 /*import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.opengl.GlTexture;*/
+// 21.8 帧图：实体/手部分派发生在 RenderPass 执行窗口外（探针实证 drawFbo=0）→
+// 绘制期需显式绑主目标 FBO（GlTexture.getFbo 缓存命中 vanilla 自建 id）。仅 >=21.8 消费。
+//? if >=21.8
+/*import com.mojang.blaze3d.opengl.DirectStateAccess;
+import com.mojang.blaze3d.pipeline.RenderTarget;*/
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
@@ -48,7 +54,7 @@ public final class GpuRenderPath {
             ResourceLocation textureLocation
     ) {
         if (!GpuCapability.isAvailable()) return false;
-        // 1.21.8 降级闸门在 GpuCapability.isAvailable（CPU 投影/雾读取删除，见其类内注记）
+        // 1.21.8+ 复活闸门在 GpuCapability.isAvailable（CPU 投影/雾捕获就绪即放行，见其类内注记）
         //? if <1.17 {
         /*// 1.16.5 恒 false 闸门（照 gui-hud 卡 IrisRenderPath 同款降级）：本方法依赖
         // RenderSystem.getProjectionMatrix/getModelViewMatrix/getShaderTexture/getShaderFog*、
@@ -80,11 +86,19 @@ public final class GpuRenderPath {
         Matrix4f projMat = RenderSystem.getProjectionMatrix();
         Matrix4f mvMat = RenderSystem.getModelViewMatrix();
         //?}
+        // 21.6+ GpuCapability 门放行后（21.8/21.11，捕获 mixin 已喂入）走真实矩阵：
+        // 投影=GpuCapability 捕获面（vanilla GameRenderer:671(1218)/:771(2111) 打包点镜像），
+        // modelview=RenderSystem.getModelViewStack（1218 LevelRenderer:445-447/21111 :512-514
+        // 仍 push 相机旋转，语义同旧线 getModelViewMatrix）。21.6/21.7 门恒关此分支不可达。
+        // 预览态用 GUI 正交槽：21.8 延迟 GUI 管线 Screen.render 时刻当前捕获=hud3d 透视
+        // （far=100 会把 z=1250 预览整裁），GUI 正交=上一帧值（尺寸恒定），对齐旧线 GUI 语义
         //? if >=21.6 {
-        /*Matrix4f rootPose = new Matrix4f();
-        Matrix3f rootNormal = new Matrix3f();
-        Matrix4f projMat = new Matrix4f();
-        Matrix4f mvMat = new Matrix4f();*/
+        /*Matrix4f rootPose = pose.pose();
+        Matrix3f rootNormal = pose.normal();
+        Matrix4f projMat = (ModelPreviewRenderer.isPreview() || ModelPreviewRenderer.isExtraPlayer())
+                && GpuCapability.ysmGuiProjectionReady()
+                ? GpuCapability.ysmCapturedGuiProjection : GpuCapability.ysmCapturedProjection;
+        Matrix4f mvMat = RenderSystem.getModelViewMatrix();*/
         //?}
 
         rootPose.get(rootPoseScratch);
@@ -165,14 +179,21 @@ public final class GpuRenderPath {
         int fogShape = ysmFogParams.shape().getIndex();
         */
         //?}
-        // 1.21.6 fog 改 GpuBufferSlice（21.6 RenderSystem.java:170）且路径已降级：零雾兜底（不可达）
+        // 21.6 fog 改 GpuBufferSlice（21.6 RenderSystem.java:170）→ CPU 雾值由捕获面喂入
+        //（vanilla FogRenderer.setupFog:166(1218)/:162(21111) CPU 全参→updateBuffer:213/:205 打包，
+        // 捕获 mixin 镜像；envStart/End=旧 FogParameters.start/end 语义槽位；fogShape 已随
+        // FogParameters 代删除 → 0=sphere（大气雾旧默认）。21.6/21.7 门恒关此分支不可达）
         //? if >=21.6 {
-        /*
-        float fogStart = 0.0f;
-        float fogEnd = 0.0f;
-        float[] fogColor = new float[] { 0.0f, 0.0f, 0.0f, 0.0f };
+        /*float fogStart = GpuCapability.ysmCapturedFogStart;
+        float fogEnd = GpuCapability.ysmCapturedFogEnd;
+        float[] fogColor = GpuCapability.ysmCapturedFogColor;
         int fogShape = 0;
-        */
+        // GUI 预览时刻 21.8 vanilla 雾=NONE（GuiRenderer 阶段 emptyBuffer，updateBuffer 不覆写
+        // → 捕获面残留世界雾），预览几何在千米级视距会被整只雾掉=对现状 CPU 预览回归；
+        // 对齐旧线 GUI 语义=setupNoFog（1.20.1 FogRenderer.java:194-195 setShaderFogStart(MAX)）
+        if (ModelPreviewRenderer.isPreview() || ModelPreviewRenderer.isExtraPlayer()) {
+            fogStart = Float.MAX_VALUE;
+        }*/
         //?}
         //? if <1.21.2 {
         float fogStart = RenderSystem.getShaderFogStart();
@@ -185,6 +206,28 @@ public final class GpuRenderPath {
         /*int fogShape = 0;*/
         //? if >=1.18.2 && <1.21.2
         int fogShape = RenderSystem.getShaderFogShape().getIndex();
+        //?}
+
+        // 21.8 帧图：实体/手部分派发生在 RenderPass 执行窗口之外（探针实证全量 drawFbo=0），
+        // 立即直绘落在默认帧缓冲=被末帧合成覆盖。绘制期显式绑主目标 FBO（getFbo 缓存命中
+        // vanilla 自建 id，DirectStateAccess 实参仅作 factory，命中缓存不触发改实现）；
+        // 21.8- vanilla 每 pass 自绑 FBO，无需恢复。21.6/21.7 门恒关此分支不可达。
+        // create 三参化（GraphicsWorkarounds）21.9 起（21.9/26.1 DirectStateAccess.java:18
+        // 编译实证；21.8 仍两参。get(GpuDevice) 公共实例工厂）
+        //? if >=21.8 && <21.9 {
+        /*RenderTarget ysmMain = mc.getMainRenderTarget();
+        int ysmMainFbo = ((GlTexture) ysmMain.getColorTexture()).getFbo(
+                DirectStateAccess.create(GL.getCapabilities(), new java.util.HashSet<>()), ysmMain.getDepthTexture());
+        GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, ysmMainFbo);
+        GlStateManager._viewport(0, 0, ysmMain.width, ysmMain.height);*/
+        //?}
+        //? if >=21.9 {
+        /*RenderTarget ysmMain = mc.getMainRenderTarget();
+        int ysmMainFbo = ((GlTexture) ysmMain.getColorTexture()).getFbo(
+                DirectStateAccess.create(GL.getCapabilities(), new java.util.HashSet<>(),
+                        com.mojang.blaze3d.GraphicsWorkarounds.get(RenderSystem.getDevice())), ysmMain.getDepthTexture());
+        GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, ysmMainFbo);
+        GlStateManager._viewport(0, 0, ysmMain.width, ysmMain.height);*/
         //?}
 
         GlStateManager._glUseProgram(BoneSkinShader.program());

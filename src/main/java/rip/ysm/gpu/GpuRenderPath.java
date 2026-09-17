@@ -85,10 +85,14 @@ public final class GpuRenderPath {
         // 投影=GpuCapability 捕获面（vanilla GameRenderer:671(1218)/:771(2111) 打包点镜像），
         // modelview=RenderSystem.getModelViewStack（1218 LevelRenderer:445-447/21111 :512-514
         // 仍 push 相机旋转，语义同旧线 getModelViewMatrix）。21.6/21.7 门恒关此分支不可达。
+        // 预览态用 GUI 正交槽：21.8 延迟 GUI 管线 Screen.render 时刻当前捕获=hud3d 透视
+        // （far=100 会把 z=1250 预览整裁），GUI 正交=上一帧值（尺寸恒定），对齐旧线 GUI 语义
         //? if >=21.6 {
         /*Matrix4f rootPose = pose.pose();
         Matrix3f rootNormal = pose.normal();
-        Matrix4f projMat = GpuCapability.ysmCapturedProjection;
+        Matrix4f projMat = (ModelPreviewRenderer.isPreview() || ModelPreviewRenderer.isExtraPlayer())
+                && GpuCapability.ysmGuiProjectionReady()
+                ? GpuCapability.ysmCapturedGuiProjection : GpuCapability.ysmCapturedProjection;
         Matrix4f mvMat = RenderSystem.getModelViewMatrix();*/
         //?}
 

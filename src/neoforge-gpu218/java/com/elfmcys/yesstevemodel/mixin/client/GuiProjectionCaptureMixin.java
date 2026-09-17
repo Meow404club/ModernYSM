@@ -21,6 +21,6 @@ public abstract class GuiProjectionCaptureMixin {
 
     @Inject(method = "createProjectionMatrix", at = @At("RETURN"))
     private void ysm$captureGuiProjection(float width, float height, CallbackInfoReturnable<Matrix4f> cir) {
-        GpuCapability.ysm$onProjectionCaptured(cir.getReturnValue());
+        GpuCapability.ysm$onGuiProjectionCaptured(cir.getReturnValue());
     }
 }

@@ -21,6 +21,12 @@ public final class GpuCapability {
     // 仅渲染线程读写（捕获点与 GpuRenderPath.tryRender 同线程），无锁；非 21.8+ 线恒未捕获=死字段。
     // 包内直读（GpuRenderPath 同包消费），喂入走下方 public 方法（mixin 异包调用）。
     static final Matrix4f ysmCapturedProjection = new Matrix4f();
+    // GUI 正交独立槽（CachedOrtho：gui zNear/Far=1000/11000，罩住预览 z=1250）。21.8 GUI
+    // 改延迟管线：Screen.render 立即式绘制时刻「当前」投影=hud3d 透视（far=100，会把
+    // z=1250 预览整裁），而 GUI 正交在帧尾 GuiRenderer.draw 才打包——预览消费上一帧值
+    //（尺寸恒定，逐帧等价），对齐旧线「GUI 期 getProjectionMatrix()=GUI 正交」语义。
+    static final Matrix4f ysmCapturedGuiProjection = new Matrix4f();
+    private static boolean ysmGuiProjectionCaptured = false;
     static final float[] ysmCapturedFogColor = new float[4];
     static float ysmCapturedFogStart;
     static float ysmCapturedFogEnd;
@@ -31,6 +37,16 @@ public final class GpuCapability {
     public static void ysm$onProjectionCaptured(Matrix4f proj) {
         ysmCapturedProjection.set(proj);
         ysmProjectionCaptured = true;
+    }
+
+    /** 捕获 mixin 喂入点：GUI/PiP 正交（CachedOrtho.createProjectionMatrix 产物，独立槽）。 */
+    public static void ysm$onGuiProjectionCaptured(Matrix4f proj) {
+        ysmCapturedGuiProjection.set(proj);
+        ysmGuiProjectionCaptured = true;
+    }
+
+    static boolean ysmGuiProjectionReady() {
+        return ysmGuiProjectionCaptured;
     }
 
     /** 捕获 mixin 喂入点：vanilla 雾 UBO 打包参数（色 rgba + environmentalStart/End=旧 FogStart/End 槽位）。 */

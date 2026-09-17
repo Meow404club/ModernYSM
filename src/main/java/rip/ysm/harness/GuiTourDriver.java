@@ -42,8 +42,29 @@ public final class GuiTourDriver {
     private static final String CMD_FILE = "cmd.txt";
     private static final String READY_FILE = "harness.ready";
     private static final String ARMED_FILE = "harness.armed";
-    /** harness server 端口（-Dopenysm.harness.port 覆盖；默认 25565=历史值零差）。 */
-    private static final int HARNESS_PORT = Integer.getInteger("openysm.harness.port", 25565);
+    private static final String PORT_FILE = "harness.port";
+    /** harness server 端口：系统属性 -Dopenysm.harness.port 优先，其次 gameDir/harness.port 文件
+     * （fix-rc-probe-diff：MDG runClient 不透传 launcher -D，文件通道供编排器并行隔离端口；
+     * 两通道都缺席=25565 历史默认，生产零行为）。 */
+    private static final int HARNESS_PORT = resolvePort();
+
+    private static int resolvePort() {
+        int viaProp = Integer.getInteger("openysm.harness.port", -1);
+        if (viaProp > 0) {
+            return viaProp;
+        }
+        try {
+            Path f = gameDir().resolve(PORT_FILE);
+            if (Files.exists(f)) {
+                int viaFile = Integer.parseInt(new String(Files.readAllBytes(f), java.nio.charset.StandardCharsets.UTF_8).trim());
+                if (viaFile > 0) {
+                    return viaFile;
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return 25565;
+    }
 
     private static Boolean armedCache;
     private static boolean joined;
@@ -111,6 +132,7 @@ public final class GuiTourDriver {
 
     private static void onClientTickBody() {
         Minecraft mc = Minecraft.getInstance();
+        delayedTunnelCheck(mc);
         if (beat++ % 40 == 0) {
             // 走查心跳（armed 门控，生产零输出）：证明 listener 已挂上且 tick 在跑
             System.out.println("[GuiTourDriver] beat joined=" + joined + " player=" + (mc.player != null)
@@ -182,8 +204,116 @@ public final class GuiTourDriver {
         if (line.startsWith("open ")) {
             String name = line.substring(5).trim();
             mark(openScreen(mc, name) ? "ok " + name : "fail " + name);
+            return;
+        }
+        // fix-rc-probe-diff：姿势诱导命令（RC 探针差分格：站/蹲×2/趴爬）。客户端按键注入，
+        // 服务端物理一致（蹲=crouch pose 客户端判定、趴=1 格高隧道内前进触发 SWIMMING）。
+        if (line.startsWith("pose ")) {
+            String pose = line.substring(5).trim();
+            mark(setPose(mc, pose) ? "ok pose " + pose : "fail pose " + pose);
         }
     }
+
+    /** 姿势命令实现；返回 false=未知姿势名。 */
+    private static boolean setPose(Minecraft mc, String pose) {
+        if (mc.player == null || mc.options == null) {
+            return false;
+        }
+        // 先全释放（命令间互斥）
+        mc.options.keyUp.setDown(false);
+        mc.options.keyDown.setDown(false);
+        mc.options.keyLeft.setDown(false);
+        mc.options.keyRight.setDown(false);
+        mc.options.keyShift.setDown(false);
+        mc.options.keySprint.setDown(false);
+        if ("crouch".equals(pose)) {
+            mc.options.keyShift.setDown(true);
+        } else if ("crouchmove".equals(pose)) {
+            // 蹲行：Trissy sneak 动画绑定 onGround&&CROUCHING&&|limbSwing|>阈值（AnimationRegister:41）
+            mc.options.keyShift.setDown(true);
+            mc.options.keyUp.setDown(true);
+        } else if ("crawl2".equals(pose)) {
+            // 趴爬 v2（fix-rc-probe-diff）：客户端已 op，先经 sendCommand 以 @s 建四向 1 格隧道
+            //（服务端控制台 fill 曾疑似未落——玩家 STANDING 穿过隧道区，v2 客户端自建可自证），
+            // 随后持续前进+疾跑触发 SWIMMING（climbing 趴姿动画）。仅 >=1.19 线可用。
+            buildTunnelAndCrawl(mc);
+        } else if ("crawl".equals(pose)) {
+            // 旧趴爬（依赖编排器经服务端控制台预建隧道）
+            mc.options.keyUp.setDown(true);
+            mc.options.keySprint.setDown(true);
+        } else if (!"stand".equals(pose)) {
+            return false;
+        }
+        return true;
+    }
+
+    /** 客户端 op 后自建四向 1 格隧道并开始爬行（>=1.19；带方块级自证日志）。 */
+    //? if >=1.19 {
+    private static void buildTunnelAndCrawl(Minecraft mc) {
+        if (mc.player == null || mc.player.connection == null) {
+            return;
+        }
+        String[][] fills = {
+                // +x / -x / +z / -z 四向：挖脚下一层（air@~-1）、铺底（stone@~-2）、封顶（stone@~）
+                {"execute at @s run fill 2 ~-1 -3 40 ~-1 3 minecraft:air"},
+                {"execute at @s run fill 2 ~-2 -3 40 ~-2 3 minecraft:smooth_stone"},
+                {"execute at @s run fill 2 ~ -3 40 ~ 3 minecraft:smooth_stone"},
+                {"execute at @s run fill -40 ~-1 -3 -2 ~-1 3 minecraft:air"},
+                {"execute at @s run fill -40 ~-2 -3 -2 ~-2 3 minecraft:smooth_stone"},
+                {"execute at @s run fill -40 ~ -3 -2 ~ 3 minecraft:smooth_stone"},
+                {"execute at @s run fill -3 ~-1 2 3 ~-1 40 minecraft:air"},
+                {"execute at @s run fill -3 ~-2 2 3 ~-2 40 minecraft:smooth_stone"},
+                {"execute at @s run fill -3 ~ 2 3 ~ 40 minecraft:smooth_stone"},
+                {"execute at @s run fill -3 ~-1 -40 3 ~-1 -2 minecraft:air"},
+                {"execute at @s run fill -3 ~-2 -40 3 ~-2 -2 minecraft:smooth_stone"},
+                {"execute at @s run fill -3 ~ -40 3 ~ -2 minecraft:smooth_stone"},
+        };
+        for (String[] cmd : fills) {
+            mc.player.connection.sendCommand(cmd[0]);
+        }
+        // 命令通道决定性诊断：say 会在服务端日志留 "[Dev] rcprobe-*" 痕迹
+        mc.player.connection.sendCommand("say rcprobe-fills-sent");
+        // 直接放入 -z 隧道内（下 1 格、北移 20、面向北）：四向隧道以填充时刻位置为基准，
+        // 玩家自发行走线与隧道走廊错位会全程 STANDING 走过（round3 实证）；tp 内置位消除入洞问题。
+        mc.player.connection.sendCommand("tp @s ~ ~-1 ~-20 180 0");
+        mc.player.connection.sendCommand("say rcprobe-tp-sent");
+        // 延迟方块自证：fill/tp 经服务端回环，同 tick 读方块是旧值（round3 教训）
+        tunnelCheckDelay = 60;
+        mc.options.keyUp.setDown(true);
+        mc.options.keySprint.setDown(true);
+    }
+
+    /** 延迟隧道自证倒计时（tick）；<0=未武装。 */
+    private static int tunnelCheckDelay = -1;
+
+    private static void delayedTunnelCheck(Minecraft mc) {
+        if (tunnelCheckDelay < 0) {
+            return;
+        }
+        if (tunnelCheckDelay-- > 0) {
+            return;
+        }
+        tunnelCheckDelay = -1;
+        if (mc.player == null || mc.level == null) {
+            return;
+        }
+        net.minecraft.core.BlockPos feet = new net.minecraft.core.BlockPos(
+                (int) Math.floor(mc.player.getX()), (int) Math.floor(mc.player.getY()), (int) Math.floor(mc.player.getZ()));
+        for (int dy = -1; dy <= 1; dy++) {
+            System.out.println("[GuiTourDriver] tunnel-check-delayed dy=" + dy + " block="
+                    + mc.level.getBlockState(feet.offset(0, dy, 0)).getBlock());
+        }
+    }
+    //? }
+    //? if <1.19 {
+    /*private static void buildTunnelAndCrawl(Minecraft mc) {
+        // <1.19 无可靠 sendCommand 面：趴爬格不支持
+    }
+
+    private static void delayedTunnelCheck(Minecraft mc) {
+        // 同上 no-op：保持 onClientTickBody 调用点全线可编译
+    }*/
+    //? }
 
     private static boolean openScreen(Minecraft mc, String name) {
         net.minecraft.client.gui.screens.Screen screen = HarnessScreens.forName(mc, name);

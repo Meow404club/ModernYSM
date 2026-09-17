@@ -13,8 +13,11 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 //? }
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
@@ -300,7 +303,7 @@ public final class RealCameraApiBinder {
             float netHeadYawDeg = basis[1];
             // diag-rc-preview-anchor-mismatch 方案 A：UV→表面点主路径（与 GUI/探针同语义锚点）
             if (mTargetConfig != null) {
-                Object uvResult = tryUvBind(player, model, target, viewRot, bodyRot, netHeadYawDeg, cap);
+                Object uvResult = tryUvBind(player, model, target, viewRot, bodyRot, netHeadYawDeg, cap, partialTick);
                 if (uvResult != null) {
                     return uvResult;
                 }
@@ -383,7 +386,7 @@ public final class RealCameraApiBinder {
      */
     @Nullable
     private static Object tryUvBind(Player player, AnimatedGeoModel model, Object target, float viewRot, float bodyRot,
-                                    float netHeadYawDeg, PlayerCapability cap) {
+                                    float netHeadYawDeg, PlayerCapability cap, float partialTick) {
         try {
             Object cfg = mTargetConfig.invoke(target);
             if (cfg == null) {
@@ -447,6 +450,11 @@ public final class RealCameraApiBinder {
             mSetForward.invoke(result, new Vec3(forward.x(), forward.y(), forward.z()));
             mSetUpward.invoke(result, new Vec3(upward.x(), upward.y(), upward.z()));
             logBindSuccess(target, position, forward, upward);
+            // fix-rc-probe-diff：harness 门控探针差分（生产 armed 文件不存在=零行为，见 runProbeDiff javadoc）
+            if (probeDiffArmed()) {
+                runProbeDiff(player, model, cap, posHit, uv, position, forward, upward, bodyRot, partialTick,
+                        bonesByName, target);
+            }
             if (spaceDiagAllowed(netHeadYawDeg)) {
                 // 对照值：view-yaw 基准（M1 旧行为）独立重算——同一骨链换根帧，非恒等式推导；
                 // 三字段与 fed 计算完全镜像（surfacePoint/quadDirection/boneUpAxis 同参同序）
@@ -1091,6 +1099,401 @@ public final class RealCameraApiBinder {
                     dFinal);
         } catch (Throwable t) {
             YesSteveModel.LOGGER.debug("[compat] RealCamera space-diag log failed: {}", t.toString());
+        }
+    }
+
+    // ==================== fix-rc-probe-diff：探针差分 harness（生产零行为） ====================
+    //
+    // 任务：B1 预测表面点（烘焙 quad 重心插值+骨链矩阵）vs RC 探针实际捕获顶点（真值）逐姿势差分。
+    // 真值=复用 realcamera-8b82d0d YSMCompat.computeBindResult 的捕获逻辑（任务卡"直调其类"授权；
+    // 首轮直调实证：运行时 realcamera jar 的该函数对本 mod 恒 EMPTY——textureId 来自
+    // RenderType.toString() 的 texture[Optional[...]] 正则（BuiltIterableBuffer.buildFrom），本 mod
+    // 半透明纹理走 CustomEntityTranslucentRenderType（name=entity_translucent_ysm）其 toString 无
+    // 纹理段 → getBindTargetList(textureId) 零匹配。这就是"探针在世内两路都失败"（诊断账 C4）
+    // 的根因；官方 YSM 用常规类型故官方集成不受影响。故本 harness 改为同逻辑自管捕获：直用
+    // realcamera 的 MultiVertexCatcher/BuiltIterableBuffer/VertexData 工具（javap 对运行时
+    // realcamera-dev.jar 实证：renderer.MultiVertexCatcher、renderer.BuiltIterableBuffer、
+    // renderer.state.VertexData$UV/position/normal），绕开 BindTarget/textureId 匹配，UV 直查。
+    //
+    // 门控：probeDiffArmed()=gameDir/harness.armed 文件存在（与 GuiTourDriver 同款懒查缓存）。
+    // 生产无该文件 → 静态布尔短路，零反射、零渲染、零行为。
+    // 额外成本（仅 harness）：每帧最多 4 次 dispatcher.render（官方 YSM+RC 集成的常态工作模式）。
+    //
+    // 差分分解（定位"锚点与渲染表面距离随姿势变化"的来源）：
+    //   dStale = b1Before − b1After：B1 读到的 matrixData 相位（camera setup 读上一 eval）
+    //     vs 探针同步求值后的 matrixData——纯"求值时机/分支"贡献（z=false 异步 tick 门控
+    //     vs z=true 同步全量，GeoEntity.shouldSkipAnimation/isFirstPerson 分叉）。
+    //   dStruct = probe − b1After：同帧同 matrixData 下，烘焙 quad+骨链数学 vs 实际渲染顶点
+    //     流——纯"预测链结构"贡献（候选：UV 采样点插值/cube 级通道/渲染期骨处理/探针逆旋闭合差）。
+    // 同时镜像链值（posY/rotX 逐骨）与 RC 消费侧 lastResult，供姿势间对账。
+
+    /** harness armed 门懒查缓存（生产=FALSE 恒短路）。 */
+    private static Boolean diffArmedCache;
+
+    private static boolean probeDiffArmed() {
+        Boolean b = diffArmedCache;
+        if (b == null) {
+            try {
+                b = java.nio.file.Files.exists(
+                        net.minecraftforge.fml.loading.FMLPaths.GAMEDIR.get().resolve("harness.armed"));
+            } catch (Throwable t) {
+                b = Boolean.FALSE;
+            }
+            diffArmedCache = b;
+        }
+        return b.booleanValue();
+    }
+
+    /** 探针捕获反射面（运行时 realcamera jar，javap 实证），失败置 probeToolsUnavailable 一次。 */
+    private static boolean probeToolsUnavailable;
+    private static Method mCatcherDefaultImpl;
+    private static Method mCatcherEndCatching;
+    private static Method mFindPrimitives;
+    private static Class<?> clsVdUv;
+    private static Constructor<?> ctorVertexUv;
+    private static Method mVdPosition;
+    private static Method mVdNormal;
+    /** BuiltIterableBuffer record 组件 textureId()——buffer 门（挡掉阴影/手持等非模型 buffer）。 */
+    private static Method mBufferTextureId;
+    /** 几何最近匹配面（UV miss 兜底）：vertexBuffer()/primitives()/VertexData 坐标 UV 访问。 */
+    private static Method mBufferVertexBuffer;
+    private static Method mPrimitives;
+    private static java.lang.reflect.Field mVbVertexCount;
+    private static Method mVdX;
+    private static Method mVdY;
+    private static Method mVdZ;
+    private static Method mVdU;
+    private static Method mVdV;
+    /** BindResult.getPosition()（实际声明在父类 CameraTransform，getMethod 沿继承链可查）。 */
+    private static Method mBindResultGetPosition;
+
+    /**
+     * 探针差分本体（仅 armed 时被 {@code tryUvBind} 调用）。任何异常只打点、绝不影响绑定返回值。
+     * 序：①链值快照→②临时解除 AllHead 隐藏（隐藏骨不发顶点，探针需捕获脸部）→③自管 4-pass
+     * 捕获（同 YSMCompat 常量 pitch/yaw 四方向、空 PoseStack 预乘逆旋、UV 直查捕获顶点、
+     * 逆矩阵旋回实体本地空间）→④恢复隐藏态→⑤同 quad 同公式重算 B1（探针同步求值已刷新
+     * matrixData）→⑥读 RC 消费侧 lastResult→⑦逐姿势差分打点。
+     */
+    private static void runProbeDiff(Player player, AnimatedGeoModel model, PlayerCapability cap, QuadHit posHit,
+                                     float[] uv, Vector3f b1Before, Vector3f b1Fwd, Vector3f b1Up,
+                                     float bodyRot, float partialTick, Map<String, IBone> bonesByName,
+                                     Object target) {
+        try {
+            if (!initProbeTools()) {
+                return;
+            }
+            // buffer 门：官方探针按 target.textureId 对 BuiltIterableBuffer.textureId 做 contains
+            // 匹配（ModConfig.getBindTargetList）；无此门时实体阴影 quad（UV 覆盖 [0,1]² 全域）
+            // 会抢在模型面片前命中。绕过 BindTarget 匹配后保留同一道门。
+            String texGate = targetTextureId(target);
+            String chainBefore = boneChainPoseDump(model, bonesByName, posHit.boneName);
+            // ② AllHead 临时解隐（进入本方法时它通常仍是上帧 hideHead 的隐藏态）
+            IBone allHead = model.allHeadBone();
+            boolean headWasHidden = false;
+            boolean headWasChildHidden = false;
+            if (allHead != null) {
+                headWasHidden = allHead.isHidden();
+                headWasChildHidden = allHead.childBonesAreHiddenToo();
+                allHead.setHidden(false, false);
+            }
+            // ③ 自管探针捕获（真值=实际渲染顶点）。置 firstPerson 标志镜像 renderLevel HEAD
+            // 时序：探针同步求值走 isFirstPerson=true 分支——z=false 时 applyHeadTracking 的
+            // FPM 重隐藏分支（PlayerCapability:135 !event.isFirstPerson() 守卫）不触发，
+            // 解除隐藏的 AllHead 保持可见，脸部顶点得以捕获。
+            com.elfmcys.yesstevemodel.client.renderer.ModelPreviewRenderer.setFirstPersonMode(true);
+            Object[] captured;
+            try {
+                captured = probeCapture(player, uv, partialTick, texGate, b1Before);
+            } finally {
+                com.elfmcys.yesstevemodel.client.renderer.ModelPreviewRenderer.setFirstPersonMode(false);
+            }
+            // ④ 恢复隐藏态（外层 tryUvBind 尾部 hideHead 会按绑定语义再隐藏）
+            if (allHead != null) {
+                allHead.setHidden(headWasHidden, headWasChildHidden);
+            }
+            boolean headRehiddenDuringPasses = allHead != null && allHead.isHidden();
+            // ⑤ 探针同步求值后的 B1 重算（同 quad 同公式，仅 matrixData 相位不同）
+            PoseStack rootAfter = bindRootFrame(player, bodyRot, cap);
+            Vector3f b1After = surfacePoint(rootAfter, new java.util.HashMap<>(), model, bonesByName,
+                    posHit, uv[UV_POS_U], uv[UV_POS_V]);
+            String chainAfter = boneChainPoseDump(model, bonesByName, posHit.boneName);
+            // ⑥ RC 消费侧实况（本帧 computeCamera 尚未回写 → lastResult=上一帧喂入的平滑值）
+            Vector3f rcLast = readRcLastResult();
+            // ⑦ 差分打点
+            Vector3f probePos = (Vector3f) captured[0];
+            Vector3f probeFwd = (Vector3f) captured[1];
+            Vector3f probeUp = (Vector3f) captured[2];
+            boolean probeAvail = (Boolean) captured[3];
+            float geoDist = (Float) captured[4];
+            int vbVerts = (Integer) captured[6];
+            String f = "(%.4f, %.4f, %.4f)";
+            String dStruct = !probeAvail || b1After == null ? "n/a" : diffField(probePos, b1After);
+            String dStale = b1After == null ? "n/a" : diffField(b1Before, b1After);
+            String dFwd = !probeAvail ? "n/a" : String.format("%.2f deg", angleDeg(b1Fwd, probeFwd));
+            String dUp = !probeAvail ? "n/a" : String.format("%.2f deg", angleDeg(b1Up, probeUp));
+            YesSteveModel.LOGGER.info(
+                    "[compat][rc-probe-diff] #{} pose={} shift={} pos={} b1Before={} b1After={} probe={} probeAvail={}"
+                            + " dStruct=probe-b1After{} dStale=b1Before-b1After{} dFwdAngle={} dUpAngle={}"
+                            + " geoDist(px)={} vbVerts={} headRehidden={} rcLastFramePos={} chainBefore=[{}] chainAfter=[{}]",
+                    bindLogCount, player.getPose(), player.isShiftKeyDown(),
+                    String.format("(%.3f, %.3f, %.3f)", player.getX(), player.getY(), player.getZ()),
+                    String.format(f, b1Before.x(), b1Before.y(), b1Before.z()),
+                    b1After == null ? "n/a" : String.format(f, b1After.x(), b1After.y(), b1After.z()),
+                    probePos == null ? "n/a" : String.format(f, probePos.x(), probePos.y(), probePos.z()),
+                    probeAvail, dStruct, dStale, dFwd, dUp,
+                    Float.isInfinite(geoDist) ? "n/a" : String.format("%.2f", geoDist * 16.0f),
+                    vbVerts, headRehiddenDuringPasses,
+                    rcLast == null ? "n/a" : String.format(f, rcLast.x(), rcLast.y(), rcLast.z()),
+                    chainBefore, chainAfter);
+        } catch (Throwable t) {
+            YesSteveModel.LOGGER.info("[compat][rc-probe-diff] failed: {}", t.toString());
+        }
+    }
+
+    /** 探针工具反射懒初始化；false=运行时 realcamera 面不符（只报一次）。 */
+    private static boolean initProbeTools() {
+        if (mCatcherDefaultImpl != null) {
+            return true;
+        }
+        if (probeToolsUnavailable) {
+            return false;
+        }
+        try {
+            Class<?> clsCatcher = Class.forName("com.xtracr.realcamera.renderer.MultiVertexCatcher");
+            mCatcherDefaultImpl = clsCatcher.getMethod("defaultImpl");
+            mCatcherEndCatching = clsCatcher.getMethod("endCatching", java.util.function.Consumer.class);
+            clsVdUv = Class.forName("com.xtracr.realcamera.renderer.state.VertexData$UV");
+            Class<?> clsBuffer = Class.forName("com.xtracr.realcamera.renderer.BuiltIterableBuffer");
+            mFindPrimitives = clsBuffer.getMethod("findPrimitives", clsVdUv.arrayType());
+            ctorVertexUv = clsVdUv.getConstructor(float.class, float.class);
+            Class<?> clsVd = Class.forName("com.xtracr.realcamera.renderer.state.VertexData");
+            mVdPosition = clsVd.getMethod("position", clsVd.arrayType(), float.class, float.class);
+            mVdNormal = clsVd.getMethod("normal", clsVd.arrayType());
+            mVdX = clsVd.getMethod("x");
+            mVdY = clsVd.getMethod("y");
+            mVdZ = clsVd.getMethod("z");
+            mVdU = clsVd.getMethod("u");
+            mVdV = clsVd.getMethod("v");
+            mBufferTextureId = clsBuffer.getMethod("textureId");
+            mBufferVertexBuffer = clsBuffer.getMethod("vertexBuffer");
+            Class<?> clsVb = Class.forName("com.xtracr.realcamera.renderer.IterableVertexBuffer");
+            mPrimitives = clsVb.getMethod("primitives");
+            mVbVertexCount = clsVb.getField("vertexCount");
+            mBindResultGetPosition = Class.forName("com.xtracr.realcamera.api.BindResult").getMethod("getPosition");
+            return true;
+        } catch (Throwable t) {
+            probeToolsUnavailable = true;
+            YesSteveModel.LOGGER.info("[compat][rc-probe-diff] probe tools unavailable: {}", t.toString());
+            return false;
+        }
+    }
+
+    /**
+     * 自管 4-pass 捕获（YSMCompat.TransformedVertexRecorder 同构）：空 PoseStack 预乘<b>正向</b>
+     * 旋转（pitch=1.9106332f/yaw=2.0943951f 四方向，覆盖背面剔除各朝向；官方序=pose·mul(R)、
+     * 捕获点·mulPosition(R⁻¹) 旋回）→ dispatcher.render 进 MultiVertexCatcher → endCatching
+     * 逐 buffer findPrimitives UV 直查 → 命中面 3 顶点重心插值（VertexData.position）；法线
+     * VertexData.normal·mul(R⁻¹)。UV miss 时几何兜底：全 primitive 质心逆旋回后与预测点
+     * {@code b1Before} 比距，最近者即真值面（无需 UV 对上，直接量化表面偏差）。
+     * 返回 {position, forward, upward, available, geoDistance, geoCentroid}。
+     */
+    private static Object[] probeCapture(Player player, float[] uv, float partialTick, String texGate,
+                                         Vector3f predicted) throws Exception {
+        final float pitch = 1.9106332f, yaw = 2.0943951f;
+        Minecraft client = Minecraft.getInstance();
+        Entity entity = client.getCameraEntity() != null ? client.getCameraEntity() : player;
+        EntityRenderDispatcher dispatcher = client.getEntityRenderDispatcher();
+        Object uvPos = ctorVertexUv.newInstance(uv[UV_POS_U], uv[UV_POS_V]);
+        Object uvFwd = ctorVertexUv.newInstance(uv[UV_FWD_U], uv[UV_FWD_V]);
+        Object uvUp = ctorVertexUv.newInstance(uv[UV_UP_U], uv[UV_UP_V]);
+        Object uvArr = java.lang.reflect.Array.newInstance(clsVdUv, 3);
+        java.lang.reflect.Array.set(uvArr, 0, uvPos);
+        java.lang.reflect.Array.set(uvArr, 1, uvFwd);
+        java.lang.reflect.Array.set(uvArr, 2, uvUp);
+        Vector3f[] slotValue = new Vector3f[3];
+        boolean[] slotFound = new boolean[3];
+        float[] geoBest = {Float.MAX_VALUE};
+        Vector3f[] geoAnchor = new Vector3f[1];
+        Vector3f[] geoNormal = new Vector3f[1];
+        int[] vbVerts = new int[1];
+        for (int pass = 0; pass < 4 && !(slotFound[0] && slotFound[1] && slotFound[2]); pass++) {
+            float p = pass == 0 ? 0.0f : pitch;
+            float y = pass == 2 ? yaw : pass == 3 ? 2 * yaw : 0.0f;
+            org.joml.Matrix4f rot4 = new org.joml.Matrix4f().rotationYXZ(y, p, 0);
+            org.joml.Matrix3f rot3 = new org.joml.Matrix3f().rotationYXZ(y, p, 0);
+            PoseStack poseStack = new PoseStack();
+            poseStack.last().pose().mul(rot4);
+            poseStack.last().normal().mul(rot3);
+            Object catcher = mCatcherDefaultImpl.invoke(null);
+            dispatcher.render(entity, 0, 0, 0,
+                    Mth.lerp(partialTick, entity.yRotO, entity.getYRot()), partialTick, poseStack,
+                    (MultiBufferSource) catcher, dispatcher.getPackedLightCoords(entity, partialTick));
+            final org.joml.Matrix4f inv4 = rot4.invert(new org.joml.Matrix4f());
+            final org.joml.Matrix3f inv3 = rot3.invert(new org.joml.Matrix3f());
+            final Vector3f predictedF = predicted == null ? new Vector3f() : new Vector3f(predicted);
+            mCatcherEndCatching.invoke(catcher, (java.util.function.Consumer<Object>) buffer -> {
+                try {
+                    if (texGate != null) {
+                        String bufTex = String.valueOf(mBufferTextureId.invoke(buffer));
+                        // 官方门=bufTex.contains(target.textureId)；本 mod 半透明纹理走
+                        // CustomEntityTranslucentRenderType，其 toString 无纹理段（=C4 根因），
+                        // 补自定义类型名白名单；阴影 buffer 显式排除（UV [0,1]² 全域必命中）。
+                        boolean modelBuffer = bufTex.contains(texGate) || bufTex.contains("entity_translucent_ysm");
+                        if (!modelBuffer || bufTex.contains("shadow")) {
+                            logBufferDiag(bufTex, "gate-skipped");
+                            return;
+                        }
+                    }
+                    Object[] slots = (Object[]) mFindPrimitives.invoke(buffer, uvArr);
+                    if (slots[0] == null) {
+                        logBufferDiag(String.valueOf(mBufferTextureId.invoke(buffer)), "uv-miss");
+                    }
+                    for (int slot = 0; slot < 3; slot++) {
+                        if (slots[slot] == null) {
+                            continue;
+                        }
+                        if (slot == 0) {
+                            net.minecraft.world.phys.Vec3 v = (net.minecraft.world.phys.Vec3) mVdPosition
+                                    .invoke(null, slots[slot], uv[UV_POS_U], uv[UV_POS_V]);
+                            slotValue[0] = new Vector3f((float) v.x, (float) v.y, (float) v.z).mulPosition(inv4);
+                            geoBest[0] = 0.0f;
+                        } else {
+                            net.minecraft.world.phys.Vec3 n = (net.minecraft.world.phys.Vec3) mVdNormal
+                                    .invoke(null, slots[slot]);
+                            Vector3f dir = new Vector3f((float) n.x, (float) n.y, (float) n.z).mul(inv3);
+                            slotValue[slot] = dir;
+                        }
+                        slotFound[slot] = true;
+                    }
+                    // 几何兜底（UV miss 时）：全 primitive 质心逆旋 vs 预测点最近者=真值面
+                    if (slots[0] == null && !slotFound[0]) {
+                        Object vb = mBufferVertexBuffer.invoke(buffer);
+                        vbVerts[0] = Math.max(vbVerts[0], (Integer) mVbVertexCount.get(vb));
+                        float best = Float.MAX_VALUE;
+                        Vector3f bestAnchor = null;
+                        Vector3f bestNormal = null;
+                        java.util.Iterator<?> it = ((java.lang.Iterable<?>) mPrimitives.invoke(vb)).iterator();
+                        while (it.hasNext()) {
+                            Object primObj = it.next();
+                            Object[] prim = (Object[]) primObj;
+                            int n = java.lang.reflect.Array.getLength(prim);
+                            if (n < 3) {
+                                continue;
+                            }
+                            float cx = 0, cy = 0, cz = 0;
+                            for (int i = 0; i < n; i++) {
+                                cx += (Float) mVdX.invoke(prim[i]);
+                                cy += (Float) mVdY.invoke(prim[i]);
+                                cz += (Float) mVdZ.invoke(prim[i]);
+                            }
+                            Vector3f c = new Vector3f(cx / n, cy / n, cz / n).mulPosition(inv4);
+                            float d = c.distanceSquared(predictedF);
+                            if (d < best) {
+                                best = d;
+                                bestAnchor = c;
+                                // Object[] 实参必须再包一层：否则被 Method.invoke 的 varargs 展开
+                                net.minecraft.world.phys.Vec3 nn = (net.minecraft.world.phys.Vec3) mVdNormal
+                                        .invoke(null, new Object[]{prim});
+                                bestNormal = new Vector3f((float) nn.x, (float) nn.y, (float) nn.z).mul(inv3);
+                            }
+                        }
+                        if (best < geoBest[0] && bestAnchor != null) {
+                            geoBest[0] = best;
+                            geoAnchor[0] = bestAnchor;
+                            geoNormal[0] = bestNormal;
+                        }
+                    }
+                } catch (Throwable t) {
+                    YesSteveModel.LOGGER.info("[compat][rc-probe-diff] buffer consume failed: {}", t.toString());
+                }
+            });
+        }
+        // UV 命中失败但几何命中（质心距预测 ≤0.25 块=4px，同一面片级）：以几何锚点为真值
+        if (!slotFound[0] && geoAnchor[0] != null && geoBest[0] <= 0.25f * 0.25f) {
+            slotValue[0] = geoAnchor[0];
+            slotValue[1] = geoNormal[0];
+            slotValue[2] = null;
+            slotFound[0] = true;
+        }
+        return new Object[]{slotValue[0], slotValue[1], slotValue[2], slotFound[0],
+                (float) Math.sqrt(geoBest[0]), geoAnchor[0], vbVerts[0]};
+    }
+
+    /** buffer 诊断日志（每 textureId+原因只打一次，harness 观测用；生产 armed 门内不触达）。 */
+    private static final java.util.Set<String> BUFFER_DIAG_SEEN = java.util.Collections.newSetFromMap(new java.util.HashMap<>());
+
+    private static void logBufferDiag(String textureId, String reason) {
+        if (BUFFER_DIAG_SEEN.add(reason + '|' + textureId)) {
+            YesSteveModel.LOGGER.info("[compat][rc-probe-diff] buffer {} textureId={}", reason, textureId);
+        }
+    }
+
+    /** 向量夹角（deg），任一零向量返回 NaN。 */
+    private static float angleDeg(Vector3f a, Vector3f b) {
+        if (a == null || b == null || a.lengthSquared() < 1.0e-12f || b.lengthSquared() < 1.0e-12f) {
+            return Float.NaN;
+        }
+        float dot = Math.max(-1.0f, Math.min(1.0f, new Vector3f(a).normalize().dot(new Vector3f(b).normalize())));
+        return (float) Math.toDegrees(Math.acos(dot));
+    }
+
+    /** target.textureId() 反射读取（探针 buffer 门用）；缺席返回 null=不过滤。 */
+    @Nullable
+    private static String targetTextureId(Object target) {
+        try {
+            return (String) target.getClass().getMethod("textureId").invoke(target);
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    /** 差分字段：Δ向量（块）+ 模长（块与 px 双单位）。 */
+    private static String diffField(Vector3f a, Vector3f b) {        float dx = a.x() - b.x();
+        float dy = a.y() - b.y();
+        float dz = a.z() - b.z();
+        float len = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
+        return String.format("=(%.4f, %.4f, %.4f) |%.4f|blk %.2fpx", dx, dy, dz, len, len * 16.0f);
+    }
+
+    /** 锚骨祖先链逐骨动画值快照（posY px / rotX deg），探针求值前后对账用。 */
+    private static String boneChainPoseDump(AnimatedGeoModel model, Map<String, IBone> bonesByName, String boneName) {
+        List<String> names = bakedAncestorNames(model, boneName);
+        if (names == null) {
+            return "none";
+        }
+        StringBuilder sb = new StringBuilder(128);
+        for (String name : names) {
+            IBone bone = bonesByName.get(name);
+            if (bone == null) {
+                continue;
+            }
+            sb.append(name)
+                    .append('(').append(String.format("%.3f", bone.getPositionY()))
+                    .append('/').append(String.format("%.2f", Math.toDegrees(bone.getRotationX())))
+                    .append(')');
+        }
+        return sb.toString();
+    }
+
+    /**
+     * RC 消费侧实况读取：RealCameraCore.lastResult（private static BindResult）的 position
+     * =上一帧喂入经 computeCamera 后的值（SmoothUtil 平滑态）。反射失败返回 null（打点降级）。
+     */
+    @Nullable
+    private static Vector3f readRcLastResult() {
+        try {
+            Class<?> clsCore = Class.forName("com.xtracr.realcamera.RealCameraCore");
+            java.lang.reflect.Field fLast = clsCore.getDeclaredField("lastResult");
+            fLast.setAccessible(true);
+            Object lastResult = fLast.get(null);
+            if (lastResult == null) {
+                return null;
+            }
+            Method getPos = Class.forName("com.xtracr.realcamera.api.BindResult").getMethod("getPosition");
+            net.minecraft.world.phys.Vec3 p = (net.minecraft.world.phys.Vec3) getPos.invoke(lastResult);
+            return new Vector3f((float) p.x, (float) p.y, (float) p.z);
+        } catch (Throwable t) {
+            return null;
         }
     }
     //? }

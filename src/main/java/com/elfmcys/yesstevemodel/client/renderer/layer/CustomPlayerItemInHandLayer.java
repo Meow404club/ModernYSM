@@ -11,7 +11,11 @@ import com.elfmcys.yesstevemodel.geckolib3.util.RenderUtils;
 import com.elfmcys.yesstevemodel.util.accessors.BufferSourceAccessor;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.ItemInHandRenderer;
+//? if <26.2
 import net.minecraft.client.renderer.MultiBufferSource;
+// 26.2 submit-dag 换代：collector 形 twin
+//? if >=26.2
+/*import net.minecraft.client.renderer.SubmitNodeCollector;*/
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 //? if <1.19.4 {
@@ -33,6 +37,7 @@ public class CustomPlayerItemInHandLayer extends GeoLayerRenderer<CustomPlayerEn
         this.itemRenderer = itemInHandRenderer;
     }
 
+    //? if <26.2 {
     @Override
     public void render(PoseStack poseStack, MultiBufferSource bufferSource, int packedLightIn, CustomPlayerEntity entityLivingBaseIn, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
         LivingEntity entity = entityLivingBaseIn.getEntity();
@@ -80,11 +85,49 @@ public class CustomPlayerItemInHandLayer extends GeoLayerRenderer<CustomPlayerEn
             SWarfareCompat.applyGunTransform(offhandItem, animatedGeoModel, entity, poseStack, packedLightIn, partialTick);
         }
     }
+    //?}
+
+    //? if >=26.2 {
+    /*@Override
+    public void render(PoseStack poseStack, SubmitNodeCollector bufferSource, int packedLightIn, CustomPlayerEntity entityLivingBaseIn, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
+        LivingEntity entity = entityLivingBaseIn.getEntity();
+        AnimatedGeoModel animatedGeoModel = entityLivingBaseIn.getCurrentModel();
+        if (animatedGeoModel == null) {
+            return;
+        }
+        ItemStack offhandItem = entity.getOffhandItem();
+        ItemStack mainHandItem = entity.getMainHandItem();
+        if (!offhandItem.isEmpty() || !mainHandItem.isEmpty()) {
+            poseStack.pushPose();
+            if (!animatedGeoModel.rightHandBones().isEmpty()) {
+                if (SlashBladeCompat.isSlashBladeItem(mainHandItem)) {
+                    SlashBladeRenderer.renderOnEntity(entity, animatedGeoModel, poseStack, bufferSource, packedLightIn, mainHandItem, partialTick);
+                } else {
+                    TacCompat.handleGunSound(entity, mainHandItem);
+                    renderItem(animatedGeoModel, entity, mainHandItem, ItemDisplayContext.THIRD_PERSON_RIGHT_HAND, HumanoidArm.RIGHT, poseStack, bufferSource, packedLightIn);
+                    TacCompat.handleItemSound(mainHandItem);
+                }
+            }
+            if (!animatedGeoModel.leftHandBones().isEmpty()) {
+                if (SlashBladeCompat.isSlashBladeItem(offhandItem)) {
+                    SlashBladeRenderer.renderRightWaist(animatedGeoModel, poseStack, bufferSource, packedLightIn, offhandItem);
+                } else if (!SWarfareCompat.isGunItem(offhandItem)) {
+                    renderItem(animatedGeoModel, entity, offhandItem, ItemDisplayContext.THIRD_PERSON_LEFT_HAND, HumanoidArm.LEFT, poseStack, bufferSource, packedLightIn);
+                }
+            }
+            poseStack.popPose();
+            TacCompat.applyItemTransform(offhandItem, animatedGeoModel, entity, poseStack, packedLightIn, partialTick);
+            SWarfareCompat.applyGunTransform(offhandItem, animatedGeoModel, entity, poseStack, packedLightIn, partialTick);
+        }
+    }*/
+    //?}
 
     //? if <1.19.4
     // public void renderItem(AnimatedGeoModel model, LivingEntity livingEntity, ItemStack itemStack, ItemTransforms.TransformType itemDisplayContext, HumanoidArm humanoidArm, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
-    //? if >=1.19.4
+    //? if >=1.19.4 && <26.2
     public void renderItem(AnimatedGeoModel model, LivingEntity livingEntity, ItemStack itemStack, ItemDisplayContext itemDisplayContext, HumanoidArm humanoidArm, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
+    //? if >=26.2
+    /*public void renderItem(AnimatedGeoModel model, LivingEntity livingEntity, ItemStack itemStack, ItemDisplayContext itemDisplayContext, HumanoidArm humanoidArm, PoseStack poseStack, SubmitNodeCollector multiBufferSource, int i) {*/
         if (!itemStack.isEmpty()) {
             boolean isLeftHand = humanoidArm == HumanoidArm.LEFT;
             poseStack.pushPose();

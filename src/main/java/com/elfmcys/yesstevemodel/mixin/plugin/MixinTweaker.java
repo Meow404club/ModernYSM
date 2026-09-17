@@ -31,6 +31,14 @@ public class MixinTweaker implements IMixinConfigPlugin {
 
     @Keep
     public boolean shouldApplyMixin(String str, String str2) {
+        // 26.2 MultiBufferSource.BufferSource 类删（render-dag 换代）→ BufferSourceMixin
+        // 目标缺失=应用期硬错，必须按线跳过（26.2 该 mixin 无消费场景：endBatch 闸仅
+        // BufferSourceAccessor instanceof 用，collector 形永不命中）。
+        //? if >=26.2 {
+        /*if ("client.BufferSourceMixin".equals(str2)) {
+            return false;
+        }*/
+        //?}
         return true;
     }
 

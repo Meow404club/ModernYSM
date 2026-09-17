@@ -6,7 +6,12 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
+//? if <26.2
 import net.minecraft.client.renderer.MultiBufferSource;
+// 26.2 submit-dag 换代：collector 形签名（>=21.9 vanilla 位渲染功能债，仅类型换代；
+// 鱼线顶点提交 <21.11 块内，21.11+ 本就 no-op）
+//? if >=26.2
+/*import net.minecraft.client.renderer.SubmitNodeCollector;*/
 // 1.21.11 RenderType 移 net.minecraft.client.renderer.rendertype 子包
 //? if >=21.11
 /*import net.minecraft.client.renderer.rendertype.RenderType;*/
@@ -22,7 +27,10 @@ import rip.ysm.api.item.ToolActionBridge;
 import org.spongepowered.asm.mixin.Unique;
 
 public class CustomFishingHookRenderer {
+    //? if <26.2
     public static boolean tryRenderCustomHook(FishingHook fishingHook, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
+    //? if >=26.2
+    /*public static boolean tryRenderCustomHook(FishingHook fishingHook, float entityYaw, float partialTick, PoseStack poseStack, SubmitNodeCollector bufferSource, int packedLight) {*/
         return ProjectileCapability.get(fishingHook).map(cap -> {
             if (cap.isModelInitialized() && cap.isModelReady()) {
                 // 1.16.5 xRot 为公共字段（setXRot 为 1.17+）
@@ -44,7 +52,10 @@ public class CustomFishingHookRenderer {
         }).orElse(true);
     }
 
+    //? if <26.2
     private static void renderFishingLine(FishingHook fishingHook, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, Player player) {
+    //? if >=26.2
+    /*private static void renderFishingLine(FishingHook fishingHook, float partialTick, PoseStack poseStack, SubmitNodeCollector bufferSource, Player player) {*/
         int hand = player.getMainArm() == HumanoidArm.RIGHT ? 1 : -1;
         if (!ToolActionBridge.canFishingRodCast(player.getMainHandItem())) {
             hand = -hand;

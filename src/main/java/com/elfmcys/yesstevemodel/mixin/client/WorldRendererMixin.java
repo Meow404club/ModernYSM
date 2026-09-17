@@ -88,9 +88,15 @@ public class WorldRendererMixin {
     // 26.x renderLevel 再换代（26.1.2 LevelRenderer.java:465-475）：Camera→CameraRenderState、
     // 去 projectionMatrix（Matrix4fc 单矩阵）、+ChunkSectionsToRender；块只供 @Inject+签名开头，
     // 方法体由下方共享裸尾承接（同 21.10 形结构）
-    //? if >=26 {
+    //? if >=26 && <26.2 {
     /*@Inject(method = {"renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/renderer/state/level/CameraRenderState;Lorg/joml/Matrix4fc;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;ZLnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;)V"}, at = {@At("HEAD")})
     private void renderLevel26(com.mojang.blaze3d.resource.GraphicsResourceAllocator resourceAllocator, net.minecraft.client.DeltaTracker deltaTracker, boolean renderOutline, net.minecraft.client.renderer.state.level.CameraRenderState cameraState, org.joml.Matrix4fc modelViewMatrix, com.mojang.blaze3d.buffers.GpuBufferSlice terrainFog, org.joml.Vector4f fogColor, boolean shouldRenderSky, net.minecraft.client.renderer.chunk.ChunkSectionsToRender chunkSectionsToRender, CallbackInfo ci) {*/
+    //?}
+    // 26.2 renderLevel 再换代（/tmp/vanilla-262 LevelRenderer.java:156）：改名 render、
+    // 去 ChunkSectionsToRender 尾参（8 参）；签名开放形同上
+    //? if >=26.2 {
+    /*@Inject(method = {"render(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/renderer/state/level/CameraRenderState;Lorg/joml/Matrix4fc;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;Z)V"}, at = {@At("HEAD")})
+    private void renderLevel26(com.mojang.blaze3d.resource.GraphicsResourceAllocator resourceAllocator, net.minecraft.client.DeltaTracker deltaTracker, boolean renderOutline, net.minecraft.client.renderer.state.level.CameraRenderState cameraState, org.joml.Matrix4fc modelViewMatrix, com.mojang.blaze3d.buffers.GpuBufferSlice terrainFog, org.joml.Vector4f fogColor, boolean shouldRenderSky, CallbackInfo ci) {*/
     //?}
         if (YesSteveModel.isAvailable()) {
             ModelPreviewRenderer.setFirstPersonMode(true);
@@ -146,9 +152,14 @@ public class WorldRendererMixin {
             ModelPreviewRenderer.setFirstPersonMode(false);
         }
      *///?}
-    //? if >=26 {
+    //? if >=26 && <26.2 {
     /*@Inject(method = {"renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/renderer/state/level/CameraRenderState;Lorg/joml/Matrix4fc;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;ZLnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;)V"}, at = {@At("TAIL")})
     private void renderLevelPost26(com.mojang.blaze3d.resource.GraphicsResourceAllocator resourceAllocator, net.minecraft.client.DeltaTracker deltaTracker, boolean renderOutline, net.minecraft.client.renderer.state.level.CameraRenderState cameraState, org.joml.Matrix4fc modelViewMatrix, com.mojang.blaze3d.buffers.GpuBufferSlice terrainFog, org.joml.Vector4f fogColor, boolean shouldRenderSky, net.minecraft.client.renderer.chunk.ChunkSectionsToRender chunkSectionsToRender, CallbackInfo ci) {*/
+    //?}
+    // 26.2：renderLevel→render、去 ChunkSectionsToRender 尾参（LevelRenderer.java:156 同 HEAD 注）
+    //? if >=26.2 {
+    /*@Inject(method = {"render(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/renderer/state/level/CameraRenderState;Lorg/joml/Matrix4fc;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;Z)V"}, at = {@At("TAIL")})
+    private void renderLevelPost26(com.mojang.blaze3d.resource.GraphicsResourceAllocator resourceAllocator, net.minecraft.client.DeltaTracker deltaTracker, boolean renderOutline, net.minecraft.client.renderer.state.level.CameraRenderState cameraState, org.joml.Matrix4fc modelViewMatrix, com.mojang.blaze3d.buffers.GpuBufferSlice terrainFog, org.joml.Vector4f fogColor, boolean shouldRenderSky, CallbackInfo ci) {*/
     //?}
         if (YesSteveModel.isAvailable()) {
             EntityRenderCache.clear();

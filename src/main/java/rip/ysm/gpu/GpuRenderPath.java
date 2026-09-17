@@ -92,13 +92,22 @@ public final class GpuRenderPath {
         // 仍 push 相机旋转，语义同旧线 getModelViewMatrix）。21.6/21.7 门恒关此分支不可达。
         // 预览态用 GUI 正交槽：21.8 延迟 GUI 管线 Screen.render 时刻当前捕获=hud3d 透视
         // （far=100 会把 z=1250 预览整裁），GUI 正交=上一帧值（尺寸恒定），对齐旧线 GUI 语义
-        //? if >=21.6 {
+        //? if >=21.6 && <26.2 {
         /*Matrix4f rootPose = pose.pose();
         Matrix3f rootNormal = pose.normal();
         Matrix4f projMat = (ModelPreviewRenderer.isPreview() || ModelPreviewRenderer.isExtraPlayer())
                 && GpuCapability.ysmGuiProjectionReady()
                 ? GpuCapability.ysmCapturedGuiProjection : GpuCapability.ysmCapturedProjection;
         Matrix4f mvMat = RenderSystem.getModelViewMatrix();*/
+        //?}
+        // 26.2：RenderSystem.getModelViewMatrix 删 → getModelViewMatrixCopy（RenderSystem.java:204）
+        //? if >=26.2 {
+        /*Matrix4f rootPose = pose.pose();
+        Matrix3f rootNormal = pose.normal();
+        Matrix4f projMat = (ModelPreviewRenderer.isPreview() || ModelPreviewRenderer.isExtraPlayer())
+                && GpuCapability.ysmGuiProjectionReady()
+                ? GpuCapability.ysmCapturedGuiProjection : GpuCapability.ysmCapturedProjection;
+        Matrix4f mvMat = RenderSystem.getModelViewMatrixCopy();*/
         //?}
 
         rootPose.get(rootPoseScratch);
@@ -123,11 +132,18 @@ public final class GpuRenderPath {
         //?}
         // 1.21.5 状态面进 RenderPipeline，RenderSystem 无静态入口 → GlStateManager._*（opengl 包）。
         // 注意：else+存储态不展开（21.5 生成树实证），一律拆兄弟 if 块
-        //? if >=21.5 {
+        //? if >=21.5 && <26.2 {
         /*GlStateManager._disableCull();
         GlStateManager._enableDepthTest();
         GlStateManager._depthMask(true);
         GlStateManager._disableBlend();*/
+        //?}
+        // 26.2 blend 开关改 index 形（opengl/GlStateManager.java:84 _disableBlend(int)）
+        //? if >=26.2 {
+        /*GlStateManager._disableCull();
+        GlStateManager._enableDepthTest();
+        GlStateManager._depthMask(true);
+        GlStateManager._disableBlend(0);*/
         //?}
 
         Minecraft mc = Minecraft.getInstance();
@@ -221,11 +237,23 @@ public final class GpuRenderPath {
         GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, ysmMainFbo);
         GlStateManager._viewport(0, 0, ysmMain.width, ysmMain.height);*/
         //?}
-        //? if >=21.9 {
+        //? if >=21.9 && <26.2 {
         /*RenderTarget ysmMain = mc.getMainRenderTarget();
         int ysmMainFbo = ((GlTexture) ysmMain.getColorTexture()).getFbo(
                 DirectStateAccess.create(GL.getCapabilities(), new java.util.HashSet<>(),
                         com.mojang.blaze3d.GraphicsWorkarounds.get(RenderSystem.getDevice())), ysmMain.getDepthTexture());
+        GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, ysmMainFbo);
+        GlStateManager._viewport(0, 0, ysmMain.width, ysmMain.height);*/
+        //?}
+        // 26.2：GraphicsWorkarounds 删 → GlHeuristics 无公开获取口（构造器包私有）→
+        // heuristics 传 null（GPU 路径 26.x 门控关闭，仅编译面）；
+        // getMainRenderTarget → mc.gameRenderer.mainRenderTarget()（Minecraft.java:673 同款）
+        //? if >=26.2 {
+        /*RenderTarget ysmMain = mc.gameRenderer.mainRenderTarget();
+        // 26.2 FBO 获取口内化（GlDevice 包私有+frameBufferCache 内化，FrameBufferCache.getFbo
+        // 仅 opengl 包可达）→ 绘制期自绑不可达，placeholder 0（GPU 路径 26.x 门控关闭，
+        // 功能债归 native/GPU 卡池）
+        int ysmMainFbo = 0;
         GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, ysmMainFbo);
         GlStateManager._viewport(0, 0, ysmMain.width, ysmMain.height);*/
         //?}
@@ -262,16 +290,22 @@ public final class GpuRenderPath {
                 RenderSystem.enableBlend();
                 RenderSystem.defaultBlendFunc();
                 //?}
-                //? if >=21.5 {
+                //? if >=21.5 && <26.2 {
                 /*GlStateManager._enableBlend();
+                GlStateManager._blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);*/
+                //?}
+                //? if >=26.2 {
+                /*GlStateManager._enableBlend(0);
                 GlStateManager._blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);*/
                 //?}
                 if (BoneSkinShader.locAlphaMode() >= 0) GL20.glUniform1i(BoneSkinShader.locAlphaMode(), 2);
                 GL11.glDrawElements(GL11.GL_TRIANGLES, drawCount, GL11.GL_UNSIGNED_INT, offsetBytes);
                 //? if <21.5
                 RenderSystem.disableBlend();
-                //? if >=21.5
+                //? if >=21.5 && <26.2
                 /*GlStateManager._disableBlend();*/
+                //? if >=26.2
+                /*GlStateManager._disableBlend(0);*/
             }
         }
 

@@ -13,7 +13,10 @@ public class RotationToCamera extends ContextFunction<Object> {
         if (args < 0 || args > 1) {
             return null;
         }
+//? if <26.2
         Camera mainCamera = Minecraft.getInstance().gameRenderer.getMainCamera();
+//? if >=26.2
+        /*Camera mainCamera = Minecraft.getInstance().gameRenderer.mainCamera();*/
         if (args == 0) {
             //? if >=21.11
             /*return -mainCamera.xRot();*/

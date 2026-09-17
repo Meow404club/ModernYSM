@@ -15,7 +15,11 @@ import net.minecraft.client.model.ParrotModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 //? }
+//? if <26.2
 import net.minecraft.client.renderer.MultiBufferSource;
+// 26.2 submit-dag 换代：collector 形 twin
+//? if >=26.2
+/*import net.minecraft.client.renderer.SubmitNodeCollector;*/
 import net.minecraft.client.renderer.entity.ParrotRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.nbt.CompoundTag;
@@ -48,6 +52,7 @@ public class CustomPlayerParrotLayer extends GeoLayerRenderer<CustomPlayerEntity
     }
     //? }
 
+    //? if <26.2 {
     @Override
     public void render(PoseStack poseStack, MultiBufferSource bufferSource, int packedLightIn, CustomPlayerEntity entityLivingBaseIn, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
         Player player = entityLivingBaseIn.getEntity();
@@ -62,7 +67,9 @@ public class CustomPlayerParrotLayer extends GeoLayerRenderer<CustomPlayerEntity
             renderParrot(poseStack, bufferSource, model, packedLightIn, player, limbSwing, limbSwingAmount, netHeadYaw, headPitch, false);
         }
     }
+    //?}
 
+    //? if <26.2 {
     private void renderParrot(PoseStack poseStack, MultiBufferSource bufferSource, AnimatedGeoModel model, int packedLightIn, Player player, float limbSwing, float limbSwingAmount, float netHeadYaw, float headPitch, boolean isLeftShoulder) {
         // 1.21.9 肩膀鹦鹉数据迁移：getShoulderEntityLeft/Right(CompoundTag) 删 →
         // ClientAvatarEntity#getParrotVariantOnShoulder(boolean left)（AbstractClientPlayer 覆写）。
@@ -126,7 +133,7 @@ public class CustomPlayerParrotLayer extends GeoLayerRenderer<CustomPlayerEntity
             poseStack.popPose();
         });
         //?}
-        //? if >=21.9 {
+        //? if >=21.9 && <26.2 {
         /*if (shoulderVariant != null) {
             poseStack.pushPose();
             applyParrotTransform(poseStack, model, isLeftShoulder);
@@ -143,7 +150,72 @@ public class CustomPlayerParrotLayer extends GeoLayerRenderer<CustomPlayerEntity
         }
         */
         //?}
+        // 26.2 getBuffer → submitCustomGeometry 逃生口（pose 提交期捕获，SubmitNodeCollection
+        // .java:350 实证）；lambda 内按捕获位姿重建 PoseStack（mulPose(Matrix4fc) 刚体变换下
+        // 法线重算=原值）供 Model.renderToBuffer 消费
+        //? if >=26.2 {
+        /*if (shoulderVariant != null) {
+            poseStack.pushPose();
+            applyParrotTransform(poseStack, model, isLeftShoulder);
+            poseStack.translate(0.0d, 1.5d, 0.0d);
+            poseStack.mulPose(Axis.ZP.rotationDegrees(180.0f));
+            net.minecraft.client.renderer.entity.state.ParrotRenderState parrotState = new net.minecraft.client.renderer.entity.state.ParrotRenderState();
+            parrotState.pose = ParrotModel.Pose.ON_SHOULDER;
+            parrotState.ageInTicks = player.tickCount;
+            parrotState.yRot = netHeadYaw;
+            parrotState.xRot = headPitch;
+            this.parrotModel.setupAnim(parrotState);
+            bufferSource.submitCustomGeometry(poseStack, this.parrotModel.renderType(ParrotRenderer.getVariantTexture(shoulderVariant)), (pose, vc) -> {
+                PoseStack inner = new PoseStack();
+                inner.mulPose(pose.pose());
+                this.parrotModel.renderToBuffer(inner, vc, packedLightIn, OverlayTexture.NO_OVERLAY, -1);
+            });
+            poseStack.popPose();
+        }
+        */
+        //?}
     }
+    //?}
+
+    //? if >=26.2 {
+    /*@Override
+    public void render(PoseStack poseStack, SubmitNodeCollector bufferSource, int packedLightIn, CustomPlayerEntity entityLivingBaseIn, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
+        Player player = entityLivingBaseIn.getEntity();
+        AnimatedGeoModel model = entityLivingBaseIn.getCurrentModel();
+        if (model == null) {
+            return;
+        }
+        if (!model.leftShoulderBones().isEmpty()) {
+            renderParrot(poseStack, bufferSource, model, packedLightIn, player, limbSwing, limbSwingAmount, netHeadYaw, headPitch, true);
+        }
+        if (!model.rightShoulderBones().isEmpty()) {
+            renderParrot(poseStack, bufferSource, model, packedLightIn, player, limbSwing, limbSwingAmount, netHeadYaw, headPitch, false);
+        }
+    }
+
+    private void renderParrot(PoseStack poseStack, SubmitNodeCollector bufferSource, AnimatedGeoModel model, int packedLightIn, Player player, float limbSwing, float limbSwingAmount, float netHeadYaw, float headPitch, boolean isLeftShoulder) {
+        Parrot.Variant shoulderVariant =
+            ((net.minecraft.client.player.AbstractClientPlayer) player).getParrotVariantOnShoulder(isLeftShoulder);
+        if (shoulderVariant != null) {
+            poseStack.pushPose();
+            applyParrotTransform(poseStack, model, isLeftShoulder);
+            poseStack.translate(0.0d, 1.5d, 0.0d);
+            poseStack.mulPose(Axis.ZP.rotationDegrees(180.0f));
+            net.minecraft.client.renderer.entity.state.ParrotRenderState parrotState = new net.minecraft.client.renderer.entity.state.ParrotRenderState();
+            parrotState.pose = ParrotModel.Pose.ON_SHOULDER;
+            parrotState.ageInTicks = player.tickCount;
+            parrotState.yRot = netHeadYaw;
+            parrotState.xRot = headPitch;
+            this.parrotModel.setupAnim(parrotState);
+            bufferSource.submitCustomGeometry(poseStack, this.parrotModel.renderType(ParrotRenderer.getVariantTexture(shoulderVariant)), (pose, vc) -> {
+                PoseStack inner = new PoseStack();
+                inner.mulPose(pose.pose());
+                this.parrotModel.renderToBuffer(inner, vc, packedLightIn, OverlayTexture.NO_OVERLAY, -1);
+            });
+            poseStack.popPose();
+        }
+    }
+    *///?}
 
     public void applyParrotTransform(PoseStack poseStack, AnimatedGeoModel model, boolean isLeftShoulder) {
         if (isLeftShoulder) {

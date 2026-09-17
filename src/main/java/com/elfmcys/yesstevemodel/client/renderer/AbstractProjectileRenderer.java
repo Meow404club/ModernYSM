@@ -11,7 +11,11 @@ import com.elfmcys.yesstevemodel.geckolib3.util.IRenderCycle;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
+//? if <26.2
 import net.minecraft.client.renderer.MultiBufferSource;
+// 26.2 submit-dag 换代：collector 形 twin
+//? if >=26.2
+/*import net.minecraft.client.renderer.SubmitNodeCollector;*/
 // 1.21.11 RenderType 移 net.minecraft.client.renderer.rendertype 子包
 //? if >=21.11
 /*import net.minecraft.client.renderer.rendertype.RenderType;*/
@@ -67,7 +71,11 @@ public abstract class AbstractProjectileRenderer<TEntity extends Projectile, T e
 
     private IRenderCycle renderState;
 
+    //? if <26.2
     public MultiBufferSource bufferSource;
+
+    //? if >=26.2
+    /*public SubmitNodeCollector bufferSource;*/
 
     //? if <1.17 {
     // public AbstractProjectileRenderer(net.minecraft.client.renderer.entity.EntityRenderDispatcher context) {
@@ -81,6 +89,7 @@ public abstract class AbstractProjectileRenderer<TEntity extends Projectile, T e
         this.bufferSource = null;
     }
 
+    //? if <26.2 {
     public void render(T animatable, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
         AnimationEvent<?> event = animatable.processAnimation(partialTick);
         Minecraft minecraft = Minecraft.getInstance();
@@ -117,12 +126,48 @@ public abstract class AbstractProjectileRenderer<TEntity extends Projectile, T e
         //? if >=1.21.2 && <21.9
         /*super.render(this.createRenderState(animatable.getEntity(), partialTick), poseStack, bufferSource, packedLight);*/
     }
+    //?}
 
+    // 26.2 collector 形 twin（>=21.9 vanilla 位渲染已功能债挂账，本 twin 仅类型换代保编译面）
+    //? if >=26.2 {
+    /*public void render(T animatable, float entityYaw, float partialTick, PoseStack poseStack, SubmitNodeCollector bufferSource, int packedLight) {
+        AnimationEvent<?> event = animatable.processAnimation(partialTick);
+        Minecraft minecraft = Minecraft.getInstance();
+        if (event != null && minecraft.player != null) {
+            Projectile projectile = animatable.getEntity();
+            boolean isVisible = !projectile.isInvisibleTo(minecraft.player);
+            boolean zShouldEntityAppearGlowing = minecraft.shouldEntityAppearGlowing(projectile);
+            RenderType renderType = getRenderType(animatable.getTextureLocation(), isVisible, zShouldEntityAppearGlowing, animatable.getCurrentModel().getGeoModel().isTranslucentTexture(0));
+            if (renderType != null && (isVisible || zShouldEntityAppearGlowing)) {
+                Color color = getRenderColor(animatable, partialTick, poseStack, bufferSource, null, packedLight);
+                AnimatedGeoModel model = animatable.getCurrentModel();
+                this.modelViewMatrix = new Matrix4f(MatrixBridge.pose(poseStack.last()));
+                setCurrentModelRenderCycle(EModelRenderCycle.INITIAL);
+                poseStack.pushPose();
+                poseStack.mulPose(Axis.YP.rotationDegrees(Mth.lerp(partialTick, projectile.yRotO, projectile.getYRot()) - 90.0f));
+                poseStack.mulPose(Axis.ZP.rotationDegrees(Mth.lerp(partialTick, projectile.xRotO, projectile.getXRot())));
+                renderWithBoneAndRenderType(model, animatable, partialTick, renderType, poseStack, bufferSource, 0, null, packedLight, getPackedLight(projectile, 0.0f), color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, color.getAlpha() / 255.0f);
+                poseStack.popPose();
+            }
+        }
+    }
+    *///?}
+
+    //? if <26.2 {
     @Override
     public void renderEarly(T animatable, PoseStack poseStack, float partialTick, MultiBufferSource bufferSource, VertexConsumer buffer, int packedLight, int packedOverlayIn, float red, float green, float blue, float alpha) {
         this.projectionMatrix = new Matrix4f(MatrixBridge.pose(poseStack.last()));
         IGeoRenderer.super.renderEarly(animatable, poseStack, partialTick, bufferSource, buffer, packedLight, packedOverlayIn, red, green, blue, alpha);
     }
+    //?}
+
+    //? if >=26.2 {
+    /*@Override
+    public void renderEarly(T animatable, PoseStack poseStack, float partialTick, SubmitNodeCollector bufferSource, VertexConsumer buffer, int packedLight, int packedOverlayIn, float red, float green, float blue, float alpha) {
+        this.projectionMatrix = new Matrix4f(MatrixBridge.pose(poseStack.last()));
+        IGeoRenderer.super.renderEarly(animatable, poseStack, partialTick, bufferSource, buffer, packedLight, packedOverlayIn, red, green, blue, alpha);
+    }*/
+    //?}
 
     public static int getPackedLight(Entity entity, float u) {
         return OverlayTexture.pack(OverlayTexture.u(u), OverlayTexture.v(false));
@@ -139,6 +184,7 @@ public abstract class AbstractProjectileRenderer<TEntity extends Projectile, T e
         this.renderState = cycle;
     }
 
+    //? if <26.2 {
     @Override
     public void setCurrentRTB(MultiBufferSource bufferSource) {
         this.bufferSource = bufferSource;
@@ -148,4 +194,17 @@ public abstract class AbstractProjectileRenderer<TEntity extends Projectile, T e
     public MultiBufferSource getCurrentRTB() {
         return this.bufferSource;
     }
+    //?}
+
+    //? if >=26.2 {
+    /*@Override
+    public void setCurrentRTB(SubmitNodeCollector bufferSource) {
+        this.bufferSource = bufferSource;
+    }
+
+    @Override
+    public SubmitNodeCollector getCurrentRTB() {
+        return this.bufferSource;
+    }*/
+    //?}
 }

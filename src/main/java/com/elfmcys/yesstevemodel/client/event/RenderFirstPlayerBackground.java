@@ -17,7 +17,11 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.elfmcys.yesstevemodel.event.api.EventResult;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+//? if <26.2
 import net.minecraft.client.renderer.MultiBufferSource;
+// 26.2 submit-dag 换代：collector 形 twin
+//? if >=26.2
+/*import net.minecraft.client.renderer.SubmitNodeCollector;*/
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
@@ -34,6 +38,7 @@ public class RenderFirstPlayerBackground {
         currentFrameRendered = false;
     }
 
+    //? if <26.2 {
     public static void onRenderHand(PoseStack poseStack, MultiBufferSource multiBufferSource, int packedLight, float partialTick) {
         if (!YesSteveModel.isAvailable()) {
             return;
@@ -84,6 +89,54 @@ public class RenderFirstPlayerBackground {
             }
         });
     }
+    //?}
+
+    // 26.2 collector 形 twin：getBuffer → submitCustomGeometry（RenderHandEvent 携带 collector）
+    //? if >=26.2 {
+    /*public static void onRenderHand(PoseStack poseStack, SubmitNodeCollector multiBufferSource, int packedLight, float partialTick) {
+        if (!YesSteveModel.isAvailable()) {
+            return;
+        }
+        if (GeneralConfig.DISABLE_SELF_MODEL.get()) {
+            return;
+        }
+        if (GeneralConfig.DISABLE_SELF_HANDS.get()) {
+            return;
+        }
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (player == null || currentFrameRendered) {
+            return;
+        }
+        currentFrameRendered = true;
+        PlayerCapability.get(player).ifPresent(cap -> {
+            if (!cap.isModelActive()) {
+                return;
+            }
+            String modelId = cap.getModelId();
+            ModelAssembly modelAssembly = cap.getModelAssembly();
+            if (modelAssembly == null || !modelAssembly.getAnimationBundle().getArmModel().hasCustomLimbs) {
+                return;
+            }
+            CustomPlayerRenderer instance = RendererManager.getPlayerRenderer();
+            EventResult result = SpecialPlayerRenderEvent.post(new SpecialPlayerRenderEvent(player, cap, modelId));
+            if (result.isFalse()) {
+                return;
+            }
+            ResourceLocation resourceLocationB_ = cap.getTextureLocation();
+            int textureIndex = cap.getTextureIndex();
+            if (instance != null) {
+                poseStack.pushPose();
+                if (Minecraft.getInstance().options.bobView().get()) {
+                    applyHandTransform(poseStack, partialTick, player);
+                }
+                poseStack.translate(0.0d, -1.5d, 0.0d);
+                multiBufferSource.submitCustomGeometry(poseStack, CustomEntityTranslucentRenderType.get(resourceLocationB_), (pose, vc) ->
+                        NativeModelRenderer.renderMesh(vc, pose, modelAssembly.getAnimationBundle().getArmModel(), modelAssembly.getAnimationBundle().getArmModel().getBoneTransformData(), null, textureIndex, 3, packedLight, OverlayTexture.NO_OVERLAY, 1.0f, 1.0f, 1.0f, 1.0f, resourceLocationB_));
+                poseStack.popPose();
+            }
+        });
+    }*/
+    //?}
 
     private static void applyHandTransform(PoseStack poseStack, float partialTick, Player player) {
         // 1.21.2 Entity.walkDist/walkDistO 删除（LivingEntity.walkAnimation WalkAnimationState

@@ -209,9 +209,14 @@ public class GeoModel {
                     // 缓存后从不被读取（dllmain.cpp 全文实证），语义零偏移，native 零改动。
                     //? if <1.17 {
                     // Object.class
-                    //? } else {
-                    VertexFormat.Mode.class
                     //? }
+                    //? if >=1.17 && <26.2
+                    VertexFormat.Mode.class
+                    //? if >=26.2
+                    /*// 26.2 BufferBuilder 模式字段换代 primitiveTopology（PrimitiveTopology）；
+                    // Class 仅用于描述符门槛（g_modeFieldID 缓存后从不读取）——且 26.2 BufferBuilder
+                    // 无 nextElementByte 字段，nInitSIMD 必失败走 CPU 兼容回退（功能债归 native 卡池）
+                    com.mojang.blaze3d.PrimitiveTopology.class*/
             );
         } catch (Throwable ex) {
             YesSteveModel.LOGGER.error("[YSM] Failed to initialize SIMD mappings, fast vertex building will not work.", ex);

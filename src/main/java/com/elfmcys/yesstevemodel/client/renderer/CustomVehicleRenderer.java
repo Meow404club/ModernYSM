@@ -2,7 +2,11 @@ package com.elfmcys.yesstevemodel.client.renderer;
 
 import com.elfmcys.yesstevemodel.capability.VehicleCapability;
 import com.mojang.blaze3d.vertex.PoseStack;
+//? if <26.2
 import net.minecraft.client.renderer.MultiBufferSource;
+// 26.2 submit-dag 换代：collector 形 twin（>=21.9 vanilla 位渲染功能债，仅类型换代）
+//? if >=26.2
+/*import net.minecraft.client.renderer.SubmitNodeCollector;*/
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -15,6 +19,7 @@ import net.minecraft.world.phys.Vec3;
 import rip.ysm.api.entity.EntityDataBridge;
 
 public class CustomVehicleRenderer {
+    //? if <26.2 {
     public static boolean renderVehicle(Entity entity, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
         return VehicleCapability.get(entity).map(cap -> {
             if (cap.isModelInitialized() && cap.isModelReady()) {
@@ -24,7 +29,19 @@ public class CustomVehicleRenderer {
             return true;
         }).orElse(true);
     }
+    //?}
 
+    //? if >=26.2 {
+    /*public static boolean renderVehicle(Entity entity, float entityYaw, float partialTick, PoseStack poseStack, SubmitNodeCollector bufferSource, int packedLight) {
+        return VehicleCapability.get(entity).map(cap -> {
+            if (cap.isModelInitialized() && cap.isModelReady()) {
+                RendererManager.getVehicleRenderer().renderEntity(cap, getBodyRotation(entity, entityYaw, partialTick), partialTick, poseStack, bufferSource, packedLight);
+                return false;
+            }
+            return true;
+        }).orElse(true);
+    }*/
+    //?}
     public static float getBodyRotation(Entity entity, float entityYaw, float partialTick) {
         float bodyRotation = entityYaw;
         if (entity instanceof LivingEntity) {

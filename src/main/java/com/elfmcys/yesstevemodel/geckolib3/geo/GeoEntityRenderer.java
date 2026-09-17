@@ -10,7 +10,11 @@ import com.elfmcys.yesstevemodel.geckolib3.util.IRenderCycle;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
+//? if <26.2
 import net.minecraft.client.renderer.MultiBufferSource;
+// 26.2 submit-dag 换代：collector 形 twin
+//? if >=26.2
+/*import net.minecraft.client.renderer.SubmitNodeCollector;*/
 // 1.21.11 RenderType 移 net.minecraft.client.renderer.rendertype 子包
 //? if >=21.11
 /*import net.minecraft.client.renderer.rendertype.RenderType;*/
@@ -77,7 +81,11 @@ public abstract class GeoEntityRenderer<TEntity extends Entity, T extends Animat
 
     private IRenderCycle renderState;
 
+    //? if <26.2
     public MultiBufferSource bufferSource;
+
+    //? if >=26.2
+    /*public SubmitNodeCollector bufferSource;*/
 
     //? if <1.17 {
     // public GeoEntityRenderer(net.minecraft.client.renderer.entity.EntityRenderDispatcher context) {
@@ -97,6 +105,7 @@ public abstract class GeoEntityRenderer<TEntity extends Entity, T extends Animat
     }
     //? }
 
+    //? if <26.2 {
     public void renderEntity(T t, float f, float f2, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
         AnimationEvent<?> event = t.processAnimation(f2);
         Minecraft minecraft = Minecraft.getInstance();
@@ -128,12 +137,46 @@ public abstract class GeoEntityRenderer<TEntity extends Entity, T extends Animat
         //? if >=1.21.2 && <21.9
         /*super.render(this.createRenderState(t.getEntity(), f2), poseStack, multiBufferSource, i);*/
     }
+    //?}
 
+    //? if >=26.2 {
+    /*public void renderEntity(T t, float f, float f2, PoseStack poseStack, SubmitNodeCollector multiBufferSource, int i) {
+        AnimationEvent<?> event = t.processAnimation(f2);
+        Minecraft minecraft = Minecraft.getInstance();
+        if (event != null && minecraft.player != null) {
+            Entity entity = t.getEntity();
+            boolean z = !entity.isInvisibleTo(minecraft.player);
+            boolean zShouldEntityAppearGlowing = minecraft.shouldEntityAppearGlowing(entity);
+            RenderType renderType = getRenderType(t.getTextureLocation(), z, zShouldEntityAppearGlowing, t.getCurrentModel().getGeoModel().isTranslucentTexture(0));
+            if (renderType != null && (z || zShouldEntityAppearGlowing)) {
+                Color color = getRenderColor(t, f2, poseStack, multiBufferSource, null, i);
+                AnimatedGeoModel model = t.getCurrentModel();
+                this.worldMatrix = new Matrix4f(MatrixBridge.pose(poseStack.last()));
+                setCurrentModelRenderCycle(EModelRenderCycle.INITIAL);
+                poseStack.pushPose();
+                poseStack.mulPose(Axis.YP.rotationDegrees(180.0f - f));
+                renderWithBoneAndRenderType(model, t, f2, renderType, poseStack, multiBufferSource, 0, null, i, packOverlayCoords(entity, 0.0f), color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, color.getAlpha() / 255.0f);
+                poseStack.popPose();
+            }
+        }
+    }
+    *///?}
+
+    //? if <26.2 {
     @Override
     public void renderEarly(T animatable, PoseStack poseStack, float partialTick, MultiBufferSource bufferSource, VertexConsumer buffer, int packedLight, int packedOverlayIn, float red, float green, float blue, float alpha) {
         this.modelMatrix = new Matrix4f(MatrixBridge.pose(poseStack.last()));
         IGeoRenderer.super.renderEarly(animatable, poseStack, partialTick, bufferSource, buffer, packedLight, packedOverlayIn, red, green, blue, alpha);
     }
+    //?}
+
+    //? if >=26.2 {
+    /*@Override
+    public void renderEarly(T animatable, PoseStack poseStack, float partialTick, SubmitNodeCollector bufferSource, VertexConsumer buffer, int packedLight, int packedOverlayIn, float red, float green, float blue, float alpha) {
+        this.modelMatrix = new Matrix4f(MatrixBridge.pose(poseStack.last()));
+        IGeoRenderer.super.renderEarly(animatable, poseStack, partialTick, bufferSource, buffer, packedLight, packedOverlayIn, red, green, blue, alpha);
+    }*/
+    //?}
 
     public static int packOverlayCoords(Entity entity, float f) {
         return OverlayTexture.pack(OverlayTexture.u(f), OverlayTexture.v(false));
@@ -150,6 +193,7 @@ public abstract class GeoEntityRenderer<TEntity extends Entity, T extends Animat
         this.renderState = cycle;
     }
 
+    //? if <26.2 {
     @Override
     public void setCurrentRTB(MultiBufferSource bufferSource) {
         this.bufferSource = bufferSource;
@@ -159,4 +203,17 @@ public abstract class GeoEntityRenderer<TEntity extends Entity, T extends Animat
     public MultiBufferSource getCurrentRTB() {
         return this.bufferSource;
     }
+    //?}
+
+    //? if >=26.2 {
+    /*@Override
+    public void setCurrentRTB(SubmitNodeCollector bufferSource) {
+        this.bufferSource = bufferSource;
+    }
+
+    @Override
+    public SubmitNodeCollector getCurrentRTB() {
+        return this.bufferSource;
+    }*/
+    //?}
 }

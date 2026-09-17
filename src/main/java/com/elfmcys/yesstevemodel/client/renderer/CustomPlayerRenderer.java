@@ -15,7 +15,11 @@ import com.elfmcys.yesstevemodel.geckolib3.geo.GeoReplacedEntityRenderer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+//? if <26.2
 import net.minecraft.client.renderer.MultiBufferSource;
+// 26.2 submit-dag 换代：collector 形 twin
+//? if >=26.2
+/*import net.minecraft.client.renderer.SubmitNodeCollector;*/
 //? if >=1.17 {
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 //? }
@@ -74,6 +78,7 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
         addLayerRenderer(new CustomPlayerArmorLayer(context));
     }
 
+    //? if <26.2 {
     public void render(Player player, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
         PlayerCapability capability;
         if (SWarfareCompat.isPlayerAiming(player) || (capability = PlayerCapability.get(player).orElse(null)) == null) {
@@ -87,6 +92,23 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
         }
         renderEntityWithTexture(capability, renderEvent.getTextureLocation(), entityYaw, partialTick, poseStack, bufferSource, packedLight);
     }
+    //?}
+
+    //? if >=26.2 {
+    /*public void render(Player player, float entityYaw, float partialTick, PoseStack poseStack, SubmitNodeCollector bufferSource, int packedLight) {
+        PlayerCapability capability;
+        if (SWarfareCompat.isPlayerAiming(player) || (capability = PlayerCapability.get(player).orElse(null)) == null) {
+            return;
+        }
+        capability.tickModel();
+        SpecialPlayerRenderEvent renderEvent = new SpecialPlayerRenderEvent(player, capability, capability.getModelId());
+        this.currentTexture = renderEvent.getTextureLocation();
+        if (SpecialPlayerRenderEvent.post(renderEvent).isFalse()) {
+            return;
+        }
+        renderEntityWithTexture(capability, renderEvent.getTextureLocation(), entityYaw, partialTick, poseStack, bufferSource, packedLight);
+    }*/
+    //?}
 
     // 1.21.2 shouldShowName 增相机距离尾参（vanilla-1.21.3 EntityRenderer.java:202）
     //? if <1.21.2
@@ -168,8 +190,12 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
         Player player = this.ysmEntity;*/
     // 1.21.9+ EntityRenderer.renderNameTag(S,...) 删（submitNameTag/SubmitNodeCollector 换代，
     // 2110 EntityRenderer.java:133），名牌逻辑整体退回 vanilla 默认链
-    //? if >=21.9
+    //? if >=21.9 && <26.2
     /*private void renderNameTagInner(AvatarRenderState state, Component component, PoseStack poseStack, MultiBufferSource multiBufferSource, int i) {
+        Player player = this.ysmEntity;
+        // 1.21.9 Player.getScoreboard() 删 → level().getScoreboard()（同义透传，2110 LivingEntity.java:823 同款）*/
+    //? if >=26.2
+    /*private void renderNameTagInner(AvatarRenderState state, Component component, PoseStack poseStack, SubmitNodeCollector multiBufferSource, int i) {
         Player player = this.ysmEntity;
         // 1.21.9 Player.getScoreboard() 删 → level().getScoreboard()（同义透传，2110 LivingEntity.java:823 同款）*/
         Scoreboard scoreboard;

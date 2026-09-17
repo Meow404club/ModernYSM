@@ -220,7 +220,7 @@ sourceSets.main {
             // 21.10→21.9 移位）；21.9 renderLevel 仍 21.8 形（WorldRendererMixin >=21.8 && <21.10
             // 分支编译实证）
             srcDir(rootProject.file("src/neoforge-2110/java"))
-        } else {
+        } else if (stonecutter.eval(stonecutter.current.version, "<26.2")) {
             // 2111 树 = 2110 的 1.21.11 代副本：net.minecraft.resources.ResourceLocation →
             // Identifier 全树改名（同包同 API，neoforge-21.11.45-sources 实证）+ Arrow 族
             // 移 projectile.arrow 子包（ArrowPotionAccessor 目标）
@@ -233,6 +233,13 @@ sourceSets.main {
                 exclude("com/elfmcys/yesstevemodel/platform/neoforge/event/RenderFirstPlayerForgeHook.java")
                 srcDir(rootProject.file("src/neoforge-2610/java"))
             }
+        } else {
+            // 262 树 = 2111 的 26.2 代副本（m3-262-submit-dag-port）：26.2 MultiBufferSource/
+            // RenderBuffers 全删（/tmp/vanilla-262 全树 0 引用实证）→ RenderPlayerEvent/
+            // RenderArmEvent/RenderHandEvent 携带的 SubmitNodeCollector 直传；全树分代挂载同
+            // FQCN（2110→2111 先例），2610 event26x 异包孪生被本树吸收（RenderFirstPlayerForgeHook
+            // 内联 AfterOpaqueFeatures 版），v26 孪生挂载仅剩 26.1 线
+            srcDir(rootProject.file("src/neoforge-262/java"))
         }
         if (pre1205) {
             srcDir(rootProject.file("src/neoforge-1204/java"))
@@ -297,8 +304,11 @@ sourceSets.main {
             srcDir(rootProject.file("versions/1.16.5-forge/src/shim/rip/ysm/compat"))
         } else if (stonecutter.eval(stonecutter.current.version, "<21.11")) {
             srcDir(rootProject.file("src/neoforge-1211/shim/rip/ysm/compat"))
-        } else {
+        } else if (stonecutter.eval(stonecutter.current.version, "<26.2")) {
             srcDir(rootProject.file("src/neoforge-2111/shim/rip/ysm/compat"))
+        } else {
+            // 26.2 代 shim 副本（SlashBladeRenderer collector 形签名分歧 1 文件，m3-262-submit-dag-port）
+            srcDir(rootProject.file("src/neoforge-262-shim/shim/rip/ysm/compat"))
         }
         // 26.1 三线 FirstPersonModel 真 compat（fpm-26x-pr659 卡A）：shim 的
         // rip/ysm/compat/firstperson/FirstPersonCompat.java（恒 false）对这三线剔除，
@@ -386,6 +396,7 @@ tasks {
         val curVersion = stonecutter.current.version
         val is21_11 = stonecutter.eval(stonecutter.current.version, ">=21.11")
         val is26 = stonecutter.eval(stonecutter.current.version, ">=26")
+        val is26_2 = stonecutter.eval(stonecutter.current.version, ">=26.2")
         val rlToIdentifier = register<org.gradle.api.DefaultTask>("rlToIdentifier") {
             dependsOn("stonecutterGenerate")
             mustRunAfter("stonecutterGenerate")
@@ -429,6 +440,28 @@ tasks {
                         // 26.1 RenderTypes 工厂更名：entityCutoutNoCull → entityCutout
                         //（26.1 RenderTypes.java:451；本条须排在 is21_11 FQN 改写规则之后）
                         rules.add(Regex("RenderTypes\\.entityCutoutNoCull\\(") to "RenderTypes.entityCutout(")
+                    }
+                    if (is26_2) {
+                        // 26.2 submit-dag 换代（/tmp/vanilla-262 + neoforge-26.2 实证，m3-262 卡）：
+                        // a) Minecraft.setScreen/screen 收进 Gui 门面（Gui.java:221 screen()/:225
+                        //    setScreen；vanilla Options.java:1405 minecraft.gui.screen() 同款消费形）
+                        rules.add(Regex("\\bMinecraft\\.getInstance\\(\\)\\.setScreen\\(") to "Minecraft.getInstance().gui.setScreen(")
+                        rules.add(Regex("\\b(minecraft|mc|client)\\.setScreen\\(") to "$1.gui.setScreen(")
+                        rules.add(Regex("\\bMinecraft\\.getInstance\\(\\)\\.screen\\b") to "Minecraft.getInstance().gui.screen()")
+                        rules.add(Regex("\\b(minecraft|mc|client)\\.screen\\b") to "$1.gui.screen()")
+                        // b) Minecraft.renderNames() 删（GUI-enabled 检查 26.x 无对位 API，恒真语义）
+                        rules.add(Regex("Minecraft\\.renderNames\\(\\) && ") to "")
+                        rules.add(Regex(" && Minecraft\\.renderNames\\(\\)") to "")
+                        // d) I18n.exists(String) 删（26.2 I18n.java 仅余 get）→ Language.has（locale 包）
+                        rules.add(Regex("\\bI18n\\.exists\\(") to "net.minecraft.locale.Language.getInstance().has(")
+                        // c) ChatFormatting 色值字段删（26.2 ChatFormatting.java 仅余 code/toString）→
+                        //    legacy 0xRRGGBB 色板字面量（ getColor().intValue() 恒等替换）
+                        rules.add(Regex("ChatFormatting\\.DARK_RED\\.getColor\\(\\)\\.intValue\\(\\)") to "0xAA0000")
+                        rules.add(Regex("ChatFormatting\\.DARK_GRAY\\.getColor\\(\\)\\.intValue\\(\\)") to "0x555555")
+                        rules.add(Regex("ChatFormatting\\.AQUA\\.getColor\\(\\)\\.intValue\\(\\)") to "0x55FFFF")
+                        rules.add(Regex("ChatFormatting\\.GRAY\\.getColor\\(\\)\\.intValue\\(\\)") to "0xAAAAAA")
+                        rules.add(Regex("ChatFormatting\\.GOLD\\.getColor\\(\\)\\.intValue\\(\\)") to "0xFFAA00")
+                        rules.add(Regex("ChatFormatting\\.GREEN\\.getColor\\(\\)\\.intValue\\(\\)") to "0x55FF55")
                     }
                     root.walkTopDown().filter { it.isFile && it.extension == "java" }.forEach { f ->
                         val text = f.readText()
@@ -496,12 +529,15 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 tasks.named<ProcessResources>("processResources") {
+    // 26.2：logoFile 弃用警告会经 ModLoadingIssue 顶起 LoadingErrorScreen（见下方 filter 注）
+    val stripLogoFile262 = stonecutter.eval(stonecutter.current.version, ">=26.2")
     val props = mapOf(
         "mod_id" to project.property("archives_name") as String,
         "mod_name" to project.property("mod_name") as String,
         "mod_version" to project.property("mod_version") as String,
         "mod_license" to project.property("mod_license") as String,
     )
+
 
     // 1.20.4 线：neoforge.mods.toml 模板 rename 回 META-INF/mods.toml（20.5 起才改名）
     if (pre1205) {
@@ -527,8 +563,14 @@ tasks.named<ProcessResources>("processResources") {
     val mcRealLocal = mcReal
     filesMatching(listOf("META-INF/neoforge.mods.toml", "META-INF/mods.toml")) {
         filter { line: String ->
-            line.replace("versionRange = \"[20.6,)\"", "versionRange = \"[$neoMajorLocal,)\"")
+            var out = line.replace("versionRange = \"[20.6,)\"", "versionRange = \"[$neoMajorLocal,)\"")
                 .replace("versionRange = \"[1.20.6,)\"", "versionRange = \"[$mcRealLocal,)\"")
+            // 26.2 ClientModLoader.java:92-102：任何 ModLoadingIssue（含 logoFile 弃用警告）
+            // 都会顶起 LoadingErrorScreen 挡住主菜单 → 26.2 改用 bannerFile（警告文案指定键）
+            if (stripLogoFile262) {
+                out = out.replace("logoFile = ", "bannerFile = ")
+            }
+            out
         }
     }
     // pack.mcmeta 资源包格式（共享源为 1.20.1 口径 15）：
@@ -598,6 +640,8 @@ tasks.named<ProcessResources>("processResources") {
         // 无本 filter，目标类缺席会运行时崩（1.20.1 红线）。锚=client.ThrowableItemProjectileAccessor
         //（前序规则不触碰该条目）
         val gpuCapture218 = stonecutter.current.version == "21.8" || stonecutter.current.version == "21.11"
+        // 26.2 BufferSourceMixin 剔除闸（render-dag 换代，见 filter 内注）
+        val stripBufferSourceMixin262 = stonecutter.eval(stonecutter.current.version, ">=26.2")
         filesMatching("*.mixins.json") {
             filter { line: String ->
                 var out = line.replace("\"JAVA_17\"", if (is26) "\"JAVA_25\"" else "\"JAVA_21\"")
@@ -607,6 +651,11 @@ tasks.named<ProcessResources>("processResources") {
                         "\"client.BufferSourceMixin\"",
                         "\"client.BufferSourceMixin\", \"client.PlayerRenderStateStashMixin\""
                     )
+                }
+                if (stripBufferSourceMixin262) {
+                    // 26.2 BufferSourceMixin 目标类（MultiBufferSource.BufferSource）删
+                    //（render-dag 换代）→ 条目按线剔除；类本体空类+MixinTweaker 双保险
+                    out = out.replace("\"client.BufferSourceMixin\", ", "")
                 }
                 if (dropRenderSystemAccessor) {
                     // 1.21.9 RenderSystem.shaderLightDirections 改 GpuBufferSlice → accessor 失效，

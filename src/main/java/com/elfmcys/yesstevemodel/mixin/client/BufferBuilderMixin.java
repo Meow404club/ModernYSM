@@ -17,11 +17,13 @@ public abstract class BufferBuilderMixin {
     @Shadow @BufferBuilderMapping("buffer_builder_vertices")
     private int vertices;
 
+    //? if <26.2 {
     @Shadow @BufferBuilderMapping("buffer_builder_nextElementByte")
     private int nextElementByte;
 
     @Shadow @BufferBuilderMapping("buffer_builder_ensureCapacity")
     protected abstract void ensureCapacity(int size);
+    //?}
 
     // 1.16.5 BufferBuilder.mode 是 int（GL 枚举值直存），1.17+ 才是 VertexFormat.Mode
     //（1.16.5 反编译源 BufferBuilder.java:30 begin(int,VertexFormat)：166）。
@@ -33,10 +35,30 @@ public abstract class BufferBuilderMixin {
     // @Unique 桩字段（描述符 Ljava/lang/Object;）让 GetFieldID 命中——@Unique 字段
     // 名不被 SRG 重映射（dev/生产 jar 双态同名字），native 零改动、语义零偏移。
     // POC 实证归 m2-native-poc-1165（一致性对比+进世界冒烟）。
-    //? if >=1.17 {
+    //? if >=1.17 && <26.2 {
     @Shadow @BufferBuilderMapping("buffer_builder_mode")
     private VertexFormat.Mode mode;
-    //?} else {
+    //?}
+    //? if >=26.2 {
+    /*// 26.2 BufferBuilder 字段面换代（/tmp/vanilla-262 BufferBuilder.java:25-41 实证）：
+    // buffer 改 ByteBufferBuilder（shadow 形不变）、vertices 在、mode→primitiveTopology、
+    // nextElementByte/ensureCapacity 删 → @Shadow 目标缺失会炸 mixin 应用，全字段走
+    // @Unique 桩（1.16.5 先例）。native 动态映射 GetFieldID 必失败 → try/catch 落 CPU
+    // 兼容回退（功能债归 native 卡池，JNI 12 参协议不动）
+    @Unique
+    @BufferBuilderMapping("buffer_builder_mode")
+    private Object ysmSimdModeStub262;
+
+    @Unique
+    @BufferBuilderMapping("buffer_builder_nextElementByte")
+    private int ysmNextElementByteStub262;
+
+    @Unique
+    @BufferBuilderMapping("buffer_builder_ensureCapacity")
+    protected void ysmEnsureCapacityStub262(int size) {
+    }*/
+    //?}
+    //? if <1.17 {
     /*@Unique
     @BufferBuilderMapping("buffer_builder_mode")
     private Object ysmSimdModeStub;

@@ -27,7 +27,13 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
 //? }
 import net.minecraft.client.player.LocalPlayer;
+//? if <26.2
 import net.minecraft.client.renderer.MultiBufferSource;
+// 26.2 submit-dag 换代（MultiBufferSource/RenderBuffers 删）：预览面板降级 no-op（>=21.6
+// 纸娃娃 renderPlayerOverlay no-op 先例，主会话裁决 2026-09-18）。正规迁移=GuiGraphicsExtractor
+// .entity() PiP + CustomPlayerRenderer 进 dispatcher 注册 + 渲染器实现 submit()（重构级，debt-262）。
+//? if >=26.2
+/*import net.minecraft.client.renderer.SubmitNodeCollector;*/  // 预览直绘替身（null）参数类型
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.NonNullList;
@@ -139,6 +145,13 @@ public final class ModelPreviewRenderer {
 
     // 动画测试界面的模型
     public static void renderEntityPreview(float x, float y, float scale, float pitch, float yaw, float partialTick, AnimatableEntity animatableEntity, GeoReplacedEntityRenderer renderer, boolean renderGround) {
+        // 26.2 预览面板降级（debt-262，主会话裁决 2026-09-18）：renderBuffers 删+GUI extract
+        // 无自定义几何钩子 → 面板模型区 no-op（>=21.6 纸娃娃先例）。正规迁移=PiP 重构。
+        //（if(true) 形规避 javac unreachable 分析；行条件 26.2 激活）
+        //? if >=26.2
+        /*if (true) {
+            return;
+        }*/
         setPreviewMode(true);
         LivingEntity livingEntity = (LivingEntity) animatableEntity.getEntity();
         // 1.16.5 无 RenderSystem.getModelViewStack（1.17+），GL_MODELVIEW 直推
@@ -238,7 +251,10 @@ public final class ModelPreviewRenderer {
         //? if <21.9
         entityRenderDispatcher.setRenderShadow(false);
         // 1.21.9+ EntityRenderDispatcher 直绘面删（render-dag 换代）→ no-op
+        //? if <26.2
         MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
+        //? if >=26.2
+        /*SubmitNodeCollector bufferSource = null; // 预览面板 26.2 降级：直绘替身仅保参数类型*/
 
         RenderCompat.runAsFancy(() -> {
             AnimationTracker animationTracker = ((IPreviewAnimatable) animatableEntity).getAnimationStateMachine();
@@ -278,6 +294,7 @@ public final class ModelPreviewRenderer {
                 if (renderGround) {
                     renderGroundPreview(scale, pitch, yaw, bufferSource);
                 }
+                //? if <26.2
                 bufferSource.endBatch();
                 renderer.renderEntity((LivingAnimatable) animatableEntity, 0.0f, partialTick, poseStack, bufferSource, 15728880);
             } catch (ExecutionException e) {
@@ -285,6 +302,7 @@ public final class ModelPreviewRenderer {
             }
         });
 
+        //? if <26.2
         bufferSource.endBatch();
         //? if <21.9
         entityRenderDispatcher.setRenderShadow(true);
@@ -319,7 +337,10 @@ public final class ModelPreviewRenderer {
         setPreviewMode(false);
     }
 
+    //? if <26.2
     private static void renderBedPreview(float scale, float pitch, float yaw, MultiBufferSource.BufferSource bufferSource) {
+    //? if >=26.2
+    /*private static void renderBedPreview(float scale, float pitch, float yaw, Object bufferSource) {*/
         PoseStack poseStack = new PoseStack();
         poseStack.translate(0.0d, 0.0d, 1000.0d);
         poseStack.scale(scale, scale, scale);
@@ -351,7 +372,10 @@ public final class ModelPreviewRenderer {
         // → 床型预览装饰 no-op（功能债 debt-26x）
     }
 
+    //? if <26.2
     private static void renderGroundPreview(float scale, float pitch, float yaw, MultiBufferSource.BufferSource bufferSource) {
+    //? if >=26.2
+    /*private static void renderGroundPreview(float scale, float pitch, float yaw, Object bufferSource) {*/
         PoseStack poseStack = new PoseStack();
         poseStack.translate(0.0d, 0.0d, 1000.0d);
         poseStack.scale(scale, scale, scale);
@@ -402,11 +426,15 @@ public final class ModelPreviewRenderer {
 
     // 1.21.9+ dispatcher.render 直绘删（render-dag 换代）→ 载具动画预览降级 no-op
     //（真身实现仅 <21.9，功能债同 renderVehicleEntity）
-    //? if >=21.9 {
-    /*
-    private static void renderVehicleForAnimation(float yaw, AnimatableEntity animatableEntity, float partialTick, PoseStack poseStack, EntityRenderDispatcher entityRenderDispatcher, MultiBufferSource.BufferSource bufferSource) throws ExecutionException {
-    }
-    *///?}
+    //? if >=21.9 && <26.2 {
+    /*private static void renderVehicleForAnimation(float yaw, AnimatableEntity animatableEntity, float partialTick, PoseStack poseStack, EntityRenderDispatcher entityRenderDispatcher, MultiBufferSource.BufferSource bufferSource) throws ExecutionException {
+    }*/
+    //?}
+    // 26.2：直绘替身 null 透传（空壳）
+    //? if >=26.2 {
+    /*private static void renderVehicleForAnimation(float yaw, AnimatableEntity animatableEntity, float partialTick, PoseStack poseStack, EntityRenderDispatcher entityRenderDispatcher, Object bufferSource) throws ExecutionException {
+    }*/
+    //?}
     //? if <21.9 {
     private static void renderVehicleForAnimation(float yaw, AnimatableEntity animatableEntity, float partialTick, PoseStack poseStack, EntityRenderDispatcher entityRenderDispatcher, MultiBufferSource.BufferSource bufferSource) throws ExecutionException {
         Entity entity = animatableEntity.getEntity();
@@ -451,11 +479,15 @@ public final class ModelPreviewRenderer {
     // 1.21.9+ EntityRenderDispatcher.render 直绘删（render-dag/SubmitNodeCollector 换代，
     // 2110 EntityRenderDispatcher.java 方法面实证）→ 载具预览降级 no-op
     //（正规迁移=extractEntity+submit 重构，功能债入账）；真身实现仅 <21.9
-    //? if >=21.9 {
-    /*
-    private static void renderVehicleEntity(float yaw, Entity riderEntity, PoseStack poseStack, EntityRenderDispatcher entityRenderDispatcher, MultiBufferSource.BufferSource bufferSource, Entity vehicleEntity, float partialTick) {
-    }
-    *///?}
+    //? if >=21.9 && <26.2 {
+    /*private static void renderVehicleEntity(float yaw, Entity riderEntity, PoseStack poseStack, EntityRenderDispatcher entityRenderDispatcher, MultiBufferSource.BufferSource bufferSource, Entity vehicleEntity, float partialTick) {
+    }*/
+    //?}
+    // 26.2：直绘替身 null 透传（空壳）
+    //? if >=26.2 {
+    /*private static void renderVehicleEntity(float yaw, Entity riderEntity, PoseStack poseStack, EntityRenderDispatcher entityRenderDispatcher, Object bufferSource, Entity vehicleEntity, float partialTick) {
+    }*/
+    //?}
     //? if <21.9 {
     private static void renderVehicleEntity(float yaw, Entity riderEntity, PoseStack poseStack, EntityRenderDispatcher entityRenderDispatcher, MultiBufferSource.BufferSource bufferSource, Entity vehicleEntity, float partialTick) {
         poseStack.pushPose();
@@ -485,6 +517,11 @@ public final class ModelPreviewRenderer {
 
     // 模型预览页面
     public static <T extends LivingEntity, TAnimatable extends LivingAnimatable<T>> void renderLivingEntityPreview(float x, float y, float scale, float partialTick, TAnimatable animatable, GeoReplacedEntityRenderer<T, TAnimatable> renderer, boolean disablePreviewRotation, boolean hideEquipment) {
+        // 26.2 预览面板降级（同 renderEntityPreview 注）
+        //? if >=26.2
+        /*if (true) {
+            return;
+        }*/
         ItemStack[] savedEquipment;
         setPreviewMode(true);
         LivingEntity livingEntity = animatable.getEntity();
@@ -645,12 +682,16 @@ public final class ModelPreviewRenderer {
         //? if <21.9
         entityRenderDispatcher.setRenderShadow(false);
         // 1.21.9+ EntityRenderDispatcher 直绘面删（render-dag 换代）→ no-op
+        //? if <26.2
         MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
+        //? if >=26.2
+        /*SubmitNodeCollector bufferSource = null; // 预览面板 26.2 降级：直绘替身仅保参数类型*/
 
         RenderCompat.runAsFancy(() -> {
             renderer.renderEntity(animatable, 0.0f, partialTick, poseStack, bufferSource, 15728880);
         });
 
+        //? if <26.2
         bufferSource.endBatch();
         //? if <21.9
         entityRenderDispatcher.setRenderShadow(true);

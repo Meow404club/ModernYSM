@@ -2,6 +2,7 @@ package rip.ysm.gpu;
 
 import com.elfmcys.yesstevemodel.NativeLibLoader;
 import com.mojang.blaze3d.systems.RenderSystem;
+import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLCapabilities;
@@ -11,17 +12,51 @@ public final class GpuCapability {
     private static volatile boolean available = false;
     private static volatile String reason = null;
 
-    // 1.21.8+ 降级闸门：恒 true，但经方法调用（编译器不可折叠 → 后续语句不算不可达）
+    // ===== 21.8+ CPU 矩阵捕获面（d3-gpu-218-revive）=====
+    // vanilla 21.8 起 RenderSystem 删 CPU 投影/雾读取（GpuBufferSlice 化），但 vanilla 在打包
+    // UBO 前仍 CPU 现算全部数值（反编译实证：投影 GameRenderer:647 现算→:671 打包；雾
+    // FogRenderer.setupFog:166 CPU 全参→:188 updateBuffer 打包；21111 同构 :749/:771、:162/:184）。
+    // 由 21.8/21.11 线挂载的捕获 mixin（src/neoforge-gpu218/ 四类）在打包点把 CPU 数值喂回：
+    // 语义=旧线 RenderSystem.getProjectionMatrix()/getShaderFog*() 的逐点镜像。
+    // 仅渲染线程读写（捕获点与 GpuRenderPath.tryRender 同线程），无锁；非 21.8+ 线恒未捕获=死字段。
+    // 包内直读（GpuRenderPath 同包消费），喂入走下方 public 方法（mixin 异包调用）。
+    static final Matrix4f ysmCapturedProjection = new Matrix4f();
+    static final float[] ysmCapturedFogColor = new float[4];
+    static float ysmCapturedFogStart;
+    static float ysmCapturedFogEnd;
+    private static boolean ysmProjectionCaptured = false;
+    private static boolean ysmFogCaptured = false;
+
+    /** 捕获 mixin 喂入点：vanilla 打包投影 UBO 前的 CPU Matrix4f（喂后为当前帧有效值）。 */
+    public static void ysm$onProjectionCaptured(Matrix4f proj) {
+        ysmCapturedProjection.set(proj);
+        ysmProjectionCaptured = true;
+    }
+
+    /** 捕获 mixin 喂入点：vanilla 雾 UBO 打包参数（色 rgba + environmentalStart/End=旧 FogStart/End 槽位）。 */
+    public static void ysm$onFogCaptured(float r, float g, float b, float a, float envStart, float envEnd) {
+        ysmCapturedFogColor[0] = r;
+        ysmCapturedFogColor[1] = g;
+        ysmCapturedFogColor[2] = b;
+        ysmCapturedFogColor[3] = a;
+        ysmCapturedFogStart = envStart;
+        ysmCapturedFogEnd = envEnd;
+        ysmFogCaptured = true;
+    }
+
+    // 21.8+ 复活门（d3-gpu-218-revive）：投影+雾捕获都就绪才放行；任一环缺席
+    //（mixin 未挂载的版本线/vanilla 改面未触发）→ 保持降级，与历史恒 true 行为零回归。
+    // 经方法调用（编译器不可折叠 → 后续语句不算不可达）
     private static boolean cpuMatrixUnavailable() {
-        return true;
+        return !ysmProjectionCaptured || !ysmFogCaptured;
     }
 
     public static boolean isAvailable() {
-        // 1.21.8+ RenderSystem 删 CPU 投影/雾读取（GpuBufferSlice 化，RenderSystem.java:296/168）→
-        // GL43 compute 蒙皮路径无法取 CPU 矩阵，整体降级 vanilla CPU 渲染（性能债，1.21.1 native 降级先例）
+        // 21.8+ RenderSystem 删 CPU 投影/雾读取（GpuBufferSlice 化）→ 由捕获 mixin 喂回
+        //（vanilla 打包点证据见捕获面注记）；未捕获时保持整体降级 vanilla CPU 渲染
         //? if >=21.8 {
         /*if (cpuMatrixUnavailable()) {
-            reason = "1.21.8+ removed CPU-side projection/fog access from RenderSystem";
+            reason = "1.21.8+ proj/fog CPU capture inactive (capture mixins absent or not fired)";
             return false;
         }*/
         //?}

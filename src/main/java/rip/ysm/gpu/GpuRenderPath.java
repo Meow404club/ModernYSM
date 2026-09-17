@@ -48,7 +48,7 @@ public final class GpuRenderPath {
             ResourceLocation textureLocation
     ) {
         if (!GpuCapability.isAvailable()) return false;
-        // 1.21.8 降级闸门在 GpuCapability.isAvailable（CPU 投影/雾读取删除，见其类内注记）
+        // 1.21.8+ 复活闸门在 GpuCapability.isAvailable（CPU 投影/雾捕获就绪即放行，见其类内注记）
         //? if <1.17 {
         /*// 1.16.5 恒 false 闸门（照 gui-hud 卡 IrisRenderPath 同款降级）：本方法依赖
         // RenderSystem.getProjectionMatrix/getModelViewMatrix/getShaderTexture/getShaderFog*、
@@ -80,11 +80,15 @@ public final class GpuRenderPath {
         Matrix4f projMat = RenderSystem.getProjectionMatrix();
         Matrix4f mvMat = RenderSystem.getModelViewMatrix();
         //?}
+        // 21.6+ GpuCapability 门放行后（21.8/21.11，捕获 mixin 已喂入）走真实矩阵：
+        // 投影=GpuCapability 捕获面（vanilla GameRenderer:671(1218)/:771(2111) 打包点镜像），
+        // modelview=RenderSystem.getModelViewStack（1218 LevelRenderer:445-447/21111 :512-514
+        // 仍 push 相机旋转，语义同旧线 getModelViewMatrix）。21.6/21.7 门恒关此分支不可达。
         //? if >=21.6 {
-        /*Matrix4f rootPose = new Matrix4f();
-        Matrix3f rootNormal = new Matrix3f();
-        Matrix4f projMat = new Matrix4f();
-        Matrix4f mvMat = new Matrix4f();*/
+        /*Matrix4f rootPose = pose.pose();
+        Matrix3f rootNormal = pose.normal();
+        Matrix4f projMat = GpuCapability.ysmCapturedProjection;
+        Matrix4f mvMat = RenderSystem.getModelViewMatrix();*/
         //?}
 
         rootPose.get(rootPoseScratch);
@@ -165,14 +169,15 @@ public final class GpuRenderPath {
         int fogShape = ysmFogParams.shape().getIndex();
         */
         //?}
-        // 1.21.6 fog 改 GpuBufferSlice（21.6 RenderSystem.java:170）且路径已降级：零雾兜底（不可达）
+        // 21.6 fog 改 GpuBufferSlice（21.6 RenderSystem.java:170）→ CPU 雾值由捕获面喂入
+        //（vanilla FogRenderer.setupFog:166(1218)/:162(21111) CPU 全参→updateBuffer:213/:205 打包，
+        // 捕获 mixin 镜像；envStart/End=旧 FogParameters.start/end 语义槽位；fogShape 已随
+        // FogParameters 代删除 → 0=sphere（大气雾旧默认）。21.6/21.7 门恒关此分支不可达）
         //? if >=21.6 {
-        /*
-        float fogStart = 0.0f;
-        float fogEnd = 0.0f;
-        float[] fogColor = new float[] { 0.0f, 0.0f, 0.0f, 0.0f };
-        int fogShape = 0;
-        */
+        /*float fogStart = GpuCapability.ysmCapturedFogStart;
+        float fogEnd = GpuCapability.ysmCapturedFogEnd;
+        float[] fogColor = GpuCapability.ysmCapturedFogColor;
+        int fogShape = 0;*/
         //?}
         //? if <1.21.2 {
         float fogStart = RenderSystem.getShaderFogStart();

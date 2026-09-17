@@ -83,7 +83,10 @@ GRADLE_CLIENT=":$VERSION:runClient"
 TOUR_SCREENS="${*:-disclaimer playermodel texture modern_texture info modern_info upload download folder extrarender extraconfig settings roulette modern_roulette}"
 
 HOST=localhost
-PORT=25565
+# 端口错开（harness-cell-1211pack-2612base）：HARNESS_PORT 覆盖，默认 25565 零行为差。
+# server 侧写 server.properties、client 侧写 gameDir/harness.port（GuiTourDriver.resolvePort
+# 的文件通道，MDG runClient 不透传 launcher -D）。多卡并行 tour 各用各端口不再互等互杀。
+PORT="${HARNESS_PORT:-25565}"
 XVFB_PID=""
 FIFO="$RUN_DIR/server-stdin.fifo"
 PIDFILE="$RUN_DIR/tour.pids"
@@ -106,14 +109,19 @@ cleanup() {
     sleep 4
     while read -r p; do [ -n "$p" ] && kill -KILL -- "-$p" 2>/dev/null; done < "$PIDFILE"
   fi
-  rm -f "$FIFO" "$CLIENT_DIR/harness.armed" "$CLIENT_DIR/cmd.txt" "$PIDFILE"
+  rm -f "$FIFO" "$CLIENT_DIR/harness.armed" "$CLIENT_DIR/cmd.txt" "$CLIENT_DIR/harness.port" "$PIDFILE"
   echo "[tour] cleanup done"
 }
 trap cleanup EXIT
 
 fail() { echo "[tour] FAIL: $*" >&2; exit 1; }
 
-# ---- 0. server 目录准备（eula + 首跑 properties；幂等）----
+# ---- 0. 端口占用预检 + server 目录准备（eula + 首跑 properties；幂等）----
+# fpm-26x 冒烟「server 连接超时/server 未达 Done」的基建级误诊教训：端口被并行
+# 会话孤儿占住时 server bind 失败，症状被读成 mod 问题。先 fail-fast 报属主。
+if ss -tln 2>/dev/null | grep -q ":$PORT "; then
+  fail "port $PORT already listening (parallel tour? set HARNESS_PORT=<other>)"
+fi
 mkdir -p "$SERVER_DIR" "$CLIENT_DIR" "$RUN_DIR" "$SCREENSHOT_DIR"
 printf 'eula=true\n' > "$SERVER_DIR/eula.txt"
 if [ ! -f "$SERVER_DIR/server.properties" ]; then
@@ -129,6 +137,12 @@ generate-structures=false
 allow-nether=false
 PROPS
   echo "[tour] wrote fresh server.properties (flat/peaceful/creative/offline)"
+fi
+# 端口错开：server 侧幂等写入（缺则加、有则改——HARNESS_PORT 换端口重跑同线生效）
+if grep -q '^server-port=' "$SERVER_DIR/server.properties" 2>/dev/null; then
+  sed -i "s/^server-port=.*/server-port=$PORT/" "$SERVER_DIR/server.properties"
+else
+  printf 'server-port=%s\n' "$PORT" >> "$SERVER_DIR/server.properties"
 fi
 
 # ---- 1. Xvfb（独占 :9x 段；PID 入表）----
@@ -192,6 +206,9 @@ case "$VERSION" in
     ;;
 esac
 
+# 端口错开：client 侧文件通道（GuiTourDriver.resolvePort 静态初读，client 启动前必须落盘）
+printf '%s\n' "$PORT" > "$CLIENT_DIR/harness.port"
+
 rm -f "$CLIENT_DIR/harness.armed" "$CLIENT_DIR/cmd.txt" "$CLIENT_DIR/harness.ready"
 : > "$OUT/client.log"
 setsid sh gradlew $GRADLE_CLIENT --no-daemon --no-configuration-cache > "$OUT/client.log" 2>&1 &
@@ -242,6 +259,33 @@ for s in $TOUR_SCREENS; do
   step "$s" "$s"
 done
 step playermodel 020b-playermodel-return
+
+# ---- 3.5 worldshot（opt-in：HARNESS_WORLDSHOT=1，默认关=既有线零行为差）----
+# 第三人称世界定格：自带模型入世界渲染（第一人称不渲染本体，GUI 预览屏外无 renderMesh），
+# 供带包格取「世界内 renderMesh 路径归属」数值证据（hide-matrix path= 行），截图仅存档不判好。
+if [ "${HARNESS_WORLDSHOT:-0}" = "1" ]; then
+  # 先关预览屏（020b 留下的 PlayerModelScreen 不关，grab 到的是 GUI 非世界，二轮实证）
+  rm -f "$CLIENT_DIR/harness.ready"
+  echo "close" > "$CLIENT_DIR/cmd.txt"
+  await_ready "ok close" 60 || echo "[tour] worldshot: close failed, shooting with screen open"
+  rm -f "$CLIENT_DIR/harness.ready"
+  echo "camera" > "$CLIENT_DIR/cmd.txt"
+  CAM=no
+  for i in $(seq 1 60); do
+    grep -qE "^(ok|fail) camera$" "$CLIENT_DIR/harness.ready" 2>/dev/null && { CAM=yes; break; }
+    grep -qE "Fatal|SIGSEGV|malloc\(\)" "$OUT/client.log" 2>/dev/null && fail "client native crash (see $OUT/client.log)"
+    sleep 1
+  done
+  if [ "$CAM" = yes ] && grep -q "^ok camera$" "$CLIENT_DIR/harness.ready" 2>/dev/null; then
+    sleep 2.5
+    grab worldshot
+    sleep 4
+    grab worldshot2
+  else
+    echo "[tour] worldshot: camera switch unavailable (timeout/fail)"
+    grab worldshot-failed
+  fi
+fi
 
 # ---- 4. 收尾（cleanup 阶梯见 trap）----
 echo "[tour] tour complete, tearing down"

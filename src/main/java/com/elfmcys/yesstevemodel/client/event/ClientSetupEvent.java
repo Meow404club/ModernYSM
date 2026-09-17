@@ -143,7 +143,8 @@ public final class ClientSetupEvent {
         }
         //? if <1.16.2
         /*net.minecraftforge.fml.DeferredWorkQueue.runLater(ClientSetupEvent::checkNativeInitialization);*/
-        //? if <26
+        // 1.16.1 无 enqueueWork（forge 32）；ce976e5 曾误改 >=1.16.2→<26 致两分支撞车（1161 五错实证）
+        //? if >=1.16.2 && <26
         event.enqueueWork(ClientSetupEvent::checkNativeInitialization);
         // 26.x：loader 11 DeferredWorkQueue 改 modloading-sync-worker 线程执行（无 GL 上下文，
         // 26.1.2 tour 首跑 FATAL nglGetIntegerv 实证）→ GL 探针移交渲染线程首帧执行

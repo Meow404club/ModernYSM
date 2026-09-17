@@ -21,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class HudProjectionCaptureMixin {
 
     @Inject(method = "createProjectionMatrix", at = @At("RETURN"))
-    private void ysm$captureHudProjection(Matrix4f proj, CallbackInfoReturnable<Matrix4f> cir) {
-        GpuCapability.ysm$onProjectionCaptured(proj);
+    private void ysm$captureHudProjection(int width, int height, float fov, CallbackInfoReturnable<Matrix4f> cir) {
+        GpuCapability.ysm$onProjectionCaptured(cir.getReturnValue());
     }
 }

@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class GuiProjectionCaptureMixin {
 
     @Inject(method = "createProjectionMatrix", at = @At("RETURN"))
-    private void ysm$captureGuiProjection(Matrix4f proj, CallbackInfoReturnable<Matrix4f> cir) {
-        GpuCapability.ysm$onProjectionCaptured(proj);
+    private void ysm$captureGuiProjection(float width, float height, CallbackInfoReturnable<Matrix4f> cir) {
+        GpuCapability.ysm$onProjectionCaptured(cir.getReturnValue());
     }
 }

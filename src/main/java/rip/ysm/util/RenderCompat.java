@@ -30,8 +30,9 @@ public final class RenderCompat {
     // 1.21.5 BufferUploader 类删除（立即绘制系统整体移除，无可失效缓存）
     // 1.16.5 无 BufferUploader（1.17+ 类，1165 generated :33 找不到符号实证）→ 下界 >=1.17
     public static void invalidate() {
-        // 1.18.0 BufferUploader 无 invalidate（1.18.2 起才有，1180 编译实证）
-        //? if >=1.18.2 && <21.5
+        // 1.18.2 BufferUploader 亦无 invalidate（仅 reset+invalidateElementArrayBufferBinding，
+        // 1182 named jar javap 实证——f2ecf2f "1.18.2 起才有"系未实编断言）→ 下界 1.19（1192 javap 有）
+        //? if >=1.19 && <21.5
         com.mojang.blaze3d.vertex.BufferUploader.invalidate();
     }
 

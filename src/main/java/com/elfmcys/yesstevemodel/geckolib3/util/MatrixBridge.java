@@ -191,7 +191,10 @@ public final class MatrixBridge {
     }
 
     public static Matrix4f modelViewMatrix() {
+        //? if <26.2
         return com.mojang.blaze3d.systems.RenderSystem.getModelViewMatrix();
+        //? if >=26.2
+        /*return com.mojang.blaze3d.systems.RenderSystem.getModelViewMatrixCopy();*/
     }
     //? }
 }

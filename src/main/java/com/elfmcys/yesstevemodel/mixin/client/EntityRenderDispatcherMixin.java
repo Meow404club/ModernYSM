@@ -8,6 +8,8 @@ import com.elfmcys.yesstevemodel.client.renderer.CustomProjectileRenderer;
 import com.elfmcys.yesstevemodel.config.GeneralConfig;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.mojang.blaze3d.vertex.PoseStack;
+// 26.2 MultiBufferSource 删；本 mixin 分支均 <21.9（import 仅被存储分支文本引用）
+//? if <26.2
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderer;

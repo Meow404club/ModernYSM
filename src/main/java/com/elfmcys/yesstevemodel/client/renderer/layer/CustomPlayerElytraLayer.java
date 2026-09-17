@@ -20,7 +20,11 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 /*import net.minecraft.client.renderer.entity.state.HumanoidRenderState;
  *///?}
 import net.minecraft.client.player.AbstractClientPlayer;
+//? if <26.2
 import net.minecraft.client.renderer.MultiBufferSource;
+// 26.2 submit-dag 换代：collector 形 twin
+//? if >=26.2
+/*import net.minecraft.client.renderer.SubmitNodeCollector;*/
 // 1.21.11 RenderType 移 net.minecraft.client.renderer.rendertype 子包
 //? if >=21.11
 /*import net.minecraft.client.renderer.rendertype.RenderType;*/
@@ -74,8 +78,14 @@ public class CustomPlayerElytraLayer extends GeoLayerRenderer<CustomPlayerEntity
     //?}
     //? }
 
+    //? if <26.2 {
     @Override
     public void render(PoseStack poseStack, MultiBufferSource bufferSource, int packedLightIn, CustomPlayerEntity entityLivingBaseIn, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
+    //?}
+    //? if >=26.2 {
+    /*@Override
+    public void render(PoseStack poseStack, SubmitNodeCollector bufferSource, int packedLightIn, CustomPlayerEntity entityLivingBaseIn, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {*/
+    //?}
         ResourceLocation cloakTextureLocation;
         LivingEntity entity = entityLivingBaseIn.getEntity();
         ItemStack stack = CosmeticArmorHelper.getElytraItem(entity);
@@ -142,8 +152,17 @@ public class CustomPlayerElytraLayer extends GeoLayerRenderer<CustomPlayerEntity
             // 1.21.9 getArmorFoilBuffer → getFoilBuffer（ItemRenderer.java:67 四参，语义同形）
             //? if >=21.9 && <26
             /*this.elytraModel.renderToBuffer(poseStack, ItemRenderer.getFoilBuffer(bufferSource, RenderType.armorCutoutNoCull(cloakTextureLocation), false, stack.hasFoil()), packedLightIn, OverlayTexture.NO_OVERLAY, -1);*/
-            //? if >=26
+            // 26.1：getFoilBuffer 同签名迁 ItemFeatureRenderer（static）
+            //? if >=26 && <26.2
             /*this.elytraModel.renderToBuffer(poseStack, ItemFeatureRenderer.getFoilBuffer(bufferSource, net.minecraft.client.renderer.rendertype.RenderTypes.armorCutoutNoCull(cloakTextureLocation), false, stack.hasFoil()), packedLightIn, OverlayTexture.NO_OVERLAY, -1);*/
+            // 26.2：getFoilBuffer 私有实例化不可达 → submitCustomGeometry 逃生口直绘
+            //（pose 提交期捕获+lambda 内重建 PoseStack；附魔光膜层丢失=功能债，量级=视觉微差）
+            //? if >=26.2
+            /*bufferSource.submitCustomGeometry(poseStack, net.minecraft.client.renderer.rendertype.RenderTypes.armorCutoutNoCull(cloakTextureLocation), (pose, vc) -> {
+                PoseStack inner = new PoseStack();
+                inner.mulPose(pose.pose());
+                this.elytraModel.renderToBuffer(inner, vc, packedLightIn, OverlayTexture.NO_OVERLAY, -1);
+            });*/
             //? if <1.21
             this.elytraModel.renderToBuffer(poseStack, ItemRenderer.getArmorFoilBuffer(bufferSource, RenderType.armorCutoutNoCull(cloakTextureLocation), false, stack.hasFoil()), packedLightIn, OverlayTexture.NO_OVERLAY, 1.0f, 1.0f, 1.0f, 1.0f);
             poseStack.popPose();

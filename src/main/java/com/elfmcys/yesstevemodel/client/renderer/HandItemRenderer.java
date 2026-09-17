@@ -10,7 +10,11 @@ import com.elfmcys.yesstevemodel.geckolib3.geo.animated.AnimatedGeoModel;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.player.LocalPlayer;
+//? if <26.2
 import net.minecraft.client.renderer.MultiBufferSource;
+// 26.2 submit-dag 换代：collector 形 twin
+//? if >=26.2
+/*import net.minecraft.client.renderer.SubmitNodeCollector;*/
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.HumanoidArm;
@@ -19,6 +23,7 @@ public class HandItemRenderer {
 
     private PlayerGeoEntity geoModel = null;
 
+    //? if <26.2 {
     public void renderHandItem(LocalPlayer localPlayer, ModelAssembly modelAssembly, PlayerCapability capability, HumanoidArm arm, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, float partialTick) {
         AnimatedGeoModel model;
         if (this.geoModel == null || this.geoModel.getEntity() != localPlayer) {
@@ -46,4 +51,37 @@ public class HandItemRenderer {
         NativeModelRenderer.renderMesh(buffer, poseStack.last(), model.getGeoModel(), model.getMatrixData(), model.getAbsPivotData(), textureIndex, renderPartMask, packedLight, OverlayTexture.NO_OVERLAY, 1.0f, 1.0f, 1.0f, 1.0f, resourceLocation);
         poseStack.popPose();
     }
+    //?}
+
+    // 26.2 collector 形 twin：getBuffer → submitCustomGeometry（pose 提交期捕获，lambda
+    // 即原 renderMesh 调用；RenderHandEvent 携带 collector，neoforge-26.2 RenderHandEvent 实证）
+    //? if >=26.2 {
+    /*public void renderHandItem(LocalPlayer localPlayer, ModelAssembly modelAssembly, PlayerCapability capability, HumanoidArm arm, PoseStack poseStack, SubmitNodeCollector bufferSource, int packedLight, float partialTick) {
+        AnimatedGeoModel model;
+        if (this.geoModel == null || this.geoModel.getEntity() != localPlayer) {
+            this.geoModel = new PlayerGeoEntity(localPlayer, capability);
+        }
+        this.geoModel.tickModel();
+        if (this.geoModel.processAnimation(partialTick) == null || (model = this.geoModel.getCurrentModel()) == null) {
+            return;
+        }
+        SpecialPlayerRenderEvent event = new SpecialPlayerRenderEvent(localPlayer, capability, capability.getModelId());
+        if (SpecialPlayerRenderEvent.post(event).isFalse()) {
+            return;
+        }
+        ResourceLocation resourceLocation = event.getTextureLocation() == null ? capability.getTextureLocation() : event.getTextureLocation();
+        int textureIndex = event.getTextureLocation() == null ? capability.getTextureIndex() : 0;
+        int renderPartMask = arm == HumanoidArm.LEFT ? LayerTypeConstants.TYPE_LEFT : LayerTypeConstants.TYPE_RIGHT;
+        poseStack.pushPose();
+        if (arm == HumanoidArm.LEFT) {
+            poseStack.translate(0.25d, 1.8d, 0.0d);
+        } else {
+            poseStack.translate(-0.25d, 1.8d, 0.0d);
+        }
+        poseStack.scale(-1.0f, -1.0f, 1.0f);
+        bufferSource.submitCustomGeometry(poseStack, CustomEntityTranslucentRenderType.get(resourceLocation), (pose, vc) ->
+                NativeModelRenderer.renderMesh(vc, pose, model.getGeoModel(), model.getMatrixData(), model.getAbsPivotData(), textureIndex, renderPartMask, packedLight, OverlayTexture.NO_OVERLAY, 1.0f, 1.0f, 1.0f, 1.0f, resourceLocation));
+        poseStack.popPose();
+    }*/
+    //?}
 }

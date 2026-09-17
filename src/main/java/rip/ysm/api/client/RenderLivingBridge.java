@@ -1,6 +1,10 @@
 package rip.ysm.api.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+// 26.2 submit-dag 换代：collector 形 twin
+//? if >=26.2
+/*import net.minecraft.client.renderer.SubmitNodeCollector;*/
+//? if <26.2
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 //? if >=1.21.2 {
@@ -27,10 +31,24 @@ public final class RenderLivingBridge {
     }
     //?}
 
-    //? if >=1.21.2 {
+    //? if >=1.21.2 && <26.2 {
     /*@SuppressWarnings({"rawtypes", "unchecked"})
     public static boolean firePre(LivingEntity entity, LivingEntityRenderState state, LivingEntityRenderer renderer, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
         return RenderLivingBridgeImpl.firePre(state, renderer, partialTick, poseStack, bufferSource, packedLight);
+    }*/
+    //?}
+
+    // 26.2 collector 形 twin：collector=RenderPlayerEvent 携带值透传（neoforge-26.2
+    // RenderPlayerEvent.java:30 实证）；Static 预览路径 null 语义与 21.9+ 一致
+    //? if >=26.2 {
+    /*@SuppressWarnings({"rawtypes", "unchecked"})
+    public static boolean firePre(LivingEntity entity, LivingEntityRenderState state, LivingEntityRenderer renderer, float partialTick, PoseStack poseStack, SubmitNodeCollector bufferSource, int packedLight) {
+        return RenderLivingBridgeImpl.firePre(state, renderer, partialTick, poseStack, bufferSource, packedLight);
+    }*/
+
+    /*@SuppressWarnings({"rawtypes", "unchecked"})
+    public static void firePost(LivingEntity entity, LivingEntityRenderState state, LivingEntityRenderer renderer, float partialTick, PoseStack poseStack, SubmitNodeCollector bufferSource, int packedLight) {
+        RenderLivingBridgeImpl.firePost(state, renderer, partialTick, poseStack, bufferSource, packedLight);
     }*/
     //?}
     //? if <1.21.2 {
@@ -40,7 +58,7 @@ public final class RenderLivingBridge {
     }
     //?}
 
-    //? if >=1.21.2 {
+    //? if >=1.21.2 && <26.2 {
     /*@SuppressWarnings({"rawtypes", "unchecked"})
     public static void firePost(LivingEntity entity, LivingEntityRenderState state, LivingEntityRenderer renderer, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
         RenderLivingBridgeImpl.firePost(state, renderer, partialTick, poseStack, bufferSource, packedLight);

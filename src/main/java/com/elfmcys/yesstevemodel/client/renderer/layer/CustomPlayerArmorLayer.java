@@ -7,7 +7,11 @@ import com.elfmcys.yesstevemodel.geckolib3.geo.animated.AnimatedGeoModel;
 import com.elfmcys.yesstevemodel.geckolib3.util.RenderUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.ItemInHandRenderer;
+//? if <26.2
 import net.minecraft.client.renderer.MultiBufferSource;
+// 26.2 submit-dag 换代：collector 形 twin
+//? if >=26.2
+/*import net.minecraft.client.renderer.SubmitNodeCollector;*/
 //? if >=1.17 {
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 //? }
@@ -58,6 +62,7 @@ public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity>
     }
     //? }
 
+    //? if <26.2 {
     @Override
     public void render(PoseStack poseStack, MultiBufferSource bufferSource, int packedLightIn, CustomPlayerEntity entityLivingBaseIn, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
         Player player = entityLivingBaseIn.getEntity();
@@ -73,6 +78,25 @@ public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity>
             }
         }
     }
+    //?}
+
+    //? if >=26.2 {
+    /*@Override
+    public void render(PoseStack poseStack, SubmitNodeCollector bufferSource, int packedLightIn, CustomPlayerEntity entityLivingBaseIn, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
+        Player player = entityLivingBaseIn.getEntity();
+        AnimatedGeoModel model = entityLivingBaseIn.getCurrentModel();
+        if (model != null && !model.headBones().isEmpty()) {
+            ItemStack itemBySlot = player.getItemBySlot(EquipmentSlot.HEAD);
+            if (!itemBySlot.isEmpty() && !isArmorItem(itemBySlot)) {
+                renderArmorPiece(poseStack, bufferSource, packedLightIn, model, player, itemBySlot);
+            }
+            ItemStack stack = SimpleHatsHelper.getHatItem(player);
+            if (stack != null && !stack.isEmpty()) {
+                renderArmorPiece(poseStack, bufferSource, packedLightIn, model, player, stack);
+            }
+        }
+    }*/
+    //?}
 
     private boolean isArmorItem(ItemStack stack) {
         Item item = stack.getItem();
@@ -98,6 +122,7 @@ public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity>
         return equippable != null && equippable.slot() == EquipmentSlot.HEAD;*/
     }
 
+    //? if <26.2 {
     private void renderArmorPiece(PoseStack poseStack, MultiBufferSource bufferSource, int i, AnimatedGeoModel model, Player player, ItemStack stack) {
         poseStack.pushPose();
         RenderUtils.prepMatrixForLocator(poseStack, model.headBones());
@@ -116,4 +141,17 @@ public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity>
          *///?}
         poseStack.popPose();
     }
+
+    //?}
+
+    //? if >=26.2 {
+    /*private void renderArmorPiece(PoseStack poseStack, SubmitNodeCollector bufferSource, int i, AnimatedGeoModel model, Player player, ItemStack stack) {
+        poseStack.pushPose();
+        RenderUtils.prepMatrixForLocator(poseStack, model.headBones());
+        poseStack.scale(0.625f, 0.625f, 0.625f);
+        poseStack.translate(0.0f, 0.25f, 0.0f);
+        // 21.9+ vanilla 手持位渲染不挂载（功能债）→ collector 形保持 no-op 语义
+        poseStack.popPose();
+    }*/
+    //?}
 }

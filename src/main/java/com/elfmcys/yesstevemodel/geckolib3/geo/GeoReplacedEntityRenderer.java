@@ -28,8 +28,12 @@ import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 //? }
+//? if <26.2
 import net.minecraft.client.renderer.MultiBufferSource;
-// 1.21.11 RenderType 移 net.minecraft.client.renderer.rendertype 子包
+// 26.2 submit-dag 换代：MultiBufferSource 删，collector 形 twin（本文件 <26.2 分支不动）
+//? if >=26.2
+/*import net.minecraft.client.renderer.SubmitNodeCollector;
+ */// 1.21.11 RenderType 移 net.minecraft.client.renderer.rendertype 子包
 //? if >=21.11
 /*import net.minecraft.client.renderer.rendertype.RenderType;*/
 //? if <21.11
@@ -147,7 +151,12 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
 
     public Matrix4f renderEarlyMat = new Matrix4f();
 
+// 26.2 submit-dag：RTB 槽位承载 collector（语义同 26.1 立即缓冲槽位）
+//? if <26.2
     public MultiBufferSource rtb;
+
+//? if >=26.2
+    /*public SubmitNodeCollector rtb;*/
 
     private IRenderCycle currentModelRenderCycle = EModelRenderCycle.INITIAL;
 
@@ -186,17 +195,36 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
         this.currentModelRenderCycle = cycle;
     }
 
+    //? if <26.2 {
     @Override
     public void renderEarly(T animatable, PoseStack poseStack, float partialTick, MultiBufferSource bufferSource, VertexConsumer buffer, int packedLight, int packedOverlayIn, float red, float green, float blue, float alpha) {
         // 使用 .set 来避免每次渲染创建新的 Matrix4f, 减少 allocation rate
         this.renderEarlyMat.set(MatrixBridge.pose(poseStack.last()));
         IGeoRenderer.super.renderEarly(animatable, poseStack, partialTick, bufferSource, buffer, packedLight, packedOverlayIn, red, green, blue, alpha);
     }
+    //?}
 
+    //? if >=26.2 {
+    /*@Override
+    public void renderEarly(T animatable, PoseStack poseStack, float partialTick, SubmitNodeCollector bufferSource, VertexConsumer buffer, int packedLight, int packedOverlayIn, float red, float green, float blue, float alpha) {
+        this.renderEarlyMat.set(MatrixBridge.pose(poseStack.last()));
+        IGeoRenderer.super.renderEarly(animatable, poseStack, partialTick, bufferSource, buffer, packedLight, packedOverlayIn, red, green, blue, alpha);
+    }*/
+    //?}
+
+    //? if <26.2 {
     public void renderEntity(T t, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
         renderEntityWithTexture(t, null, entityYaw, partialTick, poseStack, bufferSource, packedLight);
     }
+    //?}
 
+    //? if >=26.2 {
+    /*public void renderEntity(T t, float entityYaw, float partialTick, PoseStack poseStack, SubmitNodeCollector bufferSource, int packedLight) {
+        renderEntityWithTexture(t, null, entityYaw, partialTick, poseStack, bufferSource, packedLight);
+    }*/
+    //?}
+
+    //? if <26.2 {
     public void renderEntityWithTexture(T t, @Nullable ResourceLocation resourceLocation, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource multiBufferSource, int packedLight) {
         Direction bedOrientation;
         boolean fireRenderEvents = !ModelPreviewRenderer.isPreview();
@@ -294,12 +322,84 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
             //?}
         }
     }
+    //?}
 
+    // 26.2 submit-dag collector 形（twin of renderEntityWithTexture）：
+    // - 类型换代 MultiBufferSource→SubmitNodeCollector（RenderPlayerEvent 携带，
+    //   neoforge-26.2 RenderPlayerEvent.java:30 实证）
+    // - 名牌 21.9+ 已退回 vanilla submitNameTag 默认链，此处不桥接
+    // - firePre/firePost 传真 collector（Static 预览路径 collector=null 消费端不可用之债不变）
+    //? if >=26.2 {
+    /*public void renderEntityWithTexture(T t, @Nullable ResourceLocation resourceLocation, float entityYaw, float partialTick, PoseStack poseStack, SubmitNodeCollector multiBufferSource, int packedLight) {
+        Direction bedOrientation;
+        boolean fireRenderEvents = !ModelPreviewRenderer.isPreview();
+        this.ysmEntity = t.getEntity();
+        this.ysmState = this.createRenderState(this.ysmEntity, partialTick);
+        this.ysmPartialTick = partialTick;
+        if (fireRenderEvents && RenderLivingBridge.firePre(t.getEntity(), this.ysmState, this, partialTick, poseStack, multiBufferSource, packedLight)) {
+            return;
+        }
+        AnimationEvent<?> event = t.processAnimation(partialTick);
+        TEntity entity = t.getEntity();
+        Minecraft minecraft = Minecraft.getInstance();
+        if (event != null && minecraft.player != null) {
+            EntityModelData modelData = event.getModelData();
+            this.dispatchedMat.set(MatrixBridge.pose(poseStack.last()));
+            setCurrentModelRenderCycle(EModelRenderCycle.INITIAL);
+            poseStack.pushPose();
+            if (entity.getPose() == Pose.SLEEPING && (bedOrientation = entity.getBedOrientation()) != null) {
+                float eyeHeight = entity.getEyeHeight(Pose.STANDING) - 0.1f;
+                poseStack.translate((-bedOrientation.getStepX()) * eyeHeight, 0.0f, (-bedOrientation.getStepZ()) * eyeHeight);
+            }
+            setupRotations(entity, poseStack, modelData.lerpedAge, modelData.lerpBodyRot, partialTick);
+            if (t.getEntity().getVehicle() != null) {
+                VehicleCapability.get(t.getEntity().getVehicle()).ifPresent(cap -> {
+                    Vector3f vector3f = cap.getExpressionOffset();
+                    if (vector3f != null) {
+                        poseStack.mulPose(new Quaternionf().rotateZYX(vector3f.z, 0.0f, vector3f.x).invert());
+                    }
+                });
+            }
+            preRenderCallback(entity, poseStack, partialTick);
+            poseStack.translate(0.0f, 0.01f, 0.0f);
+            AnimatedGeoModel animatedGeoModel = t.getCurrentModel();
+            int textureIndex = resourceLocation == null ? t.getTextureIndex() : 0;
+            RenderType renderType = getRenderType(resourceLocation == null ? t.getTextureLocation() : resourceLocation, !entity.isInvisible() && !entity.isInvisibleTo(minecraft.player), minecraft.shouldEntityAppearGlowing(entity), t.getCurrentModel().getGeoModel().isTranslucentTexture(textureIndex));
+            boolean useExtraPlayer = t.isRenderLayersFirst();
+            Color color = getRenderColor(t, partialTick, poseStack, multiBufferSource, null, packedLight);
+            renderWithBone(animatedGeoModel, t, partialTick, poseStack, multiBufferSource, null, packedLight, packOverlayCoords(entity, getHurtOverlayProgress(entity, partialTick)), color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, color.getAlpha() / 255.0f);
+            if (useExtraPlayer && !entity.isSpectator()) {
+                render(t, partialTick, poseStack, multiBufferSource, packedLight, event, modelData);
+            }
+            if (renderType != null) {
+                renderWithBoneAndRenderType(animatedGeoModel, t, partialTick, renderType, poseStack, multiBufferSource, textureIndex, null, packedLight, packOverlayCoords(entity, getHurtOverlayProgress(entity, partialTick)), color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, color.getAlpha() / 255.0f);
+            }
+            if (!useExtraPlayer && !entity.isSpectator()) {
+                render(t, partialTick, poseStack, multiBufferSource, packedLight, event, modelData);
+            }
+            poseStack.popPose();
+        }
+        if (fireRenderEvents) {
+            RenderLivingBridge.firePost(entity, this.ysmState, this, partialTick, poseStack, multiBufferSource, packedLight);
+        }
+    }
+    *///?}
+
+    //? if <26.2 {
     public void render(T entity, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLightIn, AnimationEvent<?> event, EntityModelData data) {
         for (GeoLayerRenderer<T> layerRenderer : this.layerRenderers) {
             layerRenderer.render(poseStack, bufferSource, packedLightIn, entity, event.getLimbSwing(), event.getLimbSwingAmount(), partialTick, data.lerpedAge, data.rawNetHeadYaw, data.rawHeadPitch);
         }
     }
+    //?}
+
+    //? if >=26.2 {
+    /*public void render(T entity, float partialTick, PoseStack poseStack, SubmitNodeCollector bufferSource, int packedLightIn, AnimationEvent<?> event, EntityModelData data) {
+        for (GeoLayerRenderer<T> layerRenderer : this.layerRenderers) {
+            layerRenderer.render(poseStack, bufferSource, packedLightIn, entity, event.getLimbSwing(), event.getLimbSwingAmount(), partialTick, data.lerpedAge, data.rawNetHeadYaw, data.rawHeadPitch);
+        }
+    }
+    *///?}
 
     public float getHurtOverlayProgress(TEntity entity, float partialTick) {
         return 0.0f;
@@ -370,6 +470,7 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
         return this.layerRenderers.add(layerRenderer);
     }
 
+    //? if <26.2 {
     @Override
     public MultiBufferSource getCurrentRTB() {
         return this.rtb;
@@ -379,4 +480,17 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
     public void setCurrentRTB(MultiBufferSource bufferSource) {
         this.rtb = bufferSource;
     }
+    //?}
+
+    //? if >=26.2 {
+    /*@Override
+    public SubmitNodeCollector getCurrentRTB() {
+        return this.rtb;
+    }
+
+    @Override
+    public void setCurrentRTB(SubmitNodeCollector bufferSource) {
+        this.rtb = bufferSource;
+    }*/
+    //?}
 }

@@ -9,7 +9,11 @@ import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+//? if <26.2
 import net.minecraft.client.renderer.MultiBufferSource;
+// 26.2 submit-dag 换代：collector 形 twin
+//? if >=26.2
+/*import net.minecraft.client.renderer.SubmitNodeCollector;*/
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.player.Player;
 //? if >=1.21 {
@@ -21,6 +25,7 @@ public class ReplacePlayerHandRenderEvent {
     private ReplacePlayerHandRenderEvent() {
     }
 
+    //? if <26.2 {
     public static boolean onRenderArm(Player player, HumanoidArm arm, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
         if (!YesSteveModel.isAvailable() || GeneralConfig.DISABLE_SELF_MODEL.get() || GeneralConfig.DISABLE_SELF_HANDS.get()) {
             return false;
@@ -46,6 +51,33 @@ public class ReplacePlayerHandRenderEvent {
         });
         return cancelled[0];
     }
+    //?}
+
+    // 26.2 collector 形 twin
+    //? if >=26.2 {
+    /*public static boolean onRenderArm(Player player, HumanoidArm arm, PoseStack poseStack, SubmitNodeCollector bufferSource, int packedLight) {
+        if (!YesSteveModel.isAvailable() || GeneralConfig.DISABLE_SELF_MODEL.get() || GeneralConfig.DISABLE_SELF_HANDS.get()) {
+            return false;
+        }
+        if (!(player instanceof LocalPlayer)) {
+            return false;
+        }
+        LocalPlayer localPlayer = (LocalPlayer) player;
+        boolean[] cancelled = {false};
+        PlayerCapability.get(localPlayer).ifPresent(cap -> {
+            if (!cap.isModelActive()) {
+                return;
+            }
+            ModelAssembly context = cap.getModelAssembly();
+            if (context == null || !hasArmBone(arm, context.getAnimationBundle().getArmModel())) {
+                return;
+            }
+            RendererManager.getHandRenderer().renderHandItem(localPlayer, context, cap, arm, poseStack, bufferSource, packedLight, YsmFrame.partialTick(Minecraft.getInstance()));
+            cancelled[0] = true;
+        });
+        return cancelled[0];
+    }*/
+    //?}
 
     private static boolean hasArmBone(HumanoidArm humanoidArm, GeoModel meshData) {
         if (humanoidArm == HumanoidArm.LEFT) {

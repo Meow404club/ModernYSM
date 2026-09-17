@@ -5,7 +5,11 @@ import com.elfmcys.yesstevemodel.client.entity.GeckoVehicleEntity;
 import com.elfmcys.yesstevemodel.geckolib3.geo.GeoEntityRenderer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
+//? if <26.2
 import net.minecraft.client.renderer.MultiBufferSource;
+// 26.2 submit-dag 换代：collector 形 twin（>=21.9 vanilla 位渲染功能债，仅类型换代）
+//? if >=26.2
+/*import net.minecraft.client.renderer.SubmitNodeCollector;*/
 //? if >=1.17 {
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 //? }
@@ -23,6 +27,7 @@ public class VehicleRenderer extends GeoEntityRenderer<Entity, GeckoVehicleEntit
         super(context);
     }
 
+    //? if <26.2 {
     public void render(Entity entity, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
         if (Minecraft.getInstance().player == null || entity.isInvisibleTo(Minecraft.getInstance().player)) {
             return;
@@ -32,6 +37,19 @@ public class VehicleRenderer extends GeoEntityRenderer<Entity, GeckoVehicleEntit
             renderEntity(cap, entityYaw, partialTick, poseStack, bufferSource, packedLight);
         });
     }
+    //?}
+
+    //? if >=26.2 {
+    /*public void render(Entity entity, float entityYaw, float partialTick, PoseStack poseStack, SubmitNodeCollector bufferSource, int packedLight) {
+        if (Minecraft.getInstance().player == null || entity.isInvisibleTo(Minecraft.getInstance().player)) {
+            return;
+        }
+        VehicleCapability.get(entity).ifPresent(cap -> {
+            cap.tickModel();
+            renderEntity(cap, entityYaw, partialTick, poseStack, bufferSource, packedLight);
+        });
+    }*/
+    //?}
 
     @NotNull
     public ResourceLocation getTextureLocation(Entity entity) {

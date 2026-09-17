@@ -2,7 +2,11 @@ package com.elfmcys.yesstevemodel.mixin.client;
 
 import com.elfmcys.yesstevemodel.geckolib3.extended.LivingEntityRendererAccessor;
 import com.mojang.blaze3d.vertex.PoseStack;
+// 26.2 submit-dag 换代：collector 形 twin
+//? if <26.2
 import net.minecraft.client.renderer.MultiBufferSource;
+//? if >=26.2
+/*import net.minecraft.client.renderer.SubmitNodeCollector;*/
 import net.minecraft.client.renderer.entity.EntityRenderer;
 //? if >=1.17 {
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
@@ -62,10 +66,17 @@ public abstract class LivingRendererMixin
     //（render-dag/SubmitNodeCollector 换代，2110 EntityRenderer.java:115 仅余 submit）→
     // 本 mixin 桥在 21.9+ 无可转发的 vanilla 方法，接口方法留空实现（抽象类可不全实现，
     // Static 预览路径名牌改走 vanilla submitNameTag，功能债同批入账）
-    //? if >=21.9 {
+    //? if >=21.9 && <26.2 {
     /*@Override
     @Unique
     public void tlm$renderNameTag(LivingEntityRenderState pState, PoseStack pPoseStack, MultiBufferSource pBuffer, int pPackedLight) {
+    }*/
+    //?}
+    // 26.2 collector 形 twin（同 21.9+：无可转发 vanilla 方法，空壳实现）
+    //? if >=26.2 {
+    /*@Override
+    @Unique
+    public void tlm$renderNameTag(LivingEntityRenderState pState, PoseStack pPoseStack, SubmitNodeCollector pBuffer, int pPackedLight) {
     }*/
     //?}
 }

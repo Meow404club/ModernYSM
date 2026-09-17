@@ -1,6 +1,7 @@
 package rip.ysm.gpu;
 
 import rip.ysm.util.RenderCompat;
+import com.elfmcys.yesstevemodel.client.renderer.ModelPreviewRenderer;
 import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
 import com.elfmcys.yesstevemodel.mixin.client.RenderSystemAccessor;
 // 1.21.5 GlStateManager 迁移 platform→opengl 包（vcs 直通铁律：非 1.20.1 分支源码态必须注释）
@@ -177,7 +178,13 @@ public final class GpuRenderPath {
         /*float fogStart = GpuCapability.ysmCapturedFogStart;
         float fogEnd = GpuCapability.ysmCapturedFogEnd;
         float[] fogColor = GpuCapability.ysmCapturedFogColor;
-        int fogShape = 0;*/
+        int fogShape = 0;
+        // GUI 预览时刻 21.8 vanilla 雾=NONE（GuiRenderer 阶段 emptyBuffer，updateBuffer 不覆写
+        // → 捕获面残留世界雾），预览几何在千米级视距会被整只雾掉=对现状 CPU 预览回归；
+        // 对齐旧线 GUI 语义=setupNoFog（1.20.1 FogRenderer.java:194-195 setShaderFogStart(MAX)）
+        if (ModelPreviewRenderer.isPreview() || ModelPreviewRenderer.isExtraPlayer()) {
+            fogStart = Float.MAX_VALUE;
+        }*/
         //?}
         //? if <1.21.2 {
         float fogStart = RenderSystem.getShaderFogStart();

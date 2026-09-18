@@ -505,6 +505,9 @@ tasks {
 
     register<Copy>("buildAndCollect") {
         group = "build"
+        // mojmap 直配线（无 SRG reobf，见本文件头注 18 行）：jar 产物即发布件，
+        // 收集 jar.archiveFile 正确。勿仿 build.forge.gradle.kts 改 from(reobfJar)——
+        // MDG2 主插件无 reobfJar 任务（MDG2 全源零 reobf 实证），改了全线配置期炸。
         from(jar.map { it.archiveFile })
         into(rootProject.layout.buildDirectory.file("libs/${project.property("mod_version")}"))
         dependsOn("build")

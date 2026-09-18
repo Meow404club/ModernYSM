@@ -112,11 +112,12 @@ public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity>
         // return (item instanceof ArmorItem) && ((ArmorItem) item).getSlot() == EquipmentSlot.HEAD;
         //? if >=1.17 && <1.19.3
         /*return (item instanceof ArmorItem) && ((ArmorItem) item).getSlot() == EquipmentSlot.HEAD;*/
-        //? if >=1.19.3 && <1.20 {
-        /*// 1.19.3 IForgeItem.getEquipmentSlot 尚未带参（1.20 起收 ItemStack），ArmorItem.getSlot 同判
-        return (item instanceof ArmorItem) && ((ArmorItem) item).getSlot() == EquipmentSlot.HEAD;*/
-        //?}
-        //? if >=1.20 && <1.21.2
+        //? if >=1.19.3 && <1.19.4
+        /*return (item instanceof ArmorItem) && ((ArmorItem) item).getSlot() == EquipmentSlot.HEAD;*/
+        // 1.19.3 仍 ArmorItem.getSlot()（该线 build 绿实证）；1.19.4~1.21.1 无参
+        // getEquipmentSlot()（1194 merged jar javap 实证，ArmorItem 仅此一形；1.21.2 起
+        // 无参形删除）。单行 /* */ 包裹：1201 vcs 原文注释态 + 生成线条件真时剥包裹成活码。
+        //? if >=1.19.4 && <1.21.2
         return (item instanceof ArmorItem) && ((ArmorItem) item).getEquipmentSlot() == EquipmentSlot.HEAD;
         // 1.21.2 槽位查询改 IItemExtension.getEquipmentSlot(ItemStack)（ArmorItem 无参形删除）
         //? if >=21.2 && <21.5

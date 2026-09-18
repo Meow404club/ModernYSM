@@ -7,13 +7,22 @@ import com.elfmcys.yesstevemodel.mixin.client.RenderSystemAccessor;
 // 1.21.5 GlStateManager 迁移 platform→opengl 包（vcs 直通铁律：非 1.20.1 分支源码态必须注释）
 //? if <21.5
 import com.mojang.blaze3d.platform.GlStateManager;
-//? if >=21.5
+// 26.3 renderpearl 包迁移：blaze3d.opengl.* 整包搬 com.mojang.renderpearl.backend.opengl
+//（/tmp/vanilla-263 com/mojang/renderpearl/backend/opengl 实证，GlStateManager 方法面同名同参）
+//? if >=21.5 && <26.3
 /*import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.opengl.GlTexture;*/
+//? if >=26.3
+/*import com.mojang.renderpearl.backend.opengl.GlStateManager;
+import com.mojang.renderpearl.backend.opengl.GlTexture;*/
 // 21.8 帧图：实体/手部分派发生在 RenderPass 执行窗口外（探针实证 drawFbo=0）→
 // 绘制期需显式绑主目标 FBO（GlTexture.getFbo 缓存命中 vanilla 自建 id）。仅 >=21.8 消费。
-//? if >=21.8
+// 注意 26.3 RenderTarget 不随 renderpearl 迁移（/tmp/vanilla-263 blaze3d/pipeline/RenderTarget.java 在）
+//? if >=21.8 && <26.3
 /*import com.mojang.blaze3d.opengl.DirectStateAccess;
+import com.mojang.blaze3d.pipeline.RenderTarget;*/
+//? if >=26.3
+/*import com.mojang.renderpearl.backend.opengl.DirectStateAccess;
 import com.mojang.blaze3d.pipeline.RenderTarget;*/
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;

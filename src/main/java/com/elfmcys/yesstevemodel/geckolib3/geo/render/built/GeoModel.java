@@ -5,7 +5,12 @@ import com.elfmcys.yesstevemodel.geckolib3.core.molang.util.StringPool;
 import com.elfmcys.yesstevemodel.geckolib3.geo.animated.AnimatedGeoModel;
 import com.elfmcys.yesstevemodel.resource.models.GeometryDescription;
 import com.mojang.blaze3d.vertex.BufferBuilder;
+// 26.3 VertexFormat 迁 renderpearl.api.vertex（/tmp/vanilla-263 实证）；本文件消费面仅
+// VertexFormat.Mode（<26.2）/PrimitiveTopology（>=26.2 类字面门槛，g_modeFieldID 缓存后不读）
+//? if <26.3
 import com.mojang.blaze3d.vertex.VertexFormat;
+//? if >=26.3
+/*import com.mojang.renderpearl.api.vertex.VertexFormat;*/
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntLists;
@@ -212,11 +217,14 @@ public class GeoModel {
                     //? }
                     //? if >=1.17 && <26.2
                     VertexFormat.Mode.class
-                    //? if >=26.2
+                    //? if >=26.2 && <26.3
                     /*// 26.2 BufferBuilder 模式字段换代 primitiveTopology（PrimitiveTopology）；
                     // Class 仅用于描述符门槛（g_modeFieldID 缓存后从不读取）——且 26.2 BufferBuilder
                     // 无 nextElementByte 字段，nInitSIMD 必失败走 CPU 兼容回退（功能债归 native 卡池）
                     com.mojang.blaze3d.PrimitiveTopology.class*/
+                    //? if >=26.3
+                    /*// 26.3 PrimitiveTopology 迁 renderpearl.api.pipeline（/tmp/vanilla-263 实证）
+                    com.mojang.renderpearl.api.pipeline.PrimitiveTopology.class*/
             );
         } catch (Throwable ex) {
             YesSteveModel.LOGGER.error("[YSM] Failed to initialize SIMD mappings, fast vertex building will not work.", ex);

@@ -7,8 +7,12 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 //? if <21.5
 import com.mojang.blaze3d.platform.GlStateManager;
 // 1.21.5 GlStateManager 迁移 platform→opengl 包（vcs 直通铁律：非 1.20.1 分支源码态必须注释）
-//? if >=21.5
+// 26.3 renderpearl 包迁移：blaze3d.opengl.* → com.mojang.renderpearl.backend.opengl
+//（/tmp/vanilla-263 renderpearl/backend/opengl 实证，GlStateManager 方法面同名同参）
+//? if >=21.5 && <26.3
 /*import com.mojang.blaze3d.opengl.GlStateManager;*/
+//? if >=26.3
+/*import com.mojang.renderpearl.backend.opengl.GlStateManager;*/
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.opengl.*;

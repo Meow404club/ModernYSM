@@ -5,7 +5,7 @@
 ## 阶段
 - phase: 架构重构（Stonecutter 迁移）——M3 全谱平铺收官（1.16.1~26.3 全谱）；FPM/RC/iris/native 四线全清；26.2+26.3 已落地（2026-09-18 暂停点）
 - done: [M0 骨架+源码合并, native 子模块, M1 八卡全过, M2 十一卡全合入, M2.5/M2.6/M2.6.1 GUI 修复链, harness ccb6b23, 内置模型同步 ce1aaf9, M3 批一 ebc4427 + 批二a a129edc + 批二b 07e171e + 批二c-1 5c5888f, M2.7 8444dbf, reobf 撞名修复 d14e610, FPM/RC 修复链 18a91f7→57bb90e, 2026-09-17 批：daff957 五卡（iris 实验支线 d4d314c/26.1 FPM 511ab9b/neoforge Iris 检测 241e683/FPM 颈隐藏 b5f3bf3/RC 变换矩阵 daff957）→ iris memFree e47beed → native 整合 87d552b → RC 锚点 d4850d6 → cleanup 3c81354 → 探针差分 96be7aa, 2026-09-18 批：卡B 七线 FPM f629fe5 → D3 复活 c7d5916 → 六线修复 570a961 → harness 补格 9cf9584 → 26.2 移植 80c3239 → 26.3 增量 2800a3a]
-- current: 无在途分支；dev 顶=2800a3a（1.16.1~26.3 全谱平铺，26.3=26.3.0.3-beta tile）；用户终测 jar=ea519e08/4e49be17 仍有效（其后变更=26.x 专项+harness，1.20.1 行为面零变化）
+- current: 无在途分支；dev 顶=4f0e8d8（发布物料卡合入；1.16.1~26.3 全谱平铺，26.3=26.3.0.3-beta tile）；**发布物料就绪**：docs/release/RELEASE-MANIFEST.md（35 线）+CHANGELOG-draft.md，发布取件铁律=versions/<线>/build/libs/<jar>（reobf 物），收集目录 11 件 forge devlibs 已加后缀防误取
 - next: 生产发布卡（26.x 目标=26.2 GA；26.3 beta 适配已先行不改发布目标）→ 候选池逐项；完整队列见 state:tasks.handoff-2026-09-17-restart
 
 ## 2026-09-17/18 收官纪要（四线全清+26.x 落地）

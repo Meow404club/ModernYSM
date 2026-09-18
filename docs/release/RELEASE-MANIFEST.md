@@ -1,8 +1,9 @@
 # RELEASE-MANIFEST — OpenYSM 2.6.6.6 全线生产构建清单
 
-- 生成：2026-09-18；分支 `work/prod-release-202609` @ f5a7542（基线 8cf9355 = dev 2800a3a + docs 镜像 + 1.19.4 适配修复）
+- 生成：2026-09-18；分支 `work/prod-release-202609` @ 4ca4867（基线 8cf9355 = dev 2800a3a + docs 镜像 + 1.19.4 适配修复）
 - 用途：**用户自行分发的内部物料清单，不对外发布**。
-- 构建口径：gradle 串行（`--no-daemon --no-configuration-cache`）逐线 `:产线:buildAndCollect`（= build + 发布 jar 收集；unimined 线含 SRG remapJar + MixinExtras/JOML/ImageStream/unsafe8 内嵌）。
+- 构建口径：gradle 串行（`--no-daemon --no-configuration-cache`）逐线 `:产线:buildAndCollect`（= build + 收集；unimined 线构建含 SRG remapJar + MixinExtras/JOML/ImageStream/unsafe8 内嵌）。
+- **发布取件口径：唯一可分发件 = `versions/<产线>/build/libs/<jar>`（reobf 物，本表 sha256 即该路径实测）。** 根 `build/libs/2.6.6.6/` 收集目录中 11 条 MDG-forge 线（1.17.1~1.20.1）复制的是 build/devlibs 下未-reobf dev jar（mojmap 方法名；生产 forge=mojmap 类名+SRG 方法名混合口径，分发必 NSME）——已改名加 `.devlibs` 后缀防误取，**不可分发**；其余 24 线收集件与取件件 cmp 字节全同。
 - 门禁：每线 jar 跑 `tools/audit_reobf_collision.py`，**35/35 全部 0 BROKEN（exit 0）**，无红线。
 - modid：`yes_steve_model`（全线统一）；maven 坐标 `rip.ysm:openysm`；版本号 **2.6.6.6 沿用现状（是否升级待用户裁定，本次未擅自变更）**。
 - 已知功能债与限制（不漏报）：见同目录 [CHANGELOG-draft.md](CHANGELOG-draft.md)。

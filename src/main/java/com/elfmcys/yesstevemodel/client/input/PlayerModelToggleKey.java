@@ -25,7 +25,11 @@ import rip.ysm.api.client.KeyMappingFactory;
 
 public final class PlayerModelToggleKey {
 
+    // 26.3 SDL 替 GLFW：KEYSYM→KEYBOARD（值域=SDL scancode，InputConstants.KEY_Y=28 同键位）
+    //? if <26.3
     public static final KeyMapping KEY_MAPPING = KeyMappingFactory.createInGameAlt("key.yes_steve_model.player_model.desc", InputConstants.Type.KEYSYM, 89, "key.category.yes_steve_model");
+    //? if >=26.3
+    /*public static final KeyMapping KEY_MAPPING = KeyMappingFactory.createInGameAlt("key.yes_steve_model.player_model.desc", InputConstants.Type.KEYBOARD, InputConstants.KEY_Y, "key.category.yes_steve_model");*/
 
     private PlayerModelToggleKey() {
     }
@@ -46,7 +50,11 @@ public final class PlayerModelToggleKey {
     //?} else {
     /*private static void onKeyEvent(InputEvent.KeyInputEvent event) {*/
 //?}
+        // 26.3 InputEvent.Key getScanCode→getKeycode（SDL 改名，nf-26.3 InputEvent.java:268）
+        //? if <26.3
         onKeyInput(event.getAction(), event.getKey(), event.getScanCode());
+        //? if >=26.3
+        /*onKeyInput(event.getAction(), event.getKey(), event.getKeycode());*/
     }
 
     private static void onKeyInput(int action, int keyCode, int scanCode) {

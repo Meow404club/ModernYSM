@@ -43,7 +43,13 @@ public final class ExtraAnimationKey {
             initialized = true;
             if (YesSteveModel.isAvailable()) {
                 for (int i = 0; i <= 7; i++) {
+                    // 26.3 SDL 替 GLFW：KEYSYM→KEYBOARD；占位码 -1→0（0=key.keyboard.unknown
+                    // 未绑定哨兵）——26.3 InputConstants.isKeyDown 直查 SDL 键盘态缓冲
+                    //（InputConstants.java:222），负索引=IndexOutOfBoundsException（tour 实证）
+                    //? if <26.3
                     KeyMapping eventMapping = KeyMappingFactory.createInGameNone(String.format("key.yes_steve_model.extra_animation.%d.desc", Integer.valueOf(i)), InputConstants.Type.KEYSYM, -1, "key.category.yes_steve_model");
+                    //? if >=26.3
+                    /*KeyMapping eventMapping = KeyMappingFactory.createInGameNone(String.format("key.yes_steve_model.extra_animation.%d.desc", Integer.valueOf(i)), InputConstants.Type.KEYBOARD, 0, "key.category.yes_steve_model");*/
                     KEY_MAPPINGS.add(eventMapping);
                 }
             }
@@ -67,7 +73,11 @@ public final class ExtraAnimationKey {
     //?} else {
     /*private static void onKeyEvent(InputEvent.KeyInputEvent event) {*/
 //?}
+        // 26.3 InputEvent.Key getScanCode→getKeycode（SDL 改名，nf-26.3 InputEvent.java:268）
+        //? if <26.3
         onKeyInput(event.getAction(), event.getKey(), event.getScanCode());
+        //? if >=26.3
+        /*onKeyInput(event.getAction(), event.getKey(), event.getKeycode());*/
     }
 
     private static void onKeyInput(int action, int keyCode, int scanCode) {

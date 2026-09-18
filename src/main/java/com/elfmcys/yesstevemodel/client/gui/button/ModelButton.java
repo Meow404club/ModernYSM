@@ -373,8 +373,12 @@ public class ModelButton extends YsmButton {
             }
             // 1.21.9 Window.getWindow(long 句柄) → handle()（2110 Window.java:427）
             // 1.21.9+ isKeyDown 首参 (long 句柄 → Window 对象)（2110 InputConstants.java:191）
-            //? if >=21.9
+            // 26.3 isKeyDown 单参化（SDL 键盘态轮询，InputConstants.java:220）；340/344=GLFW
+            // L/R_SHIFT → InputConstants.KEY_LSHIFT(225)/KEY_RSHIFT(229)
+            //? if >=21.9 && <26.3
             /*if (InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), 340) || InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), 344)) {*/
+            //? if >=26.3
+            /*if (InputConstants.isKeyDown(InputConstants.KEY_LSHIFT) || InputConstants.isKeyDown(InputConstants.KEY_RSHIFT)) {*/
             //? if <21.9
             if (InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), 340) || InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), 344)) {
                 if (this.detailedTooltipLines == null) {

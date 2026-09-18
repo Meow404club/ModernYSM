@@ -208,12 +208,23 @@ return super.mouseScrolled(mouseX, mouseY, delta);
             return;
         }
         if (link.startsWith("http://") || link.startsWith("https://")) {
+            // 26.3 Util.OS 撤桌面打开面 → Blaze3D.openUri(URI)；ConfirmLinkScreen(String)→(URI)
+            //? if <26.3 {
             Minecraft.getInstance().setScreen(new ConfirmLinkScreen(confirmed -> {
                 if (confirmed) {
                     Util.getPlatform().openUri(link);
                 }
                 Minecraft.getInstance().setScreen(this.parentScreen);
             }, link, true));
+            //?}
+            //? if >=26.3 {
+            /*Minecraft.getInstance().setScreen(new ConfirmLinkScreen(confirmed -> {
+                if (confirmed) {
+                    com.mojang.blaze3d.Blaze3D.openUri(java.net.URI.create(link));
+                }
+                Minecraft.getInstance().setScreen(this.parentScreen);
+            }, java.net.URI.create(link), true));*/
+            //?}
             return;
         }
         Minecraft.getInstance().keyboardHandler.setClipboard(link);

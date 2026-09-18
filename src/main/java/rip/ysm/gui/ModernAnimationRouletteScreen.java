@@ -521,10 +521,21 @@ public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
     }
 
     // 1.21.9+ 输入事件对象化（GuiEventListener.keyPressed(KeyEvent)）
-    //? if >=21.9 {
+    // 26.3 KeyEvent.scancode→keycode（SDL 改名，/tmp/vanilla-263 input/KeyEvent.java:12）
+    //? if >=21.9 && <26.3 {
     /*@Override
     public boolean keyPressed(KeyEvent event) {
         if (KeyMappingFactory.isActiveAndMatches(AnimationRouletteKey.KEY_ROULETTE, event.key(), event.scancode())) {
+            onClose();
+            return true;
+        }
+        return super.keyPressed(event);
+    }
+     *///?}
+    //? if >=26.3 {
+    /*@Override
+    public boolean keyPressed(KeyEvent event) {
+        if (KeyMappingFactory.isActiveAndMatches(AnimationRouletteKey.KEY_ROULETTE, event.key(), event.keycode())) {
             onClose();
             return true;
         }

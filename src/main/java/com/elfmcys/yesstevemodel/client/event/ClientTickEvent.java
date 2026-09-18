@@ -69,7 +69,16 @@ public final class ClientTickEvent {
         ClientModelManager.updateModelLoadingMode();
         ClientModelManager.flushPendingModels();
         ObjectPool.cleanup();
+        // 26.3 Window.getRefreshRate 删（/tmp/vanilla-263 Window.java 无该方法）→
+        // findBestMonitor().currentMode().getRefreshRate()（VideoMode.java:99）；无监视器兜底 60
+        //? if <26.3
         refreshRate = client.getWindow().getRefreshRate();
+        //? if >=26.3
+        /*{
+            com.mojang.blaze3d.platform.Monitor ysmMonitor = client.getWindow().findBestMonitor();
+            refreshRate = ysmMonitor == null || ysmMonitor.currentMode() == null
+                    ? 60 : Math.round(ysmMonitor.currentMode().getRefreshRate());
+        }*/
         LocalPlayer localPlayer = client.player;
         if (localPlayer != null) {
             PlayerCapability.get(localPlayer).ifPresent(cap -> cap.tickAnimations());

@@ -40,6 +40,15 @@ public class C2SSwingArmPacket {
     public static void processSwingArm(C2SSwingArmPacket message, ServerPlayer sender) {
         InteractionHand interactionHand = message.hand;
         ItemStack itemInHand = sender.getItemInHand(interactionHand);
+        // 26.3 LivingEntity.swing(hand,SwingAnimation,boolean) 收编本方法模拟的 vanilla 逻辑
+        //（/tmp/vanilla-263 LivingEntity.java:2123-2140：onEntitySwing 守卫/startIfAble 半程节流/
+        // getModifiedSwingDuration 效果修正/ClientboundSwingAnimationPacket 含本体广播）
+        //? if >=26.3 {
+        /*if (itemInHand.isEmpty() || !ToolActionBridge.onEntitySwing(itemInHand, sender)) {
+            sender.swing(interactionHand, net.minecraft.world.item.component.SwingAnimation.DEFAULT, true);
+        }*/
+        //?}
+        //? if <26.3 {
         if (itemInHand.isEmpty() || !ToolActionBridge.onEntitySwing(itemInHand, sender)) {
             if (!sender.swinging || sender.swingTime >= getSwingDuration(sender) / 2 || sender.swingTime < 0) {
                 sender.swingTime = -1;
@@ -55,6 +64,7 @@ public class C2SSwingArmPacket {
                 }
             }
         }
+        //?}
     }
     private static int getSwingDuration(LivingEntity entity) {
         if (MobEffectUtil.hasDigSpeed(entity)) {

@@ -76,7 +76,12 @@ public class MainHandHoldPredicate implements IAnimationPredicate<LivingAnimatab
     }
 
     private boolean checkSwingAndUse(LivingEntity entity, InteractionHand hand) {
+        // 26.3 swing 字段删 → SwingState（同 YSMBinding 注）
+        //? if <26.3
         if (entity.swinging && entity.swingingArm == hand) {
+        //? if >=26.3
+        /*LivingEntity.SwingDescription ysmSwing = entity.getCurrentSwing();
+        if (ysmSwing != null && ysmSwing.hand() == hand) {*/
             return false;
         }
         return !entity.isUsingItem() || entity.getUsedItemHand() != hand;

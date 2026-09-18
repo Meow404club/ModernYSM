@@ -35,7 +35,12 @@ public class InnerClassify {
         if (TouhouLittleMaidCompat.isMaidItem(item)) {
             return "gohei";
         }
+        // 26.3 AxeItem/ShovelItem/HoeItem 类删除（工具组件化收尾，/tmp/vanilla-263
+        // world/item 无此类；同 21.5 SwordItem/PickaxeItem 删除先例）→ 仅标签判定
+        //? if <26.3
         if ((item instanceof AxeItem) || ItemTagsConstants.AXES.matches(itemStack)) {
+        //? if >=26.3
+        /*if (ItemTagsConstants.AXES.matches(itemStack)) {*/
             return "axe";
         }
         //? if <21.5
@@ -44,10 +49,16 @@ public class InnerClassify {
         /*if (ItemTagsConstants.PICKAXES.matches(itemStack)) {*/
             return "pickaxe";
         }
+        //? if <26.3
         if ((item instanceof ShovelItem) || ItemTagsConstants.SHOVELS.matches(itemStack)) {
+        //? if >=26.3
+        /*if (ItemTagsConstants.SHOVELS.matches(itemStack)) {*/
             return "shovel";
         }
+        //? if <26.3
         if ((item instanceof HoeItem) || ItemTagsConstants.HOES.matches(itemStack)) {
+        //? if >=26.3
+        /*if (ItemTagsConstants.HOES.matches(itemStack)) {*/
             return "hoe";
         }
         if ((item instanceof ShieldItem) || ItemTagsConstants.SHIELDS.matches(itemStack)) {

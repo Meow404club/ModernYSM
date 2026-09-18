@@ -9,8 +9,11 @@ import com.mojang.blaze3d.platform.TextureUtil;
 //（/tmp/vanilla-262 GpuFormat.java:14 实证）
 //? if >=21.5 && <26.2
 /*import com.mojang.blaze3d.textures.TextureFormat;*/
-//? if >=26.2
+// 26.3 GpuFormat 随 renderpearl 迁移 com.mojang.renderpearl.api（/tmp/vanilla-263 api/GpuFormat.java:14 RGBA8_UNORM 实证）
+//? if >=26.2 && <26.3
 /*import com.mojang.blaze3d.GpuFormat;*/
+//? if >=26.3
+/*import com.mojang.renderpearl.api.GpuFormat;*/
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceMaps;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;

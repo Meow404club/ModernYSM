@@ -45,7 +45,11 @@ public class HandRenderFunction extends LivingEntityFunction {
     }
 
     public static HandRenderFunction createWhenSwinging() {
+        // 26.3 swing 字段删 → isSwinging()（LivingEntity.java:3474）
+        //? if <26.3
         return new HandRenderFunction((entity, interactionHand) -> entity.swinging && !entity.isSleeping());
+        //? if >=26.3
+        /*return new HandRenderFunction((entity, interactionHand) -> entity.isSwinging() && !entity.isSleeping());*/
     }
 
     public static HandRenderFunction createWhenUsing() {

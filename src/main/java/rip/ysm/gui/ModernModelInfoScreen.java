@@ -142,9 +142,18 @@ public class ModernModelInfoScreen extends OptionScreen {
 
     public void openUrlWithConfirm(String url) {
         if (StringUtils.isBlank(url)) return;
+        // 26.3 Util.OS 撤桌面打开面 → Blaze3D.openUri(URI)；ConfirmLinkScreen(String)→(URI)
+        //? if <26.3 {
         Minecraft.getInstance().setScreen(new ConfirmLinkScreen(confirmed -> {
             if (confirmed) Util.getPlatform().openUri(url);
             Minecraft.getInstance().setScreen(this);
         }, url, true));
+        //?}
+        //? if >=26.3 {
+        /*Minecraft.getInstance().setScreen(new ConfirmLinkScreen(confirmed -> {
+            if (confirmed) com.mojang.blaze3d.Blaze3D.openUri(java.net.URI.create(url));
+            Minecraft.getInstance().setScreen(this);
+        }, java.net.URI.create(url), true));*/
+        //?}
     }
 }

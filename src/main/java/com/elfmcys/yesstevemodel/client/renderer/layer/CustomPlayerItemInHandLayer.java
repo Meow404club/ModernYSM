@@ -10,6 +10,9 @@ import rip.ysm.compat.gun.tacz.TacCompat;
 import com.elfmcys.yesstevemodel.geckolib3.util.RenderUtils;
 import com.elfmcys.yesstevemodel.util.accessors.BufferSourceAccessor;
 import com.mojang.blaze3d.vertex.PoseStack;
+// 26.3 ItemInHandRenderer 类删除（vanilla 第一人称手改 FirstPersonHandsAndItemsRenderer 全私有，
+// /tmp/vanilla-263 实证）；本层 renderItem 委托 >=21.9 已 no-op → 字段/构造 26.3 摘除
+//? if <26.3
 import net.minecraft.client.renderer.ItemInHandRenderer;
 //? if <26.2
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -31,11 +34,17 @@ import com.mojang.math.Axis;
 
 public class CustomPlayerItemInHandLayer extends GeoLayerRenderer<CustomPlayerEntity> {
 
+//? if <26.3 {
     private final ItemInHandRenderer itemRenderer;
 
     public CustomPlayerItemInHandLayer(ItemInHandRenderer itemInHandRenderer) {
         this.itemRenderer = itemInHandRenderer;
     }
+//?}
+//? if >=26.3 {
+    /*public CustomPlayerItemInHandLayer() {
+    }*/
+//?}
 
     //? if <26.2 {
     @Override

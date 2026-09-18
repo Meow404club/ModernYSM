@@ -26,9 +26,18 @@ import rip.ysm.gui.ModernAnimationRouletteScreen;
 
 public final class AnimationRouletteKey {
 
+    //? if <26.3
     public static final KeyMapping KEY_ROULETTE = KeyMappingFactory.createInGameNone("key.yes_steve_model.animation_roulette.desc", InputConstants.Type.KEYSYM, 90, "key.category.yes_steve_model");
+    //? if >=26.3
+    /*// 26.3 SDL 替 GLFW：Type.KEYSYM 摘除（Type 枚举仅余 KEYBOARD/MOUSE，值域=SDL scancode，
+// /tmp/vanilla-263 InputConstants.java:307 实证）→ KEYBOARD+InputConstants.KEY_* 常量
+//（SDL scancode：GLFW_KEY_L(76)≡KEY_L(15) 等字母键映射）
+    public static final KeyMapping KEY_ROULETTE = KeyMappingFactory.createInGameNone("key.yes_steve_model.animation_roulette.desc", InputConstants.Type.KEYBOARD, InputConstants.KEY_Z, "key.category.yes_steve_model");*/
 
+    //? if <26.3
     public static final KeyMapping KEY_LOCK = KeyMappingFactory.createInGameAlt("key.yes_steve_model.lock_roulette.desc", InputConstants.Type.KEYSYM, 76, "key.category.yes_steve_model");
+    //? if >=26.3
+    /*public static final KeyMapping KEY_LOCK = KeyMappingFactory.createInGameAlt("key.yes_steve_model.lock_roulette.desc", InputConstants.Type.KEYBOARD, InputConstants.KEY_L, "key.category.yes_steve_model");*/
 
     private AnimationRouletteKey() {
     }
@@ -46,7 +55,11 @@ public final class AnimationRouletteKey {
 
     //? if >=1.19 {
     private static void onKeyInput(InputEvent.Key event) {
+        // 26.3 InputEvent.Key getScanCode→getKeycode（SDL 改名，nf-26.3 InputEvent.java:268）
+        //? if <26.3
         handleKeyInput(event.getKey(), event.getScanCode(), event.getAction());
+        //? if >=26.3
+        /*handleKeyInput(event.getKey(), event.getKeycode(), event.getAction());*/
     }
     //?} else {
     /*// 1.16.5 无 InputEvent.Key（1.19.3+），键盘事件为 InputEvent.KeyInputEvent（getKey/getScanCode/getAction 同名同义）

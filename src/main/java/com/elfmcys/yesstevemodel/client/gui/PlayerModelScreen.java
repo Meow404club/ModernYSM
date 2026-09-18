@@ -1014,7 +1014,8 @@ moveCursorToEnd();;
     //?}
 
     // 1.21.9+ 输入事件对象化（keyPressed(KeyEvent)，GuiEventListener.java:36；EditBox 同步换代）
-    //? if >=21.9 {
+    // 26.3 KeyEvent.scancode→keycode（SDL 改名，/tmp/vanilla-263 input/KeyEvent.java:12）
+    //? if >=21.9 && <26.3 {
     /*public boolean keyPressed(KeyEvent event) {
         int keyCode = event.key();
         int scanCode = event.scancode();
@@ -1046,7 +1047,40 @@ moveCursorToEnd();;
         }
         return true;
     }
-    *///?}
+     *///?}
+    //? if >=26.3 {
+    /*public boolean keyPressed(KeyEvent event) {
+        int keyCode = event.key();
+        int scanCode = event.keycode();
+        if (handleToggleKey(keyCode, scanCode, event.modifiers())) {
+            return true;
+        }
+        if (keyCode == InputConstants.KEY_F && event.hasControlDown()) {
+            toggleSearchFocus();
+            return true;
+        }
+        if (this.searchBox.isFocused() && this.suggestions != null && this.suggestions.keyPressed(keyCode)) {
+            navigateToSuggestedPack();
+            resetCurrentPage();
+            init();
+            return true;
+        }
+        boolean zIsPresent = InputConstants.getKey(new KeyEvent(keyCode, scanCode, 0)).getNumericKeyValue().isPresent();
+        String value = this.searchBox.getValue();
+        if (zIsPresent) {
+            return true;
+        }
+        if (!this.searchBox.keyPressed(event)) {
+            return (this.searchBox.isFocused() && this.searchBox.isVisible() && keyCode != 256) || super.keyPressed(event);
+        }
+        if (!Objects.equals(value, this.searchBox.getValue())) {
+            resetCurrentPage();
+            init();
+            return true;
+        }
+        return true;
+    }
+     *///?}
     //? if <21.9 {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (handleToggleKey(keyCode, scanCode, modifiers)) {

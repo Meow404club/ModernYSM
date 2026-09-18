@@ -6,6 +6,9 @@ import com.elfmcys.yesstevemodel.geckolib3.geo.GeoLayerRenderer;
 import com.elfmcys.yesstevemodel.geckolib3.geo.animated.AnimatedGeoModel;
 import com.elfmcys.yesstevemodel.geckolib3.util.RenderUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
+// 26.3 ItemInHandRenderer 类删除（同 CustomPlayerItemInHandLayer 注）；本层 renderItem
+// 委托 >=21.9 已 no-op（renderArmorPiece 26.2+ 分支即 no-op）→ 字段/构造 26.3 摘除
+//? if <26.3
 import net.minecraft.client.renderer.ItemInHandRenderer;
 //? if <26.2
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -34,6 +37,7 @@ import net.minecraft.world.item.ItemStack;
 
 public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity> {
 
+    //? if <26.3
     private final ItemInHandRenderer itemRenderer;
 
     //? if <1.17 {
@@ -56,9 +60,11 @@ public class CustomPlayerArmorLayer extends GeoLayerRenderer<CustomPlayerEntity>
         //?}
         //? if >=1.19.2 && <1.21.2
         this.itemRenderer = context.getItemInHandRenderer();
-        // 1.21.2 Context 删 getItemInHandRenderer → GameRenderer 公有字段
-        //? if >=1.21.2
+        // 1.21.2 Context 删 getItemInHandRenderer → GameRenderer 公有字段；26.3 字段随类删除
+        //? if >=1.21.2 && <26.3
         /*this.itemRenderer = net.minecraft.client.Minecraft.getInstance().gameRenderer.itemInHandRenderer;*/
+        //? if >=26.3
+        /*// no-op（26.3 无 ItemInHandRenderer，头饰渲染 21.9+ 本就不挂载，功能债在案）*/
     }
     //? }
 

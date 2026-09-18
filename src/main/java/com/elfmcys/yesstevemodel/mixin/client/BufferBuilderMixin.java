@@ -1,6 +1,10 @@
 package com.elfmcys.yesstevemodel.mixin.client;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
+// VertexFormat 仅 >=1.17 && <26.2 的 mode shadow 消费；26.3 VertexFormat 迁
+// renderpearl.api.vertex（/tmp/vanilla-263 实证）——本 mixin 条目 >=1.21 已剔除，
+// 类仅为编译面保留，>=26.3 无消费面不导入
+//? if <26.3
 import com.mojang.blaze3d.vertex.VertexFormat;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

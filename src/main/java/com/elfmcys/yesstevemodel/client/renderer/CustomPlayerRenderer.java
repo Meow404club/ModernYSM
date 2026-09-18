@@ -71,8 +71,13 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
         //（vanilla-1.21.3 GameRenderer.java:84）
         //? if >=1.19.2 && <1.21.2
         addLayerRenderer(new CustomPlayerItemInHandLayer(context.getItemInHandRenderer()));
-        //? if >=1.21.2
+        // 1.21.2 起 Context 删 getItemInHandRenderer → GameRenderer 公有字段；
+        // 26.3 ItemInHandRenderer 类删除（FirstPersonHandsAndItemsRenderer 全私有化，
+        // /tmp/vanilla-263 实证）且层内 renderItem 委托本就 >=21.9 no-op → 层改无参构造
+        //? if >=1.21.2 && <26.3
         /*addLayerRenderer(new CustomPlayerItemInHandLayer(Minecraft.getInstance().gameRenderer.itemInHandRenderer));*/
+        //? if >=26.3
+        /*addLayerRenderer(new CustomPlayerItemInHandLayer());*/
         addLayerRenderer(new CustomPlayerElytraLayer(context));
         addLayerRenderer(new CustomPlayerParrotLayer(context));
         addLayerRenderer(new CustomPlayerArmorLayer(context));

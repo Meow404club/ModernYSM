@@ -39,6 +39,8 @@ public class ItemHoldAnimationPredicate implements IAnimationPredicate<LivingAni
                 return PlayState.CONTINUE;
             }
         }
+        // 26.3 swing 字段删 → SwingState（同 YSMBinding 注）；swingTime==0≈round(进度*duration)==0
+        //? if <26.3 {
         if (livingEntity.swinging && !livingEntity.isSleeping()) {
             if (livingEntity.swingTime == 0 && ((LivingAnimatable) event.getAnimatable()).getPositionTracker().markProcessed(1)) {
                 event.getController().stopTransition();
@@ -53,6 +55,26 @@ public class ItemHoldAnimationPredicate implements IAnimationPredicate<LivingAni
             }
             return IAnimationPredicate.playAnimationWithValid(event, livingEntity.swingingArm == InteractionHand.MAIN_HAND ? "swing_hand" : "swing_offhand", ILoopType.EDefaultLoopTypes.PLAY_ONCE, i);
         }
+        //?}
+        //? if >=26.3 {
+        /*if (livingEntity.isSwinging() && !livingEntity.isSleeping()) {
+            net.minecraft.world.entity.LivingEntity.SwingDescription ysmSwing = livingEntity.getCurrentSwing();
+            InteractionHand ysmSwingHand = ysmSwing == null ? InteractionHand.MAIN_HAND : ysmSwing.hand();
+            int ysmSwingTick = ysmSwing == null ? -1 : Math.round(livingEntity.getSwingAnimation(0.0f) * ysmSwing.durationTicks());
+            if (ysmSwingTick == 0 && ((LivingAnimatable) event.getAnimatable()).getPositionTracker().markProcessed(1)) {
+                event.getController().stopTransition();
+            }
+            ConditionManager conditionManager = event.getAnimatable().getModelConfig();
+            ConditionSwing conditionSwing = ysmSwingHand == InteractionHand.MAIN_HAND ? conditionManager.getSwingMainhand() : conditionManager.getSwingOffhand();
+            if (conditionSwing != null) {
+                String str2 = conditionSwing.doTest(livingEntity, ysmSwingHand);
+                if (StringUtils.isNoneBlank(str2)) {
+                    return IAnimationPredicate.playAnimationWithValid(event, str2, ILoopType.EDefaultLoopTypes.PLAY_ONCE, i);
+                }
+            }
+            return IAnimationPredicate.playAnimationWithValid(event, ysmSwingHand == InteractionHand.MAIN_HAND ? "swing_hand" : "swing_offhand", ILoopType.EDefaultLoopTypes.PLAY_ONCE, i);
+        }
+        *///?}
         return PlayState.CONTINUE;
     }
 }

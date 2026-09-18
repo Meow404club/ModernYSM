@@ -18,7 +18,12 @@ import rip.ysm.gui.YsmSliderButton;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+// 26.3 运行时不再带 GLFW（SDL 替 GLFW， FML 12/loader）→ import 按线收窄；
+// 26.3 分支左右键用 InputConstants.KEY_LEFT/KEY_RIGHT（SDL scancode 80/79）
+//? if <26.3
 import org.lwjgl.glfw.GLFW;
+//? if >=26.3
+/*import com.mojang.blaze3d.platform.InputConstants;*/
 
 import java.text.DecimalFormat;
 
@@ -130,11 +135,27 @@ public class RangedSliderWidget extends YsmSliderButton {
         }
     }
 
-    //? if >=21.9 {
+    //? if >=21.9 && <26.3 {
     /*@Override
     public boolean keyPressed(KeyEvent event) {
         boolean flag = event.key() == GLFW.GLFW_KEY_LEFT;
         if (flag || event.key() == GLFW.GLFW_KEY_RIGHT) {
+            if (this.minValue > this.maxValue) flag = !flag;
+            float f = flag ? -1F : 1F;
+            if (stepSize <= 0D) this.setSliderValue(this.value + (f / (this.width - 8)));
+            else this.setValue(this.getValue() + f * this.stepSize);
+            return true;
+        }
+        return false;
+    }
+     *///?}
+    // 26.3：GLFW 摘除 → InputConstants.KEY_LEFT/KEY_RIGHT（SDL scancode）；keyPressed(KeyEvent)
+    // 签名与 KeyEvent.key() 语义 26.3 同形（KeyEvent.java:12 key=@Value 首参不变）
+    //? if >=26.3 {
+    /*@Override
+    public boolean keyPressed(KeyEvent event) {
+        boolean flag = event.key() == InputConstants.KEY_LEFT;
+        if (flag || event.key() == InputConstants.KEY_RIGHT) {
             if (this.minValue > this.maxValue) flag = !flag;
             float f = flag ? -1F : 1F;
             if (stepSize <= 0D) this.setSliderValue(this.value + (f / (this.width - 8)));

@@ -149,12 +149,24 @@ public class ModelInfoScreen extends Screen {
 
     private void openUrl(@Nullable String str) {
         if (str != null && StringUtils.isNoneBlank(str)) {
+            // 26.3 Util.OS 撤桌面打开面（openUri/openFile 删，Util.java:1205 仅余 telemetryName）
+            // → Blaze3D.openUri(URI)（Blaze3D.java:31）；ConfirmLinkScreen(String)→(URI)
+            //? if <26.3 {
             Minecraft.getInstance().setScreen(new ConfirmLinkScreen(confirmed -> {
                 if (confirmed) {
                     Util.getPlatform().openUri(str);
                 }
                 Minecraft.getInstance().setScreen(this);
             }, str, true));
+            //?}
+            //? if >=26.3 {
+            /*Minecraft.getInstance().setScreen(new ConfirmLinkScreen(confirmed -> {
+                if (confirmed) {
+                    com.mojang.blaze3d.Blaze3D.openUri(java.net.URI.create(str));
+                }
+                Minecraft.getInstance().setScreen(this);
+            }, java.net.URI.create(str), true));*/
+            //?}
         }
     }
 

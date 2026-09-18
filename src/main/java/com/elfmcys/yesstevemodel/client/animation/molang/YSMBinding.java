@@ -164,10 +164,31 @@ public class YSMBinding extends ContextBinding {
         livingEntityVar("offhand_charged_crossbow", ctx -> isChargedCrossbow(ctx, InteractionHand.OFF_HAND));
 
         livingEntityVar("is_fishing", YSMBinding::isFishing);
+        // 26.3 LivingEntity swing 状态换代：swinging/swingTime/swingingArm 字段删 → SwingState
+        //（isSwinging()/getCurrentSwing()=SwingDescription(hand,animation,durationTicks)/
+        // getSwingAnimation(p)，/tmp/vanilla-263 LivingEntity.java:3466-3476 实证）
+        //? if <26.3 {
         livingEntityVar("swinging", ctx -> ctx.entity().swinging);
         livingEntityVar("swing_time", ctx -> ctx.entity().swingTime);
         livingEntityVar("swinging_arm", ctx -> ctx.entity().swingingArm == InteractionHand.MAIN_HAND ? 0 : 1);
         livingEntityVar("attack_time", ctx -> ctx.entity().getAttackAnim(ctx.animationEvent().getFrameTime()));
+        //?}
+        //? if >=26.3 {
+        /*livingEntityVar("swinging", ctx -> ctx.entity().isSwinging());
+        // swing_time 旧语义=挥动起始 tick 计数（-1=未挥动）；26.3 无公开 tick 访问器 →
+        // 近似=round(动画进度*durationTicks)（SwingState.animation=min(ticks/duration,1) 线性，
+        // ponytail: 每帧一次标量换算，模型脚本语义偏移在半 tick 内）
+        livingEntityVar("swing_time", ctx -> {
+            net.minecraft.world.entity.LivingEntity.SwingDescription ysmSwing = ctx.entity().getCurrentSwing();
+            return ysmSwing == null ? -1 : Math.round(ctx.entity().getSwingAnimation(0.0f) * ysmSwing.durationTicks());
+        });
+        // 未挥动时旧字段保持上次值 → 26.3 null 兜底 MAIN_HAND（0），行为面=swinging 门后消费不受扰
+        livingEntityVar("swinging_arm", ctx -> {
+            net.minecraft.world.entity.LivingEntity.SwingDescription ysmSwing = ctx.entity().getCurrentSwing();
+            return (ysmSwing == null ? InteractionHand.MAIN_HAND : ysmSwing.hand()) == InteractionHand.MAIN_HAND ? 0 : 1;
+        });
+        livingEntityVar("attack_time", ctx -> ctx.entity().getSwingAnimation(ctx.animationEvent().getFrameTime()));
+        *///?}
         playerEntityVar("texture_name", new TextureName());
         playerEntityVar("first_person_mod_hide", new FirstPersonModHide());
 

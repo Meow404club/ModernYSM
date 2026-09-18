@@ -4,7 +4,13 @@ package rip.ysm.gui;
 /*import java.util.ArrayList;
 import java.util.List;
 
+// 26.3 RenderPipeline 随 renderpearl 迁移 renderpearl.api.pipeline（/tmp/vanilla-263 实证）；
+// 本文件整体为 >=21.6 存储态（块注释包裹），内部孪生必须裸行+行条件，
+// 注释文本不得再出现块注释定界符（会提前闭合外层存储注释）
+//? if <26.3
 import com.mojang.blaze3d.pipeline.RenderPipeline;
+//? if >=26.3
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
@@ -139,6 +145,12 @@ public final class RouletteFanState implements GuiElementRenderState {
 
         @Override
         public VertexConsumer setNormal(float x, float y, float z) {
+            return this;
+        }
+
+        // 26.3 VertexConsumer 新增抽象 setUv3(float,float)（blaze3d/vertex/VertexConsumer.java:31）
+        // ——不加 @Override（<26.3 接口无此方法）即全版本兼容的空实现
+        public VertexConsumer setUv3(float u, float v) {
             return this;
         }
     }

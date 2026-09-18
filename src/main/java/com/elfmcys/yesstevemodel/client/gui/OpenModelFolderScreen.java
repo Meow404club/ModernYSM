@@ -36,7 +36,11 @@ public class OpenModelFolderScreen extends Screen {
         clearWidgets();
 //?}
         ysmAddWidget(YsmGui.button(x, y, 150, 20, YsmText.translatable("gui.yes_steve_model.open_model_folder.open"), button -> {
+            // 26.3 Util.OS 撤桌面打开面 → Blaze3D.openPath(Path)（Blaze3D.java:39）
+            //? if <26.3
             Util.getPlatform().openFile(ServerModelManager.CUSTOM.toFile());
+            //? if >=26.3
+            /*com.mojang.blaze3d.Blaze3D.openPath(ServerModelManager.CUSTOM);*/
         }));
         ysmAddWidget(YsmGui.button(x + 160, y, 150, 20, YsmText.translatable("gui.yes_steve_model.model.return"), button2 -> {
             Minecraft.getInstance().setScreen(this.parentScreen);

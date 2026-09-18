@@ -94,16 +94,27 @@ public class WorldRendererMixin {
     //?}
     // 26.2 renderLevel 再换代（/tmp/vanilla-262 LevelRenderer.java:156）：改名 render、
     // 去 ChunkSectionsToRender 尾参（8 参）；签名开放形同上
-    //? if >=26.2 {
+    //? if >=26.2 && <26.3 {
     /*@Inject(method = {"render(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/renderer/state/level/CameraRenderState;Lorg/joml/Matrix4fc;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;Z)V"}, at = {@At("HEAD")})
     private void renderLevel26(com.mojang.blaze3d.resource.GraphicsResourceAllocator resourceAllocator, net.minecraft.client.DeltaTracker deltaTracker, boolean renderOutline, net.minecraft.client.renderer.state.level.CameraRenderState cameraState, org.joml.Matrix4fc modelViewMatrix, com.mojang.blaze3d.buffers.GpuBufferSlice terrainFog, org.joml.Vector4f fogColor, boolean shouldRenderSky, CallbackInfo ci) {*/
+    //?}
+    // 26.3 render 再换代（/tmp/vanilla-263 LevelRenderer.java:186 实证）：去 DeltaTracker 头参、
+    // 去 modelViewMatrix（26.3 内收 RenderSystem.getModelViewStack()）、尾加 consistentDepthRequired
+    //（7 参）；GpuBufferSlice 迁 renderpearl.api.buffers。26.3 无 DeltaTracker 参 → 裸尾的
+    // 部分帧取 Minecraft.getDeltaTracker()（Minecraft.java:2811 同款消费形）。签名开放形同上
+    //? if >=26.3 {
+    /*@Inject(method = {"render(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;ZLnet/minecraft/client/renderer/state/level/CameraRenderState;Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;Lorg/joml/Vector4f;ZZ)V"}, at = {@At("HEAD")})
+    private void renderLevel26(com.mojang.blaze3d.resource.GraphicsResourceAllocator resourceAllocator, boolean renderOutline, net.minecraft.client.renderer.state.level.CameraRenderState cameraState, com.mojang.renderpearl.api.buffers.GpuBufferSlice terrainFog, org.joml.Vector4f fogColor, boolean shouldRenderSky, boolean consistentDepthRequired, CallbackInfo ci) {*/
     //?}
         if (YesSteveModel.isAvailable()) {
             ModelPreviewRenderer.setFirstPersonMode(true);
             //? if <1.21
             EntityRenderCache.tick(partialTick);
-            //? if >=1.21
+            // 26.3 render 无 DeltaTracker 参（/tmp/vanilla-263 LevelRenderer.java:186）→ Minecraft 访问器
+            //? if >=1.21 && <26.3
             /*EntityRenderCache.tick(deltaTracker.getGameTimeDeltaPartialTick(false));*/
+            //? if >=26.3
+            /*EntityRenderCache.tick(net.minecraft.client.Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false));*/
         }
     }
 
@@ -157,9 +168,14 @@ public class WorldRendererMixin {
     private void renderLevelPost26(com.mojang.blaze3d.resource.GraphicsResourceAllocator resourceAllocator, net.minecraft.client.DeltaTracker deltaTracker, boolean renderOutline, net.minecraft.client.renderer.state.level.CameraRenderState cameraState, org.joml.Matrix4fc modelViewMatrix, com.mojang.blaze3d.buffers.GpuBufferSlice terrainFog, org.joml.Vector4f fogColor, boolean shouldRenderSky, net.minecraft.client.renderer.chunk.ChunkSectionsToRender chunkSectionsToRender, CallbackInfo ci) {*/
     //?}
     // 26.2：renderLevel→render、去 ChunkSectionsToRender 尾参（LevelRenderer.java:156 同 HEAD 注）
-    //? if >=26.2 {
+    //? if >=26.2 && <26.3 {
     /*@Inject(method = {"render(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/renderer/state/level/CameraRenderState;Lorg/joml/Matrix4fc;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;Z)V"}, at = {@At("TAIL")})
     private void renderLevelPost26(com.mojang.blaze3d.resource.GraphicsResourceAllocator resourceAllocator, net.minecraft.client.DeltaTracker deltaTracker, boolean renderOutline, net.minecraft.client.renderer.state.level.CameraRenderState cameraState, org.joml.Matrix4fc modelViewMatrix, com.mojang.blaze3d.buffers.GpuBufferSlice terrainFog, org.joml.Vector4f fogColor, boolean shouldRenderSky, CallbackInfo ci) {*/
+    //?}
+    // 26.3：render 7 参形（同 HEAD 注，/tmp/vanilla-263 LevelRenderer.java:186）
+    //? if >=26.3 {
+    /*@Inject(method = {"render(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;ZLnet/minecraft/client/renderer/state/level/CameraRenderState;Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;Lorg/joml/Vector4f;ZZ)V"}, at = {@At("TAIL")})
+    private void renderLevelPost26(com.mojang.blaze3d.resource.GraphicsResourceAllocator resourceAllocator, boolean renderOutline, net.minecraft.client.renderer.state.level.CameraRenderState cameraState, com.mojang.renderpearl.api.buffers.GpuBufferSlice terrainFog, org.joml.Vector4f fogColor, boolean shouldRenderSky, boolean consistentDepthRequired, CallbackInfo ci) {*/
     //?}
         if (YesSteveModel.isAvailable()) {
             EntityRenderCache.clear();

@@ -60,7 +60,11 @@ public class CustomFishingHookRenderer {
         if (!ToolActionBridge.canFishingRodCast(player.getMainHandItem())) {
             hand = -hand;
         }
+        // 26.3 getAttackAnim 删 → getSwingAnimation(p)（LivingEntity.java:3470，同为 0..1 进度）
+        //? if <26.3
         float swingProgressSqrt = Mth.sin(Mth.sqrt(player.getAttackAnim(partialTick)) * 3.1415927f);
+        //? if >=26.3
+        /*float swingProgressSqrt = Mth.sin(Mth.sqrt(player.getSwingAnimation(partialTick)) * 3.1415927f);*/
         float yawOffset = Mth.lerp(partialTick, player.yBodyRotO, player.yBodyRot) * 0.017453292f;
         double dSin = Mth.sin(yawOffset);
         double dCos = Mth.cos(yawOffset);

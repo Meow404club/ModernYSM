@@ -63,8 +63,12 @@ public class InventoryScreenMixin {
     }
      *///?}
     // 1.19.3：renderEntityInInventory 仍是 (IIIFF, LivingEntity) 六参（1.19.3 merged jar
-    // javap 实证；GuiGraphics/PoseStack 版与 FollowsMouse 更名 1.19.4 起）→ 与 <1.19.3 同形
-    //? if >=1.19.3 && <1.20 {
+    // javap 实证）。1.19.4 起：更名 renderEntityInInventoryFollowsMouse + GuiGraphics→
+    // PoseStack 七参（forge-1.19.4-45.4.0 merged jar javap 实证；InventoryScreen.render():82
+    // invokestatic 调用点）→ 按 1.19.3/1.19.4 切分双块。
+    // 注意双语义：/* */ 包裹护 1201 vcs 原文直通编译（原文层面注释态）；生成线条件为真时
+    // stonecutter 剥包裹成活码（1.19.4 build 红实证过「包裹≠死码」），故死活由条件管。
+    //? if >=1.19.3 && <1.19.4 {
     /*
     @Inject(at = {@At("HEAD")}, method = {"renderEntityInInventory(IIIFFLnet/minecraft/world/entity/LivingEntity;)V"})
     private static void renderEntityInInventoryFollowsAnglePre(int x, int y, int scale, float angleXComponent, float angleYComponent, LivingEntity entity, CallbackInfo ci) {
@@ -73,6 +77,18 @@ public class InventoryScreenMixin {
 
     @Inject(at = {@At("RETURN")}, method = {"renderEntityInInventory(IIIFFLnet/minecraft/world/entity/LivingEntity;)V"})
     private static void renderEntityInInventoryFollowsAnglePost(int x, int y, int scale, float angleXComponent, float angleYComponent, LivingEntity entity, CallbackInfo ci) {
+        ModelPreviewRenderer.setPreviewMode(false);
+    }
+     *///?}
+    //? if >=1.19.4 && <1.20 {
+    /*
+    @Inject(at = {@At("HEAD")}, method = {"renderEntityInInventoryFollowsMouse(Lcom/mojang/blaze3d/vertex/PoseStack;IIIFFLnet/minecraft/world/entity/LivingEntity;)V"})
+    private static void renderEntityInInventoryFollowsAnglePre(PoseStack poseStack, int x, int y, int scale, float angleXComponent, float angleYComponent, LivingEntity entity, CallbackInfo ci) {
+        ModelPreviewRenderer.setPreviewMode(true);
+    }
+
+    @Inject(at = {@At("RETURN")}, method = {"renderEntityInInventoryFollowsMouse(Lcom/mojang/blaze3d/vertex/PoseStack;IIIFFLnet/minecraft/world/entity/LivingEntity;)V"})
+    private static void renderEntityInInventoryFollowsAnglePost(PoseStack poseStack, int x, int y, int scale, float angleXComponent, float angleYComponent, LivingEntity entity, CallbackInfo ci) {
         ModelPreviewRenderer.setPreviewMode(false);
     }
      *///?}

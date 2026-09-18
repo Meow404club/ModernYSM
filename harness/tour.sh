@@ -128,6 +128,9 @@ printf 'eula=true\n' > "$SERVER_DIR/eula.txt"
 if [ ! -f "$SERVER_DIR/server.properties" ]; then
   cat > "$SERVER_DIR/server.properties" <<'PROPS'
 online-mode=false
+# 26.3 white-list 默认翻转为 true（DedicatedServerProperties.java:125，m3-263-increment）→
+# 必须显式写 false，否则 Dev 离线客户端被拒（26.1/26.2 同键同义，写 false 零影响）
+white-list=false
 level-type=minecraft\:flat
 difficulty=0
 gamemode=creative
@@ -145,6 +148,31 @@ if grep -q '^server-port=' "$SERVER_DIR/server.properties" 2>/dev/null; then
 else
   printf 'server-port=%s\n' "$PORT" >> "$SERVER_DIR/server.properties"
 fi
+# white-list 幂等下压（同 server-port 手法）：26.3 默认翻转为 true（见模板注），
+# 旧 run 目录残留 true 时新模板行不会重写（fresh 块仅首跑生效）→ 每跑强制校直
+if grep -q '^white-list=' "$SERVER_DIR/server.properties" 2>/dev/null; then
+  sed -i 's/^white-list=.*/white-list=false/' "$SERVER_DIR/server.properties"
+else
+  printf 'white-list=false\n' >> "$SERVER_DIR/server.properties"
+fi
+
+# ---- 0. 26.x SDL 面（m3-263-increment）----
+# 26.3 起 vanilla 换 SDL3/renderpearl：GlBackend 强制 SDL_GL_FRAMEBUFFER_SRGB_CAPABLE=1
+#（renderpearl GlBackend.java:68），而 Xvfb swrast GLX 无 sRGB fbconfig（实测 0/80）→
+# glXChooseFBConfig 必空，client 无法建后端。预载 shim 拦截 dlsym("SDL_GL_SetAttribute")
+# 丢弃该请求（dladdr 判定 libSDL3 才生效，其余 dlsym 原样透传；构造期 dlvsym 取真实
+# dlsym，无递归无锁竞争）。另 SDL3 优先 Wayland 驱动（WAYLAND_DISPLAY 泄漏）→ 强制 x11。
+# 生产 jar 不含此物；真机 sRGB fbconfig 存在，无需 shim。
+# shim 只挂在 gradle（游戏 JVM）进程上——Xvfb/ffmpeg 不吃 LD_PRELOAD（Xvfb 早期
+# dlsym 会踩包装器空指针，ffmpeg 同理，见 tour8 段错误实录）
+case "$VERSION" in
+  26.*-neoforge)
+    YSM_TOUR_SDL_SHIM="LD_PRELOAD=$ROOT/harness/lib/tour_sdl_srgb.so SDL_VIDEO_DRIVER=x11"
+    ;;
+  *)
+    YSM_TOUR_SDL_SHIM=""
+    ;;
+esac
 
 # ---- 1. Xvfb（独占 :9x 段；PID 入表）----
 setsid Xvfb ":$DISPLAY_NUM" -screen 0 640x480x24 -nolisten tcp >/dev/null 2>&1 &
@@ -156,7 +184,7 @@ export DISPLAY=":$DISPLAY_NUM"
 # ---- 2. server（--no-daemon + setsid：树完整可整组清理；stdin=FIFO 注入控制台）----
 rm -f "$FIFO" && mkfifo "$FIFO"
 : > "$OUT/server.log"
-setsid sh gradlew $GRADLE_SERVER --no-daemon --no-configuration-cache < "$FIFO" > "$OUT/server.log" 2>&1 &
+setsid sh -c "$YSM_TOUR_SDL_SHIM \"$ROOT/gradlew\" $GRADLE_SERVER --no-daemon --no-configuration-cache < \"$FIFO\" > \"$OUT/server.log\" 2>&1" &
 SERVER_PID=$!
 echo "$SERVER_PID" >> "$PIDFILE"
 exec 3>"$FIFO"   # 保持写端，防 EOF 杀 server
@@ -212,13 +240,14 @@ printf '%s\n' "$PORT" > "$CLIENT_DIR/harness.port"
 
 rm -f "$CLIENT_DIR/harness.armed" "$CLIENT_DIR/cmd.txt" "$CLIENT_DIR/harness.ready"
 : > "$OUT/client.log"
-setsid sh gradlew $GRADLE_CLIENT --no-daemon --no-configuration-cache > "$OUT/client.log" 2>&1 &
+setsid sh -c "$YSM_TOUR_SDL_SHIM \"$ROOT/gradlew\" $GRADLE_CLIENT --no-daemon --no-configuration-cache > \"$OUT/client.log\" 2>&1" &
 CLIENT_PID=$!
 echo "$CLIENT_PID" >> "$PIDFILE"
 touch "$CLIENT_DIR/harness.armed"
 
 grab() { # $1=输出名
-  ffmpeg -y -loglevel error -f x11grab -framerate 2 -i ":$DISPLAY_NUM" -frames:v 1 "$SCREENSHOT_DIR/$1.png" 2>/dev/null \
+  # LD_PRELOAD 剥离：srgb shim 只为游戏 JVM；ffmpeg 走 x11grab 不需要且可能被 dlsym 改写误伤
+  LD_PRELOAD= ffmpeg -y -loglevel error -f x11grab -framerate 2 -i ":$DISPLAY_NUM" -frames:v 1 "$SCREENSHOT_DIR/$1.png" 2>/dev/null \
     && echo "[tour] shot $1" || echo "[tour] SHOT FAILED: $1"
 }
 step() { # $1=screen $2=输出名

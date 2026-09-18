@@ -239,7 +239,13 @@ sourceSets.main {
             // RenderArmEvent/RenderHandEvent 携带的 SubmitNodeCollector 直传；全树分代挂载同
             // FQCN（2110→2111 先例），2610 event26x 异包孪生被本树吸收（RenderFirstPlayerForgeHook
             // 内联 AfterOpaqueFeatures 版），v26 孪生挂载仅剩 26.1 线
-            srcDir(rootProject.file("src/neoforge-262/java"))
+            // 26.3 分叉（m3-263-increment）：RenderArmEvent 删 getAvatar（携 PlayerRenderState，
+            // 事件仅 FirstPersonHandsAndItemsRenderer 首-person 自臂触发）→ 本树不可再复用
+            if (stonecutter.eval(stonecutter.current.version, "<26.3")) {
+                srcDir(rootProject.file("src/neoforge-262/java"))
+            } else {
+                srcDir(rootProject.file("src/neoforge-263/java"))
+            }
         }
         if (pre1205) {
             srcDir(rootProject.file("src/neoforge-1204/java"))
@@ -306,9 +312,13 @@ sourceSets.main {
             srcDir(rootProject.file("src/neoforge-1211/shim/rip/ysm/compat"))
         } else if (stonecutter.eval(stonecutter.current.version, "<26.2")) {
             srcDir(rootProject.file("src/neoforge-2111/shim/rip/ysm/compat"))
-        } else {
+        } else if (stonecutter.eval(stonecutter.current.version, "<26.3")) {
             // 26.2 代 shim 副本（SlashBladeRenderer collector 形签名分歧 1 文件，m3-262-submit-dag-port）
             srcDir(rootProject.file("src/neoforge-262-shim/shim/rip/ysm/compat"))
+        } else {
+            // 26.3 代 shim 副本（262-shim 分代；ItemUseAnimationPredicate 26.3 swing 字段
+            // 换代 isSwinging()——RAW 树无条件化能力，照 262 分代先例 fork）
+            srcDir(rootProject.file("src/neoforge-263-shim/shim/rip/ysm/compat"))
         }
         // 26.1 三线 FirstPersonModel 真 compat（fpm-26x-pr659 卡A）：shim 的
         // rip/ysm/compat/firstperson/FirstPersonCompat.java（恒 false）对这三线剔除，
@@ -397,6 +407,7 @@ tasks {
         val is21_11 = stonecutter.eval(stonecutter.current.version, ">=21.11")
         val is26 = stonecutter.eval(stonecutter.current.version, ">=26")
         val is26_2 = stonecutter.eval(stonecutter.current.version, ">=26.2")
+        val is26_3 = stonecutter.eval(stonecutter.current.version, ">=26.3")
         val rlToIdentifier = register<org.gradle.api.DefaultTask>("rlToIdentifier") {
             dependsOn("stonecutterGenerate")
             mustRunAfter("stonecutterGenerate")
@@ -462,6 +473,15 @@ tasks {
                         rules.add(Regex("ChatFormatting\\.GRAY\\.getColor\\(\\)\\.intValue\\(\\)") to "0xAAAAAA")
                         rules.add(Regex("ChatFormatting\\.GOLD\\.getColor\\(\\)\\.intValue\\(\\)") to "0xFFAA00")
                         rules.add(Regex("ChatFormatting\\.GREEN\\.getColor\\(\\)\\.intValue\\(\\)") to "0x55FF55")
+                    }
+                    if (is26_3) {
+                        // 26.3 PoseStack 换代（/tmp/vanilla-263 PoseStack.java:44-95 实证）：
+                        // mulPose(Quaternionf) 删 → rotate(Quaternionfc)/rotate(Axis,float)
+                        //（Quaternionf 实现 Quaternionfc，单参调用直换）。mulPose(Matrix4fc) 保留，
+                        // 负向先行排除 pose.pose() 实参（本仓全部 3 处 Matrix4fc 位点均为
+                        // inner.mulPose(pose.pose()) 形，CustomPlayerElytraLayer:163 等）；
+                        // 生成树注释内同形文本一并命中=注释漂移，不入源、不审计
+                        rules.add(Regex("\\.mulPose\\((?!pose\\.pose\\()") to ".rotate(")
                     }
                     root.walkTopDown().filter { it.isFile && it.extension == "java" }.forEach { f ->
                         val text = f.readText()
@@ -598,6 +618,7 @@ tasks.named<ProcessResources>("processResources") {
         "26.1.1" to 84,
         "26.1.2" to 84,
         "26.2" to 88,
+        "26.3" to 97,
         "1.20.2" to 18,
         "1.20.3" to 22,
         "1.20.5" to 32,

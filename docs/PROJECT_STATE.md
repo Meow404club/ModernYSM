@@ -199,3 +199,12 @@
 - 2026-09-11 M3 平铺原则：全版本谱（地图玩家友好）；枚举以 maven 官方清单为准
 - 2026-09-10 M3 前置定案：unimined 路线三代全 PASS，legacy/ 文件夹方案作废
 - 2026-09-10 架构重构方向：脱离 Architectury 转 StonecutterTemplate；native（openysm.cpp）以子模块接入并完成源码对齐
+
+## 2026-09-19 批次收官（dev→045e62a，候选池 A~H+连带四卡全落地）
+- **合并链**：A 26.2 预览 PiP 418aae6 → C quad.normal 定界 44a1e9e → B 三债捆+263 孪生 5da9e4b → D gui-tail-flush 1d99393 → F NFRT 直驱 POC GO f62e8d7 → G slashblade 钉序 03eb6cf → H native-262 1d24b21 → E 1.16.x 三症 010f298 → filetree 热修 7ac0403 → 平铺 82348d5 → manifest 38 线 045e62a
+- **能力面**：26.2/26.3 预览 PiP 活（submit 计数实证）；26.x SIMD 复活（native staging 逐字段探测 f63df97，tour 102 行 simd-fast 零回退）；21.6+ GUI 预览遮挡修复（GuiRenderer tail flush 当帧正交）；1.20.2/1.20.3/1.20.5 三线平铺入列（NFRT 直驱，FML 分代真值表 javap 实证：1.20.2/3=1.0.16 代、1.20.3 混合代、1.20.5 LocalPlayer 类级 @OnlyIn=FML 3.0.18 硬错）；1.16.1~4 升可玩级（mixin→0.8.4/modlauncher→8.1.3 强升+chasm 混排块回归修复+ForgeArgTypeSyncShim+readUtf(32767)）；fileTree 冷检出非确定根治
+- **发布物料**：RELEASE-MANIFEST.md 38 线口径（audit 38/38 零 BROKEN；三线独立复现 sha256 逐字节一致=构建可复现成立；收集任务 0e39933 起收 reobfJar，38 件收集件与 versions 取件 cmp 全同）；版本号 2.6.6.6 现值、升版待裁决（升版须重跑全量+manifest）
+- **在案债（平键 tasks.feature-debts.debt-*）**：gpu-preview-simd-not-covered / gpu-preview-scissor-flush / oculus-dual-jar-classpath（暂良性）/ tour-online-mode-idempotent；已清偿：filetree-readdir-firstperson@7ac0403、263-pip-preview@5da9e4b
+- **教训**：#133 state 覆写丢债→债账平键硬规矩 #139；#134 共享面门禁必含 26.x 兄弟线+neoformruntime zip 引用前验 version.json id（6fbc85da=26.3、1c500a45=26.2）；#137 xvfb+llvmpipe 进程内 glReadPixels 堆损坏→像素证据只走外部 ffmpeg；#142 ~/.ysm 共享库并发竞态→并行会话 YSM_CORE_LIB 钉各自 worktree
+- **待用户裁决**：子模块 f63df97 推送 / Windows dll 真机终验（39f0a7b7）/ GPU 26.x 捕获 mixin 后续卡（FBO 口已就绪）/ 版本号 / 26.2+26.3 真机终验 / 分发时机；外部等待：FPM 21.9~21.11+26.3 上游
+- **候选观察项**：unimined 116x 冷检出首跑配置缓存撞 AT 合并（二跑自愈，filetree 审查记录）；nfrt 线 --no-configuration-cache 硬约束（tour.sh 已内建）

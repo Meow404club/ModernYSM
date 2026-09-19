@@ -258,7 +258,11 @@ tasks {
 
     register<Copy>("buildAndCollect") {
         group = "build"
-        from(jar.map { it.archiveFile })
+        // 收集件必须是 reobfJar 输出（=versions/<线>/build/libs 发布件）。jar 产物被 MDG
+        // legacy 移入 build/devlibs（未 reobf dev jar，ObfuscationExtension.java:103-121
+        // destinationDirectory=build/libs 归 reobfJar、jar 改道 devlibs+finalizedBy），
+        // 收集 devlibs 件会发 SRG 名错 jar（prod-release-202609 审查踩坑实证）。
+        from(named<Jar>("reobfJar").map { it.archiveFile })
         into(rootProject.layout.buildDirectory.file("libs/${project.property("mod_version")}"))
         dependsOn("build")
     }

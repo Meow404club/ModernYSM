@@ -139,6 +139,8 @@ stonecutter {
         vers("1.20.2-neoforge", "1.20.2").buildscript = "build.nfrt.gradle.kts"
         // 1.20.3 线挂载（nfrt-flatline-1203-1205 卡线 2；tile=20.3.8-beta 冻结快照）
         vers("1.20.3-neoforge", "1.20.3").buildscript = "build.nfrt.gradle.kts"
+        // 1.20.5 线挂载（nfrt-flatline-1203-1205 卡线 3；tile=20.5.21-beta 冻结快照）
+        vers("1.20.5-neoforge", "1.20.5").buildscript = "build.nfrt.gradle.kts"
 
         vcsVersion = "1.20.1-forge"
     }

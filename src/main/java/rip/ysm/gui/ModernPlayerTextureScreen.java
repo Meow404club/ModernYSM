@@ -389,6 +389,9 @@ public class ModernPlayerTextureScreen extends OptionScreen {
         int sw = (int) ((previewRight - previewLeft) * scale);
         int sh = (int) ((previewBottom - previewTop) * scale);
                 YsmGui.enableScissorBox(sx, sy, sw, sh);
+        // 26.2 PiP（debt-262-preview-pip）：GL 静态剪裁对 PiP 无效 → 面板盒直传（一次性，预览抽取消费）
+        //? if >=26.2
+        /*ModelPreviewRenderer.ysmSetPreviewClip262(previewLeft, previewTop, previewRight, previewBottom);*/
         PlayerCapability.get(this.minecraft.player).ifPresent(cap -> {
             modelHolder.initModelWithTexture(modelId, cap.getCurrentTextureName());
             float cx = (previewLeft + previewRight) / 2.0f + offsetX;

@@ -497,11 +497,16 @@ public final class ModelPreviewRenderer {
     }*/
     //?}
 
-    // —— 26.2 PiP 预览（debt-262-preview-pip）——
-    // ysmExtractor262：YsmGui 26.2 构造期写入的 GuiGraphicsExtractor（extract 相位每帧刷新；
-    // Object 承载避免 <26.2 线解析 26.2 专有类型）。ysmPipAnimatable262：抽取窗内待捕获的
+    // 26.2 PiP 预览：YsmGui 26.2 构造期写入 GuiGraphicsExtractor（extract 相位每帧刷新；
+    // Object 承载避免各线解析 26.2 专有类型）。setter 恒存活（YsmGui >=1.20 块内不可嵌套
+    // 行条件，YsmGui 头注实证），<26.2 线 no-op。ysmPipAnimatable262：抽取窗内待捕获的
     // 预览 animatable（GeoReplacedEntityRenderer.extractRenderState 26.2 twin 取走——
     // createRenderState(T,float) 只传实体，实体→animatable 无反查表，帧内窗式暂存=最小通路）。
+    public static void ysmSetExtractor262(Object extractor) {
+        //? if >=26.2
+        /*ysmExtractor262 = extractor;*/
+    }
+
     //? if >=26.2 {
     /*private static Object ysmExtractor262;
 
@@ -509,8 +514,16 @@ public final class ModelPreviewRenderer {
 
     private static int ysmPipSubmitCount262;
 
-    public static void ysmSetExtractor262(Object extractor) {
-        ysmExtractor262 = extractor;
+    private static int ysmClipX0, ysmClipY0, ysmClipX1, ysmClipY1;
+
+    // 面板矩形直传（旧直绘被 GL 剪裁盒约束 → PiP rect=面板盒复刻同语义）：
+    // 走 YsmGui.enableScissorBox 静态 GL 剪裁的屏（ModernPlayerTextureScreen/ModelSettingsScreen）
+    // 该剪裁对 PiP 无效，改在预览调用前记录面板盒；一次性，renderPip262 消费后即清
+    public static void ysmSetPreviewClip262(int x0, int y0, int x1, int y1) {
+        ysmClipX0 = x0;
+        ysmClipY0 = y0;
+        ysmClipX1 = x1;
+        ysmClipY1 = y1;
     }
 
     public static LivingAnimatable<?> takePipAnimatable262() {
@@ -560,9 +573,28 @@ public final class ModelPreviewRenderer {
         org.joml.Matrix4f matrix = pose.last().pose();
         org.joml.Vector3f translation = matrix.getTranslation(new org.joml.Vector3f());
         org.joml.Quaternionf rotation = matrix.getNormalizedRotation(new org.joml.Quaternionf());
-        int half = Math.max(8, (int) rectHalf);
+        // 矩形：面板盒直传（ysmSetPreviewClip262，一次性）优先——PiP 纹理=盒大小，模型越界
+        // 部分被纹理边界裁掉=旧 GL 剪裁同语义；否则取中心±1/2 视高方形（extractor 剪裁屏
+        // 由 scissorArea 收敛可见域，PictureInPictureRenderState.getBounds 交自己剪）
+        int x0;
+        int y0;
+        int x1;
+        int y1;
+        if (ysmClipX1 > ysmClipX0 && ysmClipY1 > ysmClipY0) {
+            x0 = ysmClipX0;
+            y0 = ysmClipY0;
+            x1 = ysmClipX1;
+            y1 = ysmClipY1;
+            ysmClipX0 = ysmClipY0 = ysmClipX1 = ysmClipY1 = 0;
+        } else {
+            int half = Math.max(8, (int) rectHalf);
+            x0 = (int) centerX - half;
+            y0 = (int) centerY - half;
+            x1 = (int) centerX + half;
+            y1 = (int) centerY + half;
+        }
         // overrideCameraAngle=null：21.9+ 直绘面删后旧链本就无相机覆写（<21.9 行条件），与 21.9~26.1 行为对齐
-        extractor.entity(state, scale, translation, rotation, null, (int) centerX - half, (int) centerY - half, (int) centerX + half, (int) centerY + half);
+        extractor.entity(state, scale, translation, rotation, null, x0, y0, x1, y1);
     }
 
     // 旧直绘的实体旋转置位（renderEntityPreview 形：yaw 对置+俯仰归零+头部对置）

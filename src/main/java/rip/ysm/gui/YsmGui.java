@@ -1,5 +1,6 @@
 package rip.ysm.gui;
 
+import com.elfmcys.yesstevemodel.client.renderer.ModelPreviewRenderer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -7,10 +8,6 @@ import net.minecraft.resources.ResourceLocation;
 //? if >=1.16.2
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.network.chat.Component;
-// 26.2 PiP 预览（debt-262-preview-pip）：构造期向 ModelPreviewRenderer 暂存 GuiGraphicsExtractor
-//（extract 相位每帧刷新；预览抽取经它提交 graphics.entity()）
-//? if >=26.2
-/*import com.elfmcys.yesstevemodel.client.renderer.ModelPreviewRenderer;*/
 
 import java.util.List;
 
@@ -65,8 +62,8 @@ public final class YsmGui {
     public YsmGui(net.minecraft.client.gui.GuiGraphics graphics) {
         this.graphics = graphics;
         // 26.2 PiP 预览：extract 相位唯一入口（各屏 extractRenderState→render(new YsmGui(...))），
-        // 预览调用总在构造之后的同相位窗内读取
-        //? if >=26.2
+        // 预览调用总在构造之后的同相位窗内读取。<26.2 恒 no-op（ModelPreviewRenderer 侧）。
+        // 勿加 //? 行条件：本构造器在 >=1.20 块内，块内嵌套指令不可见（YsmGui 头注/1201 红实证）。
         ModelPreviewRenderer.ysmSetExtractor262(graphics);
     }
 

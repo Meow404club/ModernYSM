@@ -30,7 +30,7 @@ public class C2SSetStarModelPacket {
     }
 
     public static C2SSetStarModelPacket decode(FriendlyByteBuf buf) {
-        return new C2SSetStarModelPacket(buf.readUtf(), buf.readBoolean());
+        return new C2SSetStarModelPacket(buf.readUtf(32767), buf.readBoolean());
     }
 
     public static void handle(C2SSetStarModelPacket message, PacketContext ctx) {

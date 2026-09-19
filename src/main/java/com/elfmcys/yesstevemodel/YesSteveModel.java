@@ -99,15 +99,21 @@ public class YesSteveModel {
 //? if >=1.20.1 && <1.20.4 {
     @OnlyIn(Dist.CLIENT)
 //?}
+    // forge 注解门必须独占一块（unimined-env-116x）：chasm 只解包「整块内容均为包裹态」的
+    // /* */（ClientSetupEvent registerKeyBindings 块同款实证）；混入裸代码后包裹行保持
+    // 注释态——58aaaf2 曾把注解与方法体并入同一 forge 块 → 注解静默消失 → 1.16.1 专用服
+    // 在 forge 32（modlauncher 6.1.1）严格 dist-cleaner 下炸 LocalPlayer invalid-dist
+    // （校验器赋值兼容检查拉起 LocalPlayer；1161 runServer 实证。1165 的 forge36/modlauncher
+    // 8.1.3 容忍同形态 → 回归仅击穿 1.16.x 老代 runServer）。
 //? if forge {
 /*    @OnlyIn(Dist.CLIENT)*/
+//?}
     public static void sendUnavailableMessage() {
         LocalPlayer localPlayer = Minecraft.getInstance().player;
         if (localPlayer != null) {
             YsmText.sendSystemMessage(localPlayer, getUnavailableComponent());
         }
     }
-//?}
 
     public static Component getUnavailableComponent() {
         return NativeLibLoader.getErrorComponent();

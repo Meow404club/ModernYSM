@@ -92,7 +92,7 @@ public final class S2CModelUploadStartPacket {
         int chunkSize = buf.readVarInt();
         int maxTotalBytes = buf.readVarInt();
         int chunksPerTick = buf.readVarInt();
-        String message = buf.readUtf();
+        String message = buf.readUtf(32767);
         return new S2CModelUploadStartPacket(uploadId, status, chunkSize, maxTotalBytes, chunksPerTick, message);
     }
 

@@ -79,7 +79,7 @@ public final class FeedbackData {
             int[] iArr = new int[entryCount];
             float[] fArr = new float[entryCount];
             for (int i = 0; i < entryCount; i++) {
-                iArr[i] = StringPool.computeIfAbsent(buf.readUtf());
+                iArr[i] = StringPool.computeIfAbsent(buf.readUtf(32767));
                 fArr[i] = buf.readFloat();
             }
             int2FloatArrayMap = new Int2FloatArrayMap(iArr, fArr);
@@ -88,7 +88,7 @@ public final class FeedbackData {
             String[] strArr = new String[entryCount];
             float[] fArr2 = new float[entryCount];
             for (int i = 0; i < entryCount; i++) {
-                strArr[i] = buf.readUtf();
+                strArr[i] = buf.readUtf(32767);
                 fArr2[i] = buf.readFloat();
             }
             object2FloatArrayMap = new Object2FloatArrayMap<>(strArr, fArr2);

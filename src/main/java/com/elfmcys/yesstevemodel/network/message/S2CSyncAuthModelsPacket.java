@@ -39,7 +39,7 @@ public class S2CSyncAuthModelsPacket {
         int size = buf.readVarInt();
         HashSet<String> tmp = Sets.newHashSet();
         for (int i = 0; i < size; i++) {
-            tmp.add(buf.readUtf());
+            tmp.add(buf.readUtf(32767));
         }
         return new S2CSyncAuthModelsPacket(tmp);
     }

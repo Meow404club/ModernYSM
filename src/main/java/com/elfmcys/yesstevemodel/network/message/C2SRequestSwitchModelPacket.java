@@ -25,7 +25,7 @@ public class C2SRequestSwitchModelPacket {
     }
 
     public static C2SRequestSwitchModelPacket decode(FriendlyByteBuf buf) {
-        return new C2SRequestSwitchModelPacket(buf.readUtf(), buf.readUtf());
+        return new C2SRequestSwitchModelPacket(buf.readUtf(32767), buf.readUtf(32767));
     }
 
     public static void handle(C2SRequestSwitchModelPacket message, PacketContext ctx) {

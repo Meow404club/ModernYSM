@@ -24,10 +24,10 @@ public class S2CVersionCheckPacket {
     }
 
     public static S2CVersionCheckPacket decode(FriendlyByteBuf buf) {
-        String version = buf.readUtf();
+        String version = buf.readUtf(32767);
         boolean supportsModelSyncFragments = false;
         if(buf.readableBytes() > 0){
-            String brand = buf.readUtf();
+            String brand = buf.readUtf(32767);
             if(brand.equals(OPEN_YSM_BRAND)){
                 ClientModelManager.setOysmServer(true);
                 ClientModelManager.setAllowUpload(buf.readBoolean());

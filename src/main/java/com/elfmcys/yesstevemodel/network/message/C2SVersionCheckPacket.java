@@ -30,8 +30,8 @@ public class C2SVersionCheckPacket {
     }
 
     public static C2SVersionCheckPacket decode(FriendlyByteBuf buf) {
-        String version = buf.readUtf();
-        boolean supportsModelSyncFragments = buf.readableBytes() > 0 && MODEL_SYNC_FRAGMENT_BRAND.equals(buf.readUtf());
+        String version = buf.readUtf(32767);
+        boolean supportsModelSyncFragments = buf.readableBytes() > 0 && MODEL_SYNC_FRAGMENT_BRAND.equals(buf.readUtf(32767));
         return new C2SVersionCheckPacket(version, supportsModelSyncFragments);
     }
 

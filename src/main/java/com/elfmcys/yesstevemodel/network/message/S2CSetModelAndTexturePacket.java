@@ -45,7 +45,7 @@ public class S2CSetModelAndTexturePacket {
     }
 
     public static S2CSetModelAndTexturePacket decode(FriendlyByteBuf friendlyByteBuf) {
-        return new S2CSetModelAndTexturePacket(friendlyByteBuf.readVarInt(), friendlyByteBuf.readUtf(), friendlyByteBuf.readUtf(), friendlyByteBuf.readBoolean(), S2CSyncPlayerStatePacket.decode(friendlyByteBuf));
+        return new S2CSetModelAndTexturePacket(friendlyByteBuf.readVarInt(), friendlyByteBuf.readUtf(32767), friendlyByteBuf.readUtf(32767), friendlyByteBuf.readBoolean(), S2CSyncPlayerStatePacket.decode(friendlyByteBuf));
     }
 
     public static void handle(S2CSetModelAndTexturePacket other, PacketContext ctx) {

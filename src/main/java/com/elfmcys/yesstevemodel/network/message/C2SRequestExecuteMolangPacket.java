@@ -24,7 +24,7 @@ public class C2SRequestExecuteMolangPacket {
     }
 
     public static C2SRequestExecuteMolangPacket decode(FriendlyByteBuf buf) {
-        return new C2SRequestExecuteMolangPacket(buf.readUtf(), buf.readVarInt());
+        return new C2SRequestExecuteMolangPacket(buf.readUtf(32767), buf.readVarInt());
     }
 
     public static void handle(C2SRequestExecuteMolangPacket message, PacketContext ctx) {

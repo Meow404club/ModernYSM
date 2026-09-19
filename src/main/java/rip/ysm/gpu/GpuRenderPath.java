@@ -50,6 +50,19 @@ public final class GpuRenderPath {
     private static final Matrix4f pivotAbsScratchMat = new Matrix4f();
     private static int[] pivotAbsPathScratch = new int[64];
 
+    // 21.8+ FBO 自绑 DSA 工厂静态化（审查 ponytail 备忘：tryRender 逐帧 HashSet+create 分配）。
+    // create=纯 caps 选择函数（1218 DirectStateAccess.java:16-23 / 21111:18-25：按 caps 选
+    // Core/Emulated，Set 仅收 marker 字符串、getFbo 链零消费），实例不持上下文状态，GL 调用
+    // 全部在调用时刻打当前上下文——缓存安全。失效=上下文重建（LWJGL 换新 GLCapabilities
+    // 实例）或 21.9+ device 换代（isGlOnDx12 语义入参），按实例身份不等即重建，与逐次
+    // create 逐点等价（同 caps/device → 同 Core/Emulated 选择）。
+    //? if >=21.8 && <26.2 {
+    /*private static GLCapabilities ysmDsaCaps;
+    private static DirectStateAccess ysmDsa;
+    private static final java.util.Set<String> ysmDsaExtensions = new java.util.HashSet<>();
+    private static Object ysmDsaDevice;*/
+    //?}
+
     public static boolean tryRender(
             GeoModel model,
             PoseStack.Pose pose,
@@ -241,16 +254,24 @@ public final class GpuRenderPath {
         // 编译实证；21.8 仍两参。get(GpuDevice) 公共实例工厂）
         //? if >=21.8 && <21.9 {
         /*RenderTarget ysmMain = mc.getMainRenderTarget();
-        int ysmMainFbo = ((GlTexture) ysmMain.getColorTexture()).getFbo(
-                DirectStateAccess.create(GL.getCapabilities(), new java.util.HashSet<>()), ysmMain.getDepthTexture());
+        if (ysmDsa == null || GL.getCapabilities() != ysmDsaCaps) {
+            ysmDsaCaps = GL.getCapabilities();
+            ysmDsa = DirectStateAccess.create(ysmDsaCaps, ysmDsaExtensions);
+        }
+        int ysmMainFbo = ((GlTexture) ysmMain.getColorTexture()).getFbo(ysmDsa, ysmMain.getDepthTexture());
         GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, ysmMainFbo);
         GlStateManager._viewport(0, 0, ysmMain.width, ysmMain.height);*/
         //?}
         //? if >=21.9 && <26.2 {
         /*RenderTarget ysmMain = mc.getMainRenderTarget();
-        int ysmMainFbo = ((GlTexture) ysmMain.getColorTexture()).getFbo(
-                DirectStateAccess.create(GL.getCapabilities(), new java.util.HashSet<>(),
-                        com.mojang.blaze3d.GraphicsWorkarounds.get(RenderSystem.getDevice())), ysmMain.getDepthTexture());
+        Object ysmDeviceNow = RenderSystem.getDevice();
+        if (ysmDsa == null || GL.getCapabilities() != ysmDsaCaps || ysmDeviceNow != ysmDsaDevice) {
+            ysmDsaCaps = GL.getCapabilities();
+            ysmDsaDevice = ysmDeviceNow;
+            ysmDsa = DirectStateAccess.create(ysmDsaCaps, ysmDsaExtensions,
+                    com.mojang.blaze3d.GraphicsWorkarounds.get(RenderSystem.getDevice()));
+        }
+        int ysmMainFbo = ((GlTexture) ysmMain.getColorTexture()).getFbo(ysmDsa, ysmMain.getDepthTexture());
         GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, ysmMainFbo);
         GlStateManager._viewport(0, 0, ysmMain.width, ysmMain.height);*/
         //?}

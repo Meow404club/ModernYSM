@@ -663,6 +663,7 @@ tasks.named<ProcessResources>("processResources") {
         // 小树配套，挂载见 sourceSets 块）。共享 mixins.json 恒不加条目——forge vcs 直通线
         // 无本 filter，目标类缺席会运行时崩（1.20.1 红线）。锚=client.ThrowableItemProjectileAccessor
         //（前序规则不触碰该条目）
+        // gui-tail-flush：GuiRendererTailMixin 同挂载面（GuiRenderer.render 窗尾 flush pending 预览）
         val gpuCapture218 = stonecutter.current.version == "21.8" || stonecutter.current.version == "21.11"
         // 26.2 BufferSourceMixin 剔除闸（render-dag 换代，见 filter 内注）
         val stripBufferSourceMixin262 = stonecutter.eval(stonecutter.current.version, ">=26.2")
@@ -697,7 +698,7 @@ tasks.named<ProcessResources>("processResources") {
                         "\"client.ThrowableItemProjectileAccessor\"",
                         "\"client.ThrowableItemProjectileAccessor\", \"client.FogUniformCaptureMixin\", " +
                             "\"client.LevelProjectionCaptureMixin\", \"client.HudProjectionCaptureMixin\", " +
-                            "\"client.GuiProjectionCaptureMixin\""
+                            "\"client.GuiProjectionCaptureMixin\", \"client.GuiRendererTailMixin\""
                     )
                 }
                 out

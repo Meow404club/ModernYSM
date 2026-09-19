@@ -34,6 +34,9 @@ val nfrtVersion = "2.0.31"
 repositories {
     mavenCentral()
     maven("https://maven.neoforged.net/releases/") { name = "NeoForged" }
+    // Mojang 游戏库（FML loader 传递依赖 com.mojang:logging 等仅在此仓库；
+    // MDG RepositoriesPlugin 对 moddev 线同款注入）
+    maven("https://libraries.minecraft.net") { name = "Mojang Libraries" }
 }
 
 // NFRT 本体（shadowed jar，classifier "all"；MDG 经 Bundling.SHADOWED attribute 解析同款文件）
@@ -106,11 +109,13 @@ afterEvaluate {
     }
 }
 
-// 编译面：NFRT 产物（MC+NeoForge，mojmap 直名）+ FML loader（@Mod）
+// 编译面：NFRT 产物（MC+NeoForge，mojmap 直名）+ FML javafml 语言提供器（@Mod 所在 jar）
 dependencies {
     compileOnly(files(gameJar))
-    // 版本取 neoforge-20.2.93-userdev.jar!config.json libraries 原文
-    compileOnly("net.neoforged.fancymodloader:loader:1.0.16")
+    // 版本取 neoforge-20.2.93-userdev.jar!config.json libraries 原文。
+    // 1.0.x 代 @Mod 在 language-java（javafml），不在 loader（loader jar 类面实证
+    // 仅 fml/{common/asm,loading,server}——common/Mod.class 缺席编译报错实证）
+    compileOnly("net.neoforged.fancymodloader:language-java:1.0.16")
 }
 
 java {

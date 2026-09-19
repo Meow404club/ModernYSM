@@ -34,8 +34,9 @@ repositories {
     maven("https://maven.parchmentmc.org") { name = "ParchmentMC" }
     // ImageStream（avif/webp 解码）快照
     maven("https://jitpack.io") { name = "JitPack" }
-    // 第三方 mod 编译依赖（26+ 兼容桥），仅编译期；运行时按 isModLoaded 守卫
-    flatDir { dirs(rootProject.file("libs")) }
+    // libs/ flatDir 仓库已删（slashblade-classpath 卡）：仓内依赖全经下方 fileTree/files
+    // 显式进 compileOnly，全仓零 name:version 两段式坐标（grep 实证），flatDir 解析无人
+    // 消费且对同名双 jar 序敏感（1.16.5 线 build.unimined.gradle.kts 同款不注册先例）
 }
 
 // ImageStream 生产内嵌（发布策略项落地，等价旧仓 JIJ include）：
@@ -91,7 +92,21 @@ dependencies {
 
     // ===== 第三方 mod 兼容桥编译依赖（libs/ 下 29 jar，含 touhoulittlemaid 内
     // vendored 的 org.gagravarr 供编译解析；仅 compileOnly，不进运行时）=====
-    compileOnly(fileTree(rootProject.file("libs")))
+    // slashblade 双 fork 不走 fileTree（确定性钉序）：SlashBladeResharped-0.1.4-patched 与
+    // x_SlashBlade-0.1.2 同类坐标重复（232 个重复类，清单 tmp/evidence/slashblade-classpath/），
+    // fileTree 以 readdir 序（非排序）喂 javac，ISlashBladeState.getComboSeq 两 fork 返回型
+    // 不同（0.1.4→ResourceLocation / 0.1.2→capability.ComboState），x 先到即
+    // SlashBladeComboHelper.java:23 "不兼容的类型" 编译红——本机绿仅因 ext4 哈希序偶然
+    //（双序实测：x-first=BUILD FAILED / R-first=BUILD SUCCESSFUL）。
+    // 钉序语义：Resharped 必须先手（新 API 路径按其签名编写，编译必要条件）；
+    // x 后手仅补旧 API 独有符号（capability/slashblade/ComboState，运行时 hasNewApi()=false
+    // 分支 SlashBladeStateAccess 编译需要）。运行时行为不受编译序影响：两 jar 均 compileOnly
+    // 不进产物，实际分支由已装载 mod 版本经 VersionRange("(,0.1.2]") 判定。
+    compileOnly(fileTree(rootProject.file("libs")) { exclude("*SlashBlade*") })
+    compileOnly(files(
+        rootProject.file("libs/SlashBladeResharped-1.20.1-0.1.4-patched.jar"),
+        rootProject.file("libs/x_SlashBlade-1.20.1-0.1.2.jar"),
+    ))
 
     // Mixin refmap 注解处理器（SRG 重映射，生产 jar 必需）
     annotationProcessor("org.spongepowered:mixin:0.8.5:processor")

@@ -100,31 +100,39 @@ public final class GpuPreviewQueue {
         //（tryRender >=21.6 存储分支）恒缺席 → 队列恒空，此循环剔除后 flush 恒走 empty 短路。
         //? if >=1.17 {
         for (int i = 0; i < n; i++) {
-            GpuRenderPath.drawPending(PENDING.get(i));
+            GpuRenderPath.drawPending(PENDING.get(i), guiWidth, guiHeight);
         }
         //?}
         if (debug()) {
-            Matrix4f proj = GpuCapability.ysmGuiProjectionReady()
+            // 消费投影=按本帧逻辑尺寸现算（GuiRenderer.draw:204 同式），指纹应与尺寸自洽；
+            // slot=共享 GUI 正交捕获槽此刻值（items 正交同窗覆写面，仅存档对照不消费）
+            Matrix4f cons = new Matrix4f().setOrtho(0.0f, guiWidth, guiHeight, 0.0f, 1000.0f, 11000.0f);
+            Matrix4f slot = GpuCapability.ysmGuiProjectionReady()
                     ? GpuCapability.ysmCapturedGuiProjection
                     : GpuCapability.ysmCapturedProjection;
-            // 当帧期望 GUI 正交指纹：CachedOrthoProjectionMatrixBuffer("gui",1000,11000,invertY=true)
-            // → setOrtho(0,w,h,0,1000,11000)（1218 CachedOrthoProjectionMatrixBuffer.java:47-49），
-            // m00=2/w、m11=-2/h、m22=-2/(far-near)、m32=-(far+near)/(far-near)
-            boolean match = Math.abs(proj.m00() - 2.0f / guiWidth) < 1.0e-3f
-                    && Math.abs(proj.m11() + 2.0f / guiHeight) < 1.0e-3f
-                    && Math.abs(proj.m22() + 2.0f / 11000.0f) < 1.0e-5f
-                    && Math.abs(proj.m32() + 1.2f) < 1.0e-4f;
+            boolean match = Math.abs(cons.m00() - 2.0f / guiWidth) < 1.0e-3f
+                    && Math.abs(cons.m11() + 2.0f / guiHeight) < 1.0e-3f
+                    && Math.abs(cons.m22() + 2.0f / 10000.0f) < 1.0e-5f
+                    && Math.abs(cons.m32() + 1.2f) < 1.0e-4f;
             System.out.println("[ysm-gui-flush] flush@GuiRenderer.render-TAIL frame=" + frame
                     + " drained=" + n
-                    + " orthoFp=[m00=" + proj.m00() + ",m11=" + proj.m11()
-                    + ",m22=" + proj.m22() + ",m32=" + proj.m32() + "]"
+                    + " orthoFp=[m00=" + cons.m00() + ",m11=" + cons.m11()
+                    + ",m22=" + cons.m22() + ",m32=" + cons.m32() + "]"
+                    + " slotFp=[m22=" + slot.m22() + ",m32=" + slot.m32() + "]"
                     + " guiW=" + guiWidth + " guiH=" + guiHeight
                     + " currentFrameOrtho=" + match
+                    + " scissorTest=" + org.lwjgl.opengl.GL11.glIsEnabled(org.lwjgl.opengl.GL11.GL_SCISSOR_TEST)
+                    + " glErr=" + org.lwjgl.opengl.GL11.glGetError()
+                    + " drawCount=" + PENDING.get(0).mesh.indexDrawCount(PENDING.get(0).renderPartMask)
                     + " thread=" + Thread.currentThread().getName());
         }
         PENDING.clear();
         frame++;
     }
+
+    // 诊断探针教训（m2.5 同款）：进程内 glReadPixels 在 xvfb+llvmpipe 下触发 glibc malloc
+    // 堆损坏（sysmalloc assertion，2026-09-19 tour 21.8 三连两中实证）——像素证据一律走
+    // tour.sh 外部 ffmpeg x11grab，进程内只做 glGetError/glIsEnabled 级无拷贝状态查询。
 
     /** 单次预览 draw 的 pending 快照。boneParams/stateBuffer 为同帧存活引用（flush 在同帧稍后）。 */
     static final class Pending {

@@ -158,14 +158,21 @@ public final class GpuRenderPath {
     // 块条件剔除=与 tryRender else 体同构，内层行/块条件在 >=1.17 线解析正常）
     //? if >=1.17 {
     /** gui-tail-flush：pending 队列尾 flush 绘制（仅 GpuPreviewQueue.ysm$flush 调用，21.8/21.11 挂载线）。
-     * 投影=GuiRenderer.draw 窗内打包的当帧 GUI 正交槽（GuiProjectionCaptureMixin 喂入；CachedOrtho
-     * 尺寸未变不重算，槽值=当帧打包值逐帧等价），投影消费时刻从 Screen.render 收集相移到 GUI 绘制窗尾；
+     * 投影=按窗尾喂入的本帧 GUI 逻辑尺寸现算的正交——镜像 vanilla GuiRenderer.draw 打包式
+     *（1218 GuiRenderer.java:203-206 / 2111 :211-214：CachedOrthoProjectionMatrixBuffer("gui",1000,11000,
+     * invertY=true) → setOrtho(0,w,h,0,1000,11000)）。不消费 ysmCapturedGuiProjection 共享捕获槽：
+     * prepareItemElements（1218 :336）的 items 正交同走 CachedOrtho.createProjectionMatrix 捕获点，
+     * 同窗内覆写槽值（tour 21.8 实测槽指纹=items 140 域 m22=-0.001/m32=0）。
      * 雾=预览态 setupNoFog 对齐（enqueue 时刻 isPreview/isExtraPlayer 已携 flag=true，与立即路径同语义）。 */
-    static void drawPending(GpuPreviewQueue.Pending p) {
-        Matrix4f projMat = GpuCapability.ysmGuiProjectionReady()
-                ? GpuCapability.ysmCapturedGuiProjection
-                : GpuCapability.ysmCapturedProjection;
-        drawMesh(p.model, p.mesh, p.rootPose, p.rootNormal, projMat, p.modelView, true,
+    static void drawPending(GpuPreviewQueue.Pending p, float guiW, float guiH) {
+        Matrix4f projMat = new Matrix4f().setOrtho(0.0f, guiW, guiH, 0.0f, 1000.0f, 11000.0f);
+        // 21.8+ GUI 正交可见带 z_eye∈[-11000,-1000]（GUI 网格顶点经 DynamicTransforms -11000 平移，
+        // 1218 GuiRenderer.draw:219-222）。enqueue 侧 mv（translate z=+1250·scale(1,1,-1)）与 rootPose
+        // z≈+1000 合成 z_eye≈+250——带外整裁（tour 21.8 probe nearCount=0 实证，全帧缓冲零片段）。
+        // pending 路径在 mv 前乘 z 平移 -6250：z_eye≈-6000 落带中段（模型 z 展幅 ±(16·zoom+pose 位移)
+        // 千级内冗余充足；旧线常量不经此路径不受影响）。
+        Matrix4f mv = new Matrix4f().translate(0.0f, 0.0f, -6250.0f).mul(p.modelView);
+        drawMesh(p.model, p.mesh, p.rootPose, p.rootNormal, projMat, mv, true,
                 p.boneParams, p.stateBuffer, p.textureIndex, p.renderPartMask, p.packedLight, p.packedOverlay,
                 p.r, p.g, p.b, p.a, p.textureLocation);
     }

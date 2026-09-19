@@ -17,16 +17,17 @@
 #
 # 进程卫生（沿 rc_probe_diff.sh 硬纪律）：禁 pkill/pgrep/killall/--stop/遍历 /proc；
 # gradle 一律 --no-daemon + setsid（PID=整树 PGID）；cleanup 阶梯=优雅→TERM 整组→KILL 整组。
-# 端口隔离：默认 25576（错开 rc_probe_diff 25575）。
+# 端口隔离：默认 25599（错开 rc_probe_diff 25575 等）。
 set -u
+trap '' PIPE   # 服务端死亡后 FIFO 写不炸 driver（继续走存活检查路径）
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT" || exit 1
 
 VERSION="${VERSION:-1.20.1-forge}"
-PORT="${PORT:-25576}"
+PORT="${PORT:-25599}"
 SUFFIX="${SUFFIX:-run}"
-DISPLAY_NUM="${DISPLAY_NUM:-97}"
+DISPLAY_NUM="${DISPLAY_NUM:-98}"
 CLIENT_DIR="$ROOT/versions/$VERSION/run/client"
 SERVER_DIR="$ROOT/versions/$VERSION/run/server"
 RUN_DIR="$ROOT/harness/run/rc-mirror-gaps"
@@ -59,6 +60,11 @@ trap cleanup EXIT
 
 fail() { echo "[mirror-gaps] FAIL: $*" >&2; exit 1; }
 
+# ---- 端口属主预检（泄漏的上轮服务端会让 bind 失败，fail fast 带归属提示） ----
+if ss -tln 2>/dev/null | grep -q ":$PORT "; then
+  fail "port $PORT already occupied (leaked prior run? clean its PGID first)"
+fi
+
 # ---- 0. run 目录供给（幂等；模型/RC 配置沿主仓 run 目录共享） ----
 MAIN_RUN="/home/brokestar/workspace/ModernYSM/versions/$VERSION/run/client"
 rm -rf "$SERVER_DIR/world" "$SERVER_DIR/world_nether" "$SERVER_DIR/world_the_end"
@@ -73,6 +79,14 @@ done
 grep -q 'yes_steve_model:textures/' "$CLIENT_DIR/config/realcamera.json" || fail "realcamera.json not prefix variant (L2 noMatchingTarget)"
 mkdir -p "$CLIENT_DIR/mods"
 [ -f "$MAIN_RUN/mods/realcamera-dev.jar" ] && [ ! -f "$CLIENT_DIR/mods/realcamera-dev.jar" ] && cp "$MAIN_RUN/mods/realcamera-dev.jar" "$CLIENT_DIR/mods/"
+# server 侧模型库供给：worktree server run 全新无 custom 模型 → 服务端没有 Trissy →
+# 客户端选中被拒落默认模型 → UV 布局不符 → tryUvBind 静默回退骨轴（rc-probe-diff 行零产出，
+# 2026-09-19 首跑实证）。软链主仓 server 的 custom 模型库。
+MAIN_SERVER_DIR="/home/brokestar/workspace/ModernYSM/versions/$VERSION/run/server"
+if [ -d "$MAIN_SERVER_DIR/config/yes_steve_model/custom" ] && [ ! -L "$SERVER_DIR/config/yes_steve_model/custom" ]; then
+  rm -rf "$SERVER_DIR/config/yes_steve_model/custom"
+  ln -s "$MAIN_SERVER_DIR/config/yes_steve_model/custom" "$SERVER_DIR/config/yes_steve_model/custom"
+fi
 printf '%s\n' "$PORT" > "$CLIENT_DIR/harness.port"
 echo "[mirror-gaps] run dir provisioned (port=$PORT suffix=$SUFFIX)"
 
@@ -113,7 +127,7 @@ echo "$SERVER_PID" >> "$PIDFILE"
 exec 3>"$FIFO"
 echo "[mirror-gaps] waiting for server Done (log: $OUT/server.log)"
 DONE=no
-for i in $(seq 1 300); do
+for i in $(seq 1 600); do
   if grep -q "Done (" "$OUT/server.log" 2>/dev/null; then DONE=yes; break; fi
   if grep -qE "BUILD FAILED|FATAL" "$OUT/server.log" 2>/dev/null; then break; fi
   sleep 1
@@ -156,18 +170,29 @@ echo "[mirror-gaps] waiting for client title/world"
 await_ready "title" 300 || fail "client never reached title"
 await_ready "world" 300 || fail "client never joined world"
 rm -f "$CLIENT_DIR/harness.ready"
+# world 每轮清空 → playerdata 的模型指派被抹 → Dev 落服务端默认模型 → Trissy UV(54.5,69.5)
+# 打不中 → tryUvBind 静默回退骨轴、rc-probe-diff 零行（08:39/08:41 两轮实证）。
+# join 后 console 指派 Trissy（S2C 推送，下方 sleep 20 内完成下载/解析）。
+execute_console 'ysm model set Dev "custom|Trissy_特莉丝" textures/NekoWhite.png true'
 sleep 20   # 模型懒加载+首绑稳定期（rc_probe_diff 同款）
 
 seg_mark() { echo "SEG $1 $(date +%s)" >> "$TABLE"; }
+logt() { echo "[mirror-gaps $(date +%H:%M:%S)] $*"; }
+server_alive() {
+  if grep -q "Stopping the server" "$OUT/server.log" 2>/dev/null; then
+    fail "server died unexpectedly (check $OUT/server.log tail before this line)"
+  fi
+}
+execute_console() { echo "$1" >&3; sleep 1; }
 
 # ---- 4.1 stand 段（默认路径基准） ----
-echo "[mirror-gaps] segment stand"
+logt "segment stand"
 seg_mark stand
 sleep 10
 
 # ---- 4.2 ladder 段（climbable：脚 cell 换 ladder[facing=south]，tp 锁 yaw=0） ----
-echo "[mirror-gaps] segment ladder"
-execute_console() { echo "$1" >&3; sleep 1; }
+server_alive
+logt "segment ladder"
 execute_console "execute at @p run setblock ~ ~ ~-1 minecraft:smooth_stone"
 execute_console "execute at @p run setblock ~ ~ ~ minecraft:ladder[facing=south]"
 execute_console "execute at @p run tp @p ~ ~ ~ 0 0"
@@ -176,7 +201,8 @@ seg_mark ladder
 sleep 10
 
 # ---- 4.3 freeze 段（isShaking：powder_snow 埋脚，peaceful 冻 140t 后 fully frozen） ----
-echo "[mirror-gaps] segment freeze"
+server_alive
+logt "segment freeze"
 execute_console "execute at @p run fill ~1 ~ ~1 ~-1 ~-2 ~-1 minecraft:powder_snow"
 sleep 10  # 冻结累计 140t=7s
 seg_mark freeze
@@ -186,11 +212,12 @@ execute_console "execute at @p run fill ~1 ~-2 ~1 ~-1 ~-2 ~-1 minecraft:smooth_s
 sleep 10  # 解冻衰减（140t）后才进 dinnerbone 段，两态不混
 
 # ---- 4.4 dinnerbone 段（倒置：armed 反射改写 gameProfile 名） ----
-echo "[mirror-gaps] segment dinnerbone"
+server_alive
+logt "segment dinnerbone"
 echo "dinnerbone" > "$CLIENT_DIR/cmd.txt"
 sleep 3
 grep -q "ok dinnerbone" "$CLIENT_DIR/harness.ready" 2>/dev/null \
-  || echo "[mirror-gaps] WARN dinnerbone cmd not ok: $(cat "$CLIENT_DIR/harness.ready" 2>/dev/null)"
+  || logt "WARN dinnerbone cmd not ok: $(cat "$CLIENT_DIR/harness.ready" 2>/dev/null)"
 seg_mark dinnerbone
 sleep 10
 
@@ -203,10 +230,10 @@ import re, sys
 rows = []
 pat = re.compile(
     r'dStruct=probe-b1After.*?\|([0-9.]+)\|blk'
-    r'.*?dFwdAngle=(-?[0-9.]+) deg'
-    r'.*?dUpAngle=(-?[0-9.]+) deg'
+    r'.*?dFwdAngle=(-?[0-9.]+|NaN) deg'
+    r'.*?dUpAngle=(-?[0-9.]+|NaN) deg'
     r'.*?st=climb:(true|false)/frozen:(true|false)/flip:(true|false)'
-    r'.*?fwdZ=(-?[0-9.]+) upY=(-?[0-9.]+)')
+    r'.*?fwdZ=(-?[0-9.]+|NaN) upY=(-?[0-9.]+|NaN)')
 total = 0
 for line in open(sys.argv[1], encoding='utf-8', errors='replace'):
     total += 1
@@ -214,16 +241,22 @@ for line in open(sys.argv[1], encoding='utf-8', errors='replace'):
     if not m:
         continue
     climb, frozen, flip = m.group(4) == 'true', m.group(5) == 'true', m.group(6) == 'true'
-    rows.append((climb, frozen, flip, float(m.group(1)), float(m.group(2)), float(m.group(3)), float(m.group(7)), float(m.group(8))))
+    fnum = lambda x: float('nan') if x == 'NaN' else float(x)
+    rows.append((climb, frozen, flip, float(m.group(1)), fnum(m.group(2)), fnum(m.group(3)), fnum(m.group(7)), fnum(m.group(8))))
 def bucket(name, pred):
     sel = [r for r in rows if pred(r)]
     if not sel:
         print("# %s n=0" % name); return
-    ds = sorted(r[3] for r in sel); df = sorted(r[4] for r in sel); du = sorted(r[5] for r in sel)
-    fz = sorted(r[6] for r in sel); uy = sorted(r[7] for r in sel)
+    fin = lambda a: sorted(x for x in a if x == x)
+    ds = fin(r[3] for r in sel); df = fin(r[4] for r in sel); du = fin(r[5] for r in sel)
+    fz = fin(r[6] for r in sel); uy = fin(r[7] for r in sel)
+    if not ds or not fz or not uy:
+        print("# %s n=%d (no finite rows)" % (name, len(sel))); return
     med = lambda a: a[len(a)//2]
-    print("# %s n=%d dStruct p50=%.4f max=%.4f (blk) | dFwd p50=%.2f max=%.2f | dUp p50=%.2f max=%.2f (deg) | fwdZ med=%.3f | upY med=%.3f"
-          % (name, len(sel), med(ds), ds[-1], med(df), df[-1], med(du), du[-1], med(fz), med(uy)))
+    dfm = '%.2f/%.2f' % (med(df), df[-1]) if df else 'n/a'
+    dum = '%.2f/%.2f' % (med(du), du[-1]) if du else 'n/a'
+    print("# %s n=%d dStruct p50=%.4f max=%.4f (blk) | dFwd p50/max=%s | dUp p50/max=%s (deg) | fwdZ med=%.3f | upY med=%.3f"
+          % (name, len(sel), med(ds), ds[-1], dfm, dum, med(fz), med(uy)))
 bucket("stand(default)", lambda r: not r[0] and not r[1] and not r[2])
 bucket("ladder(climbable)", lambda r: r[0])
 bucket("freeze(shaking)", lambda r: r[1])

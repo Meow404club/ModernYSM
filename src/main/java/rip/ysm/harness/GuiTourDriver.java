@@ -230,6 +230,37 @@ public final class GuiTourDriver {
         if (line.startsWith("pose ")) {
             String pose = line.substring(5).trim();
             mark(setPose(mc, pose) ? "ok pose " + pose : "fail pose " + pose);
+            return;
+        }
+        // rc-closure-mirror-gaps：Dinnerbone 倒置诱导（RC 绑定镜像数值格用）。
+        // vanilla 无玩家改名面：isEntityUpsideDown（1.20.1 LivingEntityRenderer.java:257-266）
+        // 对玩家走 Player.getName():1756-1758 = gameProfile 名（setCustomName 无效），
+        // 故反射改写本地玩家 profile 名；玩家路径还要求 CAPE 层开（fresh options 默认全开）。
+        // 仅 armed dev 生效（pollCommand 全体在 armed 门内），生产 jar 无此类。
+        if (line.equals("dinnerbone")) {
+            if (mc.player == null) {
+                mark("fail dinnerbone");
+                return;
+            }
+            //? if >=1.19.3 && <1.20.5 {
+            try {
+                java.lang.reflect.Field profileField =
+                        net.minecraft.world.entity.player.Player.class.getDeclaredField("gameProfile");
+                profileField.setAccessible(true);
+                profileField.set(mc.player, new com.mojang.authlib.GameProfile(mc.player.getUUID(), "Dinnerbone"));
+                mark("ok dinnerbone");
+            } catch (Throwable t) {
+                System.out.println("[GuiTourDriver] dinnerbone rewrite failed: " + t);
+                mark("fail dinnerbone");
+            }
+            //? }
+            //? if <1.19.3 {
+            /*mark("fail dinnerbone");*/
+            //? }
+            //? if >=1.20.5 {
+            /*mark("fail dinnerbone");*/
+            //? }
+            return;
         }
     }
 

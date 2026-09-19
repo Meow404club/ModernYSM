@@ -1,12 +1,13 @@
 # CHANGELOG 草稿 — OpenYSM 2.6.6.6（全线平铺版）
 
 > 状态：草稿（供用户审阅后自行发布）。版本号沿用现状 **2.6.6.6**，本次未擅自升级——是否升版列为待用户决定项。
-> 构建基线：`work/prod-release-202609`（dev 2800a3a 谱系 + 1.19.4 适配修复）。35 条产线全部构建 + audit 0 BROKEN，清单见 [RELEASE-MANIFEST.md](RELEASE-MANIFEST.md)。
+> 构建基线：dev 82348d5（prod-release-202609 谱系 + nfrt 三线平铺等本批合并，2026-09-19 全量重建）。38 条产线全部构建 + audit 0 BROKEN，清单见 [RELEASE-MANIFEST.md](RELEASE-MANIFEST.md)。
 
 ## 新增
 
 - **全版本平铺**：单仓 Stonecutter 构建 35 条产线——Forge 1.16.1 ~ 1.20.1（含 1.16.1~1.16.5、1.17.1、1.18.x、1.19.x、1.20）与 NeoForge 1.20.4 ~ 1.26.3（1.20.4/1.20.6/1.21/1.21.1/21.2~21.11/26.1/26.1.1/26.1.2/26.2/26.3）。
 - **NeoForge 新线**：1.20.4 起 NeoForge 全谱接入（mods.toml [[mixins]] 声明、mojmap 直配无 refmap 口径）。
+- **NeoForge 1.20.2/1.20.3/1.20.5 三线补齐（NFRT 直驱）**：以 NeoForm Runtime 2.0.31 直驱构建接入 MDG capability 解析判负的三线（named 直发无 reobf；1.20.2/1.20.3=Java 17、1.20.5=Java 21），全线扩至 **38 条产线**，清单见 RELEASE-MANIFEST.md。
 - **新代适配**：26.1 / 26.2 / 26.3 渲染代移植（submit DAG 几何提交、GuiGraphics 抽取、SDL 键值域/事件面、swing 状态 API 换代）。
 - **FirstPersonModel 真 compat**：NeoForge 21.2 ~ 21.8 七线恢复第一人称模型兼容（vendor jar 按 Modrinth 校验和锁定；21.9+ 见已知限制）。
 - **GPU 渲染路径复活（21.8/21.11）**：投影/雾参数捕获面 + vanilla FBO 缓存命中自绑，世界内模型恢复 GL43 compute GPU 蒙皮路径（捕获得放行的门控）。
@@ -42,7 +43,7 @@
 ## 验证口径
 
 - 全线 `compileJava` + `buildAndCollect` 绿（串行 `--no-daemon --no-configuration-cache`）。
-- 全线 `tools/audit_reobf_collision.py` **0 BROKEN**（35/35，exit 0）。
-- tour 在案线（1.20.1/1.16.5/21.8/21.11/26.1/26.2/26.3/1.21.1）直接采信历史 16 屏走查；其余 27 线未跑 tour（名单已标注）。
+- 全线 `tools/audit_reobf_collision.py` **0 BROKEN**（38/38，exit 0）。
+- tour 在案线（1.20.1/1.16.5/21.8/21.11/26.1/26.2/26.3/1.21.1，及 NFRT 三新线 1.20.2/1.20.3/1.20.5——nfrt-flatline 卡走查）直接采信 16 屏走查证据；其余 27 线未跑 tour（名单已标注）。
 - 1.20.1 抽查：jar CRC 全过、natives 五平台齐、零 harness 条目、linux-x64 native 可 dlopen（真机 soak ~24min 0 NSME 先例在案）。
 - 26.2/26.3 真机终验、Windows 真机（光影/真 GPU）终验归用户。

@@ -3,7 +3,7 @@
 - 生成：2026-09-19；分支 `work/manifest-rebuild-38`（基线 82348d5 = dev 顶：nfrt-flatline 三线平铺合入后的全量重建版，取代上轮 `work/prod-release-202609` @ 4ca4867 的 35 线口径）。
 - 用途：**用户自行分发的内部物料清单，不对外发布**。
 - 构建口径：gradle 串行（`--no-daemon --no-configuration-cache`，38 线统一——nfrt 三线脚本头注强制该旗标，其余线沿上轮口径）逐线 `:产线:buildAndCollect`（= build + 收集；unimined 线构建含 SRG remapJar + MixinExtras/JOML/ImageStream/unsafe8 内嵌；nfrt 三线 createMinecraftArtifacts = NFRT 2.0.31 JavaExec 直调，见备注 7）。
-- **发布取件口径：唯一可分发件 = `versions/<产线>/build/libs/<jar>`（reobf 物，本表 sha256 即该路径实测）。** 根 `build/libs/2.6.6.6/` 收集目录中 11 条 MDG-forge 线（1.17.1~1.20.1）复制的是 build/devlibs 下未-reobf dev jar——已改名加 `.devlibs` 后缀防误取，**不可分发**；其余线收集件与取件件同物。unimined 线 build/libs 内另有 `-dev.jar`（mojmap 开发件），亦不可分发。
+- **发布取件口径：唯一可分发件 = `versions/<产线>/build/libs/<jar>`（reobf 物，本表 sha256 即该路径实测）。** 根收集目录 `build/libs/2.6.6.6/`：收集任务自 0e39933 起改收 reobfJar 输出（build.forge.gradle.kts:295），本轮 38 件收集件与 `versions/<线>/build/libs/` 取件件 cmp 字节全同（审查实证）——收集目录与取件路径同物。unimined 线 build/libs 内另有 `-dev.jar`（mojmap 开发件），不可分发。
 - 门禁：每线 jar 跑 `tools/audit_reobf_collision.py`，**38/38 全部 0 BROKEN（exit 0）**，无红线。
 - modid：`yes_steve_model`（全线统一）；maven 坐标 `rip.ysm:openysm`；版本号 **2.6.6.6 为现值——升版待用户裁决，若升版须以新版本号重跑全量构建并再生成本清单（jar 名内嵌版本号）**。
 - 重建缘由：基线 82348d5 较上轮发布基线含多批源码合并，35 条既有线产物 sha256 全量平移（旧表值全部作废）；另新增 1.20.2/1.20.3/1.20.5-neoforge 三线（NFRT 直驱）→ 38 线。本表每行均为本批实测新值。
@@ -52,7 +52,7 @@
 
 ## 备注
 
-1. **tour 标注口径**：tour 在案 = 历史卡 16 屏走查证据可采信；「未跑 tour」线以 compileJava + build + audit（0 BROKEN）口径入名单。在案来源：派单指定 8 线（1.20.1/1.16.5/21.8/21.11/26.1/26.2/26.3/1.21.1，上轮在册）+ NFRT 三新线（nfrt-flatline-1203-1205 卡走查证据：1.20.2 Done 2.201s / 1.20.3 Done 2.026s 采信交卡轮、1.20.5 Done 0.692s 本卡重跑，16png 在案）。另有可追溯补跑记录未计入标注：21.7/21.9（m3-neoforge-server-dist-fix）、26.1.2（m3-26x 适配卡）。本卡按派单不重跑 tour。
+1. **tour 标注口径**：tour 在案 = 历史卡 16 屏走查证据可采信；「未跑 tour」线以 compileJava + build + audit（0 BROKEN）口径入名单。在案来源：派单指定 8 线（1.20.1/1.16.5/21.8/21.11/26.1/26.2/26.3/1.21.1，上轮在册）+ NFRT 三新线（nfrt-flatline-1203-1205 卡走查证据，已合入 dev：1.20.2 Done 2.201s / 1.20.3 Done 2.026s / 1.20.5 Done 0.692s 重跑，16png 在案）。另有可追溯补跑记录未计入标注：21.7/21.9（m3-neoforge-server-dist-fix）、26.1.2（m3-26x 适配卡）。本卡按派单不重跑 tour。
 2. **上轮（prod-release-202609）1.19.4 适配修复**：stonecutter 0.7 条件块双语义陷阱致 1.19.4 唯一红（InventoryScreenMixin 注入点更名 `renderEntityInInventoryFollowsMouse(PoseStack,...)`、ArmorItem `getSlot()`→`getEquipmentSlot()`），条件切分修复；对其他线经逐条目 CRC + javap 归一化对拍证明零行为变化。该修复在本基线谱系内，本轮全量重测覆盖。
 3. **上轮零漂移证明与六线新鲜度**（1.19.4 修复轮）：与修复前产物逐条目 CRC 对比语义零变化；1.16.1/1.18.2/1.19/1.19.1/1.19.2 五线彼时首次完整 buildAndCollect 全绿。本轮为源码合并后的全新构建，上轮结论不再外推，以本表实测为准。
 4. **1.20.1 抽查（可加载性 smoke）**：本轮新 jar `unzip -t` 全 2921 条目 CRC 无错（exit 0）；上轮深检结论（META-INF/mods.toml + MixinConfigs 在位、natives/ 五平台齐、linux-x64 libysm-core.so 可 dlopen、1201 安装器 soak ~24min 0 NSME 先例 d2a8802）按同口径采信。

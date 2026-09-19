@@ -349,6 +349,21 @@ sourceSets.main {
             )
             srcDir(rootProject.file("src/neoforge-1202/java"))
         }
+        // 1.20.3（20.3.8-beta jar 实证）：混合代——capabilities 已是 20.4 重铸面
+        // （net.neoforged.neoforge.capabilities 在册+registerEntity/createVoid 同签名）、
+        // 网络仍是 SimpleChannel（registration/handling 零命中）→ 网络域挂 1202 孪生，
+        // 其余（主类/capability providers/ForgeCapabilityHooks/事件 hooks）走基础+1204 树。
+        // 1202 孪生非网络域必须剔除防双 @Mod/重复类
+        else if (stonecutter.eval(stonecutter.current.version, "<1.20.4")) {
+            exclude(
+                "com/elfmcys/yesstevemodel/platform/neoforge/network/YSMChannelImpl.java",
+                "com/elfmcys/yesstevemodel/platform/neoforge/network/PacketContextImpl.java",
+                "com/elfmcys/yesstevemodel/platform/neoforge1202/YesSteveModelForge.java",
+                "com/elfmcys/yesstevemodel/platform/neoforge1202/ForgeCapabilityHooks.java",
+                "com/elfmcys/yesstevemodel/platform/neoforge1202/capability/**",
+            )
+            srcDir(rootProject.file("src/neoforge-1202/java"))
+        }
         // shim：<1.21 挂原件（moddev :309-310 同款）
         srcDir(rootProject.file("versions/1.16.5-forge/src/shim/rip/ysm/compat"))
         exclude(

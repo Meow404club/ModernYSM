@@ -137,6 +137,8 @@ stonecutter {
         // 与 build.moddev.gradle.kts 零共享代码路径：本键作用域外任何线不触碰该脚本，
         // 既有 35 线门禁不受影响。
         vers("1.20.2-neoforge", "1.20.2").buildscript = "build.nfrt.gradle.kts"
+        // 1.20.3 线挂载（nfrt-flatline-1203-1205 卡线 2；tile=20.3.8-beta 冻结快照）
+        vers("1.20.3-neoforge", "1.20.3").buildscript = "build.nfrt.gradle.kts"
 
         vcsVersion = "1.20.1-forge"
     }

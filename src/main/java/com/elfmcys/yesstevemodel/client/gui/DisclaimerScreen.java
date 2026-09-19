@@ -41,12 +41,12 @@ public class DisclaimerScreen extends Screen {
         this.textHeight = (this.height - i) / 2;
         MutableComponent mutableComponentTranslatable = YsmText.translatable("gui.yes_steve_model.disclaimer.read");
         int iWidth = this.font.width(mutableComponentTranslatable);
-        //? if neoforge
+        //? if neoforge && >=1.20.3
         /*this.checkbox = Checkbox.builder(mutableComponentTranslatable, this.font)
                 .pos((this.width - iWidth) / 2, (this.textHeight + i) - 50)
                 .selected(!GeneralConfig.DISCLAIMER_SHOW.get().booleanValue())
                 .build();*/
-        //? if forge
+        //? if forge || neoforge && <1.20.3
         this.checkbox = new Checkbox((this.width - iWidth) / 2, (this.textHeight + i) - 50, iWidth, 20, mutableComponentTranslatable, !GeneralConfig.DISCLAIMER_SHOW.get().booleanValue());
         ysmAddWidget(this.checkbox);
         ysmAddWidget(YsmGui.button((this.width - 300) / 2, (this.textHeight + i) - 20, 300, 20, YsmText.translatable("gui.yes_steve_model.disclaimer.close"), button -> {

@@ -10,8 +10,10 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import com.elfmcys.yesstevemodel.client.entity.GeckoVehicleEntity;
 import com.elfmcys.yesstevemodel.molang.runtime.Int2FloatOpenHashMapStruct;
-//? if neoforge
+//? if neoforge && >=1.20.3
 /*import com.elfmcys.yesstevemodel.platform.neoforge.capability.VehicleCapabilityProvider;*/
+//? if neoforge && <1.20.3
+/*import com.elfmcys.yesstevemodel.platform.neoforge1202.capability.VehicleCapabilityProvider;*/
 //? if forge
 import com.elfmcys.yesstevemodel.platform.forge.capability.VehicleCapabilityProvider;
 import it.unimi.dsi.fastutil.ints.Int2FloatMap;
@@ -27,11 +29,11 @@ import java.util.Optional;
 public class VehicleCapability extends GeckoVehicleEntity {
 
     public static Optional<VehicleCapability> get(Entity entity) {
-        //? if neoforge
+        //? if neoforge && >=1.20.3
         /*return java.util.Optional.ofNullable(entity.getCapability(VehicleCapabilityProvider.VEHICLE_CAP));*/
         //? if forge && <1.16.2
         /*return java.util.Optional.ofNullable(entity.getCapability(VehicleCapabilityProvider.VEHICLE_CAP).orElse(null));*/
-        //? if forge && >=1.16.2
+        //? if (forge && >=1.16.2) || (neoforge && <1.20.3)
         return entity.getCapability(VehicleCapabilityProvider.VEHICLE_CAP).resolve();
     }
 

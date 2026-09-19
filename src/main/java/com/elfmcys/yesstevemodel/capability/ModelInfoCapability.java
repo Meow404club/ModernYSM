@@ -6,8 +6,10 @@ import com.elfmcys.yesstevemodel.network.sync.PlayerStateSynchronizer;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.util.StringPool;
 import com.elfmcys.yesstevemodel.network.message.S2CSetModelAndTexturePacket;
 import com.elfmcys.yesstevemodel.network.message.FeedbackData;
-//? if neoforge
+//? if neoforge && >=1.20.3
 /*import com.elfmcys.yesstevemodel.platform.neoforge.capability.ModelInfoCapabilityProvider;*/
+//? if neoforge && <1.20.3
+/*import com.elfmcys.yesstevemodel.platform.neoforge1202.capability.ModelInfoCapabilityProvider;*/
 //? if forge
 import com.elfmcys.yesstevemodel.platform.forge.capability.ModelInfoCapabilityProvider;
 import com.google.common.collect.Queues;
@@ -29,11 +31,11 @@ import java.util.function.Consumer;
 public class ModelInfoCapability {
 
     public static Optional<ModelInfoCapability> get(Player player) {
-        //? if neoforge
+        //? if neoforge && >=1.20.3
         /*return java.util.Optional.ofNullable(player.getCapability(ModelInfoCapabilityProvider.MODEL_INFO_CAP));*/
         //? if forge && <1.16.2
         /*return java.util.Optional.ofNullable(player.getCapability(ModelInfoCapabilityProvider.MODEL_INFO_CAP).orElse(null));*/
-        //? if forge && >=1.16.2
+        //? if (forge && >=1.16.2) || (neoforge && <1.20.3)
         return player.getCapability(ModelInfoCapabilityProvider.MODEL_INFO_CAP).resolve();
     }
 

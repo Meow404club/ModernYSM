@@ -76,13 +76,14 @@ public class ExtraPlayerRenderScreen extends Screen {
         }
         MutableComponent mutableComponentTranslatable = YsmText.translatable("gui.yes_steve_model.hide_or_show");
         int iWidth = this.font.width(mutableComponentTranslatable) + 24;
-        //? if neoforge {
+        //? if neoforge && >=1.20.3 {
         /*ysmAddWidget(Checkbox.builder(mutableComponentTranslatable, this.font)
                 .pos((this.width - iWidth) / 2, this.height + i)
                 .selected(ExtraPlayerRenderConfig.DISABLE_PLAYER_RENDER.get().booleanValue())
                 .onValueChange((checkbox, value) -> ExtraPlayerRenderConfig.DISABLE_PLAYER_RENDER.set(value))
                 .build());
-         *///?} else {
+         *///?}
+        //? if forge || neoforge && <1.20.3 {
         ysmAddWidget(new Checkbox((this.width - iWidth) / 2, this.height + i, iWidth, 20, mutableComponentTranslatable, ExtraPlayerRenderConfig.DISABLE_PLAYER_RENDER.get().booleanValue(), true) {
             public void onPress() {
                 super.onPress();

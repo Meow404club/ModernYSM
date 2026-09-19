@@ -1,7 +1,9 @@
 package com.elfmcys.yesstevemodel.capability;
 
-//? if neoforge
+//? if neoforge && >=1.20.3
 /*import com.elfmcys.yesstevemodel.platform.neoforge.capability.StarModelsCapabilityProvider;*/
+//? if neoforge && <1.20.3
+/*import com.elfmcys.yesstevemodel.platform.neoforge1202.capability.StarModelsCapabilityProvider;*/
 //? if forge
 import com.elfmcys.yesstevemodel.platform.forge.capability.StarModelsCapabilityProvider;
 import com.google.common.collect.Sets;
@@ -19,11 +21,11 @@ public class StarModelsCapability {
     private Set<String> starModels = Sets.newHashSet();
 
     public static Optional<StarModelsCapability> get(Player player) {
-        //? if neoforge
+        //? if neoforge && >=1.20.3
         /*return java.util.Optional.ofNullable(player.getCapability(StarModelsCapabilityProvider.STAR_MODELS_CAP));*/
         //? if forge && <1.16.2
         /*return java.util.Optional.ofNullable(player.getCapability(StarModelsCapabilityProvider.STAR_MODELS_CAP).orElse(null));*/
-        //? if forge && >=1.16.2
+        //? if (forge && >=1.16.2) || (neoforge && <1.20.3)
         return player.getCapability(StarModelsCapabilityProvider.STAR_MODELS_CAP).resolve();
     }
 

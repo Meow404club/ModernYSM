@@ -6,8 +6,10 @@ import com.elfmcys.yesstevemodel.config.ModSoundEvents;
 import com.elfmcys.yesstevemodel.config.ServerConfig;
 import com.elfmcys.yesstevemodel.event.YsmEventBootstrap;
 import com.elfmcys.yesstevemodel.platform.YsmPlatform;
-//? if neoforge
+//? if neoforge && >=1.20.3
 /*import com.elfmcys.yesstevemodel.platform.neoforge.YesSteveModelForge;*/
+//? if neoforge && <1.20.3
+/*import com.elfmcys.yesstevemodel.platform.neoforge1202.YesSteveModelForge;*/
 //? if forge
 import com.elfmcys.yesstevemodel.platform.forge.YesSteveModelForge;
 import com.elfmcys.yesstevemodel.util.obfuscate.Keep;
@@ -98,6 +100,15 @@ public class YesSteveModel {
     // 保持基线原位（字节码零差口径）；其余 stonecutter 线（1165 等基线本就无注解）整块剥除
 //? if >=1.20.1 && <1.20.4 {
     @OnlyIn(Dist.CLIENT)
+//?}
+    // 1.20.5 专面：FML 3.0.18 的 RuntimeDistCleaner 给 LocalPlayer 打了类级 @OnlyIn(Dist.CLIENT)
+    // （1.20.4 无类级注解、1.20.6 起补丁移除——三线 runServer 实证差），本方法体的 LocalPlayer
+    // 引用在 YesSteveModel 类校验期拉起 LocalPlayer 类加载 → invalid dist 硬错（1.20.5
+    // runServer 实证，YesSteveModelForge.<init>:48 init() 链）。注解使 3.0.18 cleaner 在
+    // 校验前剥离本方法（调用方均在 client 包，server 零触达）；>=21.7 严禁 @OnlyIn
+    // （OnlyInWarningsHandler 记 ERROR，58aaaf2 口径）→ 面收窄 1.20.5 单版
+//? if neoforge && >=1.20.5 && <1.20.6 {
+/*    @OnlyIn(Dist.CLIENT)*/
 //?}
     // forge 注解门必须独占一块（unimined-env-116x）：chasm 只解包「整块内容均为包裹态」的
     // /* */（ClientSetupEvent registerKeyBindings 块同款实证）；混入裸代码后包裹行保持

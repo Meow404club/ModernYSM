@@ -1,7 +1,9 @@
 package com.elfmcys.yesstevemodel.capability;
 
-//? if neoforge
+//? if neoforge && >=1.20.3
 /*import com.elfmcys.yesstevemodel.platform.neoforge.capability.ProjectileModelCapabilityProvider;*/
+//? if neoforge && <1.20.3
+/*import com.elfmcys.yesstevemodel.platform.neoforge1202.capability.ProjectileModelCapabilityProvider;*/
 //? if forge
 import com.elfmcys.yesstevemodel.platform.forge.capability.ProjectileModelCapabilityProvider;
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
@@ -14,20 +16,20 @@ import java.util.Optional;
 public class ProjectileModelCapability {
 
     public static Optional<ProjectileModelCapability> get(Entity entity) {
-        //? if neoforge
+        //? if neoforge && >=1.20.3
         /*return java.util.Optional.ofNullable(entity.getCapability(ProjectileModelCapabilityProvider.PROJECTILE_MODEL));*/
         //? if forge && <1.16.2
         /*return java.util.Optional.ofNullable(entity.getCapability(ProjectileModelCapabilityProvider.PROJECTILE_MODEL).orElse(null));*/
-        //? if forge && >=1.16.2
+        //? if (forge && >=1.16.2) || (neoforge && <1.20.3)
         return entity.getCapability(ProjectileModelCapabilityProvider.PROJECTILE_MODEL).resolve();
     }
 
     public static Optional<ProjectileModelCapability> get(Projectile projectile) {
-        //? if neoforge
+        //? if neoforge && >=1.20.3
         /*return java.util.Optional.ofNullable(projectile.getCapability(ProjectileModelCapabilityProvider.PROJECTILE_MODEL));*/
         //? if forge && <1.16.2
         /*return java.util.Optional.ofNullable(projectile.getCapability(ProjectileModelCapabilityProvider.PROJECTILE_MODEL).orElse(null));*/
-        //? if forge && >=1.16.2
+        //? if (forge && >=1.16.2) || (neoforge && <1.20.3)
         return projectile.getCapability(ProjectileModelCapabilityProvider.PROJECTILE_MODEL).resolve();
     }
 

@@ -15,12 +15,15 @@ import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.LivingEntityRenderer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
@@ -39,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
@@ -353,6 +357,23 @@ public final class RealCameraApiBinder {
             mSetForward.invoke(result, new Vec3(forward.x(), forward.y(), forward.z()));
             mSetUpward.invoke(result, new Vec3(upward.x(), upward.y(), upward.z()));
             logBindSuccess(target, position, forward, upward);
+            // rc-closure-mirror-gaps：骨轴路径的 armed 探针差分（UV 路径 collinear 被拒时
+            // 一致性数值格仍可用；探针 geo 兜底对任意预测点有效，见 runProbeDiff javadoc）
+            if (probeDiffArmed() && mTargetConfig != null) {
+                try {
+                    Object cfgB = mTargetConfig.invoke(target);
+                    if (cfgB != null) {
+                        float[] uvB = new float[6];
+                        for (int i = 0; i < 6; i++) {
+                            uvB[i] = (Float) mUvGetters[i].invoke(cfgB);
+                        }
+                        runProbeDiff(player, model, cap, null, uvB, position, forward, upward, bodyRot,
+                                partialTick, null, chain, target);
+                    }
+                } catch (Throwable t) {
+                    YesSteveModel.LOGGER.info("[compat][rc-probe-diff] bone-path diff setup failed: {}", t.toString());
+                }
+            }
             if (spaceDiagAllowed(netHeadYawDeg)) {
                 // 对照值：view-yaw 基准（M1 旧行为）独立重算——同一骨链换根帧，非恒等式推导
                 PoseStack rootAlt = bindRootFrame(player, viewRot, cap);
@@ -390,6 +411,7 @@ public final class RealCameraApiBinder {
         try {
             Object cfg = mTargetConfig.invoke(target);
             if (cfg == null) {
+                uvFallbackLog("targetConfigNull");
                 return null;
             }
             float[] uv = new float[6];
@@ -400,7 +422,9 @@ public final class RealCameraApiBinder {
             QuadHit[][] hitSlots = quadHits(model, target, uv);
             QuadHit[] posCandidates = hitSlots[0];
             if (posCandidates.length == 0) {
-                return null; // posUV 无命中：UV 布局对不上（模型/贴图布局不符）→ 骨轴兜底
+                // posUV 无命中：UV 布局对不上（模型/贴图布局不符）→ 骨轴兜底
+                uvFallbackLog("noPosCandidates u=" + uv[UV_POS_U] + " v=" + uv[UV_POS_V]);
+                return null;
             }
             QuadHit posHit = posCandidates[0];
             // 名字→IBone 一次遍历（三槽链共享）
@@ -416,12 +440,14 @@ public final class RealCameraApiBinder {
 
             Vector3f position = surfacePoint(root, frameMats, model, bonesByName, posHit, uv[UV_POS_U], uv[UV_POS_V]);
             if (!finiteNonZero(position)) {
+                uvFallbackLog("nonFinitePos");
                 return null;
             }
             // forward：forwardUV 命中面法线；无命中退 pos 面法线（=面朝向，bindRotation 时视角贴面）
             Vector3f forward = quadDirection(root, frameMats, model, bonesByName,
                     hitSlots[1].length > 0 ? hitSlots[1][0] : posHit);
             if (!finiteNonZero(forward)) {
+                uvFallbackLog("nonFiniteFwd");
                 return null;
             }
             forward.normalize();
@@ -430,11 +456,13 @@ public final class RealCameraApiBinder {
                     ? quadDirection(root, frameMats, model, bonesByName, hitSlots[2][0])
                     : boneUpAxis(root, frameMats, model, bonesByName, posHit.boneName);
             if (!finiteNonZero(upward)) {
+                uvFallbackLog("nonFiniteUp");
                 return null;
             }
             upward.normalize();
             // forward/upward 近共线会让 realcamera computeCamera 的正交化退化
             if (Math.abs(forward.dot(upward)) > 0.99f) {
+                uvFallbackLog("collinearAxes");
                 return null;
             }
             Object[] args;
@@ -453,7 +481,7 @@ public final class RealCameraApiBinder {
             // fix-rc-probe-diff：harness 门控探针差分（生产 armed 文件不存在=零行为，见 runProbeDiff javadoc）
             if (probeDiffArmed()) {
                 runProbeDiff(player, model, cap, posHit, uv, position, forward, upward, bodyRot, partialTick,
-                        bonesByName, target);
+                        bonesByName, null, target);
             }
             if (spaceDiagAllowed(netHeadYawDeg)) {
                 // 对照值：view-yaw 基准（M1 旧行为）独立重算——同一骨链换根帧，非恒等式推导；
@@ -476,6 +504,7 @@ public final class RealCameraApiBinder {
             return result;
         } catch (Throwable t) {
             // UV 路径任何异常 → 骨轴兜底（不计 EMPTY 统计，避免双计数）
+            uvFallbackLog("exception: " + t);
             YesSteveModel.LOGGER.debug("[compat] RealCamera UV bind fell back to bone axis: {}", t.toString());
             return null;
         }
@@ -494,6 +523,13 @@ public final class RealCameraApiBinder {
 
     /** 空 UV 候选槽（替代旧 null 槽语义：无命中面）。 */
     private static final QuadHit[] NO_HIT = new QuadHit[0];
+
+    /** UV 路径回退原因打点（仅 harness armed 时 INFO，生产 debug 级保持静默）。 */
+    private static void uvFallbackLog(String reason) {
+        if (probeDiffArmed()) {
+            YesSteveModel.LOGGER.info("[compat][rc-probe-diff] uv-fallback reason={}", reason);
+        }
+    }
 
     /**
      * 三槽（pos/fwd/up）UV→quad 候选命中，按 (模型, target) 缓存（UV 布局=geo 构建期决定，模型重载
@@ -1015,16 +1051,48 @@ public final class RealCameraApiBinder {
             Direction bedOrientation = player.getBedOrientation();
             root.translate((-bedOrientation.getStepX()) * eyeHeight, 0.0f, (-bedOrientation.getStepZ()) * eyeHeight);
         }
+        // rc-closure-mirror-gaps：setupRotations 的 yaw 链镜像（GeoReplacedEntityRenderer.java:411-452
+        // → vanilla 1.20.1 LivingEntityRenderer.java:173-203，分支序=渲染链真相）：
+        // climbable yaw 整体替换（GeoReplacedEntityRenderer.java:420-435：onClimbable&&
+        // getLastClimbablePos&&FACING 三条件 → getOpposite().get2DDataValue()*90，非叠加）
+        // → isShaking 抖动叠加（vanilla :174-176：this.isShaking 默认实现=entity.isFullyFrozen()
+        // :169-171，我方渲染器无覆盖；cos(tickCount*3.25)*PI*0.4F 弧度值直进 rotationDegrees）
+        // → 根旋转（:178-180 非睡 180-yaw / :193-198 床向翻转，睡优先）→ Dinnerbone 平移+ZP180
+        // （:199-202 else-if 链尾：濒死/旋转攻击/睡眠优先——前两者旗标被我方 :412-419+446-451
+        // 中和，渲染链实际只余睡眠优先；睡濒死边沿差=fix-rc-transform-matrix 已声明取舍）。
+        float yaw = lerpBodyRotDeg;
+        if (player.onClimbable()) {
+            Optional<BlockPos> ladderPos = player.getLastClimbablePos();
+            if (ladderPos.isPresent()) {
+                //? if <1.20
+                /*Optional<Direction> ladderFacing = player.getLevel().getBlockState(ladderPos.get()).getOptionalValue(HorizontalDirectionalBlock.FACING);*/
+                //? if >=1.20
+                Optional<Direction> ladderFacing = player.level().getBlockState(ladderPos.get()).getOptionalValue(HorizontalDirectionalBlock.FACING);
+                if (ladderFacing.isPresent()) {
+                    yaw = ladderFacing.get().getOpposite().get2DDataValue() * 90;
+                }
+            }
+        }
+        if (player.isFullyFrozen()) {
+            yaw += (float) (Math.cos(player.tickCount * 3.25) * Math.PI * 0.4f);
+        }
         if (player.getPose() == Pose.SLEEPING && player.deathTime <= 0 && !player.isAutoSpinAttack()) {
             // vanilla 1.20.1 LivingEntityRenderer.setupRotations SLEEPING 分支逐字
-            // （:193-198：180-body 分支在 SLEEPING 时被 :178-180 跳过，改走床向翻转）
+            // （:193-198：180-body 分支在 SLEEPING 时被 :178-180 跳过，改走床向翻转；
+            // 床向缺失时的 $$3 兜底含 climbable/isShaking 修正后的 yaw，同源 :195）
             Direction bedOrientation = player.getBedOrientation();
-            float sleepRot = bedOrientation != null ? sleepDirectionToRotation(bedOrientation) : lerpBodyRotDeg;
+            float sleepRot = bedOrientation != null ? sleepDirectionToRotation(bedOrientation) : yaw;
             root.mulPose(Axis.YP.rotationDegrees(sleepRot));
             root.mulPose(Axis.ZP.rotationDegrees(90.0f));
             root.mulPose(Axis.YP.rotationDegrees(270.0f));
         } else {
-            root.mulPose(Axis.YP.rotationDegrees(180.0f - lerpBodyRotDeg));
+            root.mulPose(Axis.YP.rotationDegrees(180.0f - yaw));
+            if (LivingEntityRenderer.isEntityUpsideDown(player)) {
+                // vanilla :199-202 逐字：translate(0, bbHeight+0.1, 0) + ZP180
+                //（静态公共方法直调=同源判定：profile 名 Dinnerbone/Grumm+玩家 CAPE 层开）
+                root.translate(0.0f, player.getBbHeight() + 0.1f, 0.0f);
+                root.mulPose(Axis.ZP.rotationDegrees(180.0f));
+            }
         }
         if (player.getVehicle() != null) {
             // GeoReplacedEntityRenderer.java:235-257 逐字（1.19.3 分支：rotateZYX(z,0,x).invert()）
@@ -1177,7 +1245,7 @@ public final class RealCameraApiBinder {
     private static void runProbeDiff(Player player, AnimatedGeoModel model, PlayerCapability cap, QuadHit posHit,
                                      float[] uv, Vector3f b1Before, Vector3f b1Fwd, Vector3f b1Up,
                                      float bodyRot, float partialTick, Map<String, IBone> bonesByName,
-                                     Object target) {
+                                     List<IBone> boneAxisChain, Object target) {
         try {
             if (!initProbeTools()) {
                 return;
@@ -1186,7 +1254,15 @@ public final class RealCameraApiBinder {
             // 匹配（ModConfig.getBindTargetList）；无此门时实体阴影 quad（UV 覆盖 [0,1]² 全域）
             // 会抢在模型面片前命中。绕过 BindTarget 匹配后保留同一道门。
             String texGate = targetTextureId(target);
-            String chainBefore = boneChainPoseDump(model, bonesByName, posHit.boneName);
+            if (bonesByName == null) {
+                // 骨轴路径不预建表：此处按需构建（uv 路径由 tryUvBind 传入）
+                bonesByName = new java.util.HashMap<>();
+                for (IBone bone : model.bones().values()) {
+                    bonesByName.put(bone.getName(), bone);
+                }
+            }
+            String boneName = posHit == null ? "none" : posHit.boneName;
+            String chainBefore = boneChainPoseDump(model, bonesByName, boneName);
             // ② AllHead 临时解隐（进入本方法时它通常仍是上帧 hideHead 的隐藏态）
             IBone allHead = model.allHeadBone();
             boolean headWasHidden = false;
@@ -1212,11 +1288,20 @@ public final class RealCameraApiBinder {
                 allHead.setHidden(headWasHidden, headWasChildHidden);
             }
             boolean headRehiddenDuringPasses = allHead != null && allHead.isHidden();
-            // ⑤ 探针同步求值后的 B1 重算（同 quad 同公式，仅 matrixData 相位不同）
+            // ⑤ 探针同步求值后的 B1 重算（同 quad 同公式/同骨链同 pivot，仅 matrixData 相位不同）
             PoseStack rootAfter = bindRootFrame(player, bodyRot, cap);
-            Vector3f b1After = surfacePoint(rootAfter, new java.util.HashMap<>(), model, bonesByName,
-                    posHit, uv[UV_POS_U], uv[UV_POS_V]);
-            String chainAfter = boneChainPoseDump(model, bonesByName, posHit.boneName);
+            Vector3f b1After;
+            if (posHit != null) {
+                b1After = surfacePoint(rootAfter, new java.util.HashMap<>(), model, bonesByName,
+                        posHit, uv[UV_POS_U], uv[UV_POS_V]);
+            } else {
+                // 骨轴路径（rc-closure-mirror-gaps）：与 computeBind 主算同 helper 同序
+                RenderUtils.prepMatrixForLocator(rootAfter, boneAxisChain);
+                org.joml.Matrix4f matAfter = rootAfter.last().pose();
+                Vector3f centerOffset = boneCubeCenterOffset(model, boneAxisChain.get(boneAxisChain.size() - 1));
+                b1After = matAfter.transformPosition(centerOffset != null ? centerOffset : new Vector3f());
+            }
+            String chainAfter = boneChainPoseDump(model, bonesByName, boneName);
             // ⑥ RC 消费侧实况（本帧 computeCamera 尚未回写 → lastResult=上一帧喂入的平滑值）
             Vector3f rcLast = readRcLastResult();
             // ⑦ 差分打点

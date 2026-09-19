@@ -1234,6 +1234,7 @@ public final class RealCameraApiBinder {
             YesSteveModel.LOGGER.info(
                     "[compat][rc-probe-diff] #{} pose={} shift={} pos={} b1Before={} b1After={} probe={} probeAvail={}"
                             + " dStruct=probe-b1After{} dStale=b1Before-b1After{} dFwdAngle={} dUpAngle={}"
+                            + " st=climb:{}/frozen:{}/flip:{} fwdZ={} upY={}"
                             + " geoDist(px)={} vbVerts={} headRehidden={} rcLastFramePos={} chainBefore=[{}] chainAfter=[{}]",
                     bindLogCount, player.getPose(), player.isShiftKeyDown(),
                     String.format("(%.3f, %.3f, %.3f)", player.getX(), player.getY(), player.getZ()),
@@ -1241,6 +1242,10 @@ public final class RealCameraApiBinder {
                     b1After == null ? "n/a" : String.format(f, b1After.x(), b1After.y(), b1After.z()),
                     probePos == null ? "n/a" : String.format(f, probePos.x(), probePos.y(), probePos.z()),
                     probeAvail, dStruct, dStale, dFwd, dUp,
+                    player.onClimbable(), player.isFullyFrozen(),
+                    net.minecraft.client.renderer.entity.LivingEntityRenderer.isEntityUpsideDown(player),
+                    String.format("%.3f", b1Fwd.z()),
+                    String.format("%.3f", b1Up == null ? Float.NaN : b1Up.y()),
                     Float.isInfinite(geoDist) ? "n/a" : String.format("%.2f", geoDist * 16.0f),
                     vbVerts, headRehiddenDuringPasses,
                     rcLast == null ? "n/a" : String.format(f, rcLast.x(), rcLast.y(), rcLast.z()),

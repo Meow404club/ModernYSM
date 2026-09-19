@@ -102,7 +102,22 @@ dependencies {
     // x 后手仅补旧 API 独有符号（capability/slashblade/ComboState，运行时 hasNewApi()=false
     // 分支 SlashBladeStateAccess 编译需要）。运行时行为不受编译序影响：两 jar 均 compileOnly
     // 不进产物，实际分支由已装载 mod 版本经 VersionRange("(,0.1.2]") 判定。
-    compileOnly(fileTree(rootProject.file("libs")) { exclude("*SlashBlade*") })
+    // neoforge-* 子目录 = 各代 shim 编译域（build.moddev.gradle.kts 按线以
+    // fileTree(libs/neoforge-2xx) 专属消费，21.2~21.8 映射表 + 26.1 直挂），非 1.20.1
+    // 依赖：fileTree 默认递归会把 7 个 firstperson 同包 fork 全吞进本线 classpath，
+    // javac 按 classpath 序首中解析 dev.tr7zw.firstperson.api.*（本线
+    // FirstPersonCompat.java 引用面）——btrfs 主仓序 1.20.1 jar 先手=绿，tmpfs 冷检出
+    // 序 neoforge-261（mc26.1.2 fork，major 69 > 本线 61）先手即红，与 slashblade
+    // 同族非确定（本卡实测三处文件集全等纯 readdir 序差：btrfs 绿 / tmpfs 冷检出
+    // a、b 双红，错误原文"类文件具有错误的版本 69.0, 应为 61.0"）。剪枝目录将递归
+    // 面归零（libs/ 现存子目录仅此 7 个 neoforge-*）：新增子目录必须由归属构建脚本
+    // 显式消费，禁止依赖本 fileTree 递归（同族先例 G 卡 slashblade 钉序 03eb6cf）。
+    // 顶层 oculus 双 jar（1.8.0×1.6.13）同类隐患为已挂账独立债（签名现同暂良性），不在本卡。
+    // ponytail: fileTree 对未来非 neoforge-* 新子目录仍递归吞入；命名约定破例时改显式 files() 钉序
+    compileOnly(fileTree(rootProject.file("libs")) {
+        exclude("*SlashBlade*")
+        exclude("neoforge-*")
+    })
     compileOnly(files(
         rootProject.file("libs/SlashBladeResharped-1.20.1-0.1.4-patched.jar"),
         rootProject.file("libs/x_SlashBlade-1.20.1-0.1.2.jar"),

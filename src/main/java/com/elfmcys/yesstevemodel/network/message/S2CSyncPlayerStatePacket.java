@@ -280,7 +280,7 @@ public class S2CSyncPlayerStatePacket {
             message.shieldBlockCooldown = buffer.readBoolean();
         }
         if ((flags & 2048) != 0) {
-            message.modelSwitchId = buffer.readUtf();
+            message.modelSwitchId = buffer.readUtf(32767);
         }
         if ((flags & 4096) != 0) {
             message.molangHashId = buffer.readInt();
@@ -289,17 +289,17 @@ public class S2CSyncPlayerStatePacket {
                 Int2FloatOpenHashMap roamingVars = new Int2FloatOpenHashMap(varCount);
                 message.molangVarData = roamingVars;
                 for (int i = 0; i < varCount; i++) {
-                    roamingVars.put(StringPool.computeIfAbsent(buffer.readUtf()), buffer.readFloat());
+                    roamingVars.put(StringPool.computeIfAbsent(buffer.readUtf(32767)), buffer.readFloat());
                 }
             } else if (varCount == 0) {
                 message.molangVarData = Int2FloatMaps.EMPTY_MAP;
             } else if (varCount == 1) {
-                message.molangVarData = Int2FloatMaps.singleton(StringPool.computeIfAbsent(buffer.readUtf()), buffer.readFloat());
+                message.molangVarData = Int2FloatMaps.singleton(StringPool.computeIfAbsent(buffer.readUtf(32767)), buffer.readFloat());
             } else {
                 int[] keys = new int[varCount];
                 float[] values = new float[varCount];
                 for (int i = 0; i < varCount; i++) {
-                    keys[i] = StringPool.computeIfAbsent(buffer.readUtf());
+                    keys[i] = StringPool.computeIfAbsent(buffer.readUtf(32767));
                     values[i] = buffer.readFloat();
                 }
                 message.molangVarData = new Int2FloatArrayMap(keys, values);

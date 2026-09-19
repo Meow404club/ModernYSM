@@ -102,6 +102,31 @@ repositories {
     // versions/1.16.5-forge/src/main/java 下的版本独有 no-op shim 提供（mod-absent 语义）。
 }
 
+// ===== dev 运行面依赖代差矫正（unimined-env-116x）=====
+// 本脚本只服务 1.16.1~1.16.5 五线（settings vers 路由），configurations.all 天然圈定范围。
+// 逐项机制（全部 runServer 实测）：
+//  1) modlauncher 8.0.6(1163)/8.0.9(1164) 的 SecureJarHandler.createCodeSource 硬编码
+//     invokespecial sun/security/util/ManifestEntryVerifier."<init>":(Ljava/util/jar/Manifest;)V
+//     —— 该单参构造在 JDK 8u312+ 已删（本机 azul 1.8.0_504 只剩 (Manifest,String)），
+//     TCL 首次建 CodeSource 即 NSME（1163/1164 runServer 双复现，栈 SecureJarHandler.java:66）。
+//     8.1.x（1165 原生在用、azul-8 亲证）已改 MEV_FACTORY 反射双兼容 → 同槽强升 8.1.3。
+//     1161(6.1.1)/1162(7.0.1) 的 modlauncher 无 SecureJarHandler 类，不受此炸点影响，不动。
+//     先例：build.forge.gradle.kts pre118 的 asm 9.8 eachDependency 强升。
+//  2) mixin 0.8(1161/1162)/0.8.2(1163/1164) 在 prepare 相位经 MixinLaunchPlugin.getClassNode
+//     → ITransformerLoader.buildTransformedClassNodeFor 全量 transform 管线回读目标类，
+//     重入类恰有 pending mixins 即抛 ReEntrantTransformerError（1162 runServer 复现，
+//     MixinProcessor.applyMixins:278 prepare 锁）。1165 的 0.8.4 同配置无此炸 → 五线同代化 0.8.4。
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "cpw.mods" && requested.name == "modlauncher" &&
+            requested.version in listOf("8.0.6", "8.0.9")
+        ) useVersion("8.1.3")
+        if (requested.group == "org.spongepowered" && requested.name == "mixin" &&
+            requested.version in listOf("0.8", "0.8.2")
+        ) useVersion("0.8.4")
+    }
+}
+
 unimined.minecraft {
     version(mcVersion)
 

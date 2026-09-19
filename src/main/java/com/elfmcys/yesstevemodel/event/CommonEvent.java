@@ -48,5 +48,12 @@ public final class CommonEvent {
         NetworkHandler.init();
         TouhouMaidCompat.init();
         nativeInit();
+        // forge 32/33/34（<1.16.4）自家命令参数类型（ModIdArgument/EnumArgument）从未注册
+        // ArgumentTypes → 命令树同步写占位 "minecraft:" → 客户端反序列化失败进服必断连
+        // （unimined-env-116x；两侧都要注册，故挂 common setup）。
+        // 注意必须块包裹形态：1201 vcs 直通线下裸行会常驻生效（与 35+ 代 ForgeMod 注册撞车）
+        //? if forge && <1.16.4 {
+        /*com.elfmcys.yesstevemodel.platform.forge.ForgeArgTypeSyncShim.register();*/
+        //?}
     }
 }

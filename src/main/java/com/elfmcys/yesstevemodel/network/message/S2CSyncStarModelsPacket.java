@@ -39,7 +39,7 @@ public class S2CSyncStarModelsPacket {
         int varInt = buf.readVarInt();
         HashSet<String> tmp = Sets.newHashSet();
         for (int i = 0; i < varInt; i++) {
-            tmp.add(buf.readUtf());
+            tmp.add(buf.readUtf(32767));
         }
         return new S2CSyncStarModelsPacket(tmp);
     }

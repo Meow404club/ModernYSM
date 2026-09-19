@@ -54,7 +54,7 @@ public final class C2SModelUploadStartPacket {
     }
 
     public static C2SModelUploadStartPacket decode(FriendlyByteBuf buf) {
-        return new C2SModelUploadStartPacket(buf.readUtf(), buf.readVarInt(), buf.readUtf());
+        return new C2SModelUploadStartPacket(buf.readUtf(32767), buf.readVarInt(), buf.readUtf(32767));
     }
 
     public static void handle(C2SModelUploadStartPacket message, PacketContext ctx) {

@@ -47,7 +47,7 @@ public class C2SPlayAnimationPacket {
     }
 
     public static C2SPlayAnimationPacket decode(FriendlyByteBuf buf) {
-        return new C2SPlayAnimationPacket(buf.readVarInt(), buf.readUtf(), buf.readVarInt());
+        return new C2SPlayAnimationPacket(buf.readVarInt(), buf.readUtf(32767), buf.readVarInt());
     }
 
     public static void handle(C2SPlayAnimationPacket message, PacketContext ctx) {

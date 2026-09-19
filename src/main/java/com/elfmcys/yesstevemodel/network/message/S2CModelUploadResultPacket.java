@@ -86,7 +86,7 @@ public final class S2CModelUploadResultPacket {
     }
 
     public static S2CModelUploadResultPacket decode(FriendlyByteBuf buf) {
-        return new S2CModelUploadResultPacket(buf.readVarLong(), buf.readByte(), buf.readUtf(), buf.readVarLong(), buf.readVarLong(), buf.readUtf());
+        return new S2CModelUploadResultPacket(buf.readVarLong(), buf.readByte(), buf.readUtf(32767), buf.readVarLong(), buf.readVarLong(), buf.readUtf(32767));
     }
 
     public static void handle(S2CModelUploadResultPacket packet, PacketContext ctx) {

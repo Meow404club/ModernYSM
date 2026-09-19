@@ -41,7 +41,7 @@ public class S2CExecuteMolangPacket {
     }
 
     public static S2CExecuteMolangPacket decode(FriendlyByteBuf buf) {
-        return new S2CExecuteMolangPacket(buf.readVarIntArray(), buf.readUtf());
+        return new S2CExecuteMolangPacket(buf.readVarIntArray(), buf.readUtf(32767));
     }
 
     public static void handle(S2CExecuteMolangPacket message, PacketContext ctx) {

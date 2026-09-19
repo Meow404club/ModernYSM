@@ -175,12 +175,14 @@ public class YSMBinding extends ContextBinding {
         //?}
         //? if >=26.3 {
         /*livingEntityVar("swinging", ctx -> ctx.entity().isSwinging());
-        // swing_time 旧语义=挥动起始 tick 计数（-1=未挥动）；26.3 无公开 tick 访问器 →
-        // 近似=round(动画进度*durationTicks)（SwingState.animation=min(ticks/duration,1) 线性，
-        // ponytail: 每帧一次标量换算，模型脚本语义偏移在半 tick 内）
+        // swing_time 旧语义=挥动起始 tick 计数（-1=未挥动）；26.3 SwingState 无 tick 访问器，
+        // 但 getSwingAnimation(p) 本身就是 vanilla getAttackAnim 同款插值器
+        //（old/current lerp+wrap+1：26.3 LivingEntity.java:4341-4345 SwingState.getAnimation
+        // ≡ 26.1 LivingEntity.java:3253-3260 getAttackAnim 公式逐项同构）→
+        // 渲染时刻以 frameTime 采样再换算 tick 数=精确插值，round 取整对齐旧整型计数
         livingEntityVar("swing_time", ctx -> {
             net.minecraft.world.entity.LivingEntity.SwingDescription ysmSwing = ctx.entity().getCurrentSwing();
-            return ysmSwing == null ? -1 : Math.round(ctx.entity().getSwingAnimation(0.0f) * ysmSwing.durationTicks());
+            return ysmSwing == null ? -1 : Math.round(ctx.entity().getSwingAnimation(ctx.animationEvent().getFrameTime()) * ysmSwing.durationTicks());
         });
         // 未挥动时旧字段保持上次值 → 26.3 null 兜底 MAIN_HAND（0），行为面=swinging 门后消费不受扰
         livingEntityVar("swinging_arm", ctx -> {

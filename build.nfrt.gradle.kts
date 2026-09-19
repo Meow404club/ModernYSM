@@ -48,16 +48,27 @@ dependencies {
 // ===== NFRT 直驱任务：等价 MDG createMinecraftArtifacts（无 mod 侧 AT/parchment 输入，POC 不需要）=====
 val nfrtArtifactsDir = layout.buildDirectory.dir("moddev-artifacts")
 val gameJar = nfrtArtifactsDir.map { it.file("minecraft-patched-$neoVersion.jar") }
+// toolchain 解析在脚本层（Project 扩展表）；the<T>() 在任务 lambda 内会解析到任务扩展表
+val nfrtLauncher = the<JavaToolchainService>()
+    .launcherFor { languageVersion = JavaLanguageVersion.of(21) }
+val toolsJavaExecutable = the<JavaToolchainService>()
+    .launcherFor { languageVersion = JavaLanguageVersion.of(17) }
+    .map { it.executablePath.asFile.absolutePath }
+    .get()
 
 val createMinecraftArtifacts by tasks.registering(JavaExec::class) {
     group = "build"
     description = "Runs the NeoForm Runtime CLI directly (bypasses MDG capability resolution)."
     // NFRT 本体 Java 21（NeoFormRuntimeTask.java:114-117 convention）
-    javaLauncher.set(the<JavaToolchainService>().launcherFor { languageVersion = JavaLanguageVersion.of(21) })
+    javaLauncher.set(nfrtLauncher)
     // 内存闸（主会话裁决 2026-09-19）：NFRT JVM 封顶 4G——本机与他仓常驻 runServer 并行，
     // 反编译重活不受控堆会挤压背景负载（gradle.properties 同因的个体化边界）
     maxHeapSize = "4g"
-    classpath(neoFormRuntimeTool)
+    // 主类显式 + classpath 只留 shadowed 单 jar：classifier 记法下 Gradle 仍会连带解析
+    // 默认 variant 的传递依赖（picocli/ecj 实证），多文件 classpath 令 JavaExec 拒绝猜主类；
+    // -all.jar 自带 Main-Class（MANIFEST.MF 实证）且自包含
+    mainClass = "net.neoforged.neoform.runtime.cli.Main"
+    classpath(neoFormRuntimeTool.filter { it.name.endsWith("-all.jar") })
     // 缓存/工作目录与 MDG 同款（NeoFormRuntimeTask.java:107-112）：缓存复用全局
     // ~/.gradle/caches/neoformruntime（26.x 线 intermediate_results 同仓），工作目录落本线 build/
     args(
@@ -66,11 +77,11 @@ val createMinecraftArtifacts by tasks.registering(JavaExec::class) {
         "run",
         // MC 1.20.2 外部工具 toolchain = Java 17（MDG VersionCapabilitiesInternal.getJavaVersion：
         // 1.18~1.20.4 段=17；launcher 经 foojay 解析，本机 java-17 在册）
-        "--java-executable", the<JavaToolchainService>()
-            .launcherFor { languageVersion = JavaLanguageVersion.of(17) }
-            .map { it.executablePath.asFile.absolutePath }
-            .get(),
-        "--neoforge", "net.neoforged:neoforge:$neoVersion",
+        "--java-executable", toolsJavaExecutable,
+        // notation 带 :userdev classifier（ModDevPlugin.java:63 原文
+        // "net.neoforged:neoforge:" + version + ":userdev"）——20.2.93 的 maven 无主 jar
+        // （pom/userdev/universal 而已，判负同根），无 classifier 时 NFRT 解析主 jar 必炸
+        "--neoforge", "net.neoforged:neoforge:$neoVersion:userdev",
         "--dist", "joined",
         // needsNeoForgeInMinecraftJar(<=1.21.11)=true → NeoForge 类并入产物 jar，
         // 请求 gameJarWithNeoForge（CreateMinecraftArtifacts.java:364-367 同款分支）

@@ -132,6 +132,51 @@ public final class GpuRenderPath {
         Matrix4f mvMat = RenderSystem.getModelViewMatrixCopy();*/
         //?}
 
+        // gui-tail-flush：21.6+ 延迟 GUI 管线（21.8/21.11 挂 GuiRendererTailMixin 的线）预览 draw
+        // 改入 pending 队列，GuiRenderer.render 窗尾 flush——GUI 正交帧尾才打包（1218 GuiRenderer.java:199/:203）
+        // 且 GUI 网格批次后绘盖掉先绘（GpuCapability.java:26 病灶注/债面），Screen.render 收集相直绘必被遮挡。
+        // 置于矩阵分支之后：rootPose/rootNormal/mvMat 已按线解析成 JOML（1.17~1.19.2=MatrixBridge 换算）。
+        // tailHookArmed=false（未挂载线）→ 走下方立即直绘，行为零回归。
+        //? if >=21.6 {
+        /*if ((ModelPreviewRenderer.isPreview() || ModelPreviewRenderer.isExtraPlayer()) && GpuPreviewQueue.isTailHookArmed()) {
+            GpuPreviewQueue.enqueue(model, mesh, rootPose, rootNormal, mvMat, boneParams, stateBuffer,
+                    textureIndex, renderPartMask, packedLight, packedOverlay, r, g, b, a, textureLocation);
+            return true;
+        }*/
+        //?}
+
+        drawMesh(model, mesh, rootPose, rootNormal, projMat, mvMat,
+                ModelPreviewRenderer.isPreview() || ModelPreviewRenderer.isExtraPlayer(),
+                boneParams, stateBuffer, textureIndex, renderPartMask, packedLight, packedOverlay,
+                r, g, b, a, textureLocation);
+        return true;
+        //?}
+    }
+
+    // gui-tail-flush：pending 绘制面仅 >=1.17 存在（<1.17 线 tryRender 走恒 false 闸门直返，
+    // else 体被 stonecutter 整体剔除 → 本两方法引用的矩阵形参在 1.16.5 生成树无声明；
+    // 块条件剔除=与 tryRender else 体同构，内层行/块条件在 >=1.17 线解析正常）
+    //? if >=1.17 {
+    /** gui-tail-flush：pending 队列尾 flush 绘制（仅 GpuPreviewQueue.ysm$flush 调用，21.8/21.11 挂载线）。
+     * 投影=GuiRenderer.draw 窗内打包的当帧 GUI 正交槽（GuiProjectionCaptureMixin 喂入；CachedOrtho
+     * 尺寸未变不重算，槽值=当帧打包值逐帧等价），投影消费时刻从 Screen.render 收集相移到 GUI 绘制窗尾；
+     * 雾=预览态 setupNoFog 对齐（enqueue 时刻 isPreview/isExtraPlayer 已携 flag=true，与立即路径同语义）。 */
+    static void drawPending(GpuPreviewQueue.Pending p) {
+        Matrix4f projMat = GpuCapability.ysmGuiProjectionReady()
+                ? GpuCapability.ysmCapturedGuiProjection
+                : GpuCapability.ysmCapturedProjection;
+        drawMesh(p.model, p.mesh, p.rootPose, p.rootNormal, projMat, p.modelView, true,
+                p.boneParams, p.stateBuffer, p.textureIndex, p.renderPartMask, p.packedLight, p.packedOverlay,
+                p.r, p.g, p.b, p.a, p.textureLocation);
+    }
+
+    /** tryRender/drawPending 共用绘制体（矩阵已解析：立即路径=当下捕获值，pending 路径=flush 时刻 GUI 正交槽
+     * +enqueue 快照模型视图）。previewFog 取代体内 isPreview 现场判定——pending 路径 flush 时预览旗已复位。 */
+    private static void drawMesh(GeoModel model, GpuMesh mesh, Matrix4f rootPose, Matrix3f rootNormal,
+            Matrix4f projMat, Matrix4f mvMat, boolean previewFog,
+            float[] boneParams, float[] stateBuffer, int textureIndex, int renderPartMask,
+            int packedLight, int packedOverlay, float r, float g, float b, float a,
+            ResourceLocation textureLocation) {
         rootPose.get(rootPoseScratch);
         rootNormal.get(rootNormalScratch);
         projMat.mul(mvMat, projMVScratch);
@@ -228,8 +273,9 @@ public final class GpuRenderPath {
         int fogShape = 0;
         // GUI 预览时刻 21.8 vanilla 雾=NONE（GuiRenderer 阶段 emptyBuffer，updateBuffer 不覆写
         // → 捕获面残留世界雾），预览几何在千米级视距会被整只雾掉=对现状 CPU 预览回归；
-        // 对齐旧线 GUI 语义=setupNoFog（1.20.1 FogRenderer.java:194-195 setShaderFogStart(MAX)）
-        if (ModelPreviewRenderer.isPreview() || ModelPreviewRenderer.isExtraPlayer()) {
+        // 对齐旧线 GUI 语义=setupNoFog（1.20.1 FogRenderer.java:194-195 setShaderFogStart(MAX)）。
+        // previewFog 入参：pending 路径 flush 时 ModelPreviewRenderer 预览旗已复位，flag 入队时携带
+        if (previewFog) {
             fogStart = Float.MAX_VALUE;
         }*/
         //?}
@@ -369,10 +415,8 @@ public final class GpuRenderPath {
         // 1.21.11 turnOffLightLayer removed (same note as turnOnLightLayer) -> no-op
         //? if <21.11
         mc.gameRenderer.lightTexture().turnOffLightLayer();
-
-        return true;
-        //?}
     }
+    //?}
 
     private static void refreshLights() {
         //? if <1.17 {

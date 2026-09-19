@@ -129,12 +129,13 @@ stonecutter {
         vers("21.7-neoforge", "21.7").buildscript = "build.moddev.gradle.kts"
         vers("21.9-neoforge", "21.9").buildscript = "build.moddev.gradle.kts"
 
-        // NFRT 直驱 POC（nfrt-poc-1202）：1.20.2 线绕过 MDG capability 解析——上记判负三线中
-        // 先证 1.20.2（tile=20.2.93，官方 maven metadata 冻结快照，tasks.m3-nfrt-direct-drive-poc）。
-        // 构建脚本走 build.nfrt.gradle.kts（JavaExec 直调 NFRT CLI，旗标逐一对齐 MDG
-        // nfrtgradle/CreateMinecraftArtifacts.java 的调用面），与 build.moddev.gradle.kts
-        // 零共享代码路径：本键作用域外任何线不触碰该脚本，既有 35 线门禁不受影响。
-        // GO 后 1.20.3/1.20.5 平铺与 mod 代码移植另立卡。
+        // NFRT 直驱线（nfrt-poc-1202 立架，nfrt-flatline-1203-1205 三线平铺）：绕过 MDG
+        // capability 解析——判负三线全数挂载（tiles=官方 maven metadata 冻结快照：
+        // 1.20.2=20.2.93 / 1.20.3=20.3.8-beta / 1.20.5=20.5.21-beta；后两线 userdev 构件
+        // maven 200 实证 2026-09-19）。构建脚本走 build.nfrt.gradle.kts（JavaExec 直调
+        // NFRT CLI，旗标逐一对齐 MDG nfrtgradle/CreateMinecraftArtifacts.java 的调用面），
+        // 与 build.moddev.gradle.kts 零共享代码路径：本键作用域外任何线不触碰该脚本，
+        // 既有 35 线门禁不受影响。
         vers("1.20.2-neoforge", "1.20.2").buildscript = "build.nfrt.gradle.kts"
 
         vcsVersion = "1.20.1-forge"

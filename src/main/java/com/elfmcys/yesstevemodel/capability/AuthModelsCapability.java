@@ -1,7 +1,9 @@
 package com.elfmcys.yesstevemodel.capability;
 
-//? if neoforge
+//? if neoforge && >=1.20.3
 /*import com.elfmcys.yesstevemodel.platform.neoforge.capability.AuthModelsCapabilityProvider;*/
+//? if neoforge && <1.20.3
+/*import com.elfmcys.yesstevemodel.platform.neoforge1202.capability.AuthModelsCapabilityProvider;*/
 //? if forge
 import com.elfmcys.yesstevemodel.platform.forge.capability.AuthModelsCapabilityProvider;
 import com.google.common.collect.Sets;
@@ -19,11 +21,11 @@ public class AuthModelsCapability {
     private Set<String> authModels = Sets.newHashSet();
 
     public static Optional<AuthModelsCapability> get(Player player) {
-        //? if neoforge
+        //? if neoforge && >=1.20.3
         /*return java.util.Optional.ofNullable(player.getCapability(AuthModelsCapabilityProvider.AUTH_MODELS_CAP));*/
         //? if forge && <1.16.2
         /*return java.util.Optional.ofNullable(player.getCapability(AuthModelsCapabilityProvider.AUTH_MODELS_CAP).orElse(null));*/
-        //? if forge && >=1.16.2
+        //? if (forge && >=1.16.2) || (neoforge && <1.20.3)
         return player.getCapability(AuthModelsCapabilityProvider.AUTH_MODELS_CAP).resolve();
     }
 

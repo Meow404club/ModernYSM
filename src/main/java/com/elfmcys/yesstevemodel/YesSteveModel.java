@@ -6,8 +6,10 @@ import com.elfmcys.yesstevemodel.config.ModSoundEvents;
 import com.elfmcys.yesstevemodel.config.ServerConfig;
 import com.elfmcys.yesstevemodel.event.YsmEventBootstrap;
 import com.elfmcys.yesstevemodel.platform.YsmPlatform;
-//? if neoforge
+//? if neoforge && >=1.20.3
 /*import com.elfmcys.yesstevemodel.platform.neoforge.YesSteveModelForge;*/
+//? if neoforge && <1.20.3
+/*import com.elfmcys.yesstevemodel.platform.neoforge1202.YesSteveModelForge;*/
 //? if forge
 import com.elfmcys.yesstevemodel.platform.forge.YesSteveModelForge;
 import com.elfmcys.yesstevemodel.util.obfuscate.Keep;

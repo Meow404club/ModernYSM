@@ -1,0 +1,361 @@
+package com.elfmcys.yesstevemodel.platform.neoforge1202.network;
+
+import com.elfmcys.yesstevemodel.mixin.ConnectionAccessor;
+import com.elfmcys.yesstevemodel.network.NetworkHandler;
+import com.elfmcys.yesstevemodel.network.message.C2SModelSyncPayload;
+import io.netty.buffer.Unpooled;
+import net.minecraft.network.Connection;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+// 传输层 API 面条件差（1.17.1=fmllegacy（FML 重构过渡版独有包名）；1.18.2+=net.minecraftforge.network
+// ← 1.16.x net.minecraftforge.fml.network）：包移动条件化，协议字节层面零变化——SimpleChannel/
+// NetworkRegistry/NetworkEvent.Context 方法面两侧同签名（unimined 1.16.5 mojmap jar javap 实证：
+// registerMessage(int,Class,BiConsumer,Function,BiConsumer,Optional<NetworkDirection>) /
+// newSimpleChannel / PacketDistributor / toVanillaPacket 逐一核对）。
+import net.neoforged.neoforge.network.INetworkDirection;
+import net.neoforged.neoforge.network.PlayNetworkDirection;
+import net.neoforged.neoforge.network.NetworkRegistry;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.simple.SimpleChannel;
+import rip.ysm.api.network.PacketContext;
+import rip.ysm.api.network.PacketDirection;
+import rip.ysm.util.YsmCollections;
+
+import java.io.ByteArrayOutputStream;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+
+public final class YSMChannelImpl {
+
+    private static final int FRAGMENT_DISCRIMINATOR = 255;
+    private static final int FRAGMENT_DATA_SIZE = 30_000;
+    private static final int MAX_FRAGMENT_COUNT = 128;
+    private static final int MAX_REASSEMBLED_SIZE = 2 * 1024 * 1024;
+    private static final long FRAGMENT_TIMEOUT_NANOS = 30_000_000_000L;
+
+    private static final Map<Integer, LocalCodec<?>> codecs = new HashMap<>();
+    private static final Map<Connection, Map<Integer, FragmentAccumulator>> incomingFragments = new ConcurrentHashMap<>();
+    private static final AtomicInteger nextTransferId = new AtomicInteger();
+
+    private static SimpleChannel channel;
+
+    private YSMChannelImpl() {
+    }
+
+    public static void init(ResourceLocation channelId, String version) {
+        // [M4 锚点] 1.20.5+ NeoForge：SimpleChannel/NetworkRegistry 已移除，此处改走
+        // RegisterPayloadHandlersEvent + PayloadRegistrar（version(String) + playToClient/playToServer
+        // 注册 CustomPacketPayload）；本类 FragmentPacket 同步改造为 Payload。1.20.1-forge 维持 Forge 47 原生 SimpleChannel。
+        channel = NetworkRegistry.newSimpleChannel(channelId, () -> version, str -> true, str -> true);
+        // 20.2 SimpleChannel 消费面：handler 直收 Context（非 Supplier，javap 实证
+        // MessageFunctions$MessageConsumer<MSG> = (MSG, NetworkEvent.Context) -> void）
+        channel.registerMessage(FRAGMENT_DISCRIMINATOR, FragmentPacket.class,
+                FragmentPacket::encode, FragmentPacket::decode,
+                (packet, ctx) -> {
+                    handleFragment(packet, new PacketContextImpl(() -> ctx));
+                    ctx.setPacketHandled(true);
+                });
+    }
+
+    public static <T> void register(int discriminator, Class<T> type, BiConsumer<T, FriendlyByteBuf> encoder, Function<FriendlyByteBuf, T> decoder, BiConsumer<T, PacketContext> handler, PacketDirection direction) {
+        codecs.put(discriminator & 0xff, new LocalCodec<>(type, decoder, handler, direction));
+        // 20.2 MessageEncoder/MessageDecoder 为独立函数接口（非 BiConsumer 子接口，
+        // javap 实证）→ BiConsumer/Function 变量需方法引用桥接
+        channel.registerMessage(discriminator, type, encoder::accept, decoder::apply,
+                (msg, ctx) -> {
+                    handler.accept(msg, new PacketContextImpl(() -> ctx));
+                    ctx.setPacketHandled(true);
+                },
+                Optional.<INetworkDirection<?>>of(toForge(direction))
+        );
+    }
+
+    public static void sendToServer(Object packet) {
+        if (packet instanceof C2SModelSyncPayload && NetworkHandler.serverSupportsModelSyncFragments()) {
+            byte[] encoded = encode(packet);
+            if (encoded.length > FRAGMENT_DATA_SIZE) {
+                sendFragments(encoded, channel::sendToServer);
+                return;
+            }
+        }
+        channel.sendToServer(packet);
+    }
+
+    public static void sendToClientPlayer(Object packet, ServerPlayer player) {
+        channel.send(PacketDistributor.PLAYER.with(() -> player), packet);
+    }
+
+    public static void sendToAll(Object packet) {
+        channel.send(PacketDistributor.ALL.noArg(), packet);
+    }
+
+    public static void sendToTrackingEntity(Object packet, Entity entity) {
+        channel.send(PacketDistributor.TRACKING_ENTITY.with(() -> entity), packet);
+    }
+
+    public static void sendToTrackingEntityAndSelf(Object packet, Player player) {
+        channel.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> player), packet);
+    }
+
+    public static Packet<?> toClientboundPacket(Object packet) {
+        return channel.toVanillaPacket(packet, PlayNetworkDirection.PLAY_TO_CLIENT);
+    }
+
+    public static List<Packet<?>> toClientboundPackets(Object packet) {
+        byte[] encoded = encode(packet);
+        if (encoded.length <= FRAGMENT_DATA_SIZE) {
+            return YsmCollections.immutableListOf(channel.toVanillaPacket(packet, PlayNetworkDirection.PLAY_TO_CLIENT));
+        }
+        List<Packet<?>> packets = new ArrayList<>();
+        int transferId = nextTransferId.incrementAndGet();
+        int fragmentCount = (encoded.length + FRAGMENT_DATA_SIZE - 1) / FRAGMENT_DATA_SIZE;
+        for (int index = 0; index < fragmentCount; index++) {
+            int from = index * FRAGMENT_DATA_SIZE;
+            int to = Math.min(from + FRAGMENT_DATA_SIZE, encoded.length);
+            FragmentPacket fragment = new FragmentPacket(transferId, index, fragmentCount, Arrays.copyOfRange(encoded, from, to));
+            packets.add(channel.toVanillaPacket(fragment, PlayNetworkDirection.PLAY_TO_CLIENT));
+        }
+        return packets;
+    }
+
+    public static Packet<?> toServerboundPacket(Object packet) {
+        return channel.toVanillaPacket(packet, PlayNetworkDirection.PLAY_TO_SERVER);
+    }
+
+    private static INetworkDirection<?> toForge(PacketDirection direction) {
+        switch (direction) {
+            case PLAY_TO_CLIENT:
+                return PlayNetworkDirection.PLAY_TO_CLIENT;
+            case PLAY_TO_SERVER:
+                return PlayNetworkDirection.PLAY_TO_SERVER;
+            default:
+                throw new IllegalArgumentException("Unknown packet direction: " + direction);
+        }
+    }
+
+    private static byte[] encode(Object packet) {
+        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
+        try {
+            channel.encodeMessage(packet, buf);
+            byte[] data = new byte[buf.readableBytes()];
+            buf.readBytes(data);
+            return data;
+        } finally {
+            buf.release();
+        }
+    }
+
+    private static void sendFragments(byte[] encoded, java.util.function.Consumer<Object> sender) {
+        int transferId = nextTransferId.incrementAndGet();
+        int fragmentCount = (encoded.length + FRAGMENT_DATA_SIZE - 1) / FRAGMENT_DATA_SIZE;
+        for (int index = 0; index < fragmentCount; index++) {
+            int from = index * FRAGMENT_DATA_SIZE;
+            int to = Math.min(from + FRAGMENT_DATA_SIZE, encoded.length);
+            sender.accept(new FragmentPacket(transferId, index, fragmentCount, Arrays.copyOfRange(encoded, from, to)));
+        }
+    }
+
+    private static void handleFragment(FragmentPacket packet, PacketContext context) {
+        PacketDirection expected = context.isServerSide() ? PacketDirection.PLAY_TO_SERVER : PacketDirection.PLAY_TO_CLIENT;
+
+        long now = System.nanoTime();
+        Connection connection = context.getConnection();
+        Map<Integer, FragmentAccumulator> newTransfers = new ConcurrentHashMap<>();
+        Map<Integer, FragmentAccumulator> transfers = incomingFragments.putIfAbsent(connection, newTransfers);
+        if (transfers == null) {
+            transfers = newTransfers;
+            Map<Integer, FragmentAccumulator> registeredTransfers = transfers;
+            ((ConnectionAccessor) connection).ysm$getChannel().closeFuture()
+                    .addListener(ignored -> incomingFragments.remove(connection, registeredTransfers));
+        }
+        transfers.entrySet().removeIf(entry -> now - entry.getValue().lastUpdateNanos > FRAGMENT_TIMEOUT_NANOS);
+
+        FragmentAccumulator accumulator = transfers.computeIfAbsent(packet.transferId(), ignored -> new FragmentAccumulator(packet.fragmentCount()));
+        byte[] complete = accumulator.add(packet, now);
+        if (complete == null) {
+            return;
+        }
+        transfers.remove(packet.transferId(), accumulator);
+        if (transfers.isEmpty()) {
+            incomingFragments.remove(context.getConnection(), transfers);
+        }
+
+        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.wrappedBuffer(complete));
+        try {
+            int discriminator = buf.readUnsignedByte();
+            LocalCodec<?> codec = codecs.get(discriminator);
+            if (codec == null || codec.direction != expected) {
+                throw new IllegalArgumentException("Invalid fragmented YSM packet discriminator: " + discriminator);
+            }
+            codec.dispatch(buf, context);
+            if (buf.isReadable()) {
+                throw new IllegalArgumentException("Fragmented YSM packet left " + buf.readableBytes() + " unread bytes");
+            }
+        } finally {
+            buf.release();
+        }
+    }
+
+    private static final class FragmentPacket {
+        final int transferId;
+        final int fragmentIndex;
+        final int fragmentCount;
+        final byte[] data;
+
+        FragmentPacket(int transferId, int fragmentIndex, int fragmentCount, byte[] data) {
+            this.transferId = transferId;
+            this.fragmentIndex = fragmentIndex;
+            this.fragmentCount = fragmentCount;
+            this.data = data;
+        }
+
+        int transferId() {
+            return this.transferId;
+        }
+
+        int fragmentIndex() {
+            return this.fragmentIndex;
+        }
+
+        int fragmentCount() {
+            return this.fragmentCount;
+        }
+
+        byte[] data() {
+            return this.data;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof FragmentPacket)) {
+                return false;
+            }
+            FragmentPacket other = (FragmentPacket) obj;
+            return this.transferId == other.transferId && this.fragmentIndex == other.fragmentIndex
+                    && this.fragmentCount == other.fragmentCount && Objects.equals(this.data, other.data);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.transferId, this.fragmentIndex, this.fragmentCount, this.data);
+        }
+
+        @Override
+        public String toString() {
+            return "FragmentPacket[transferId=" + this.transferId + ", fragmentIndex=" + this.fragmentIndex
+                    + ", fragmentCount=" + this.fragmentCount + ", data=" + this.data + "]";
+        }
+
+        private static void encode(FragmentPacket packet, FriendlyByteBuf buf) {
+            buf.writeVarInt(packet.transferId);
+            buf.writeVarInt(packet.fragmentIndex);
+            buf.writeVarInt(packet.fragmentCount);
+            buf.writeByteArray(packet.data);
+        }
+
+        private static FragmentPacket decode(FriendlyByteBuf buf) {
+            return new FragmentPacket(buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readByteArray(FRAGMENT_DATA_SIZE));
+        }
+    }
+
+    private static final class FragmentAccumulator {
+        private final byte[][] fragments;
+        private int received;
+        private int totalSize;
+        private volatile long lastUpdateNanos = System.nanoTime();
+
+        private FragmentAccumulator(int fragmentCount) {
+            if (fragmentCount <= 0 || fragmentCount > MAX_FRAGMENT_COUNT) {
+                throw new IllegalArgumentException("Invalid YSM fragment count: " + fragmentCount);
+            }
+            this.fragments = new byte[fragmentCount][];
+        }
+
+        private synchronized byte[] add(FragmentPacket packet, long now) {
+            if (packet.fragmentCount() != fragments.length || packet.fragmentIndex() < 0 || packet.fragmentIndex() >= fragments.length) {
+                throw new IllegalArgumentException("Inconsistent YSM fragment metadata");
+            }
+            lastUpdateNanos = now;
+            if (fragments[packet.fragmentIndex()] == null) {
+                fragments[packet.fragmentIndex()] = packet.data();
+                received++;
+                totalSize += packet.data().length;
+                if (totalSize > MAX_REASSEMBLED_SIZE) {
+                    throw new IllegalArgumentException("Fragmented YSM packet exceeds maximum size");
+                }
+            }
+            if (received != fragments.length) {
+                return null;
+            }
+
+            ByteArrayOutputStream output = new ByteArrayOutputStream(totalSize);
+            for (byte[] fragment : fragments) {
+                output.write(fragment, 0, fragment.length);
+            }
+            return output.toByteArray();
+        }
+    }
+
+    private static final class LocalCodec<T> {
+        final Class<T> type;
+        final Function<FriendlyByteBuf, T> decoder;
+        final BiConsumer<T, PacketContext> handler;
+        final PacketDirection direction;
+
+        LocalCodec(Class<T> type, Function<FriendlyByteBuf, T> decoder,
+                   BiConsumer<T, PacketContext> handler, PacketDirection direction) {
+            this.type = type;
+            this.decoder = decoder;
+            this.handler = handler;
+            this.direction = direction;
+        }
+
+        Class<T> type() {
+            return this.type;
+        }
+
+        Function<FriendlyByteBuf, T> decoder() {
+            return this.decoder;
+        }
+
+        BiConsumer<T, PacketContext> handler() {
+            return this.handler;
+        }
+
+        PacketDirection direction() {
+            return this.direction;
+        }
+
+        private void dispatch(FriendlyByteBuf buf, PacketContext context) {
+            handler.accept(decoder.apply(buf), context);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof LocalCodec)) {
+                return false;
+            }
+            LocalCodec<?> other = (LocalCodec<?>) obj;
+            return Objects.equals(this.type, other.type) && Objects.equals(this.decoder, other.decoder)
+                    && Objects.equals(this.handler, other.handler) && Objects.equals(this.direction, other.direction);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(this.type, this.decoder, this.handler, this.direction);
+        }
+
+        @Override
+        public String toString() {
+            return "LocalCodec[type=" + this.type + ", decoder=" + this.decoder + ", handler=" + this.handler
+                    + ", direction=" + this.direction + "]";
+        }
+    }
+}

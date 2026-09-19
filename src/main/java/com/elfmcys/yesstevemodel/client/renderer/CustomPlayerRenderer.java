@@ -244,7 +244,9 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
             // Component.literal（1.19+）→ 1.16.5 new TextComponent；append 双版同名
             //? if <1.19
             // super.renderNameTag(player, new net.minecraft.network.chat.TextComponent(Integer.toString(scoreboard.getOrCreatePlayerScore(player.getScoreboardName(), displayObjective).getScore())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i);
-            //? if neoforge && >=1.19.2 && <1.20.5
+            //? if neoforge && >=1.19.2 && <1.20.3
+            /*super.renderNameTag(player, Component.literal(Integer.toString(scoreboard.getOrCreatePlayerScore(player.getScoreboardName(), displayObjective).getScore())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i);*/
+            //? if neoforge && >=1.20.3 && <1.20.5
             /*super.renderNameTag(player, Component.literal(Integer.toString(scoreboard.getOrCreatePlayerScore(player, displayObjective).get())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i);*/
             //? if neoforge && >=1.20.5 && <1.21.2
             /*super.renderNameTag(player, Component.literal(Integer.toString(scoreboard.getOrCreatePlayerScore(player, displayObjective).get())).append(" ").append(displayObjective.getDisplayName()), poseStack, multiBufferSource, i, partialTick);*/

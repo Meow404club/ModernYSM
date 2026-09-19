@@ -435,13 +435,14 @@ moveCursorToEnd();;
                 navigateUp();
             }).setTooltipText("gui.back"));
         }
-        //? if neoforge {
+        //? if neoforge && >=1.20.3 {
         /*ysmAddWidget(Checkbox.builder(YsmText.translatable("gui.yes_steve_model.show_model_id_first"), this.font)
                 .pos(this.guiLeft + 5, this.guiTop - 22)
                 .selected(GeneralConfig.SHOW_MODEL_ID_FIRST.get())
                 .onValueChange((checkbox, newValue) -> GeneralConfig.SHOW_MODEL_ID_FIRST.set(newValue))
                 .build());
-         *///?} else {
+         *///?}
+        //? if forge || neoforge && <1.20.3 {
         ysmAddWidget(new Checkbox(this.guiLeft + 5, this.guiTop - 22, 20, 20, YsmText.translatable("gui.yes_steve_model.show_model_id_first"), GeneralConfig.SHOW_MODEL_ID_FIRST.get(), true) {
             public void onPress() {
                 super.onPress();

@@ -30,8 +30,10 @@ import com.elfmcys.yesstevemodel.molang.runtime.Struct;
 import com.elfmcys.yesstevemodel.network.NetworkHandler;
 import com.elfmcys.yesstevemodel.network.message.C2SCompleteFeedbackPacket;
 import com.elfmcys.yesstevemodel.network.message.FeedbackData;
-//? if neoforge
+//? if neoforge && >=1.20.3
 /*import com.elfmcys.yesstevemodel.platform.neoforge.capability.PlayerCapabilityProvider;*/
+//? if neoforge && <1.20.3
+/*import com.elfmcys.yesstevemodel.platform.neoforge1202.capability.PlayerCapabilityProvider;*/
 //? if forge
 import com.elfmcys.yesstevemodel.platform.forge.capability.PlayerCapabilityProvider;
 import it.unimi.dsi.fastutil.ints.Int2FloatMap;
@@ -54,20 +56,20 @@ import java.util.Optional;
 public final class PlayerCapability extends CustomPlayerEntity {
 
     public static Optional<PlayerCapability> get(Player player) {
-        //? if neoforge
+        //? if neoforge && >=1.20.3
         /*return java.util.Optional.ofNullable(player.getCapability(PlayerCapabilityProvider.PLAYER_CAP));*/
         //? if forge && <1.16.2
         /*return java.util.Optional.ofNullable(player.getCapability(PlayerCapabilityProvider.PLAYER_CAP).orElse(null));*/
-        //? if forge && >=1.16.2
+        //? if (forge && >=1.16.2) || (neoforge && <1.20.3)
         return player.getCapability(PlayerCapabilityProvider.PLAYER_CAP).resolve();
     }
 
     public static Optional<PlayerCapability> get(Entity entity) {
-        //? if neoforge
+        //? if neoforge && >=1.20.3
         /*return java.util.Optional.ofNullable(entity.getCapability(PlayerCapabilityProvider.PLAYER_CAP));*/
         //? if forge && <1.16.2
         /*return java.util.Optional.ofNullable(entity.getCapability(PlayerCapabilityProvider.PLAYER_CAP).orElse(null));*/
-        //? if forge && >=1.16.2
+        //? if (forge && >=1.16.2) || (neoforge && <1.20.3)
         return entity.getCapability(PlayerCapabilityProvider.PLAYER_CAP).resolve();
     }
 

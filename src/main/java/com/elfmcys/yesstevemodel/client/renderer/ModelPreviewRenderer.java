@@ -420,8 +420,10 @@ public final class ModelPreviewRenderer {
         }
 
         poseStack.translate(-1.0f, 1.0f, 1.0f);
-        //? if neoforge && <26
+        //? if neoforge && >=1.20.3 && <26
         /*Minecraft.getInstance().getBlockRenderer().renderSingleBlock(Blocks.SHORT_GRASS.defaultBlockState(), poseStack, bufferSource, 15728880, OverlayTexture.NO_OVERLAY);*/
+        //? if neoforge && <1.20.3
+        /*Minecraft.getInstance().getBlockRenderer().renderSingleBlock(Blocks.GRASS.defaultBlockState(), poseStack, bufferSource, 15728880, OverlayTexture.NO_OVERLAY);*/
         // 26.x：renderSingleBlock 删 → 短草预览 no-op（功能债 debt-26x）
         //? if forge && <26
         Minecraft.getInstance().getBlockRenderer().renderSingleBlock(Blocks.GRASS.defaultBlockState(), poseStack, bufferSource, 15728880, OverlayTexture.NO_OVERLAY);

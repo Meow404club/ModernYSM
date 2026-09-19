@@ -1,7 +1,9 @@
 package rip.ysm.api.network;
 
-//? if neoforge
+//? if neoforge && >=1.20.3
 /*import com.elfmcys.yesstevemodel.platform.neoforge.network.YSMChannelImpl;*/
+//? if neoforge && <1.20.3
+/*import com.elfmcys.yesstevemodel.platform.neoforge1202.network.YSMChannelImpl;*/
 //? if forge
 import com.elfmcys.yesstevemodel.platform.forge.network.YSMChannelImpl;
 import net.minecraft.network.FriendlyByteBuf;

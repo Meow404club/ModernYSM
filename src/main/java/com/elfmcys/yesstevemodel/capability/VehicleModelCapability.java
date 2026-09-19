@@ -1,7 +1,9 @@
 package com.elfmcys.yesstevemodel.capability;
 
-//? if neoforge
+//? if neoforge && >=1.20.3
 /*import com.elfmcys.yesstevemodel.platform.neoforge.capability.VehicleModelCapabilityProvider;*/
+//? if neoforge && <1.20.3
+/*import com.elfmcys.yesstevemodel.platform.neoforge1202.capability.VehicleModelCapabilityProvider;*/
 //? if forge
 import com.elfmcys.yesstevemodel.platform.forge.capability.VehicleModelCapabilityProvider;
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
@@ -13,11 +15,11 @@ import java.util.Optional;
 public class VehicleModelCapability {
 
     public static Optional<VehicleModelCapability> get(Entity entity) {
-        //? if neoforge
+        //? if neoforge && >=1.20.3
         /*return java.util.Optional.ofNullable(entity.getCapability(VehicleModelCapabilityProvider.VEHICLE_MODEL_CAP));*/
         //? if forge && <1.16.2
         /*return java.util.Optional.ofNullable(entity.getCapability(VehicleModelCapabilityProvider.VEHICLE_MODEL_CAP).orElse(null));*/
-        //? if forge && >=1.16.2
+        //? if (forge && >=1.16.2) || (neoforge && <1.20.3)
         return entity.getCapability(VehicleModelCapabilityProvider.VEHICLE_MODEL_CAP).resolve();
     }
 

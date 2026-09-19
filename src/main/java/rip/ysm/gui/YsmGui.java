@@ -7,6 +7,10 @@ import net.minecraft.resources.ResourceLocation;
 //? if >=1.16.2
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.network.chat.Component;
+// 26.2 PiP 预览（debt-262-preview-pip）：构造期向 ModelPreviewRenderer 暂存 GuiGraphicsExtractor
+//（extract 相位每帧刷新；预览抽取经它提交 graphics.entity()）
+//? if >=26.2
+/*import com.elfmcys.yesstevemodel.client.renderer.ModelPreviewRenderer;*/
 
 import java.util.List;
 
@@ -60,6 +64,10 @@ public final class YsmGui {
 
     public YsmGui(net.minecraft.client.gui.GuiGraphics graphics) {
         this.graphics = graphics;
+        // 26.2 PiP 预览：extract 相位唯一入口（各屏 extractRenderState→render(new YsmGui(...))），
+        // 预览调用总在构造之后的同相位窗内读取
+        //? if >=26.2
+        ModelPreviewRenderer.ysmSetExtractor262(graphics);
     }
 
     /** 1.20.1 侧取出被包装的 GuiGraphics（super.render/renderBackground 需要）。 */

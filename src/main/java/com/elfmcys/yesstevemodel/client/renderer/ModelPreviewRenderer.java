@@ -145,11 +145,19 @@ public final class ModelPreviewRenderer {
 
     // 动画测试界面的模型
     public static void renderEntityPreview(float x, float y, float scale, float pitch, float yaw, float partialTick, AnimatableEntity animatableEntity, GeoReplacedEntityRenderer renderer, boolean renderGround) {
-        // 26.2 预览面板降级（debt-262，主会话裁决 2026-09-18）：renderBuffers 删+GUI extract
-        // 无自定义几何钩子 → 面板模型区 no-op（>=21.6 纸娃娃先例）。正规迁移=PiP 重构。
+        // 26.2 PiP 预览恢复（debt-262-preview-pip）：extract 相位经 GuiGraphicsExtractor.entity()
+        // 提交预览实体（PiP），绘制期 dispatcher 按 state.entityType 解析到注册的
+        // CustomPlayerRenderer.submit()（SubmitNodeCollector 自定义几何，submitCustomGeometry
+        // 逃生口同族）。旧直绘链（下方共享体）26.2 不再触达。setPreviewMode 括住 extract 窗。
         //（if(true) 形规避 javac unreachable 分析；行条件 26.2 激活）
         //? if >=26.2
         /*if (true) {
+            setPreviewMode(true);
+            try {
+                renderEntityPreviewPip262(x, y, scale, pitch, yaw, partialTick, animatableEntity, renderer, renderGround);
+            } finally {
+                setPreviewMode(false);
+            }
             return;
         }*/
         setPreviewMode(true);
@@ -488,6 +496,176 @@ public final class ModelPreviewRenderer {
     /*private static void renderVehicleEntity(float yaw, Entity riderEntity, PoseStack poseStack, EntityRenderDispatcher entityRenderDispatcher, Object bufferSource, Entity vehicleEntity, float partialTick) {
     }*/
     //?}
+
+    // —— 26.2 PiP 预览（debt-262-preview-pip）——
+    // ysmExtractor262：YsmGui 26.2 构造期写入的 GuiGraphicsExtractor（extract 相位每帧刷新；
+    // Object 承载避免 <26.2 线解析 26.2 专有类型）。ysmPipAnimatable262：抽取窗内待捕获的
+    // 预览 animatable（GeoReplacedEntityRenderer.extractRenderState 26.2 twin 取走——
+    // createRenderState(T,float) 只传实体，实体→animatable 无反查表，帧内窗式暂存=最小通路）。
+    //? if >=26.2 {
+    /*private static Object ysmExtractor262;
+
+    private static LivingAnimatable<?> ysmPipAnimatable262;
+
+    private static int ysmPipSubmitCount262;
+
+    public static void ysmSetExtractor262(Object extractor) {
+        ysmExtractor262 = extractor;
+    }
+
+    public static LivingAnimatable<?> takePipAnimatable262() {
+        LivingAnimatable<?> animatable = ysmPipAnimatable262;
+        ysmPipAnimatable262 = null;
+        return animatable;
+    }
+
+    // 预览路径 submit() 调用计数证据（验收口径：计数>0 的日志；#1 与每 #100 打点）
+    public static void countPipSubmit262() {
+        ysmPipSubmitCount262++;
+        if (ysmPipSubmitCount262 == 1 || ysmPipSubmitCount262 % 100 == 0) {
+            com.elfmcys.yesstevemodel.YesSteveModel.LOGGER.info("[ysm-preview-pip] CustomPlayerRenderer.submit n={}", ysmPipSubmitCount262);
+        }
+    }
+
+    // PiP 抽取核心。pose=旧直绘姿态链的「无 scale、无 z 常量」重建（各包装器拼装），
+    // 平移/旋转从 pose 矩阵提取、scale 直传 graphics.entity()（GuiGraphicsExtractor.java:974）。
+    // 同构性：旧直绘 p→(x,y)+S(1,1,-1)·s·(P·p)（S 仅负 z，xy 恒正）＝PiP
+    // p→(cx,cy)+k·(R·p+t)（PictureInPictureRenderer.java:57-66 + GuiEntityRenderer:36-39），
+    // 故 k=s、(cx,cy)=旧直绘 translate 点、(R,t)=pose 矩阵旋转/平移列时逐项同构（无镜像差）。
+    // 注意 t 为模型单位（PiP 乘 k）：renderLivingEntityPreview 的 5.5px 预 scale 位移须除以 scale。
+    // entity rotations 只置不还原：PiP 绘制晚于 extract（同帧 GUI 渲染段），还原会让绘制期
+    // processAnimation 读到还原值；预览实体每帧重置，LocalPlayer 字段下 tick 自愈。
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static void renderPip262(LivingAnimatable animatable, GeoReplacedEntityRenderer renderer, float partialTick, PoseStack pose, float scale, float centerX, float centerY, float rectHalf) {
+        if (!(ysmExtractor262 instanceof net.minecraft.client.gui.GuiGraphicsExtractor extractor) || renderer == null || animatable == null) {
+            return;
+        }
+        LivingEntity livingEntity = (LivingEntity) animatable.getEntity();
+        if (livingEntity == null || livingEntity.level() == null) {
+            return;
+        }
+        // 未 spawn 预览实体（DummyPlayer）id 恒 0，抽取链 Entity.getId() 抛
+        // IllegalStateException（Entity.java:389-391）→ 提交前补置（卡面锚点 4）；
+        // 真身实体（LocalPlayer 等）id 已分配，绝不触碰
+        if (livingEntity instanceof Player player && com.elfmcys.yesstevemodel.client.entity.PlayerPreviewEntity.isPreviewPlayer(player)) {
+            player.setId(1);
+        }
+        ysmPipAnimatable262 = animatable;
+        net.minecraft.client.renderer.entity.state.EntityRenderState state;
+        try {
+            state = renderer.createRenderState(livingEntity, partialTick);
+        } finally {
+            ysmPipAnimatable262 = null;
+        }
+        org.joml.Matrix4f matrix = pose.last().pose();
+        org.joml.Vector3f translation = matrix.getTranslation(new org.joml.Vector3f());
+        org.joml.Quaternionf rotation = matrix.getNormalizedRotation(new org.joml.Quaternionf());
+        int half = Math.max(8, (int) rectHalf);
+        // overrideCameraAngle=null：21.9+ 直绘面删后旧链本就无相机覆写（<21.9 行条件），与 21.9~26.1 行为对齐
+        extractor.entity(state, scale, translation, rotation, null, (int) centerX - half, (int) centerY - half, (int) centerX + half, (int) centerY + half);
+    }
+
+    // 旧直绘的实体旋转置位（renderEntityPreview 形：yaw 对置+俯仰归零+头部对置）
+    private static void applyPreviewRotations262(LivingEntity livingEntity, float yaw) {
+        livingEntity.yBodyRot = -yaw;
+        livingEntity.yBodyRotO = -yaw;
+        livingEntity.setYRot(180.0f);
+        livingEntity.yRotO = 180.0f;
+        livingEntity.setXRot(0.0f);
+        livingEntity.xRotO = 0.0f;
+        livingEntity.yHeadRot = -yaw;
+        livingEntity.yHeadRotO = -yaw;
+    }
+
+    // 动画测试/贴纸屏 26.2 twin：姿态链=旧 renderEntityPreview 去 z 常量与 scale（平移先 0.8、
+    // Rz(π)·Rx(-10°+pitch)、动画条件位移/姿态照搬旧 lambda 序），bed/ground/载具 26.2 本就 no-op
+    //（renderSingleBlock 删/dispatcher 直绘删，m3-262 移植卡在案）不搬。
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static void renderEntityPreviewPip262(float x, float y, float scale, float pitch, float yaw, float partialTick, AnimatableEntity animatableEntity, GeoReplacedEntityRenderer renderer, boolean renderGround) {
+        LivingEntity livingEntity = (LivingEntity) animatableEntity.getEntity();
+        if (livingEntity == null) {
+            return;
+        }
+        PoseStack poseStack = new PoseStack();
+        poseStack.translate(0.0d, 0.8d, 0.0d);
+        Quaternionf rotationZ = Axis.ZP.rotationDegrees(180.0f);
+        Quaternionf rotationX = Axis.XP.rotationDegrees((-10.0f) + pitch);
+        rotationZ.mul(rotationX);
+        poseStack.mulPose(rotationZ);
+        AnimationTracker animationTracker = ((IPreviewAnimatable) animatableEntity).getAnimationStateMachine();
+        if (animationTracker.isCurrentAnimation("sleep")) {
+            poseStack.mulPose(Axis.YP.rotationDegrees(yaw - 90.0f));
+            poseStack.translate(0.5d, 0.5625d, 0.0d);
+            livingEntity.setPose(Pose.SLEEPING);
+        }
+        if (animationTracker.isCurrentAnimation("swim") || animationTracker.isCurrentAnimation("swim_stand")) {
+            livingEntity.setPose(Pose.SWIMMING);
+        }
+        if (animationTracker.isCurrentAnimation("sneak") || animationTracker.isCurrentAnimation("sneaking")) {
+            livingEntity.setPose(Pose.CROUCHING);
+        }
+        if (animationTracker.isCurrentAnimation("sit")) {
+            poseStack.translate(0.0d, -0.5d, 0.0d);
+        }
+        if (animationTracker.isCurrentAnimation("ride")) {
+            poseStack.translate(0.0d, 0.85d, 0.0d);
+        }
+        if (animationTracker.isCurrentAnimation("ride_pig")) {
+            poseStack.translate(0.0d, 0.3125d, 0.0d);
+        }
+        if (animationTracker.isCurrentAnimation("boat")) {
+            poseStack.translate(0.0d, -0.45d, 0.0d);
+        }
+        applyPreviewRotations262(livingEntity, yaw);
+        renderPip262((LivingAnimatable) animatableEntity, renderer, partialTick, poseStack, scale, x, y, 1.8f * scale + 8.0f);
+    }
+
+    // 模型/贴纸按钮 26.2 twin：姿态链=旧 renderLivingEntityPreview 去 z 常量与 scale；
+    // 5.5px 预 scale 位移 → 模型单位 t=5.5/scale（PiP 乘 k=s 还原为像素位移）；
+    // 载具随动/装备隐藏搬除：预览实体无载具无装备（DummyPlayer/holder），真身路径 26.2 不经此。
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static void renderLivingEntityPreviewPip262(float x, float y, float scale, float partialTick, LivingAnimatable animatable, GeoReplacedEntityRenderer renderer, boolean disablePreviewRotation) {
+        LivingEntity livingEntity = (LivingEntity) animatable.getEntity();
+        if (livingEntity == null) {
+            return;
+        }
+        PoseStack poseStack = new PoseStack();
+        poseStack.translate(0.0d, (disablePreviewRotation ? 5.5d : 0.0d) / scale, 0.0d);
+        Quaternionf rotationZ = Axis.ZP.rotationDegrees(180.0f);
+        Quaternionf rotationX = Axis.XP.rotationDegrees(disablePreviewRotation ? 0.0f : -10.0f);
+        rotationZ.mul(rotationX);
+        poseStack.mulPose(rotationZ);
+        float previewYaw = disablePreviewRotation ? 180.0f : 200.0f;
+        livingEntity.yBodyRot = previewYaw;
+        livingEntity.yBodyRotO = previewYaw;
+        livingEntity.setYRot(previewYaw);
+        livingEntity.yRotO = previewYaw;
+        livingEntity.setXRot(0.0f);
+        livingEntity.xRotO = 0.0f;
+        livingEntity.yHeadRot = livingEntity.getYRot();
+        livingEntity.yHeadRotO = livingEntity.getYRot();
+        renderPip262(animatable, renderer, partialTick, poseStack, scale, x, y, 1.8f * scale + 8.0f);
+    }
+
+    // 设置屏 26.2 twin（ModelSettingsScreen.renderPlayerForSettings 调用）：姿态链同
+    // renderEntityPreview（无动画位移），旋转置位同其旧直绘形（-yaw 对置）
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public static void renderSettingsPreviewPip262(float x, float y, float scale, float pitch, float yaw, float partialTick, LivingAnimatable animatable, GeoReplacedEntityRenderer renderer) {
+        LivingEntity livingEntity = (LivingEntity) animatable.getEntity();
+        if (livingEntity == null) {
+            return;
+        }
+        applyPreviewRotations262(livingEntity, yaw);
+        PoseStack poseStack = new PoseStack();
+        poseStack.translate(0.0d, 0.8d, 0.0d);
+        Quaternionf rotationZ = Axis.ZP.rotationDegrees(180.0f);
+        Quaternionf rotationX = Axis.XP.rotationDegrees((-10.0f) + pitch);
+        rotationZ.mul(rotationX);
+        poseStack.mulPose(rotationZ);
+        renderPip262(animatable, renderer, partialTick, poseStack, scale, x, y, 1.8f * scale + 8.0f);
+    }*/
+    //?}
+
     //? if <21.9 {
     private static void renderVehicleEntity(float yaw, Entity riderEntity, PoseStack poseStack, EntityRenderDispatcher entityRenderDispatcher, MultiBufferSource.BufferSource bufferSource, Entity vehicleEntity, float partialTick) {
         poseStack.pushPose();
@@ -517,9 +695,16 @@ public final class ModelPreviewRenderer {
 
     // 模型预览页面
     public static <T extends LivingEntity, TAnimatable extends LivingAnimatable<T>> void renderLivingEntityPreview(float x, float y, float scale, float partialTick, TAnimatable animatable, GeoReplacedEntityRenderer<T, TAnimatable> renderer, boolean disablePreviewRotation, boolean hideEquipment) {
-        // 26.2 预览面板降级（同 renderEntityPreview 注）
+        // 26.2 PiP 预览恢复（同 renderEntityPreview 26.2 分支注）。hideEquipment 仅对
+        // 预览实体（DummyPlayer/贴纸 holder，装备栏本空）生效面，26.2 PiP 分支不再搬移。
         //? if >=26.2
         /*if (true) {
+            setPreviewMode(true);
+            try {
+                renderLivingEntityPreviewPip262(x, y, scale, partialTick, animatable, renderer, disablePreviewRotation);
+            } finally {
+                setPreviewMode(false);
+            }
             return;
         }*/
         ItemStack[] savedEquipment;

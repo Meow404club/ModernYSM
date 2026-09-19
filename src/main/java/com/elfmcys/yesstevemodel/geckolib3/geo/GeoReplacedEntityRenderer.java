@@ -46,9 +46,16 @@ import net.minecraft.resources.ResourceLocation;
  *///?}
 // 1.21.9 PlayerRenderState → AvatarRenderState（neoforge-21.10.64 state/AvatarRenderState.java
 // 实证，PlayerRenderState 全线删除）
-//? if >=21.9 {
+//? if >=21.9 && <26.2 {
 /*import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
+import net.minecraft.resources.ResourceLocation;
+ *///?}
+// 26.2 PiP 预览（debt-262-preview-pip）：state=YsmPreviewRenderState（非 Avatar，理由见类声明注）
+//? if >=26.2 {
+/*import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
+import com.elfmcys.yesstevemodel.client.renderer.YsmPreviewRenderState;
 import net.minecraft.resources.ResourceLocation;
  *///?}
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -102,12 +109,12 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
         return net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.getLocation();
     }*/
 //?}
-//? if >=21.9 {
+//? if >=21.9 && <26.2 {
 /*public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T extends LivingAnimatable<TEntity>> extends LivingEntityRenderer<TEntity, AvatarRenderState, PlayerModel> implements IGeoRenderer<T> {
 
     // render-state 化（1.21.2+）：vanilla dispatch 链 createRenderState(entity,partialTick)→
     // render(state) 丢失实体引用，本类经 extractRenderState 暂存三元组供 renderEntityWithTexture/
-    // setupRotations/事件桥使用（复用单 state 实例，EntityRenderer.reusedState 同款生命周期）。
+    // setupRotations/事件桥使用（复用单 state 实例，EntityRenderer.reusedState 同款生命周期）
     // 1.21.9 起 state 类型为 AvatarRenderState（PlayerRenderState 改名）
     protected TEntity ysmEntity;
 
@@ -131,6 +138,49 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
     @Override
     public ResourceLocation getTextureLocation(AvatarRenderState state) {
         // vanilla dispatch 永不触发（Static 驱动路径，CustomPlayerRenderer.render 直调）；
+        // 纹理由 capability/t.getTextureLocation() 提供
+        return net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.getLocation();
+    }*/
+//?}
+// 26.2 PiP 预览（debt-262-preview-pip）：S=YsmPreviewRenderState——dispatcher.getRenderer(S)
+// 对 AvatarRenderState 恒走 vanilla playerRenderers 表（EntityRenderDispatcher.java:112-118），
+// 非 Avatar state 按 state.entityType 查 renderers 表（:118），预览注册钩子
+// （PreviewRendererRegisterHook，262 代树）把 CustomPlayerRenderer 登记在 EntityTypes.PLAYER 下
+// → PiP 绘制期解析回我方渲染器；vanilla 玩家实体/state 全走 avatar 分支对本表项零可观测。
+// M 界随之换代：PlayerModel=EntityModel<AvatarRenderState> 不满足 EntityModel<? super S>
+// → EntityModel<LivingEntityRenderState> 空模型占位（模型面仅 vanilla submit 链消费，
+// 本类自定义几何完全旁路，262 树构造器实证）。
+//? if >=26.2 {
+/*public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T extends LivingAnimatable<TEntity>> extends LivingEntityRenderer<TEntity, YsmPreviewRenderState, EntityModel<LivingEntityRenderState>> implements IGeoRenderer<T> {
+
+    // render-state 化（1.21.2+）：vanilla dispatch 链 createRenderState(entity,partialTick)→
+    // render(state) 丢失实体引用，本类经 extractRenderState 暂存三元组供 renderEntityWithTexture/
+    // setupRotations/事件桥使用（复用单 state 实例，EntityRenderer.reusedState 同款生命周期）。
+    // 26.2 预览抽取窗内另捕获 animatable 入 state（PiP 绘制期 submit 消费；
+    // 实体→animatable 无反查表，帧内窗式暂存=最小通路），非窗提取恒 null。
+    protected TEntity ysmEntity;
+
+    protected YsmPreviewRenderState ysmState;
+
+    protected float ysmPartialTick;
+
+    @Override
+    public YsmPreviewRenderState createRenderState() {
+        return new YsmPreviewRenderState();
+    }
+
+    @Override
+    public void extractRenderState(TEntity entity, YsmPreviewRenderState state, float partialTick) {
+        super.extractRenderState(entity, state, partialTick);
+        this.ysmEntity = entity;
+        this.ysmState = state;
+        this.ysmPartialTick = partialTick;
+        state.ysmAnimatable = ModelPreviewRenderer.takePipAnimatable262();
+    }
+
+    @Override
+    public ResourceLocation getTextureLocation(YsmPreviewRenderState state) {
+        // vanilla dispatch 永不触发（Static 驱动路径，CustomPlayerRenderer.render/submit 直调）；
         // 纹理由 capability/t.getTextureLocation() 提供
         return net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.getLocation();
     }*/
@@ -172,9 +222,19 @@ public abstract class GeoReplacedEntityRenderer<TEntity extends LivingEntity, T 
         this.rtb = null;
     }
     //?}
-    //? if >=1.21.2 {
+    //? if >=1.21.2 && <26.2 {
     /*public GeoReplacedEntityRenderer(EntityRendererProvider.Context context) {
         super(context, new PlayerModel(context.bakeLayer(ModelLayers.PLAYER_SLIM), true), 0.5f);
+        this.rtb = null;
+    }*/
+    //?}
+    //? if >=26.2 {
+    /*public GeoReplacedEntityRenderer(EntityRendererProvider.Context context) {
+        // M 界=EntityModel<LivingEntityRenderState>（S=YsmPreviewRenderState 非 Avatar，
+        // PlayerModel 不满足界）；模型面仅 vanilla submit 链消费，本类自定义几何完全旁路
+        // → 无部件空模型占位（EntityModel 无抽象方法，ModelPart 空立方/空子件，26.2 源实证）
+        super(context, new EntityModel<LivingEntityRenderState>(new net.minecraft.client.model.geom.ModelPart(java.util.List.of(), java.util.Map.of())) {
+        }, 0.5f);
         this.rtb = null;
     }*/
     //?}

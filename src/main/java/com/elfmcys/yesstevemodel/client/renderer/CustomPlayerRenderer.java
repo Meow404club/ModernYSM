@@ -27,8 +27,12 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 /*import net.minecraft.client.renderer.entity.state.PlayerRenderState;
  *///?}
 // 1.21.9 PlayerRenderState → AvatarRenderState（neoforge-21.10.64 state/AvatarRenderState.java 实证）
-//? if >=21.9 {
+//? if >=21.9 && <26.2 {
 /*import net.minecraft.client.renderer.entity.state.AvatarRenderState;
+ *///?}
+// 26.2 PiP 预览（debt-262-preview-pip）：submit() 回调面（YsmPreviewRenderState 同包免 import）
+//? if >=26.2 {
+/*import net.minecraft.client.renderer.state.level.CameraRenderState;
  *///?}
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.network.chat.Component;
@@ -112,6 +116,29 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
             return;
         }
         renderEntityWithTexture(capability, renderEvent.getTextureLocation(), entityYaw, partialTick, poseStack, bufferSource, packedLight);
+    }*/
+    //?}
+
+    // 26.2 PiP 预览提交（debt-262-preview-pip）：GuiEntityRenderer.renderToTexture →
+    // EntityRenderDispatcher.submit 按 state.entityType 解析到本渲染器（注册实例=
+    // PreviewRendererRegisterHook 经 RegisterRenderers 登记的 PLAYER 槽位；vanilla 玩家
+    // 全走 avatar 分支，本覆写仅被 YsmPreviewRenderState 触达）后回调。
+    // 自定义几何=renderEntityWithTexture 26.2 twin（SubmitNodeCollector submitCustomGeometry
+    // 逃生口同族）；ysmAnimatable 由抽取窗存入 state（YsmPreviewRenderState 注）。
+    // isPreviewMode 括住整个 submit：PiP 绘制晚于 extract，旧 extract 期括不住。
+    //? if >=26.2 {
+    /*@Override
+    public void submit(YsmPreviewRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera) {
+        if (state == null || state.ysmAnimatable == null) {
+            return;
+        }
+        ModelPreviewRenderer.countPipSubmit262();
+        ModelPreviewRenderer.setPreviewMode(true);
+        try {
+            renderEntityWithTexture((CustomPlayerEntity) state.ysmAnimatable, null, 0.0f, state.partialTick, poseStack, submitNodeCollector, state.lightCoords);
+        } finally {
+            ModelPreviewRenderer.setPreviewMode(false);
+        }
     }*/
     //?}
 
@@ -200,7 +227,7 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
         Player player = this.ysmEntity;
         // 1.21.9 Player.getScoreboard() 删 → level().getScoreboard()（同义透传，2110 LivingEntity.java:823 同款）*/
     //? if >=26.2
-    /*private void renderNameTagInner(AvatarRenderState state, Component component, PoseStack poseStack, SubmitNodeCollector multiBufferSource, int i) {
+    /*private void renderNameTagInner(YsmPreviewRenderState state, Component component, PoseStack poseStack, SubmitNodeCollector multiBufferSource, int i) {
         Player player = this.ysmEntity;
         // 1.21.9 Player.getScoreboard() 删 → level().getScoreboard()（同义透传，2110 LivingEntity.java:823 同款）*/
         Scoreboard scoreboard;
@@ -273,9 +300,19 @@ public class CustomPlayerRenderer extends GeoReplacedEntityRenderer<Player, Cust
         }
     }*/
     //?}
-    //? if >=21.9 {
+    //? if >=21.9 && <26.2 {
     /*@Override
     protected void setupRotations(AvatarRenderState state, PoseStack poseStack, float ageInTicks, float rotationYaw) {
+        super.setupRotations(state, poseStack, ageInTicks, rotationYaw);
+        Entity vehicle = this.ysmEntity.getVehicle();
+        if (TouhouLittleMaidCompat.isSimplePlanesEntity(vehicle) || TouhouLittleMaidCompat.isImmersiveAircraftEntity(vehicle)) {
+            poseStack.translate(0.0d, 0.5d, 0.0d);
+        }
+    }*/
+    //?}
+    //? if >=26.2 {
+    /*@Override
+    protected void setupRotations(YsmPreviewRenderState state, PoseStack poseStack, float ageInTicks, float rotationYaw) {
         super.setupRotations(state, poseStack, ageInTicks, rotationYaw);
         Entity vehicle = this.ysmEntity.getVehicle();
         if (TouhouLittleMaidCompat.isSimplePlanesEntity(vehicle) || TouhouLittleMaidCompat.isImmersiveAircraftEntity(vehicle)) {

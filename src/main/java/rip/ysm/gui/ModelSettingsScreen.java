@@ -344,10 +344,18 @@ public class ModelSettingsScreen extends OptionScreen {
             RenderCompat.runAsFancy(() -> renderer.renderEntity(animatable, 0.0f, partialTick, poseStack, bufferSource, 15728880));
             bufferSource.endBatch();
             //?}
+            // 26.2 PiP 预览恢复（debt-262-preview-pip）：extract 相位无 collector，直绘不可能 →
+            // 姿态/旋转向 ModelPreviewRenderer 26.2 twin 重建，经 GuiGraphicsExtractor.entity() 提交
+            //（旋转恢复见 finally 内 <26.2 行条件：PiP 绘制晚于 extract，还原会泄值）
+            //? if >=26.2
+            /*ModelPreviewRenderer.renderSettingsPreviewPip262(x, y, scale, pitch, yaw, partialTick, animatable, renderer);*/
         } finally {
             //? if <21.9
             dispatcher.setRenderShadow(true);
+            // 26.2 PiP：旋转只置不还原（PiP 绘制晚于 extract；LocalPlayer 字段下 tick 自愈）
+            //? if <26.2
             livingEntity.yBodyRot = oldBodyRot;
+            //? if <26.2
             livingEntity.yBodyRotO = oldBodyRotO;
             //? if <1.17 {
             /*livingEntity.yRot = oldYRot;
@@ -355,12 +363,18 @@ public class ModelSettingsScreen extends OptionScreen {
             livingEntity.xRot = oldXRot;
             livingEntity.xRotO = oldXRotO;
              *///?} else {
+            //? if <26.2
             livingEntity.setYRot(oldYRot);
+            //? if <26.2
             livingEntity.yRotO = oldYRotO;
+            //? if <26.2
             livingEntity.setXRot(oldXRot);
+            //? if <26.2
             livingEntity.xRotO = oldXRotO;
             //?}
+            //? if <26.2
             livingEntity.yHeadRot = oldHeadRot;
+            //? if <26.2
             livingEntity.yHeadRotO = oldHeadRotO;
             //? if <1.17 {
             /*RenderSystem.popMatrix();

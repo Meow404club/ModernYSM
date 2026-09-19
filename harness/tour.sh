@@ -16,8 +16,9 @@
 #
 # 和平启动：server "Done" 后经 stdin(FIFO) 注入控制台命令（difficulty peaceful /
 # gamerule doDaylightCycle false / time set day / gamerule doWeatherCycle false /
-# weather clear，全版本一致）。生成期读取的设置（flat/online-mode/difficulty=0/
-# gamemode=creative）由 server.properties 预写双保险。
+# weather clear；26.x 分档见注入点注——advance_time/advance_weather 新名）。
+# 生成期读取的设置（flat/online-mode/difficulty=0/gamemode=creative）由
+# server.properties 预写双保险。
 #
 # 客户端零 GL 注入：截图全部外部 ffmpeg x11grab（xvfb+llvmpipe 下进程内 glReadPixels
 # 会触发 native 堆损坏假崩溃，M2.5 12 轮误报实证）；屏间导航经 cmd.txt/harness.ready
@@ -198,9 +199,19 @@ done
 [ "$DONE" = yes ] || fail "server did not reach Done (see $OUT/server.log)"
 echo "[tour] server up, injecting peaceful/day-locked/clear via stdin"
 echo "difficulty peaceful" >&3
-echo "gamerule doDaylightCycle false" >&3
+# 26.x gamerule 改名分档：advance_time/advance_weather（26.2 server-26.2.jar 内层
+# GameRules javap 常量实证；<=1.21.11 仍旧名 doDaylightCycle/doWeatherCycle，1.21.11
+# NFR rename 中间 jar javap 同法实证——tmp/refs/vanilla-mc/1.21.11 源码目录系 26.x
+# 错位勿仿）。旧名在 26.x 报 "Incorrect argument"（非阻断，但污染 server.log 判读）。
+case "$VERSION" in
+  26.*-neoforge) echo "gamerule advance_time false" >&3 ;;
+  *)             echo "gamerule doDaylightCycle false" >&3 ;;
+esac
 echo "time set day" >&3
-echo "gamerule doWeatherCycle false" >&3
+case "$VERSION" in
+  26.*-neoforge) echo "gamerule advance_weather false" >&3 ;;
+  *)             echo "gamerule doWeatherCycle false" >&3 ;;
+esac
 echo "weather clear" >&3
 sleep 2
 

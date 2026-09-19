@@ -156,9 +156,30 @@ public class CustomPlayerElytraLayer extends GeoLayerRenderer<CustomPlayerEntity
             //? if >=26 && <26.2
             /*this.elytraModel.renderToBuffer(poseStack, ItemFeatureRenderer.getFoilBuffer(bufferSource, net.minecraft.client.renderer.rendertype.RenderTypes.armorCutoutNoCull(cloakTextureLocation), false, stack.hasFoil()), packedLightIn, OverlayTexture.NO_OVERLAY, -1);*/
             // 26.2：getFoilBuffer 私有实例化不可达 → submitCustomGeometry 逃生口直绘
-            //（pose 提交期捕获+lambda 内重建 PoseStack；附魔光膜层丢失=功能债，量级=视觉微差）
-            //? if >=26.2
+            //（pose 提交期捕获+lambda 内重建 PoseStack）。光膜对齐 vanilla-26.2 双提交机制
+            //（WingsLayer→EquipmentLayerRenderer.renderLayers：base armorCutoutNoCull 后
+            // hasFoil() 再提交 armorEntityGlint 同几何，EquipmentLayerRenderer.java renderFoil
+            // 段实证；GLINT 管线 depth CompareOp.EQUAL 贴 base 深度、hasBlending→translucent 相，
+            // solid→translucent 固定相序即 vanilla order+1 语义，SubmitNodeCollection.java:349-357）
+            //? if >=26.2 && <26.3
             /*bufferSource.submitCustomGeometry(poseStack, net.minecraft.client.renderer.rendertype.RenderTypes.armorCutoutNoCull(cloakTextureLocation), (pose, vc) -> {
+                PoseStack inner = new PoseStack();
+                inner.mulPose(pose.pose());
+                this.elytraModel.renderToBuffer(inner, vc, packedLightIn, OverlayTexture.NO_OVERLAY, -1);
+            });
+            if (stack.hasFoil()) {
+                bufferSource.submitCustomGeometry(poseStack, net.minecraft.client.renderer.rendertype.RenderTypes.armorEntityGlint(), (pose, vc) -> {
+                    PoseStack inner = new PoseStack();
+                    inner.mulPose(pose.pose());
+                    this.elytraModel.renderToBuffer(inner, vc, packedLightIn, OverlayTexture.NO_OVERLAY, -1);
+                });
+            }*/
+            // 26.3：光膜并入单管线——hasFoil 时 base render type 直接换
+            // armorCutoutNoCullGlint（=ENTITY+GLINT 双 snippet 单次提交，Sampler0=层贴图、
+            // GlintSampler=ENCHANTED_GLINT_ARMOR、TextureTransform.ARMOR_ENTITY_GLINT_TEXTURING，
+            // EquipmentLayerRenderer.java:86-90 renderShaderGlint 三元实证），lambda 零变
+            //? if >=26.3
+            /*bufferSource.submitCustomGeometry(poseStack, stack.hasFoil() ? net.minecraft.client.renderer.rendertype.RenderTypes.armorCutoutNoCullGlint(cloakTextureLocation) : net.minecraft.client.renderer.rendertype.RenderTypes.armorCutoutNoCull(cloakTextureLocation), (pose, vc) -> {
                 PoseStack inner = new PoseStack();
                 inner.mulPose(pose.pose());
                 this.elytraModel.renderToBuffer(inner, vc, packedLightIn, OverlayTexture.NO_OVERLAY, -1);

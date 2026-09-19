@@ -164,14 +164,18 @@ fi
 # 丢弃该请求（dladdr 判定 libSDL3 才生效，其余 dlsym 原样透传；构造期 dlvsym 取真实
 # dlsym，无递归无锁竞争）。另 SDL3 优先 Wayland 驱动（WAYLAND_DISPLAY 泄漏）→ 强制 x11。
 # 生产 jar 不含此物；真机 sRGB fbconfig 存在，无需 shim。
-# shim 只挂在 gradle（游戏 JVM）进程上——Xvfb/ffmpeg 不吃 LD_PRELOAD（Xvfb 早期
-# dlsym 会踩包装器空指针，ffmpeg 同理，见 tour8 段错误实录）
+# shim 只挂在 client 侧（gradle 启动 JVM→游戏 JVM 继承，这一段即设计预期进程集）——
+# server JVM 无 GL 后端不碰 SDL_GL_SetAttribute（dedicated server 不建 renderpearl
+# GlBackend），Xvfb/ffmpeg 不吃 LD_PRELOAD（Xvfb 早期 dlsym 会踩包装器空指针，
+# ffmpeg 同理，见 tour8 段错误实录；grab 段 LD_PRELOAD= 显式剥离）。
+# 债 debt-263-tour-sdl-shim：server 行曾误挂同前缀（LD_PRELOAD 作用域残留），
+# 收窄后 server 及其子树 environ 零 LD_PRELOAD。
 case "$VERSION" in
   26.*-neoforge)
-    YSM_TOUR_SDL_SHIM="LD_PRELOAD=$ROOT/harness/lib/tour_sdl_srgb.so SDL_VIDEO_DRIVER=x11"
+    YSM_TOUR_CLIENT_SDL_SHIM="LD_PRELOAD=$ROOT/harness/lib/tour_sdl_srgb.so SDL_VIDEO_DRIVER=x11"
     ;;
   *)
-    YSM_TOUR_SDL_SHIM=""
+    YSM_TOUR_CLIENT_SDL_SHIM=""
     ;;
 esac
 
@@ -185,7 +189,7 @@ export DISPLAY=":$DISPLAY_NUM"
 # ---- 2. server（--no-daemon + setsid：树完整可整组清理；stdin=FIFO 注入控制台）----
 rm -f "$FIFO" && mkfifo "$FIFO"
 : > "$OUT/server.log"
-setsid sh -c "$YSM_TOUR_SDL_SHIM \"$ROOT/gradlew\" $GRADLE_SERVER --no-daemon --no-configuration-cache < \"$FIFO\" > \"$OUT/server.log\" 2>&1" &
+setsid sh -c "\"$ROOT/gradlew\" $GRADLE_SERVER --no-daemon --no-configuration-cache < \"$FIFO\" > \"$OUT/server.log\" 2>&1" &
 SERVER_PID=$!
 echo "$SERVER_PID" >> "$PIDFILE"
 exec 3>"$FIFO"   # 保持写端，防 EOF 杀 server
@@ -254,7 +258,7 @@ printf '%s\n' "$PORT" > "$CLIENT_DIR/harness.port"
 
 rm -f "$CLIENT_DIR/harness.armed" "$CLIENT_DIR/cmd.txt" "$CLIENT_DIR/harness.ready"
 : > "$OUT/client.log"
-setsid sh -c "$YSM_TOUR_SDL_SHIM \"$ROOT/gradlew\" $GRADLE_CLIENT --no-daemon --no-configuration-cache > \"$OUT/client.log\" 2>&1" &
+setsid sh -c "$YSM_TOUR_CLIENT_SDL_SHIM \"$ROOT/gradlew\" $GRADLE_CLIENT --no-daemon --no-configuration-cache > \"$OUT/client.log\" 2>&1" &
 CLIENT_PID=$!
 echo "$CLIENT_PID" >> "$PIDFILE"
 touch "$CLIENT_DIR/harness.armed"

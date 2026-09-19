@@ -328,15 +328,18 @@ public final class GpuRenderPath {
         GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, ysmMainFbo);
         GlStateManager._viewport(0, 0, ysmMain.width, ysmMain.height);*/
         //?}
-        // 26.2：GraphicsWorkarounds 删 → GlHeuristics 无公开获取口（构造器包私有）→
-        // heuristics 传 null（GPU 路径 26.x 门控关闭，仅编译面）；
-        // getMainRenderTarget → mc.gameRenderer.mainRenderTarget()（Minecraft.java:673 同款）
+        // 26.2：GraphicsWorkarounds 删（DirectStateAccess.create 第三参改 GlHeuristics，
+        // 构造器包私有无公开获取口）。FBO 获取口内化（native-262 债2）：26.2 GlTexture
+        // 只剩 FrameBufferAttachment 实现（getFbo 移入 FrameBufferCache），GlDevice 包私有
+        // 但持公共访问器 directStateAccess()/frameBufferCache()（GlDevice.java:297/:376），
+        // FrameBufferCache.getFbo(dsa,color[],depth) 公共（:16）→ ysmInternalMainFbo 反射
+        // 软取等价重建 21.8-26.1 语义（命中 vanilla 自建 FBO 缓存，不新建不 mutate）；
+        // getMainRenderTarget → mc.gameRenderer.mainRenderTarget()（Minecraft.java:673 同款）。
+        // GPU 路径 26.x 门控关闭（GpuCapability 捕获 mixin 未挂载恒 false），本路径仅编译面
+        // +未来复活预留。
         //? if >=26.2 {
         /*RenderTarget ysmMain = mc.gameRenderer.mainRenderTarget();
-        // 26.2 FBO 获取口内化（GlDevice 包私有+frameBufferCache 内化，FrameBufferCache.getFbo
-        // 仅 opengl 包可达）→ 绘制期自绑不可达，placeholder 0（GPU 路径 26.x 门控关闭，
-        // 功能债归 native/GPU 卡池）
-        int ysmMainFbo = 0;
+        int ysmMainFbo = ysmInternalMainFbo(ysmMain);
         GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, ysmMainFbo);
         GlStateManager._viewport(0, 0, ysmMain.width, ysmMain.height);*/
         //?}
@@ -423,6 +426,59 @@ public final class GpuRenderPath {
         //? if <21.11
         mc.gameRenderer.lightTexture().turnOffLightLayer();
     }
+
+    //? if >=26.2 {
+    /*// 26.2 FBO 获取口内化（native-262 债2）：GlDevice 包私有（GlDevice.java:48 无 public
+    // 修饰）且 frameBufferCache 内化，21.8-26.1 的 GlTexture.getFbo(dsa, depth) 链随
+    // GlTexture 面收窄失效；但 vanilla 在 GlDevice 上留了公共访问器 directStateAccess()
+    //(GlDevice.java:297)/frameBufferCache()(:376)，FrameBufferCache.getFbo(dsa, color[],
+    //depth) 本身公共（FrameBufferCache.java:16，26.3 同构 renderpearl backend
+    //GlDevice.java:323/:346+FrameBufferCache.java:16）。GlDevice 类型面不可达 →
+    //getDeclaredMethod+setAccessible 软取（游戏类在 unnamed module，setAccessible 恒可），
+    //命中 vanilla 自建 FBO 缓存（computeIfAbsent），不新建不 mutate，与 21.8-26.1
+    //GlTexture.getFbo 缓存命中语义逐点等价。任一环漂移 → 一次性告警回落 0（原 placeholder
+    //语义；GPU 路径 26.x 门控关闭，仅编译面+未来复活预留）。
+    private static java.lang.reflect.Method ysm26DsaGetter;
+    private static java.lang.reflect.Method ysm26CacheGetter;
+    private static java.lang.reflect.Method ysm26GetFbo;
+    private static boolean ysm26FboWarned;
+
+    private static int ysmInternalMainFbo(RenderTarget ysmMain) {
+        try {
+            Object device = RenderSystem.getDevice();
+            if (device == null) return 0;
+            if (ysm26GetFbo == null) {
+                Class<?> dev = device.getClass();
+                ysm26DsaGetter = dev.getDeclaredMethod("directStateAccess");
+                ysm26DsaGetter.setAccessible(true);
+                ysm26CacheGetter = dev.getDeclaredMethod("frameBufferCache");
+                ysm26CacheGetter.setAccessible(true);
+                Object cacheProbe = ysm26CacheGetter.invoke(device);
+                for (java.lang.reflect.Method m : cacheProbe.getClass().getMethods()) {
+                    if ("getFbo".equals(m.getName()) && m.getParameterCount() == 3) {
+                        ysm26GetFbo = m;
+                        break;
+                    }
+                }
+                if (ysm26GetFbo == null) {
+                    throw new NoSuchMethodException("FrameBufferCache.getFbo(dsa,color[],depth)");
+                }
+            }
+            Object dsa = ysm26DsaGetter.invoke(device);
+            Object cache = ysm26CacheGetter.invoke(device);
+            // 主目标 color 纹理非空（RenderTarget.java:120）；depth 可空（getFbo @Nullable 形参）。
+            Object fbo = ysm26GetFbo.invoke(cache, dsa,
+                    java.util.List.of(ysmMain.getColorTexture()), ysmMain.getDepthTexture());
+            return (Integer) fbo;
+        } catch (Throwable t) {
+            if (!ysm26FboWarned) {
+                ysm26FboWarned = true;
+                System.out.println("[YSM] 26.x main FBO acquisition unavailable, drawing to FBO 0: " + t);
+            }
+            return 0;
+        }
+    }*/
+    //?}
     //?}
 
     private static void refreshLights() {

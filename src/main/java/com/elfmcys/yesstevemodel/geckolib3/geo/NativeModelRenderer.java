@@ -476,5 +476,32 @@ public class NativeModelRenderer {
                 packedLight, packedOverlay,
                 r, g, b, a
         );
+
+        //? if >=26.2
+        /*ysmLogSimdFastDraw(vertexConsumer);*/
     }
+
+    //? if >=26.2 {
+    /*// 26.x SIMD staging 快路径绘制遥测（native-262，沿 [ysm-hide-matrix] 打点面）：
+    // 快路径直写不回吐 submitVertices（native 快/慢互斥，该回调=慢路径唯一出口，
+    // dllmain.cpp [A]/[A2]）——绘制证据=builder.vertices 增长（26.2 BufferBuilder.java:23
+    // 私有 int vertices，staging 快路径每次 draw +quads*4）。debug 门复用
+    // shouldLogHideMatrix()，关闭时零开销；慢路径时该行与 path=simd 回调行并存可区分。
+    private static java.lang.reflect.Field ysm26SimdVerticesField;
+
+    private static void ysmLogSimdFastDraw(Object vertexConsumer) {
+        if (!shouldLogHideMatrix()) return;
+        try {
+            if (ysm26SimdVerticesField == null) {
+                ysm26SimdVerticesField = vertexConsumer.getClass().getDeclaredField("vertices");
+                ysm26SimdVerticesField.setAccessible(true);
+            }
+            int v = ysm26SimdVerticesField.getInt(vertexConsumer);
+            System.out.printf("[ysm-hide-matrix] path=simd-fast vertices=%d totalQuads=%d%n", v, v / 4);
+        } catch (Throwable t) {
+            System.out.println("[ysm-hide-matrix] path=simd-fast vertices=unreadable ("
+                    + t.getClass().getSimpleName() + ")");
+        }
+    }*/
+    //?}
 }

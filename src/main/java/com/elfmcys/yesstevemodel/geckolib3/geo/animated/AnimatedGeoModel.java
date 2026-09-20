@@ -1,6 +1,14 @@
 package com.elfmcys.yesstevemodel.geckolib3.geo.animated;
 
+// TLM 兼容面 1.12.2 不接入（legacy-1222-l1-render：rip.ysm.compat.touhoulittlemaid
+// 整面排除）。stonecutter 双门块：活跃分支裸行+非活跃块注释
+// TLM 兼容面 1.12.2 不接入（legacy-1222-l1-render，1.12.2 活跃分支无 import；
+// 1.20.1 活跃分支 stonecutter 对 /* */ 去注释激活）
+//? if <1.17 {
+//? }
+//? if >=1.17 {
 import rip.ysm.compat.touhoulittlemaid.TouhouMaidBoneProcessor;
+//? }
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.util.StringPool;
 import com.elfmcys.yesstevemodel.geckolib3.core.processor.IBone;
 import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
@@ -127,8 +135,15 @@ public class AnimatedGeoModel {
     private List<IBone> lookupBones(@NotNull IntList intList) {
         ReferenceArrayList<IBone> referenceArrayList = new ReferenceArrayList<>(intList.size());
         // 1.16.5 fastutil 8.3.1 的 IntIterable.forEach(IntConsumer/Consumer) 重载对 lambda 有歧义
-        //? if <1.18.2
-        // intList.forEach((java.util.function.IntConsumer) i -> referenceArrayList.add(this.boneIdsMap.get(i)));
+        // 1.12.2 无 fastutil 8（forEach(IntConsumer) 不存在）——索引 for（legacy-1222-l1-render）
+        //? if <1.13
+        /*
+        for (int i = 0; i < intList.size(); i++) {
+            referenceArrayList.add(this.boneIdsMap.get(intList.getInt(i)));
+        }
+         */
+        //? if >=1.13 && <1.18.2
+        /*intList.forEach((java.util.function.IntConsumer) i -> referenceArrayList.add(this.boneIdsMap.get(i)));*/
         //? if >=1.18.2
         intList.forEach(i -> referenceArrayList.add(this.boneIdsMap.get(i)));
         return ReferenceLists.unmodifiable(referenceArrayList);
@@ -241,6 +256,10 @@ public class AnimatedGeoModel {
 
     public <T> T getTouhouMaidData() {
         if (this.touhouMaidData == null) {
+            // TLM 兼容面 1.12.2 不接入（整面排除）；raw 面 >=1.17 活跃裸行
+            //? if <1.17
+            this.touhouMaidData = null; // TLM 兼容面 1.12.2 不接入（legacy-1222-l1-render）
+            //? if >=1.17
             this.touhouMaidData = TouhouMaidBoneProcessor.createLocationModel(this);
         }
         return (T) this.touhouMaidData;

@@ -1,7 +1,6 @@
 package rip.ysm.legacy122;
 
 import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
-import com.elfmcys.yesstevemodel.geckolib3.util.MatrixBridge;
 import net.minecraft.client.renderer.GlStateManager;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;

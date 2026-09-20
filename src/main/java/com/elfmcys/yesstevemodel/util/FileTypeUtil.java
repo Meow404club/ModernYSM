@@ -3,8 +3,12 @@ package com.elfmcys.yesstevemodel.util;
 import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.util.StringPool;
 import com.google.common.collect.Sets;
+// 1.13+ mojmap RL/EntityType；1.12.2 无对应——RL 面（pack icon/EntityType 解析）
+// 是 1.13+ 语义，1.12.2 走 Object 槽位（legacy-1222-l1-render）
+//? if >=1.13 {
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
+//? }
 
 import java.util.HashSet;
 import java.util.Set;
@@ -65,6 +69,8 @@ public final class FileTypeUtil {
         return lastSlashIndex >= 0 ? trimmedPath.substring(lastSlashIndex + 1) : trimmedPath;
     }
 
+    // RL/EntityType 方法族 1.13+ 语义（pack icon/实体 Tag 解析），1.12.2 无消费者（legacy-1222-l1-render）
+    //? if >=1.13 {
     public static ResourceLocation getPackIconLocation(String str) {
         //? if >=1.21
         /*return ResourceLocation.fromNamespaceAndPath(YesSteveModel.MOD_ID, "model_pack_icon/" + str.hashCode());*/
@@ -140,4 +146,5 @@ public final class FileTypeUtil {
         }
         return hashSet;
     }
+    //? }
 }

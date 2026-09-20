@@ -11,6 +11,9 @@ pluginManagement {
         maven("https://maven.wagyourtail.xyz/releases") { name = "WagYourTail" }
         // 1.3.16-SNAPSHOT 退路（unimined 1.4.1 解析/DSL 失败时 Celeritas 同款回退）
         maven("https://maven.wagyourtail.xyz/snapshots") { name = "WagYourTail Snapshots" }
+        // RetroFuturaGradle 插件 marker（com.gtnewhorizons.retrofuturagradle）只在 GTNH nexus
+        //（gradlePluginPortal 404 实证 2026-09-20；1.12.2 线构建脚本所需）
+        maven("https://nexus.gtnewhorizons.com/repository/public/") { name = "GTNH" }
     }
 }
 
@@ -141,6 +144,15 @@ stonecutter {
         vers("1.20.3-neoforge", "1.20.3").buildscript = "build.nfrt.gradle.kts"
         // 1.20.5 线挂载（nfrt-flatline-1203-1205 卡线 3；tile=20.5.21-beta 冻结快照）
         vers("1.20.5-neoforge", "1.20.5").buildscript = "build.nfrt.gradle.kts"
+
+        // ===== legacy 1.12.2 线（legacy-1222-l0-poc）=====
+        // RetroFuturaGradle 构建 POC（Celeritas-mva forge122 先例形态：
+        // tmp/harvest/celeritas-mva/forge122/build.gradle.kts:12 RFB 1.4.8 + Java21 toolchain
+        // + lwjgl3ify + mixinbooter 10.5，自带 SRG reobf）。独立 buildscript
+        // build.legacy122.gradle.kts，与 build.forge/moddev/nfrt/unimined 零共享代码路径。
+        // forge 版本 14.23.5.2859（任务卡冻结 tile；maven metadata 该线另有 2860~2864 后补
+        // 构建但 2859 为社区公认末版稳定线）。
+        vers("1.12.2-forge", "1.12.2").buildscript = "build.legacy122.gradle.kts"
 
         vcsVersion = "1.20.1-forge"
     }

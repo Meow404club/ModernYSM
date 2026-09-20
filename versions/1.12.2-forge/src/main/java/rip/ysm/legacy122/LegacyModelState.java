@@ -34,21 +34,37 @@ public final class LegacyModelState {
 
     // L1 程序化模型入口（OpenYSMStub：装载链 L2 接入前直喂 GeoModel）
     public static void setBundle(ClientModelInfo info, GeoModel model) {
+        setBundle(info, model, null);
+    }
+
+    // L2 真实装载入口（LegacyModelLoader）：真实贴图直持 OuterFileTexture
+    //（AbstractTexture 子类，RenderManager.renderEngine.bindTexture 直通）
+    public static void setBundle(ClientModelInfo info, GeoModel model, Object realTexture) {
         bundle = info;
         mainModel = model;
         boneParams = mainModel == null || mainModel.bakedBones == null
                 ? null : new float[mainModel.bakedBones.size() * 12];
         currentBoneParams = boneParams;
-        // L1 纹理面：默认贴图（MissingTexture 兜底由 GL 无绑定时的白面承接）
-        texture = new ResourceLocation("yes_steve_model", "textures/entity/default.png");
+        // L2 纹理面：真实贴图优先（OuterFileTexture 直 bind），null 回退占位皮肤
+        boundTexture = realTexture instanceof net.minecraft.client.renderer.texture.AbstractTexture
+                ? (net.minecraft.client.renderer.texture.AbstractTexture) realTexture : null;
+        texture = boundTexture != null
+                ? null : new ResourceLocation("yes_steve_model", "textures/entity/default.png");
         // twin YesSteveModel 的 main-compileJava classpath 解析在本环布局下不稳定
         //（pass81 实证"package YesSteveModel does not exist"）——ponytail: 直接 JUL，
         // 不为一条日志维护 twin 编译序
         Logger.getLogger("yes_steve_model").info(String.format(
-                "[ysm-legacy122] state set: model=%b bones=%d",
+                "[ysm-legacy122] state set: model=%b bones=%d realTex=%b",
                 mainModel != null, mainModel == null || mainModel.bakedBones == null
-                        ? -1 : mainModel.bakedBones.size()));
+                        ? -1 : mainModel.bakedBones.size(),
+                realTexture != null));
     }
+
+    public static net.minecraft.client.renderer.texture.AbstractTexture realTexture() {
+        return boundTexture;
+    }
+
+    private static net.minecraft.client.renderer.texture.AbstractTexture boundTexture;
 
     public static GeoModel mainModel() {
         return mainModel;

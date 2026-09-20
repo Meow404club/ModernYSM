@@ -119,12 +119,21 @@ public class YesSteveModel {
 //? if forge {
 /*    @OnlyIn(Dist.CLIENT)*/
 //?}
+    // 方法体必须在 forge 块内裸行 + 块尾收口（dev-regress-2111-server-dist）：f78f7fb 为修
+    // 上条把块尾 //?} 前移到注解行后 → 方法体变无条件代码重新编入 neoforge 面 → loader 10
+    // （21.11 loader-10.0.36）NeoForgeDevDistCleaner 掩码时代类链接期 CNFE LocalPlayer
+    // （YesSteveModelForge.<init>:48 → init() 链，21.11 runServer 实证；neoforge 调用方
+    // 走 client.ClientModelManager.sendUnavailableMessage 孪生，本方法 neoforge 面整块剥除）。
+    // 双目标共存=注解独占块（f78f7fb 初衷）+ 方法体留 forge 块内裸行（58aaaf2 隔离，
+    // chasm 条件假整块剥除；1201 vcs 直通线 //? 行为注释、方法体裸行照编=基线字节码零差）。
+//? if forge {
     public static void sendUnavailableMessage() {
         LocalPlayer localPlayer = Minecraft.getInstance().player;
         if (localPlayer != null) {
             YsmText.sendSystemMessage(localPlayer, getUnavailableComponent());
         }
     }
+//?}
 
     public static Component getUnavailableComponent() {
         return NativeLibLoader.getErrorComponent();

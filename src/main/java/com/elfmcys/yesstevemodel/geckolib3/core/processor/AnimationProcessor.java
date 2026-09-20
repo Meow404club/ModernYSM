@@ -207,7 +207,15 @@ public class AnimationProcessor<TEntity extends Entity> {
             snapshot.isCurrentlyRunningAnimation = true;
             this.modelRendererList.add(snapshot);
         }
+        // GeoEntity async evaluator NPE 守卫（跳帧降级，非吞异常）：
+        // currentEvaluator 在 tickAnimation 中段置位/复位，正常单线程恒非 null；async 覆写
+        // 竞态（GeoEntity.submitAsyncUpdate 覆写 in-flight modelFuture）下另一 worker 已复位
+        // 时本 worker 的 forEachTransform 读到 null，对 evaluator 求值即 NPE。守卫后本帧跳过
+        // 该 provider 变换（骨保留上一帧值），动画由 GeoEntity 侧同步降级路径继续推进。
         final ExpressionEvaluator<AnimationContext<?>> evaluator = this.currentEvaluator;
+        if (evaluator == null) {
+            return;
+        }
         final float seekTime = this.currentSeekTime;
 
         TransitionVector3f rot = provider.getRotation(evaluator);

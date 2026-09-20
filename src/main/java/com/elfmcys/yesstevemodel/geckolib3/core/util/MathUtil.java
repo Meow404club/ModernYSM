@@ -1,6 +1,10 @@
 package com.elfmcys.yesstevemodel.geckolib3.core.util;
 
+// Mth 为 1.13+ 面（1.12.2 是 net.minecraft.util.math.MathHelper 且无 DEG_TO_RAD 常量，
+// tmp/refs/vanilla-mc/1.12.2 MathHelper.java:7 实证）——import 随 >=1.13 门
+//? if >=1.13 {
 import net.minecraft.util.Mth;
+//? }
 import org.joml.Math;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;

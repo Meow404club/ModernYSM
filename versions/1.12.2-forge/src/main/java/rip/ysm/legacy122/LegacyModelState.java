@@ -1,0 +1,76 @@
+package rip.ysm.legacy122;
+
+import com.elfmcys.yesstevemodel.client.ClientModelInfo;
+import com.elfmcys.yesstevemodel.client.model.MainModelData;
+import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
+import net.minecraft.util.ResourceLocation;
+
+import java.util.logging.Logger;
+
+/**
+ * 1.12.2 线渲染状态（legacy-1222-l1-render）。
+ *
+ * 持默认模型的 GeoModel + 每骨动画参数面（12 float/骨契约，
+ * NativeModelRenderer.calculateBoneMatrix:328 消费侧同款布局）。
+ * L1 单默认模型全玩家同模（PlayerCapability/网络同步=L2）。
+ */
+public final class LegacyModelState {
+
+    private static ClientModelInfo bundle;
+    private static GeoModel mainModel;
+    private static float[] boneParams;
+    private static float[] currentBoneParams;
+    private static long animTick;
+    private static ResourceLocation texture;
+
+    private LegacyModelState() {
+    }
+
+    public static void setBundle(ClientModelInfo info) {
+        MainModelData data = info == null ? null : info.getMainModelData();
+        setBundle(info,
+                data == null || data.getModels().isEmpty() ? null : data.getModels().get(0));
+    }
+
+    // L1 程序化模型入口（OpenYSMStub：装载链 L2 接入前直喂 GeoModel）
+    public static void setBundle(ClientModelInfo info, GeoModel model) {
+        bundle = info;
+        mainModel = model;
+        boneParams = mainModel == null || mainModel.bakedBones == null
+                ? null : new float[mainModel.bakedBones.size() * 12];
+        currentBoneParams = boneParams;
+        // L1 纹理面：默认贴图（MissingTexture 兜底由 GL 无绑定时的白面承接）
+        texture = new ResourceLocation("yes_steve_model", "textures/entity/default.png");
+        // twin YesSteveModel 的 main-compileJava classpath 解析在本环布局下不稳定
+        //（pass81 实证"package YesSteveModel does not exist"）——ponytail: 直接 JUL，
+        // 不为一条日志维护 twin 编译序
+        Logger.getLogger("yes_steve_model").info(String.format(
+                "[ysm-legacy122] state set: model=%b bones=%d",
+                mainModel != null, mainModel == null || mainModel.bakedBones == null
+                        ? -1 : mainModel.bakedBones.size()));
+    }
+
+    public static GeoModel mainModel() {
+        return mainModel;
+    }
+
+    public static float[] boneParams(GeoModel model) {
+        return model == mainModel ? boneParams : null;
+    }
+
+    public static float[] currentBoneParams() {
+        return currentBoneParams;
+    }
+
+    public static ResourceLocation texture() {
+        return texture;
+    }
+
+    public static long nextAnimTick() {
+        return ++animTick;
+    }
+
+    public static long animTick() {
+        return animTick;
+    }
+}

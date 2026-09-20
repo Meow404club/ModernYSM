@@ -1,6 +1,13 @@
 package com.elfmcys.yesstevemodel.geckolib3.geo.animated;
 
+// TLM 兼容面 1.12.2 不接入（整面排除）；stonecutter 双门块：活跃分支裸行+非活跃块注释
+// TLM 兼容面 1.12.2 不接入（legacy-1222-l1-render，1.12.2 活跃分支无 import；
+// 1.20.1 活跃分支 stonecutter 对 /* */ 去注释激活）
+//? if <1.17 {
+//? }
+//? if >=1.17 {
 import rip.ysm.compat.touhoulittlemaid.TouhouMaidBoneProcessor;
+//? }
 import com.elfmcys.yesstevemodel.geckolib3.core.processor.IBone;
 import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoBone;
 import org.joml.Vector3f;
@@ -247,6 +254,10 @@ public class AnimatedGeoBone implements IBone {
 
     public <T> T getTouhouMaidBone() {
         if (this.touhouMaidBone == null) {
+            // TLM 兼容面 1.12.2 不接入（整面排除）；raw 面 >=1.17 活跃裸行
+            //? if <1.17
+            this.touhouMaidBone = null; // TLM 兼容面 1.12.2 不接入（legacy-1222-l1-render）
+            //? if >=1.17
             this.touhouMaidBone = TouhouMaidBoneProcessor.createLocationBone(this);
         }
         return (T) this.touhouMaidBone;

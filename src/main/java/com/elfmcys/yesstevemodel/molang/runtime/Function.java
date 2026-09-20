@@ -1,10 +1,16 @@
 package com.elfmcys.yesstevemodel.molang.runtime;
 
+// 1.12.2 无 mojmap 面（IContext/ResourceLocation 为 1.14+ 语义）——RL 缓存访问器
+// 1.12.2 no-op（legacy-1222-l1-render）。raw 面恒 1.20.1 合法：<1.14 分支整行注释
+//? if >=1.14 {
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.context.IContext;
+//? }
 import com.elfmcys.yesstevemodel.molang.parser.ast.Expression;
 import com.elfmcys.yesstevemodel.molang.parser.ast.StringExpression;
 import com.elfmcys.yesstevemodel.molang.runtime.binding.ValueConversions;
+//? if >=1.14 {
 import net.minecraft.resources.ResourceLocation;
+//? }
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -68,6 +74,17 @@ public interface Function {
             return ValueConversions.asBoolean(ctx.evalSafe(this.arguments.get(index)));
         }
 
+        // 1.14+ 返回 ResourceLocation（调用方 EffectLevel 等收窄）；<1.14 无 RL 语义
+        // 直接取值。raw 面恒 1.20.1 合法：<1.14 分支整块注释（legacy-1222-l1-render）
+        //? if <1.14 {
+        /*
+        @Nullable
+        public Object getResourceLocation(@NotNull ExecutionContext<?> ctx, final int index) {
+            return getValue(ctx, index);
+        }
+         */
+        //? }
+        //? if >=1.14 {
         @Nullable
         public ResourceLocation getResourceLocation(@NotNull ExecutionContext<? extends IContext<?>> ctx, final int index) {
             Object obj;
@@ -96,6 +113,7 @@ public interface Function {
             ctx.entity().logWarning("Illegal resource location: ", obj);
             return null;
         }
+        //? }
 
         @Nullable
         public Object getValue(@NotNull ExecutionContext<?> ctx, final int index) {

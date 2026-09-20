@@ -46,8 +46,8 @@ public final class LegacyModelState {
                 ? null : new float[mainModel.bakedBones.size() * 12];
         currentBoneParams = boneParams;
         // L2 纹理面：真实贴图优先（OuterFileTexture 直 bind），null 回退占位皮肤
-        boundTexture = realTexture instanceof net.minecraft.client.renderer.texture.AbstractTexture
-                ? (net.minecraft.client.renderer.texture.AbstractTexture) realTexture : null;
+        boundTexture = realTexture instanceof com.elfmcys.yesstevemodel.client.texture.OuterFileTexture
+                ? (com.elfmcys.yesstevemodel.client.texture.OuterFileTexture) realTexture : null;
         texture = boundTexture != null
                 ? null : new ResourceLocation("yes_steve_model", "textures/entity/default.png");
         // twin YesSteveModel 的 main-compileJava classpath 解析在本环布局下不稳定
@@ -60,11 +60,11 @@ public final class LegacyModelState {
                 realTexture != null));
     }
 
-    public static net.minecraft.client.renderer.texture.AbstractTexture realTexture() {
+    public static com.elfmcys.yesstevemodel.client.texture.OuterFileTexture realTexture() {
         return boundTexture;
     }
 
-    private static net.minecraft.client.renderer.texture.AbstractTexture boundTexture;
+    private static com.elfmcys.yesstevemodel.client.texture.OuterFileTexture boundTexture;
 
     public static GeoModel mainModel() {
         return mainModel;

@@ -48,6 +48,18 @@ val fpm2128Libs = when (stonecutter.current.version) {
     else -> "libs/neoforge-218"
 }
 
+// 21.9~21.11 三线（fpm-selfdrive-219-2111 卡）：FirstPersonModel 真 compat 专属段，
+// 挂 src/neoforge-219 孪生小树。自力方案（PR#659 open 未合，不等上游）：复用 261
+// 模式——SetupHook 注册 RegisterRenderStateModifiersEvent 第二 extractor（对相机
+// 实体）标 WeakHashMap<EntityRenderState,Boolean> 旗标，submit 期消费自家快照。
+// FPM 2.6.0（21.9/21.10 同 jar，Modrinth WedulMVH）/2.7.2（21.11，TKoHJWZZ）
+// WorldRendererMixin 均注 extractVisibleEntities（旗标窗只盖 extract 期，submit
+// 期恒 false——spec 明确不复刻 2128 老 render 期直查语义）
+val fpm219 = stonecutter.eval(stonecutter.current.version, ">=21.9") &&
+        stonecutter.eval(stonecutter.current.version, "<26.1")
+// 2.6.0（21.9/21.10 同 jar）与 2.7.2（21.11）同 vendor 目录，单 fileTree 覆盖三线
+val fpm219Libs = "libs/neoforge-219"
+
 // 21.3+ 线 log4j 对齐：下方 eachDependency 已把 log4j-core 钉死 2.19.0（全线，NFRT 去抖），
 // 而 1.21.4/1.21.5 vanilla 自带 log4j-api 2.22.x 与 core 2.19.0 错配 → 启动即
 // NoSuchMethodError（ServiceLoaderUtil.loadServices 3 参签名缺失，21.4/21.5 runClient 实证）。
@@ -115,6 +127,12 @@ dependencies {
     // fpm2128Libs 注），仅 compileOnly 不进运行时
     if (fpm2128) {
         compileOnly(fileTree(rootProject.file(fpm2128Libs)))
+    }
+    // 21.9~21.11 三线 FirstPersonModel api 编译面（fpm-selfdrive-219-2111 卡）：
+    // 机制同上——官方 jar vendor libs/neoforge-219（2.6.0-mc1.21.9 重命名 + 2.7.2-mc1.21.11，
+    // Modrinth 实拉），仅 compileOnly 不进运行时
+    if (fpm219) {
+        compileOnly(fileTree(rootProject.file(fpm219Libs)))
     }
 }
 
@@ -344,6 +362,19 @@ sourceSets.main {
         if (fpm2128) {
             exclude("firstperson/FirstPersonCompat.java")
             srcDir(rootProject.file("src/neoforge-2128/java"))
+        }
+        // 21.9~21.11 三线 FirstPersonModel 真 compat（fpm-selfdrive-219-2111 卡）：
+        // 机制同 fpm261 段——shim 的 firstperson/FirstPersonCompat.java（恒 false）对
+        // 三线剔除，换 src/neoforge-219 孪生小树（异包 platform/neoforge/firstperson，
+        // 261/2128 卡先例：exclude 按相对路径双杀同名 RAW 文件，孪生必须异包）。
+        // 同时剔 2110/2111 树 ReplacePlayerRenderForgeHook（21.9+ FPM 旗标窗只盖
+        // extract 期，submit 期恒 false——换快照消费窗孪生，2128 不剔的 render 期
+        // 直查语义在本三线不成立）。2110/2111 树文件同名同相对路径，exclude 双杀
+        // 恰好同时命中两树（21.9/21.10 挂 2110、21.11 挂 2111，按线只挂其一）。
+        if (fpm219) {
+            exclude("firstperson/FirstPersonCompat.java")
+            exclude("com/elfmcys/yesstevemodel/platform/neoforge/event/ReplacePlayerRenderForgeHook.java")
+            srcDir(rootProject.file("src/neoforge-219/java"))
         }
         // ===== d3-gpu-218-revive：21.8/21.11 线 GPU 路径复活捕获 mixin =====
         // vanilla 21.8 删 RenderSystem CPU 投影/雾读取（GpuBufferSlice 化）后，四个捕获

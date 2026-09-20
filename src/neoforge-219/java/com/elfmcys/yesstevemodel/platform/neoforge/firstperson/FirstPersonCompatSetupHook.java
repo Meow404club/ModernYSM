@@ -48,9 +48,18 @@ public final class FirstPersonCompatSetupHook {
     public static void onRegisterModifiers(RegisterRenderStateModifiersEvent event) {
         event.registerEntityModifier(
                 new com.google.common.reflect.TypeToken<net.minecraft.client.renderer.entity.player.AvatarRenderer<?>>() {},
-                (entity, state) -> FirstPersonCompat.putSample(
-                        (net.minecraft.client.renderer.entity.state.EntityRenderState) state,
-                        FirstPersonCompat.sample(entity)));
+                (entity, state) -> {
+                    // 相机实体闸（本地玩家）在本 client-only 类做：FirstPersonCompat 是
+                    // 服务端也会加载的公共类（PlayerCapability 引用），方法体引用
+                    // net.minecraft.client.Minecraft 会被 JVM 校验器在 if_acmpne 可赋值性
+                    // 检查时提前加载 → 专用服 DISTXFORM CNFE（21.11 runServer 实证）。
+                    if (entity != net.minecraft.client.Minecraft.getInstance().player) {
+                        return;
+                    }
+                    FirstPersonCompat.putSample(
+                            (net.minecraft.client.renderer.entity.state.EntityRenderState) state,
+                            FirstPersonCompat.sample());
+                });
     }
 
 }

@@ -99,16 +99,20 @@ public class FirstPersonCompat {
 
     /**
      * extract 期采样（FirstPersonCompatSetupHook 的第二 extractor modifier 回调）：
-     * FPM 在场 && FPM 旗标（extract 窗口内=true）&& 实体是相机实体（本地玩家）。
+     * FPM 在场 && FPM 旗标（extract 窗口内=true）。相机实体（本地玩家）闸在
+     * SetupHook（client-only）侧做——本类被服务端公共类引用，方法体禁引
+     * net.minecraft.client.Minecraft（JVM 校验器提前加载 → 专用服 CNFE，21.11
+     * runServer 实证）。本方法体仅引 FirstPersonAPI（FPM 缺席不解析，零 NCDFE）。
      */
-    public static boolean sample(Object entity) {
+    public static boolean sample() {
         if (!IS_LOADED || !FirstPersonAPI.isRenderingPlayer()) {
             return false;
         }
-        if (entity != net.minecraft.client.Minecraft.getInstance().player) {
-            return false;
-        }
         sampleHits++;
+        // acceptance 数值口径（fpm-selfdrive-219-2111）：首命中+每 500 次打点，防 60fps 刷屏
+        if (sampleHits == 1 || sampleHits % 500 == 0) {
+            YesSteveModel.LOGGER.info("FPM selfdrive sample hit #{} (extract-phase flag set for camera entity)", sampleHits);
+        }
         return true;
     }
 
@@ -123,6 +127,9 @@ public class FirstPersonCompat {
         renderStateFlag = flag != null && flag;
         if (renderStateFlag) {
             consumeHits++;
+            if (consumeHits == 1 || consumeHits % 500 == 0) {
+                YesSteveModel.LOGGER.info("FPM selfdrive consume hit #{} (submit-phase snapshot=true consumed)", consumeHits);
+            }
         }
     }
 

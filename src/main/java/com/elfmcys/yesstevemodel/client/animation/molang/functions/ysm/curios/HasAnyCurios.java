@@ -1,5 +1,8 @@
 package com.elfmcys.yesstevemodel.client.animation.molang.functions.ysm.curios;
 
+//? if >=1.21.1 && <21.2
+/*import com.elfmcys.yesstevemodel.platform.neoforge.curios.CuriosCompat;*/
+//? if <1.21.1 || >=21.2
 import rip.ysm.compat.curios.CuriosCompat;
 import com.elfmcys.yesstevemodel.util.YsmTag;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.context.IContext;

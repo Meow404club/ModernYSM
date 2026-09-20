@@ -26,12 +26,20 @@ public final class LegacyTestModel {
     public static GeoModel build() {
         // GeoModel 仅 5 参构造（GeoBone[]/strArr/zArr/properties/zArr2）——程序化面
         // 走空 GeoBone 数组占位，bakedBones 独立赋值（翻译层只消费 bakedBones）
+        // strArr 35 行契约（GeoModel 构造 :358-386 实证：0..12 命名组 + 13..19
+        // extraLeftHand + 20..26 extraRightHand + 27..34 passengerGroups）
+        String[][] strArr = new String[35][];
+        for (int i = 0; i < 35; i++) {
+            strArr[i] = new String[0];
+        }
+        // zArr 3 位契约（:385-387 hasCustomLeftHand/RightHand/Limbs）；
+        // zArr2 translucent 每纹理位：1 位
         GeoModel model = new GeoModel(
                 new com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoBone[0],
-                new String[0][], new boolean[0],
+                strArr, new boolean[3],
                 new com.elfmcys.yesstevemodel.resource.models.GeometryDescription(
                         "legacy122_test", 64.0, 64.0, 2.0, 2.0, new double[3]),
-                new boolean[0]);
+                new boolean[1]);
         List<GeoModel.BakedBone> bones = new ObjectArrayList<>();
 
         // 树序：body(0) → head(1), leftArm(2), rightArm(3), leftLeg(4), rightLeg(5)

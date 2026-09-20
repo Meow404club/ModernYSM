@@ -1,6 +1,9 @@
 package com.elfmcys.yesstevemodel.client.animation.condition;
 
 import rip.ysm.compat.touhoulittlemaid.TouhouLittleMaidCompat;
+//? if >=1.21.1 && <21.2
+/*import com.elfmcys.yesstevemodel.platform.neoforge.slashblade.SlashBladeCompat;*/
+//? if <1.21.1 || >=21.2
 import rip.ysm.compat.slashblade.SlashBladeCompat;
 import com.elfmcys.yesstevemodel.util.ItemTagsConstants;
 import net.minecraft.world.InteractionHand;

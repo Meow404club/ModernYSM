@@ -2,6 +2,9 @@ package com.elfmcys.yesstevemodel.client.animation;
 
 import com.elfmcys.yesstevemodel.client.entity.CustomPlayerEntity;
 import rip.ysm.compat.parcool.ParcoolCompat;
+//? if >=1.21.1 && <21.2
+/*import com.elfmcys.yesstevemodel.platform.neoforge.slashblade.SlashBladeCompat;*/
+//? if <1.21.1 || >=21.2
 import rip.ysm.compat.slashblade.SlashBladeCompat;
 import rip.ysm.compat.gun.swarfare.SWarfareCompat;
 import rip.ysm.compat.gun.tacz.TacCompat;

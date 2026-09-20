@@ -1,9 +1,13 @@
 package com.elfmcys.yesstevemodel.geckolib3.geo.render.built;
 
+// 1.12.2 无 org.apache.logging.log4j 直引面与 YesSteveModel 主类（legacy-1222-l1-render
+// twin 源集提供 1.12.2 原生孪生，import 面同包同名兼容）；>=1.16.5 走共享主类
 import com.elfmcys.yesstevemodel.YesSteveModel;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.util.StringPool;
 import com.elfmcys.yesstevemodel.geckolib3.geo.animated.AnimatedGeoModel;
 import com.elfmcys.yesstevemodel.resource.models.GeometryDescription;
+// 1.12.2 固定管线无 BufferBuilder/VertexFormat（无 SIMD bake 面）——import 分代
+//? if >=1.17 {
 import com.mojang.blaze3d.vertex.BufferBuilder;
 // 26.3 VertexFormat 迁 renderpearl.api.vertex（/tmp/vanilla-263 实证）；本文件消费面仅
 // VertexFormat.Mode（<26.2）/PrimitiveTopology（>=26.2 类字面门槛，g_modeFieldID 缓存后不读）
@@ -11,6 +15,7 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.VertexFormat;
 //? if >=26.3
 /*import com.mojang.renderpearl.api.vertex.VertexFormat;*/
+//? }
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntLists;
@@ -22,6 +27,8 @@ import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
+// 1.12.2 固定管线 GpuRenderPath 禁用（legacy-1222-l1-render）
+//? if >=1.17
 import rip.ysm.gpu.GpuRenderPath;
 
 import java.io.InputStream;
@@ -133,6 +140,15 @@ public class GeoModel {
 
     public long gpuMeshHandle = 0;
 
+    // 1.12.2 固定管线无 BufferBuilder/SIMD bake 面（翻译层直绘烘焙几何，
+    // legacy-1222-l1-render）——initSIMD 整体分代为 no-op。raw 面恒 1.20.1 合法：
+    // <1.17 分支整体注释
+    //? if <1.17 {
+    // public static void initSIMD() {
+    //     // no-op: legacy 1.12.2 fixed-pipeline path has no BufferBuilder SIMD surface
+    // }
+    //? }
+    //? if >=1.17 {
     public static void initSIMD() {
         try {
             String bufferName = null;
@@ -230,7 +246,9 @@ public class GeoModel {
             YesSteveModel.LOGGER.error("[YSM] Failed to initialize SIMD mappings, fast vertex building will not work.", ex);
         }
     }
-
+    //? }
+    // 1.12.2 无 SIMD 面：native 声明随 >=1.17 门（无调用点，声明也分代避免空转）
+    //? if >=1.17 {
     private static native void nInitSIMD(
             Class<?> bufferBuilderClass,
             String bufferName,
@@ -240,6 +258,7 @@ public class GeoModel {
             String modeName,
             Class<?> vertexFormatClass
     );
+    //? }
 
     public static native long nInitModelCache(ByteBuffer buffer);
 
@@ -326,9 +345,12 @@ public class GeoModel {
             nDestroyModelCache(nativeModelHandle);
             nativeModelHandle = 0;
         }
+        // 1.12.2 固定管线无 GPU 路径（GpuRenderPath 禁用，legacy-1222-l1-render）
+        //? if >=1.17 {
         if (gpuMeshHandle != 0) {
             GpuRenderPath.disposeMesh(this);
         }
+        //? }
     }
 
     public GeoModel(GeoBone[] geoBones, String[][] strArr, boolean[] zArr, @NotNull GeometryDescription properties, boolean[] zArr2) {

@@ -104,6 +104,9 @@ val legacy122Include = listOf(
     "com/elfmcys/yesstevemodel/geckolib3/**",
     "com/elfmcys/yesstevemodel/molang/**",
     "com/elfmcys/yesstevemodel/client/model/**",
+    "com/elfmcys/yesstevemodel/client/texture/**",
+    "com/elfmcys/yesstevemodel/client/gui/custom/**",
+    "rip/ysm/imagestream/**",
     "com/elfmcys/yesstevemodel/resource/**",
     "com/elfmcys/yesstevemodel/model/**",
     "com/elfmcys/yesstevemodel/util/**",
@@ -130,7 +133,6 @@ val legacy122ExcludeMcDeps = listOf(
     "com/elfmcys/yesstevemodel/geckolib3/core/controller/controllers/FirstPersonArmAnimationController.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/controller/controllers/PlayerAnimationController.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/event/SoundKeyFrameExecutor.java",
-    "com/elfmcys/yesstevemodel/geckolib3/core/molang/MolangParser.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/molang/binding/ContextBinding.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/molang/builtin/QueryBinding.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/molang/builtin/math/Clamp.java",
@@ -209,8 +211,6 @@ val legacy122ExcludeMcDeps = listOf(
     "com/elfmcys/yesstevemodel/model/ServerModelManager.java",
     "com/elfmcys/yesstevemodel/model/format/ServerModelData.java",
     "com/elfmcys/yesstevemodel/model/format/UUIDComponentData.java",
-    "com/elfmcys/yesstevemodel/molang/parser/ast/StringExpression.java",
-    "com/elfmcys/yesstevemodel/molang/runtime/Function.java",
     "com/elfmcys/yesstevemodel/util/AnimatableCacheUtil.java",
     "com/elfmcys/yesstevemodel/util/CameraUtil.java",
     "com/elfmcys/yesstevemodel/util/ComponentUtil.java",
@@ -232,7 +232,6 @@ val legacy122ExcludeMcDeps = listOf(
     "rip/ysm/util/Rl.java",
     "rip/ysm/util/UseAction.java",
     "com/elfmcys/yesstevemodel/client/model/AnimationDataProvider.java",
-    "com/elfmcys/yesstevemodel/client/model/MainModelData.java",
     "com/elfmcys/yesstevemodel/client/model/ModelResourceBundle.java",
     "com/elfmcys/yesstevemodel/client/model/processor/ControllerFactory.java",
     "com/elfmcys/yesstevemodel/client/model/processor/ControllerSlotBinder.java",
@@ -251,12 +250,6 @@ val legacy122ExcludeMcDeps = listOf(
     "com/elfmcys/yesstevemodel/geckolib3/core/controller/controllers/VehicleAnimationController.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/event/InstructionKeyFrameExecutor.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/event/predicate/AnimationEvent.java",
-    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/AnimationPoint.java",
-    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/ConstantPoint.java",
-    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/KeyFramePoint.java",
-    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/TransitionPoint.java",
-    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/bone/CatmullRomKeyFrame.java",
-    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/bone/LinearKeyFrame.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/molang/binding/PrimaryBinding.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/molang/binding/variable/ControllerVariableBinding.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/molang/binding/variable/ForeignVariableBinding.java",
@@ -285,49 +278,63 @@ val legacy122ExcludeMcDeps = listOf(
     "com/elfmcys/yesstevemodel/geckolib3/core/molang/builtin/query/DebugOut.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/molang/funciton/ContextFunction.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/molang/storage/TempVariableStorage.java",
-    "com/elfmcys/yesstevemodel/geckolib3/core/molang/value/IValue.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/molang/value/MolangValue.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/ContextVariable.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/LambdaVariable.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/util/TransitionVector3f.java",
-    "com/elfmcys/yesstevemodel/geckolib3/file/ModelExtraResourcesFile.java",
-    "com/elfmcys/yesstevemodel/geckolib3/file/ProjectileModelFiles.java",
-    "com/elfmcys/yesstevemodel/geckolib3/file/VehicleModelFiles.java",
-    "com/elfmcys/yesstevemodel/geckolib3/geo/animated/AnimatedGeoBone.java",
-    "com/elfmcys/yesstevemodel/geckolib3/geo/animated/AnimatedGeoModel.java",
-    "com/elfmcys/yesstevemodel/geckolib3/geo/render/built/GeoModel.java",
-    "com/elfmcys/yesstevemodel/geckolib3/resource/GeckoLibCache.java",
     "com/elfmcys/yesstevemodel/geckolib3/util/json/JsonAnimationControllerUtils.java",
     "com/elfmcys/yesstevemodel/geckolib3/util/json/JsonKeyFrameUtils.java",
     "com/elfmcys/yesstevemodel/geckolib3/util/json/JsonMolangUtils.java",
     "com/elfmcys/yesstevemodel/geckolib3/util/json/JsonTextureUtils.java",
-    "com/elfmcys/yesstevemodel/model/format/ServerModelInfo.java",
-    "com/elfmcys/yesstevemodel/molang/parser/MolangParserImpl.java",
-    "com/elfmcys/yesstevemodel/molang/parser/ast/CallExpression.java",
-    "com/elfmcys/yesstevemodel/molang/parser/ast/ExpressionVisitor.java",
-    "com/elfmcys/yesstevemodel/molang/parser/ast/IdentifierExpression.java",
-    "com/elfmcys/yesstevemodel/molang/runtime/ExecutionContext.java",
-    "com/elfmcys/yesstevemodel/molang/runtime/ExpressionEvaluatorImpl.java",
-    "com/elfmcys/yesstevemodel/molang/runtime/binding/StandardBindings.java",
-    "com/elfmcys/yesstevemodel/molang/runtime/binding/ValueConversions.java",
-    "com/elfmcys/yesstevemodel/resource/YSMBinaryDeserializer.java",
-    "com/elfmcys/yesstevemodel/resource/YSMBinarySerializer.java",
-    "com/elfmcys/yesstevemodel/resource/YSMClientMapper.java",
-    "com/elfmcys/yesstevemodel/resource/YSMFolderDeserializer.java",
     "com/elfmcys/yesstevemodel/resource/models/ModelPackData.java",
     "com/elfmcys/yesstevemodel/resource/models/ModelProperties.java",
     "com/elfmcys/yesstevemodel/util/ResourceCleanupHelper.java",
     "rip/ysm/algorithms/YsmZstd.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/builder/Animation.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/builder/AnimationController.java",
-    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/BoneAnimationQueue.java",
-    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/bone/EasingType.java",
-    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/bone/RawBoneKeyFrame.java",
-    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/bone/Vector3v.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/manager/AnimationData.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/molang/storage/VariableStorage.java",
-    "com/elfmcys/yesstevemodel/geckolib3/core/molang/value/FloatValue.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/molang/value/RotationValue.java",
+    "com/elfmcys/yesstevemodel/client/texture/OuterFileTexture.java",
+    "com/elfmcys/yesstevemodel/YesSteveModel.java",
+    "com/elfmcys/yesstevemodel/util/log/ChatLogger.java",
+    "com/elfmcys/yesstevemodel/client/renderer/AnimationDebugOverlay.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/AnimationPoint.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/BoneAnimationQueue.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/ConstantPoint.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/KeyFramePoint.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/TransitionPoint.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/bone/CatmullRomKeyFrame.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/bone/LinearKeyFrame.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/bone/RawBoneKeyFrame.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/MolangParser.java",
+    "com/elfmcys/yesstevemodel/geckolib3/file/AnimationControllerFile.java",
+    "com/elfmcys/yesstevemodel/geckolib3/file/AnimationFile.java",
+    "com/elfmcys/yesstevemodel/geckolib3/file/ModelExtraResourcesFile.java",
+    "com/elfmcys/yesstevemodel/geckolib3/geo/animated/AnimatedGeoBone.java",
+    "com/elfmcys/yesstevemodel/geckolib3/geo/animated/AnimatedGeoModel.java",
+    "com/elfmcys/yesstevemodel/geckolib3/geo/render/built/GeoModel.java",
+    "com/elfmcys/yesstevemodel/geckolib3/resource/GeckoLibCache.java",
+    "com/elfmcys/yesstevemodel/model/format/ServerModelInfo.java",
+    "com/elfmcys/yesstevemodel/molang/parser/ast/StringExpression.java",
+    "com/elfmcys/yesstevemodel/molang/runtime/Function.java",
+    "com/elfmcys/yesstevemodel/resource/YSMBinaryDeserializer.java",
+    "com/elfmcys/yesstevemodel/resource/YSMBinarySerializer.java",
+    "com/elfmcys/yesstevemodel/resource/YSMClientMapper.java",
+    "com/elfmcys/yesstevemodel/resource/YSMFolderDeserializer.java",
+    "com/elfmcys/yesstevemodel/client/model/MainModelData.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/bone/BoneKeyFrameProcessor.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/bone/EasingType.java",
+    "com/elfmcys/yesstevemodel/geckolib3/file/ProjectileModelFiles.java",
+    "com/elfmcys/yesstevemodel/geckolib3/file/VehicleModelFiles.java",
+    "com/elfmcys/yesstevemodel/molang/parser/MolangParserImpl.java",
+    "com/elfmcys/yesstevemodel/molang/parser/ast/CallExpression.java",
+    "com/elfmcys/yesstevemodel/molang/parser/ast/ExpressionVisitor.java",
+    "com/elfmcys/yesstevemodel/molang/parser/ast/IdentifierExpression.java",
+    "com/elfmcys/yesstevemodel/molang/runtime/ExpressionEvaluatorImpl.java",
+    "com/elfmcys/yesstevemodel/molang/runtime/binding/StandardBindings.java",
+    "com/elfmcys/yesstevemodel/molang/runtime/binding/ValueConversions.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/value/IValue.java",
     "com/elfmcys/yesstevemodel/molang/parser/MolangParser.java",
     "com/elfmcys/yesstevemodel/molang/parser/ast/AssignableVariableExpression.java",
     "com/elfmcys/yesstevemodel/molang/parser/ast/BinaryExpression.java",
@@ -340,24 +347,77 @@ val legacy122ExcludeMcDeps = listOf(
     "com/elfmcys/yesstevemodel/molang/parser/ast/TernaryConditionalExpression.java",
     "com/elfmcys/yesstevemodel/molang/parser/ast/UnaryExpression.java",
     "com/elfmcys/yesstevemodel/molang/parser/ast/VariableExpression.java",
-    "com/elfmcys/yesstevemodel/molang/runtime/AssignableVariable.java",
     "com/elfmcys/yesstevemodel/molang/runtime/ExpressionEvaluator.java",
     "com/elfmcys/yesstevemodel/molang/runtime/Int2FloatOpenHashMapStruct.java",
-    "com/elfmcys/yesstevemodel/molang/runtime/Variable.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/bone/BoneKeyFrame.java",
-    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/bone/BoneKeyFrameProcessor.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/bone/TransitionKeyFrame.java",
-    "com/elfmcys/yesstevemodel/geckolib3/file/AnimationControllerFile.java",
-    "com/elfmcys/yesstevemodel/geckolib3/file/AnimationFile.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/bone/Vector3v.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/value/FloatValue.java",
     "com/elfmcys/yesstevemodel/molang/MolangEngine.java",
     "com/elfmcys/yesstevemodel/molang/MolangEngineImpl.java",
+    "com/elfmcys/yesstevemodel/molang/runtime/ExecutionContext.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/BoneAnimation.java",
+    "com/elfmcys/yesstevemodel/molang/runtime/AssignableVariable.java",
+    "com/elfmcys/yesstevemodel/molang/runtime/Variable.java",
+    "com/elfmcys/yesstevemodel/client/texture/ITextureMap.java",
 )
+// ===== twin 源集（legacy-1222-l1-render 分代孪生）=====
+// 共享 YesSteveModel/ChatLogger/AnimationDebugOverlay/OuterFileTexture/ShadersTextureType
+// 绑定现代 MC 面（Component/AbstractTexture/net.minecraft.resources），1.12.2 无对应。
+// 孪生类（1.12.2 原生面，同包同名）放 versions/1.12.2-forge/src/twin/java 独立源集：
+// main 源集按相对路径排除共享同名文件时不会误杀 twin（exclude 只作用于 main 自己的
+// srcDirs），twin classes 挂 main 编译/运行类路径——包结构对消费点透明。
+sourceSets {
+    create("twin") {
+        java {
+            srcDir(file("src/twin/java"))
+        }
+    }
+}
+tasks.named<JavaCompile>("compileTwinJava") {
+    sourceCompatibility = "8"
+    targetCompatibility = "8"
+}
+// twin 需要 RFB patched MC 编译面（AbstractTexture/Minecraft/log4j 与 main 同源）：
+// main.compileClasspath 摘除 twin.output（FileCollection 减法）断
+// compileTwinJava↔twinClasses↔main 环，其余面（RFB patched MC+依赖）全继承
+afterEvaluate {
+    tasks.named<JavaCompile>("compileTwinJava") {
+        classpath = sourceSets.main.get().compileClasspath - sourceSets.getByName("twin").output
+    }
+}
 afterEvaluate {
     sourceSets.main {
         java {
+            srcDir(sourceSets.getByName("twin").output)
+        }
+    }
+}
+// main 编译/运行不挂 twin.output（会经 compileClasspath 传染 twinClasses 依赖，
+// 与 twin 继承 main 编译面成环）——twin classes 由 jar 打包 + 各消费任务显式并
+tasks.named<JavaCompile>("compileJava") {
+    classpath += sourceSets.getByName("twin").output
+}
+tasks.named<Jar>("jar") {
+    from(sourceSets.getByName("twin").output)
+}
+// twin 需要 RFB patched MC 编译面（AbstractTexture/Minecraft/log4j 与 main 同源）：
+// twinCompileClasspath 继承 implementation/compileOnly 外部配置（不含任何 sourceSet
+// output，无环）；joml/fastutil 等已随 implementation 面
+afterEvaluate {
+    configurations.getByName("twinCompileClasspath").extendsFrom(
+        configurations.getByName("implementation"),
+        configurations.getByName("compileOnly"),
+    )
+}
+
+afterEvaluate {
+    sourceSets.main {
+        java {
+            // 共享面必须走 stonecutter 展开树（//? 条件剥离在生成步）；raw src/main/java
+            // 的条件块两侧代码都在，直接编译必炸（pass26 实证 GeoModel 双 initSIMD）
             setSrcDirs(listOf(
-                rootProject.file("src/main/java"),
+                file("build/generated/stonecutter/main/java"),
                 file("src/main/java"),
             ))
             include(legacy122Include)

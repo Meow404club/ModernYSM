@@ -134,6 +134,13 @@ dependencies {
     if (fpm219) {
         compileOnly(fileTree(rootProject.file(fpm219Libs)))
     }
+    // 1.21.1 线 Curios api 编译面（compat-curios-1211 卡）：官方
+    // curios-neoforge-9.5.1+1.21.1-api.jar vendor（Modrinth vvuO3ImH/yohfFbgD 实拉），
+    // 机制同上 fpm261/fpm2128 段——仅 compileOnly 不进运行时，独立子目录
+    // libs/neoforge-1211 避免误吞 libs/ 根的 forge 代 jar
+    if (stonecutter.current.version == "1.21.1") {
+        compileOnly(fileTree(rootProject.file("libs/neoforge-1211")))
+    }
 }
 
 neoForge {
@@ -328,6 +335,17 @@ sourceSets.main {
             srcDir(rootProject.file("versions/1.16.5-forge/src/shim/rip/ysm/compat"))
         } else if (stonecutter.eval(stonecutter.current.version, "<21.11")) {
             srcDir(rootProject.file("src/neoforge-1211/shim/rip/ysm/compat"))
+            // 1.21.1 线 Curios 真 compat（compat-curios-1211 卡，fpm2128 先例）：
+            // shim 的 curios/CuriosCompat.java（恒 false）对本线剔除，换
+            // src/neoforge-1211-curios 异包孪生 platform/neoforge/curios（exclude
+            // 按相对路径双杀同名 RAW 文件，孪生必须异包——261/2128 卡头注实证；
+            // 消费面 4 文件 import 走 stonecutter 行条件交换 FirstPersonModHide 缝先例；
+            // 仅 1.21.1——21.2~21.10 共用 1211 shim 树，无 curios 真适配不剔，
+            // mod-absent 语义保持）
+            if (stonecutter.current.version == "1.21.1") {
+                exclude("curios/CuriosCompat.java")
+                srcDir(rootProject.file("src/neoforge-1211-curios/java"))
+            }
         } else if (stonecutter.eval(stonecutter.current.version, "<26.2")) {
             srcDir(rootProject.file("src/neoforge-2111/shim/rip/ysm/compat"))
         } else if (stonecutter.eval(stonecutter.current.version, "<26.3")) {

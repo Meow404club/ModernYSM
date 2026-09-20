@@ -5,6 +5,9 @@ import rip.ysm.compat.touhoulittlemaid.TouhouLittleMaidCompat;
 import com.elfmcys.yesstevemodel.util.accessors.ProjectileStateAccessor;
 import com.elfmcys.yesstevemodel.client.animation.molang.functions.ysm.*;
 import rip.ysm.compat.cosmeticarmorreworked.CosmeticArmorHelper;
+//? if >=1.21.1 && <21.2
+/*import com.elfmcys.yesstevemodel.platform.neoforge.curios.CuriosCompat;*/
+//? if <1.21.1 || >=21.2
 import rip.ysm.compat.curios.CuriosCompat;
 import com.elfmcys.yesstevemodel.client.renderer.ModelPreviewRenderer;
 import com.elfmcys.yesstevemodel.geckolib3.core.AnimatableEntity;

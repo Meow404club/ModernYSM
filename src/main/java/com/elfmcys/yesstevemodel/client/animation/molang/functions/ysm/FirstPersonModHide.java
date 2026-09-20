@@ -1,8 +1,8 @@
 package com.elfmcys.yesstevemodel.client.animation.molang.functions.ysm;
 
-//? if (>=21.2 && <21.9) || (>=26.1 && <26.2)
+//? if (>=21.2 && <26.2)
 /*import com.elfmcys.yesstevemodel.platform.neoforge.firstperson.FirstPersonCompat;*/
-//? if <21.2 || (>=21.9 && <26.1) || >=26.2
+//? if <21.2 || >=26.2
 import rip.ysm.compat.firstperson.FirstPersonCompat;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.context.IContext;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.variable.IValueEvaluator;

@@ -61,9 +61,14 @@ repositories {
 val lwjgl3ifyVersion = "d6af8e7"
 
 // lwjgl3ify forgePatches：运行面（先例 forge122:118-126 同款，implementation 仅 :dev）
+val forgePatchDeps by configurations.creating {
+    isCanBeResolved = true
+    isCanBeConsumed = false
+}
+
 dependencies {
     implementation("org.taumc:lwjgl3ify:${lwjgl3ifyVersion}:dev") { isTransitive = false }
-    runtimeOnly("org.taumc:lwjgl3ify:${lwjgl3ifyVersion}:forgePatches") { isTransitive = false }
+    forgePatchDeps("org.taumc:lwjgl3ify:${lwjgl3ifyVersion}:forgePatches") { isTransitive = false }
     // mixinbooter（先例 :114；stub 阶段只进 runtime 面，L1 写 mixin 类时再挂配置）
     implementation("zone.rong:mixinbooter:10.5")
 }
@@ -92,6 +97,36 @@ afterEvaluate {
         resources.setSrcDirs(listOf("src/main/resources"))
     }
 }
+
+// 运行面：lwjgl3ify 现代化 runtime（用户裁决 2026-09-20）。RFB 默认 runClient 在 Java21 下
+// launchwrapper 直挂 main（ClassCastException AppClassLoader→URLClassLoader 实测
+// 2026-09-20）——先例 runRFBClient（forge122:151-172）同款自定义 RunMinecraftTask：
+// forgePatches 显式排 classpath 前列（内含打补丁的 launchwrapper，绕开 JEP 违规 cast），
+// bouncer 走 RetroFuturaBootstrap。
+tasks.register<com.gtnewhorizons.retrofuturagradle.minecraft.RunMinecraftTask>(
+    "runRFBClient", com.gtnewhorizons.retrofuturagradle.util.Distribution.CLIENT
+).configure {
+    val mcTasks = project.extensions.getByType<com.gtnewhorizons.retrofuturagradle.minecraft.MinecraftTasks>()
+    classpath(forgePatchDeps)
+    classpath(mcpTasks.taskPackageMcLauncher)
+    classpath(mcpTasks.taskPackagePatchedMc)
+    classpath(sourceSets.main.get().compileClasspath)
+    classpath(tasks.named("jar"))
+    setup(project)
+    dependsOn(mcTasks.taskDownloadVanillaAssets, mcpTasks.taskPackagePatchedMc, "jar")
+    mainClass.set("GradleStart")
+    username.set(minecraft.username)
+    userUUID.set(minecraft.userUUID)
+    // RetroFuturaBootstrap Main.main:140 强制要求系统类加载器替换（实测报错原文点名）
+    extraJvmArgs.add("-Djava.system.class.loader=com.gtnewhorizons.retrofuturabootstrap.RfbSystemClassLoader")
+    systemProperty("gradlestart.bouncerClient", "com.gtnewhorizons.retrofuturabootstrap.Main")
+    systemProperty("fml.coreMods.load", "zone.rong.mixinbooter.MixinBooterPlugin")
+    javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
+}
+
+// RFB 默认 runClient/runServer 不可用（launchwrapper URLClassLoader cast，实测）；
+// server 同理需 forgePatches 前置——POC 验收走 runRFBClient。
+tasks.named("runClient") { enabled = false }
 
 tasks.processResources.configure {
     filesMatching("mcmod.info") {

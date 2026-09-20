@@ -416,6 +416,8 @@ tasks.register<com.gtnewhorizons.retrofuturagradle.minecraft.RunMinecraftTask>(
     userUUID.set(minecraft.userUUID)
     // RetroFuturaBootstrap Main.main:140 强制要求系统类加载器替换（实测报错原文点名）
     extraJvmArgs.add("-Djava.system.class.loader=com.gtnewhorizons.retrofuturabootstrap.RfbSystemClassLoader")
+    // L1 验收动画打点原文行（LegacyModelTranslator/LegacyAnimationDriver printf）
+    extraJvmArgs.add("-Dysm.legacy122.debug=true")
     systemProperty("gradlestart.bouncerClient", "com.gtnewhorizons.retrofuturabootstrap.Main")
     systemProperty("fml.coreMods.load", "zone.rong.mixinbooter.MixinBooterPlugin")
     javaLauncher.set(javaToolchains.launcherFor(java.toolchain))

@@ -48,6 +48,9 @@ public abstract class GeoEntity<T extends Entity> extends AnimatableEntity<T> {
     @Nullable
     private Future<AnimationEvent<?>> modelFuture;
 
+    /** 最近一次 async 提交的 partialTick（同步降级重算用，仅渲染线程读写） */
+    private float lastSubmittedPartialTick;
+
     @Nullable
     public abstract GeoEntity.ModelWrapper buildRenderShape(ModelAssembly modelAssembly, boolean isDefault);
 
@@ -214,6 +217,17 @@ public abstract class GeoEntity<T extends Entity> extends AnimatableEntity<T> {
     }
 
     public void submitAsyncUpdate(float partialTick) {
+        // 防 in-flight 覆写（GeoEntity async NPE 根因链①）：EntityRenderCache.tick 每帧调用本方法，
+        // 但 awaitAsyncResult 只在实体渲染帧（processAnimation）/EntityRenderCache.clear 时消费
+        // modelFuture——实体被视锥剔除/第一人称本体不渲染的帧里 modelFuture 悬空，下一帧无条件
+        // 覆写引用会让两个 YSM Worker 并发进入同一 AnimationProcessor：tickAnimation:127 置
+        // currentEvaluator、:139 复位 null，另一 worker 的 applyTransform 读到 null evaluator
+        // 即 NPE（栈内 GeoEntity.lambda$submitAsyncUpdate$0 = GeoEntity.java:220 帧，dev 存量
+        // 非 FPM 引入）。in-flight 时跳过本帧提交（上一帧结果仍会被渲染帧消费，动画不停摆）。
+        if (this.modelFuture != null) {
+            return;
+        }
+        this.lastSubmittedPartialTick = partialTick;
         UnsafeUtil.storeFence();
         this.modelFuture = YSMThreadPool.submitCallable(() -> {
             try {
@@ -225,6 +239,16 @@ public abstract class GeoEntity<T extends Entity> extends AnimatableEntity<T> {
                 throw th;
             }
         });
+    }
+
+    /**
+     * async 求值失败后的同步降级（渲染线程直调）：processAnimationImpl(false) 走同步路径
+     * 重算本帧动画，异常继续上抛由调用方 null 守卫兜底——保证失败帧后动画状态机仍前进而
+     * 非停摆（wasAnimationActiveLastTick/snapshot 标志位在同步路径上单线程自洽）。
+     */
+    @Nullable
+    private AnimationEvent<?> fallbackSyncEvaluate() {
+        return super.processAnimationImpl(this.lastSubmittedPartialTick, false);
     }
 
     @Override
@@ -254,8 +278,14 @@ public abstract class GeoEntity<T extends Entity> extends AnimatableEntity<T> {
                 event = this.modelFuture.get();
                 UnsafeUtil.loadFence();
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             } catch (Throwable th) {
+                // 根因链②（GeoEntity async evaluator NPE）：原实现吞 Throwable 后返回 null，
+                // 动画异常（含并发 evaluator NPE）只刷栈零痕迹、 bones snapshot 标志位被并发
+                // 破坏后动画永久停摆。降级=同步重算一次动画（渲染线程上、无并发），结果仍
+                // 作为本帧 event 供消费方使用——异常帧不吞、动画可自愈，调用方 null 守卫兜底。
                 th.printStackTrace();
+                event = this.fallbackSyncEvaluate();
             }
             this.modelFuture = null;
             return event;

@@ -9,11 +9,10 @@ import com.elfmcys.yesstevemodel.geckolib3.core.molang.value.MolangValue;
 import com.elfmcys.yesstevemodel.molang.MolangEngine;
 import com.elfmcys.yesstevemodel.molang.parser.ParseException;
 import com.elfmcys.yesstevemodel.util.log.ChatLogger;
-//? if <1.19 {
-// import net.minecraft.network.chat.TranslatableComponent;
-//? } else {
-//? }
+// <1.19 无 network.chat 包：解析错误打点走 LOGGER（twin ChatLogger 1.12.2 面=L2 起接入）
+//? if >=1.19 {
 import net.minecraft.network.chat.Component;
+//? }
 
 import java.util.Map;
 
@@ -35,8 +34,7 @@ public class MolangParser {
         } catch (Exception e) {
             if (AnimationDebugOverlay.isDebugActive()) {
                 YesSteveModel.LOGGER.error("Failed to parse molang expression: {}\n{}", e.getMessage(), molangExpression);
-                //? if <1.19
-                // ChatLogger.INSTANCE.logComponent(new TranslatableComponent("error.yes_steve_model.parse_molang_exp").append(e.getMessage()).append("\n----------------------\n").append(molangExpression.replace("\r\n", "\n").replace("\r", "\n")).append("\n----------------------"));
+                // <1.19 无 network.chat 包：错误只进日志（chat 打点 1.19+ 才有）
                 //? if >=1.19
                 ChatLogger.INSTANCE.logComponent(Component.translatable("error.yes_steve_model.parse_molang_exp").append(e.getMessage()).append("\n----------------------\n").append(molangExpression.replace("\r\n", "\n").replace("\r", "\n")).append("\n----------------------"));
             } else {

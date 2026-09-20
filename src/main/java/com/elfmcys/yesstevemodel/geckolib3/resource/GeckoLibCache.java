@@ -1,16 +1,23 @@
 package com.elfmcys.yesstevemodel.geckolib3.resource;
 
+import com.elfmcys.yesstevemodel.geckolib3.core.molang.MolangParser;
+import com.elfmcys.yesstevemodel.geckolib3.core.molang.value.IValue;
+import com.elfmcys.yesstevemodel.molang.parser.ParseException;
+// 1.12.2：绑定类深绑 1.17+ 实体/compat 面（YSMBinding 627 行/CtrlBinding 231 行/
+// QueryBinding 12 个 MC import），<1.14 走精简注册面（legacy-1222-l2-full）
+//? if <1.14 {
+import com.elfmcys.yesstevemodel.geckolib3.core.molang.builtin.MathBinding;
+//? }
+//? if >=1.14 {
 import com.elfmcys.yesstevemodel.client.animation.molang.TLMBinding;
 import com.elfmcys.yesstevemodel.client.animation.molang.YSMBinding;
 import com.elfmcys.yesstevemodel.client.animation.molang.ArgsVariable;
-import com.elfmcys.yesstevemodel.geckolib3.core.molang.MolangParser;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.builtin.MathBinding;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.builtin.QueryBinding;
-import com.elfmcys.yesstevemodel.geckolib3.core.molang.value.IValue;
 import com.elfmcys.yesstevemodel.client.animation.molang.CtrlBinding;
 import com.elfmcys.yesstevemodel.client.animation.molang.FnBinding;
-import com.elfmcys.yesstevemodel.molang.parser.ParseException;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
+//? }
 
 import java.util.HashMap;
 import java.util.Map;
@@ -50,6 +57,14 @@ public class GeckoLibCache {
     }
 
     private static MolangParser createMolangParser() {
+        //? if <1.14 {
+        if (EXTRA_BINDING.isEmpty()) {
+            EXTRA_BINDING.put("math", MathBinding.INSTANCE);
+        }
+        HashMap<String, Object> map = new HashMap<>(EXTRA_BINDING);
+        return new MolangParser(map);
+        //? }
+        //? if >=1.14 {
         if (EXTRA_BINDING.isEmpty()) {
             try {
                 EXTRA_BINDING.put("ysm", YSMBinding.INSTANCE.get());
@@ -60,16 +75,18 @@ public class GeckoLibCache {
                 throw new RuntimeException(e);
             }
         }
-        HashMap<String, Object> map = new HashMap<>(EXTRA_BINDING);
-        map.put("fn", new FnBinding());
-        return new MolangParser(map);
+        HashMap<String, Object> map2 = new HashMap<>(EXTRA_BINDING);
+        map2.put("fn", new FnBinding());
+        return new MolangParser(map2);
+        //? }
     }
 
     public static Map<String, Object> getGlobalBindings() {
         if (bindings.isEmpty()) {
             bindings.putAll(EXTRA_BINDING);
-            bindings.put("math", MathBinding.INSTANCE);
+            //? if >=1.14 {
             bindings.put("q", QueryBinding.INSTANCE);
+            //? }
         }
         return bindings;
     }

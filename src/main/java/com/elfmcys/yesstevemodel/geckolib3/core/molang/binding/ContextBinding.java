@@ -1,5 +1,9 @@
 package com.elfmcys.yesstevemodel.geckolib3.core.molang.binding;
 
+// 1.12.2 无 mojmap 面（mojmap 1.14.4 起）：实体 typed 变体族与 MC import 全进 >=1.14
+// 门，<1.14 消费面（GeckoLibCache 注册/PrimaryBinding）只用 Object 槽骨架
+//（legacy-1222-l2-full，StringExpression 同款门先例）
+//? if >=1.14 {
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.context.IContext;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.variable.IValueEvaluator;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.variable.LambdaVariable;
@@ -9,10 +13,12 @@ import com.elfmcys.yesstevemodel.geckolib3.core.molang.variable.block.BlockVaria
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.variable.entity.*;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.variable.item.ItemStackVariable;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.variable.item.ItemVariable;
+//? }
 import com.elfmcys.yesstevemodel.molang.parser.ast.StringExpression;
 import com.elfmcys.yesstevemodel.molang.runtime.Function;
 import com.elfmcys.yesstevemodel.molang.runtime.binding.ObjectBinding;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
+//? if >=1.14 {
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.Entity;
@@ -32,6 +38,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+//? }
 
 import java.util.Set;
 
@@ -66,6 +73,9 @@ public class ContextBinding implements ObjectBinding {
         }
     }
 
+    // <1.14 由 Object 版 var() 收敛：typed 变体族是 1.14+ 实体语义（消费面在
+    // >=1.14 门内），1.12.2 走 Object 槽位（StringExpression 同款门先例）
+    //? if >=1.14 {
     public void var(String name, IValueEvaluator<?, IContext<Object>> evaluator) {
         this.bindings.put(name, new LambdaVariable<>(evaluator));
     }
@@ -137,4 +147,5 @@ public class ContextBinding implements ObjectBinding {
     public void blockBehaviourVar(String name, IValueEvaluator<?, IContext<BlockBehaviour>> evaluator) {
         this.bindings.put(name, new BlockBehaviorVariable(evaluator));
     }
+//? }
 }

@@ -19,16 +19,28 @@ import java.util.Map;
 public class OuterFileTexture extends net.minecraft.client.renderer.texture.AbstractTexture implements ITextureMap {
     private final BufferedImage image;
 
+    // L2 解析链：共享 YSMClientMapper.toTexture 的 byte[] 单参形态（内嵌 png/bmp 面）。
+    // 1.12.2 无 NativeImage 解码面——字节暂存，解码推迟到 getImage() 消费侧
+    @Nullable
+    private final byte[] encodedData;
+
     private Map<ShadersTextureType, OuterFileTexture> suffixTextures = java.util.Collections.emptyMap();
 
     public OuterFileTexture(BufferedImage image) {
         this.image = image;
+        this.encodedData = null;
+    }
+
+    public OuterFileTexture(byte[] data) {
+        this.image = null;
+        this.encodedData = data;
     }
 
     public OuterFileTexture(byte[] data, int imageFormat, int width, int height, BufferedImage decoded) {
         // byte[] 形与共享版构造签名兼容（装载侧 YSMClientMapper.toTexture 传已解码图）；
         // 1.12.2 无 NativeImage 解码面，解码由 ImageStream 侧完成
         this.image = decoded;
+        this.encodedData = null;
     }
 
     @Override
@@ -49,7 +61,16 @@ public class OuterFileTexture extends net.minecraft.client.renderer.texture.Abst
     }
 
     public BufferedImage getImage() {
-        return this.image;
+        BufferedImage img = this.image;
+        if (img == null && this.encodedData != null) {
+            // 惰性解码：内嵌 png/bmp 字节（javax.imageio 兼容 1.12.2 Java8 面）
+            try {
+                return javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(this.encodedData));
+            } catch (java.io.IOException e) {
+                return null;
+            }
+        }
+        return img;
     }
 
     public void setSuffixTextures(Map<ShadersTextureType, OuterFileTexture> map) {

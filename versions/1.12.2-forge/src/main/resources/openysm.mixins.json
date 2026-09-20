@@ -1,0 +1,9 @@
+{
+  "required": true,
+  "package": "rip.ysm.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "openysm.refmap.json",
+  "mixins": [],
+  "client": [],
+  "injectors": { "defaultRequire": 1 }
+}

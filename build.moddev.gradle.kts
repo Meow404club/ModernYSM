@@ -346,6 +346,17 @@ sourceSets.main {
                 exclude("curios/CuriosCompat.java")
                 srcDir(rootProject.file("src/neoforge-1211-curios/java"))
             }
+            // 1.21.1 线 SlashBlade 真 compat（compat-slashblade-1211 卡，curios 卡
+            // de67a25 同构先例）：shim 的 slashblade/ 两文件（恒 false）对本线剔除，换
+            // src/neoforge-1211-slashblade 异包孪生 platform/neoforge/slashblade（5 文件，
+            // 2.x DataComponents/RegistryBuilder 适形+Unsafe 分支裁剪）；消费面 5 文件
+            // import 走 stonecutter 行条件交换。仅 1.21.1——21.2~21.10 共用 1211 shim
+            // 树，无 slashblade 真适配不剔，mod-absent 语义保持。
+            if (stonecutter.current.version == "1.21.1") {
+                exclude("slashblade/SlashBladeCompat.java")
+                exclude("slashblade/SlashBladeRenderer.java")
+                srcDir(rootProject.file("src/neoforge-1211-slashblade/java"))
+            }
         } else if (stonecutter.eval(stonecutter.current.version, "<26.2")) {
             srcDir(rootProject.file("src/neoforge-2111/shim/rip/ysm/compat"))
         } else if (stonecutter.eval(stonecutter.current.version, "<26.3")) {

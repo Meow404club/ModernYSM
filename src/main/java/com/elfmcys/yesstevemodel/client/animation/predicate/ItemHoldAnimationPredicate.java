@@ -3,6 +3,9 @@ package com.elfmcys.yesstevemodel.client.animation.predicate;
 import com.elfmcys.yesstevemodel.client.animation.IAnimationPredicate;
 import com.elfmcys.yesstevemodel.client.animation.condition.ConditionManager;
 import rip.ysm.compat.ironsspellbooks.SpellbooksCompat;
+//? if >=1.21.1 && <21.2
+/*import com.elfmcys.yesstevemodel.platform.neoforge.slashblade.SlashBladeCompat;*/
+//? if <1.21.1 || >=21.2
 import rip.ysm.compat.slashblade.SlashBladeCompat;
 import com.elfmcys.yesstevemodel.client.entity.LivingAnimatable;
 import com.elfmcys.yesstevemodel.geckolib3.core.builder.ILoopType;

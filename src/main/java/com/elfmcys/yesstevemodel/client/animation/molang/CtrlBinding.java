@@ -14,6 +14,9 @@ import rip.ysm.compat.gun.tacz.TacCompat;
 import rip.ysm.compat.bettercombat.BetterCombatCompat;
 import rip.ysm.compat.carryon.CarryOnCompat;
 import rip.ysm.compat.parcool.ParcoolCompat;
+//? if >=1.21.1 && <21.2
+/*import com.elfmcys.yesstevemodel.platform.neoforge.slashblade.SlashBladeCompat;*/
+//? if <1.21.1 || >=21.2
 import rip.ysm.compat.slashblade.SlashBladeCompat;
 import rip.ysm.compat.swem.SWEMCompat;
 import com.elfmcys.yesstevemodel.geckolib3.core.AnimatableEntity;

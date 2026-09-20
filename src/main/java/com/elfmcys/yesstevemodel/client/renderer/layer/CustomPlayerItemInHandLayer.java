@@ -1,6 +1,12 @@
 package com.elfmcys.yesstevemodel.client.renderer.layer;
 
+//? if >=1.21.1 && <21.2
+/*import com.elfmcys.yesstevemodel.platform.neoforge.slashblade.SlashBladeRenderer;*/
+//? if <1.21.1 || >=21.2
 import rip.ysm.compat.slashblade.SlashBladeRenderer;
+//? if >=1.21.1 && <21.2
+/*import com.elfmcys.yesstevemodel.platform.neoforge.slashblade.SlashBladeCompat;*/
+//? if <1.21.1 || >=21.2
 import rip.ysm.compat.slashblade.SlashBladeCompat;
 import rip.ysm.compat.gun.swarfare.SWarfareCompat;
 import com.elfmcys.yesstevemodel.client.entity.CustomPlayerEntity;

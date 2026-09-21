@@ -36,20 +36,23 @@ import java.util.zip.ZipFile;
  */
 public final class LegacyModelLoader {
 
-    private static final String BUILTIN_PATH = "assets/yes_steve_model/builtin/default";
+    private static final String BUILTIN_PREFIX = "assets/yes_steve_model/builtin/";
 
     private LegacyModelLoader() {
     }
 
     /** 装载真实模型；成功 true（state 已喂真实 bundle），失败 false（fallback 生效）。 */
     public static boolean loadDefaultModel() {
-        Path builtDir = extractBuiltinDefault();
+        // 批④配置面：config/openysm-legacy122.cfg model.id 行切换 builtin 目录
+        String modelId = rip.ysm.LegacyConfig.modelId();
+        String builtinPath = BUILTIN_PREFIX + modelId;
+        Path builtDir = extractBuiltinDefault(modelId, builtinPath);
         if (builtDir == null) {
             return false;
         }
         try (YSMFolderDeserializer deserializer = new YSMFolderDeserializer(builtDir)) {
             RawYsmModel raw = deserializer.deserialize();
-            ClientModelInfo bundle = YSMClientMapper.buildParsedBundle(raw, "default");
+            ClientModelInfo bundle = YSMClientMapper.buildParsedBundle(raw, modelId);
             MainModelData data = bundle.getMainModelData();
             if (data == null || data.getModels().isEmpty()) {
                 System.out.println("[ysm-legacy122] parsed bundle has no main model, fallback to test model");
@@ -83,11 +86,11 @@ public final class LegacyModelLoader {
         return map.values().iterator().next();
     }
 
-    /** 内置 default 解压到 config/yes_steve_model/built/default（幂等：ysm.json 在即复用）。 */
-    private static Path extractBuiltinDefault() {
+    /** builtin 模型解压到 config/yes_steve_model/built/<id>（幂等：ysm.json 在即复用）。 */
+    private static Path extractBuiltinDefault(String modelId, String builtinPath) {
         try {
             File gameDir = Minecraft.getMinecraft().gameDir;
-            Path built = new File(gameDir, "config/yes_steve_model/built/default").toPath();
+            Path built = new File(gameDir, "config/yes_steve_model/built/" + modelId).toPath();
             if (Files.isDirectory(built) && Files.exists(built.resolve("ysm.json"))) {
                 return built;
             }
@@ -104,9 +107,9 @@ public final class LegacyModelLoader {
             Files.createDirectories(built);
             // classpath 物理定位（dev=文件系统目录 / 生产=jar 条目，两态覆盖）
             ClassLoader cl = LegacyModelLoader.class.getClassLoader();
-            URL url = cl.getResource(BUILTIN_PATH);
+            URL url = cl.getResource(builtinPath);
             if (url == null) {
-                System.out.println("[ysm-legacy122] builtin default not on classpath: " + BUILTIN_PATH);
+                System.out.println("[ysm-legacy122] builtin model not on classpath: " + builtinPath);
                 return null;
             }
             URI uri = url.toURI();

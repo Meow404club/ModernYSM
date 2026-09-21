@@ -123,6 +123,7 @@ val legacy122Include = listOf(
     "rip/ysm/util/**",
     "rip/ysm/legacy122/**",
     "rip/ysm/OpenYSMStub.java",
+    "rip/ysm/LegacyConfig.java",
     "net/sourceforge/pinyin4j/**",
 )
 // 共享源 1.12.2 无 mojmap 可言（Mojang 映射 1.14.4 起才有，RFB 只出 MCP/SRG 面），

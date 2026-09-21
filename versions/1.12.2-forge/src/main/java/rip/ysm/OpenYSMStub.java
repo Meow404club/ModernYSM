@@ -9,6 +9,7 @@ import rip.ysm.legacy122.LegacyTestModel;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
 /**
  * 1.12.2 线入口（legacy-1222-l1-render，L2 legacy-1222-l2-full 接真实装载）。
@@ -20,6 +21,11 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
  */
 @Mod(modid = "openysm", name = "OpenYSM", version = "2.6.6.6")
 public class OpenYSMStub {
+
+    @Mod.EventHandler
+    public void preInit(FMLPreInitializationEvent event) {
+        LegacyConfig.load(event.getModConfigurationDirectory());
+    }
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {

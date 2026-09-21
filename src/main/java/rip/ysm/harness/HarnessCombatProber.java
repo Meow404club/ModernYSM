@@ -165,8 +165,13 @@ public final class HarnessCombatProber {
             Object state = stateOpt.get();
             stateClass = state.getClass();
             openReflectively(stateClass);
-            java.util.Optional<?> modelOpt = (java.util.Optional<?>) stateClass
-                    .getMethod("getModel").invoke(state);
+            // ComponentBackedState 非 public 类：JPMS 跨模块 invoke 其成员必须先
+            // setAccessible(true)（审查打回实证：漏包 accessible() 即 IllegalAccess，
+            // 并非"setAccessible 抑制不了"）
+            java.util.Optional<?> modelOpt = (java.util.Optional<?>) accessible(stateClass
+                    .getMethod("getModel")).invoke(state);
+            System.out.println("[HarnessCombatProber] state.getModel() present=" + modelOpt.isPresent()
+                    + (modelOpt.isPresent() ? " model=" + modelOpt.get() : ""));
             Class<?> mgrClass = Class.forName(
                     "mods.flammpfeil.slashblade.client.renderer.model.BladeModelManager");
             openReflectively(mgrClass);

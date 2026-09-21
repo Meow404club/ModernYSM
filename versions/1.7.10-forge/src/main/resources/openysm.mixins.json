@@ -3,5 +3,6 @@
   "package": "rip.ysm.legacy1710.mixin",
   "compatibilityLevel": "JAVA_8",
   "refmap": "openysm.refmap.json",
-  "mixins": []
+  "mixins": [],
+  "client": ["RendererLivingEntityMixin"],
 }

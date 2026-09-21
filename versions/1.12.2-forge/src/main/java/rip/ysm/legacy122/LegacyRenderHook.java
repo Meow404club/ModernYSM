@@ -39,8 +39,19 @@ public final class LegacyRenderHook {
         event.setCanceled(true);
         net.minecraft.client.renderer.entity.RenderManager rm = net.minecraft.client.Minecraft
                 .getMinecraft().getRenderManager();
-        // 1.12.2 RenderManager 纹理入口是 public 字段 renderEngine（RenderManager.java:123）
-        rm.renderEngine.bindTexture(LegacyModelState.texture());
+        // L2 纹理面：真实 OuterFileTexture 优先，null 回退 L1 占位皮肤
+        //（1.12.2 RenderManager 纹理入口是 public 字段 renderEngine，RenderManager.java:123）
+        if (LegacyModelState.realTexture() != null) {
+            // 解析态纹理（byte[] 构造）不走 TextureManager 装载面——首次绑定前
+            // 就地解码+上传（OuterFileTexture.ensureUploaded，DynamicTexture 同款 GL 路径）
+            LegacyModelState.realTexture().ensureUploaded();
+            // 1.12.2 TextureManager 只有 bindTexture(ResourceLocation)（TextureManager.java:32
+            // MCP 实证）——AbstractTexture 直挂 glTextureId 走 bindTexture(int) 同款 GL 绑定
+            net.minecraft.client.renderer.GlStateManager.bindTexture(
+                    LegacyModelState.realTexture().getGlTextureId());
+        } else {
+            rm.renderEngine.bindTexture(LegacyModelState.texture());
+        }
         LegacyAnimationDriver.tick(event.getEntityPlayer(), event.getPartialRenderTick());
         LegacyModelTranslator.render(model, LegacyModelState.currentBoneParams(),
                 1.0f, 1.0f, 1.0f, 1.0f);

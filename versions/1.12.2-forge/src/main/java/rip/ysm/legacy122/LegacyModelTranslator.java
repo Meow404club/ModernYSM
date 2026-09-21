@@ -54,11 +54,16 @@ public final class LegacyModelTranslator {
         }
         java.util.List<GeoModel.BakedBone> bones = model.bakedBones;
 
-        // RenderLivingBase.prepareScale 同款：Y 翻转 + 模型 1/16 尺度
+        // Y 轴约定矫正（legacy-1222-l2-full）：烘焙数据是 Y-up（Bedrock 约定，head
+        // pivot y=32.4 在顶/脚 y=0 在底，YSMFolderDeserializer:547-553 保号实证），
+        // 现代 1.20.1 线（NativeModelRenderer.renderModel/IGeoRenderer.renderEarly）
+        // 对同一份 bakedBones 无任何翻转——vanilla 1.12.2 prepareScale:159-162 的
+        // scale(-1,-1,1)+translate(0,-1.501,0) 是为 vanilla Y-DOWN 模型数据（头 y=0
+        // 原点在颈）设计的配对翻转，Y-up 数据过 Y 翻转即头朝地。只保留 X 镜像
+        //（与 L1 截图的水平朝向一致），脚在模型空间 y=0 无需 -1.501 平移。
         GlStateManager.pushMatrix();
         GlStateManager.enableRescaleNormal();
-        GlStateManager.scale(-1.0F, -1.0F, 1.0F);
-        GlStateManager.translate(0.0F, -1.501F, 0.0F);
+        GlStateManager.scale(-1.0F, 1.0F, 1.0F);
 
         // 1.12.2 无 RenderSystem 分离投影——GL 状态即管线状态，无需 MatrixBridge.proj/modelView
         Matrix4f rootPose = new Matrix4f();

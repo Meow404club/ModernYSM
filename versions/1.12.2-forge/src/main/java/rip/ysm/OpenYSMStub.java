@@ -2,29 +2,40 @@ package rip.ysm;
 
 import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
 import rip.ysm.legacy122.LegacyModelState;
+import rip.ysm.legacy122.LegacyModelLoader;
 import rip.ysm.legacy122.LegacyRenderHook;
+import rip.ysm.legacy122.LegacySyncChannel;
 import rip.ysm.legacy122.LegacyTestModel;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
 /**
- * 1.12.2 线入口（legacy-1222-l1-render）。
+ * 1.12.2 线入口（legacy-1222-l1-render，L2 legacy-1222-l2-full 接真实装载）。
  *
  * init：注册 LegacyRenderHook（RenderPlayerEvent.Pre 拦截→翻译层）。
- * L1 模型面：.ysm 文件装载链（YSMFolderDeserializer→YSMClientMapper）的传递闭包
- * 落在重 MC 面（NativeLibLoader Component/GeckoLibCache client.animation.molang，
- * 排除收敛实测 51+ 锁死），L1 不接——程序化盒状人形 GeoModel 走完整
- * 烘焙几何→骨矩阵→GL11 翻译层管线（几何/动画/渲染链全为真）。
- * 文件装载+完整 molang 状态机=L2（如实标注）。
+ * L2 模型面：真实 .ysm 装载链（内置 builtin/default 解压→YSMFolderDeserializer→
+ * YSMClientMapper.buildParsedBundle→真实 GeoModel+真实贴图）成功即替换 state；
+ * 失败回退 L1 LegacyTestModel 程序化人形（fallback 保留）。
  */
 @Mod(modid = "openysm", name = "OpenYSM", version = "2.6.6.6")
 public class OpenYSMStub {
 
     @Mod.EventHandler
+    public void preInit(FMLPreInitializationEvent event) {
+        LegacyConfig.load(event.getModConfigurationDirectory());
+    }
+
+    @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
         MinecraftForge.EVENT_BUS.register(LegacyRenderHook.class);
-        LegacyModelState.setBundle(null, LegacyTestModel.build());
-        System.out.println("[ysm-legacy122] init done: hook registered, test model built");
+        MinecraftForge.EVENT_BUS.register(LegacySyncChannel.class);
+        LegacySyncChannel.init();
+        boolean real = LegacyModelLoader.loadDefaultModel();
+        if (!real) {
+            LegacyModelState.setBundle(null, LegacyTestModel.build());
+        }
+        System.out.println("[ysm-legacy122] init done: hook registered, realModel=" + real);
     }
 }

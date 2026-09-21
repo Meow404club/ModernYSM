@@ -1,14 +1,22 @@
 package com.elfmcys.yesstevemodel.geckolib3.core.molang.binding;
 
+import com.elfmcys.yesstevemodel.molang.runtime.binding.ObjectBinding;
+import com.elfmcys.yesstevemodel.molang.runtime.binding.StandardBindings;
+import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
+import org.jetbrains.annotations.Nullable;
+
+// 1.12.2 无 mojmap 面：QueryBinding/variable 组（IContext 链深绑 1.17+ 实体）只在
+// >=1.14 注册，<1.14 走 math/loop 精简面（GeckoLibCache 同款门，legacy-1222-l2-full）
+//? if <1.14 {
+import com.elfmcys.yesstevemodel.geckolib3.core.molang.builtin.MathBinding;
+//? }
+//? if >=1.14 {
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.builtin.MathBinding;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.builtin.QueryBinding;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.binding.variable.ControllerVariableBinding;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.binding.variable.ScopedVariableBinding;
 import com.elfmcys.yesstevemodel.geckolib3.core.molang.binding.variable.TempVariableRegistry;
-import com.elfmcys.yesstevemodel.molang.runtime.binding.ObjectBinding;
-import com.elfmcys.yesstevemodel.molang.runtime.binding.StandardBindings;
-import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
-import org.jetbrains.annotations.Nullable;
+//? }
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,11 +27,13 @@ public class PrimaryBinding implements ObjectBinding {
 
     public final Object2ReferenceOpenHashMap<String, Object> bindings = new Object2ReferenceOpenHashMap<>();
 
+    //? if >=1.14 {
     public final ScopedVariableBinding scopedBinding = new ScopedVariableBinding();
 
     public final ControllerVariableBinding foreignBinding = new ControllerVariableBinding();
 
     public final TempVariableRegistry tempBinding = new TempVariableRegistry();
+    //? }
 
     private final List<CloseVariable> closeables;
 
@@ -34,16 +44,20 @@ public class PrimaryBinding implements ObjectBinding {
             this.bindings.putAll(map);
         }
         this.bindings.put("math", MathBinding.INSTANCE);
+        //? if >=1.14 {
         this.bindings.put("query", QueryBinding.INSTANCE);
         this.bindings.put("q", QueryBinding.INSTANCE);
+        //? }
         this.bindings.put("loop", StandardBindings.LOOP_FUNC);
         this.bindings.put("for_each", StandardBindings.FOR_EACH_FUNC);
+        //? if >=1.14 {
         this.bindings.put("variable", this.scopedBinding);
         this.bindings.put("v", this.scopedBinding);
         this.bindings.put("context", this.foreignBinding);
         this.bindings.put("c", this.foreignBinding);
         this.bindings.put("temp", this.tempBinding);
         this.bindings.put("t", this.tempBinding);
+        //? }
         this.closeables = this.bindings.values().stream().filter(obj -> obj instanceof CloseVariable).map(obj2 -> (CloseVariable) obj2).collect(Collectors.toCollection(ArrayList::new));
         this.resettables = this.bindings.values().stream().filter(obj3 -> obj3 instanceof ResetVariable).map(obj4 -> (ResetVariable) obj4).collect(Collectors.toCollection(ArrayList::new));
     }

@@ -42,19 +42,24 @@ public class MathBinding extends ContextBinding {
         /* 实用工具 */
         function("lerp", new Lerp());
         function("lerprotate", new LerpRotate());
+        // Random/DieRoll 族深绑 IContext（funciton 包，1.12.2 无对应面）——<1.14 不注册
+        //? if >=1.14 {
         function("random", new Random());
         function("random_integer", new RandomInteger());
         function("die_roll", new DieRoll());
         function("die_roll_integer", new DieRollInteger());
+        //? }
         function("hermite_blend", new HermitBlend());
 
         /* 其它 */
         function("min_angle", new MinAngle());
 
         /* 非标准命名，兼容原 geckolib */
+        //? if >=1.14 {
         function("randomi", new RandomInteger());
         function("roll", new DieRoll());
         function("rolli", new DieRollInteger());
+        //? }
         function("hermite", new HermitBlend());
     }
 }

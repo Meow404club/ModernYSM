@@ -5,4 +5,5 @@
   "refmap": "openysm.refmap.json",
   "mixins": [],
   "client": ["RendererLivingEntityMixin"],
+  "injectors": { "defaultRequire": 1 }
 }

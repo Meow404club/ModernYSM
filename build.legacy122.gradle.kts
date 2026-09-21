@@ -202,10 +202,16 @@ val legacy122ExcludeMcDeps = listOf(
     "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/item/ItemStackVariable.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/item/ItemVariable.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/processor/AnimationProcessor.java",
+    // ===== 批C 永久归档（legacy122-l3-4a-exclude-batch-a）：以下 5 项不摘除 =====
+    // GeoEntityRenderer 族走现代 GPU 渲染管线（RenderSystem/PoseStack/BufferBuilder
+    // 现代 API 面），1.12.2 固定管线无对应物——由 versions/1.12.2-forge 原生渲染
+    // 翻译层（LegacyModelRenderer/LegacyRenderHook）降级替代，不回接编译面。
     "com/elfmcys/yesstevemodel/geckolib3/geo/GeoEntityRenderer.java",
     "com/elfmcys/yesstevemodel/geckolib3/geo/GeoLayerRenderer.java",
     "com/elfmcys/yesstevemodel/geckolib3/geo/GeoReplacedEntityRenderer.java",
     "com/elfmcys/yesstevemodel/geckolib3/geo/IGeoRenderer.java",
+    // NativeModelRenderer 依赖 com.mojang.blaze3d.platform.NativeImage/TextureUtil
+    // native 面（1.12.2 无 blaze3d），不做 shim——1.12.2 原生 ModelRenderer 承接。
     "com/elfmcys/yesstevemodel/geckolib3/geo/NativeModelRenderer.java",
     "com/elfmcys/yesstevemodel/geckolib3/geo/exception/GeckoLibException.java",
     "com/elfmcys/yesstevemodel/geckolib3/util/AnimationUtils.java",

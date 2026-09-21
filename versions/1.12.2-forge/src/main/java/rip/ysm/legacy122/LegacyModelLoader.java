@@ -62,7 +62,12 @@ public final class LegacyModelLoader {
     private static final java.util.Map<String, ClientModelInfo> LAST_BUNDLE =
             new java.util.concurrent.ConcurrentHashMap<>();
 
-    /** L3-1：按 id 装载任意 builtin 模型入 LegacyModelState 缓存（已装载幂等跳过）。 */
+    // 审查打回修①：装载失败负缓存——渲染帧路径兜底装载失败后不再每帧重跑
+    // extract+deserialize+打印（run5.log "fallback default" 307 条实证）
+    private static final java.util.Map<String, Boolean> LOAD_FAILED =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** L3-1：按 id 装载任意 builtin 模型入 LegacyModelState 缓存（已装载/已败幂等跳过）。 */
     public static boolean loadModel(String modelId) {
         if (modelId == null || LegacyModelRegistry.DEFAULT_MODEL_ID.equals(modelId)) {
             return false; // default 由 loadDefaultModel 主面装载
@@ -70,15 +75,97 @@ public final class LegacyModelLoader {
         if (LegacyModelState.modelOf(modelId) != null) {
             return true;
         }
+        if (LOAD_FAILED.containsKey(modelId)) {
+            return false;
+        }
         return loadInto(modelId, false);
+    }
+
+    /** 审查修①：读侧查负缓存，避免回退路径每帧打日志。 */
+    public static boolean isLoadFailed(String modelId) {
+        return modelId != null && LOAD_FAILED.containsKey(modelId);
+    }
+
+    /**
+     * 审查打回修②：builtin 装载链支持 ysm-pack.json 打包根。wine_fox 等包是
+     * ysm-pack.json 在根、子模组 01_taisho_maid…22_elf 各带 ysm.json 的结构——
+     * 顶层直找 ysm.json 必败（run5.log "Legacy model missing main.json" 实证）。
+     * 解析规则：id 直下有 ysm.json → 原样；id 是打包根 → 取首个含 ysm.json 的
+     * 子目录；也接受显式两级 "wine_fox/01_taisho_maid"。状态一律按请求 id 登记
+     * （同步包面 modelId 不变）。
+     */
+    private static String resolveLoadablePath(String modelId) {
+        String direct = BUILTIN_PREFIX + modelId + "/ysm.json";
+        if (resourceExists(direct)) {
+            return direct;
+        }
+        String packRoot = BUILTIN_PREFIX + modelId + "/ysm-pack.json";
+        if (!resourceExists(packRoot)) {
+            return null;
+        }
+        String dir = BUILTIN_PREFIX + modelId + "/";
+        for (String child : listSubdirs(dir)) {
+            if (resourceExists(dir + child + "/ysm.json")) {
+                System.out.println("[ysm-legacy122] pack root resolved: id=" + modelId
+                        + " -> submodel=" + child);
+                return dir + child + "/ysm.json";
+            }
+        }
+        System.out.println("[ysm-legacy122] pack root has no submodel ysm.json: " + modelId);
+        return null;
+    }
+
+    private static boolean resourceExists(String path) {
+        return LegacyModelLoader.class.getClassLoader().getResource(path) != null;
+    }
+
+    /** 枚举 classpath 目录子项（dev=文件系统 / 生产=jar 条目，两态覆盖）。 */
+    private static java.util.List<String> listSubdirs(String dirPath) {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        try {
+            URL url = LegacyModelLoader.class.getClassLoader().getResource(dirPath);
+            if (url == null) {
+                return out;
+            }
+            URI uri = url.toURI();
+            if ("jar".equals(uri.getScheme())) {
+                JarURLConnection conn = (JarURLConnection) uri.toURL().openConnection();
+                conn.setUseCaches(false);
+                String prefix = conn.getEntryName() + "/";
+                java.util.Set<String> seen = new java.util.TreeSet<>();
+                try (ZipFile zip = new ZipFile(conn.getJarFileURL().getFile())) {
+                    Enumeration<? extends ZipEntry> entries = zip.entries();
+                    while (entries.hasMoreElements()) {
+                        String name = entries.nextElement().getName();
+                        if (name.startsWith(prefix) && name.length() > prefix.length()) {
+                            String rest = name.substring(prefix.length());
+                            seen.add(rest.contains("/") ? rest.substring(0, rest.indexOf('/')) : rest);
+                        }
+                    }
+                }
+                out.addAll(seen);
+            } else {
+                try (java.util.stream.Stream<Path> list = Files.list(Paths.get(uri))) {
+                    list.filter(Files::isDirectory).forEach(p -> out.add(p.getFileName().toString()));
+                }
+                java.util.Collections.sort(out);
+            }
+        } catch (Exception e) {
+            System.out.println("[ysm-legacy122] listSubdirs failed for " + dirPath + ": " + e);
+        }
+        return out;
     }
 
     /** 装载 builtin <id>；main=同时喂主面（loadDefaultModel 路径，日志/回退 L2 语义）。 */
     private static boolean loadInto(String modelId, boolean main) {
-        String builtinPath = BUILTIN_PREFIX + modelId;
-        Path builtDir = extractBuiltinDefault(modelId, builtinPath);
+        String ysmPath = resolveLoadablePath(modelId);
+        if (ysmPath == null) {
+            return failOnce(modelId, "builtin model not resolvable: " + BUILTIN_PREFIX + modelId);
+        }
+        // 提取目录按请求 id 落盘（'/' 归一 '_'），装载成功即按请求 id 登记
+        Path builtDir = extractBuiltin(modelId, ysmPath.substring(0, ysmPath.length() - "/ysm.json".length()));
         if (builtDir == null) {
-            return false;
+            return failOnce(modelId, "builtin extract failed: " + modelId);
         }
         try (YSMFolderDeserializer deserializer = new YSMFolderDeserializer(builtDir)) {
             RawYsmModel raw = deserializer.deserialize();
@@ -97,6 +184,7 @@ public final class LegacyModelLoader {
                 LAST_BUNDLE.put(modelId, bundle);
                 LegacyModelState.registerModel(modelId, bundle, mainModel, texture);
             }
+            LOAD_FAILED.remove(modelId);
             System.out.printf(
                     "[ysm-legacy122] real model loaded: id=%s bones=%d textures=%d tex=%s%n",
                     modelId,
@@ -105,10 +193,18 @@ public final class LegacyModelLoader {
                     texture == null ? "none" : "bound");
             return true;
         } catch (Exception e) {
-            System.out.println("[ysm-legacy122] real model load failed for id=" + modelId
-                    + ", fallback to test model: " + e);
-            return false;
+            return failOnce(modelId, "real model load failed: " + e);
         }
+    }
+
+    /** 修①：失败入负缓存（成功 remove），返回 false；日志每次失败只打一次。 */
+    private static boolean failOnce(String modelId, String why) {
+        Boolean first = LOAD_FAILED.putIfAbsent(modelId, Boolean.TRUE);
+        if (first == null) {
+            System.out.println("[ysm-legacy122] model load failed for id=" + modelId
+                    + ", fallback (negative-cached): " + why);
+        }
+        return false;
     }
 
     /**
@@ -123,11 +219,15 @@ public final class LegacyModelLoader {
         return map.values().iterator().next();
     }
 
-    /** builtin 模型解压到 config/yes_steve_model/built/<id>（幂等：ysm.json 在即复用）。 */
-    private static Path extractBuiltinDefault(String modelId, String builtinPath) {
+    /**
+     * builtin 模型资源解压到 config/yes_steve_model/built/<id>（幂等：ysm.json 在即复用）。
+     * resourcePath 为解析后的模型目录（…/ysm.json 去尾），修②后可指向打包根子模组。
+     */
+    private static Path extractBuiltin(String modelId, String resourcePath) {
         try {
             File gameDir = Minecraft.getMinecraft().gameDir;
-            Path built = new File(gameDir, "config/yes_steve_model/built/" + modelId).toPath();
+            String dirName = modelId.replace('/', '_');
+            Path built = new File(gameDir, "config/yes_steve_model/built/" + dirName).toPath();
             if (Files.isDirectory(built) && Files.exists(built.resolve("ysm.json"))) {
                 return built;
             }
@@ -144,9 +244,9 @@ public final class LegacyModelLoader {
             Files.createDirectories(built);
             // classpath 物理定位（dev=文件系统目录 / 生产=jar 条目，两态覆盖）
             ClassLoader cl = LegacyModelLoader.class.getClassLoader();
-            URL url = cl.getResource(builtinPath);
+            URL url = cl.getResource(resourcePath);
             if (url == null) {
-                System.out.println("[ysm-legacy122] builtin model not on classpath: " + builtinPath);
+                System.out.println("[ysm-legacy122] builtin model not on classpath: " + resourcePath);
                 return null;
             }
             URI uri = url.toURI();

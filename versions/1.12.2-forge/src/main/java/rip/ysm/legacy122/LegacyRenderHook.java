@@ -26,9 +26,9 @@ public final class LegacyRenderHook {
         String modelId = LegacyModelRegistry.modelIdOf(event.getEntityPlayer().getUniqueID());
         if (!LegacyModelRegistry.DEFAULT_MODEL_ID.equals(modelId)
                 && LegacyModelState.modelOf(modelId) == null) {
-            // 惰性装载（同步包先于渲染到达的正常路径不会走到这里；兜底）
+            // 惰性装载（同步包先于渲染到达的正常路径不会走到这里；兜底）。
+            // 修①：失败已负缓存于 LegacyModelLoader，此处不再每帧打日志
             if (!LegacyModelLoader.loadModel(modelId)) {
-                System.out.println("[ysm-legacy122] model not available, fallback default: id=" + modelId);
                 modelId = LegacyModelRegistry.DEFAULT_MODEL_ID;
             }
         }

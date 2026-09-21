@@ -34,6 +34,24 @@ tasks.withType<JavaCompile>().configureEach {
     options.release = 8
 }
 
+// client/server run 共享 JVM 参数（先例 forge1710:87-99 逐项；须在 unimined.minecraft
+// 块之前声明——runs.config 的 lambda 配置期立即执行，且其 jvmArgs getter 返回不可变列表，
+// setJvmArgs 整体赋值而非 addAll）
+val clientJvmArgs = listOf(
+    "-Dfile.encoding=UTF-8",
+    "-Djava.system.class.loader=com.gtnewhorizons.retrofuturabootstrap.RfbSystemClassLoader",
+    "-Djava.security.manager=allow", "--add-opens", "java.base/jdk.internal.loader=ALL-UNNAMED", "--add-opens",
+    "java.base/java.net=ALL-UNNAMED", "--add-opens", "java.base/java.nio=ALL-UNNAMED", "--add-opens",
+    "java.base/java.io=ALL-UNNAMED", "--add-opens", "java.base/java.lang=ALL-UNNAMED", "--add-opens",
+    "java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens", "java.base/java.text=ALL-UNNAMED", "--add-opens",
+    "java.base/java.util=ALL-UNNAMED", "--add-opens", "java.base/jdk.internal.reflect=ALL-UNNAMED", "--add-opens",
+    "java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens", "jdk.naming.dns/com.sun.jndi.dns=ALL-UNNAMED,java.naming",
+    "--add-opens", "java.desktop/sun.awt=ALL-UNNAMED", "--add-opens", "java.desktop/sun.awt.image=ALL-UNNAMED",
+    "--add-opens", "java.desktop/com.sun.imageio.plugins.png=ALL-UNNAMED", "--add-opens",
+    "jdk.dynalink/jdk.dynalink.beans=ALL-UNNAMED", "--add-opens",
+    "java.sql.rowset/javax.sql.rowset.serial=ALL-UNNAMED"
+)
+
 unimined.minecraft {
     version(property("deps.minecraft") as String)
 
@@ -52,24 +70,17 @@ unimined.minecraft {
     runs.config("client") {
         javaVersion = JavaVersion.VERSION_21
         mainClass = "com.gtnewhorizons.retrofuturabootstrap.Main"
-        jvmArgs.addAll(listOf(
-            "-Dfile.encoding=UTF-8",
-            "-Djava.system.class.loader=com.gtnewhorizons.retrofuturabootstrap.RfbSystemClassLoader",
-            "-Djava.security.manager=allow", "--add-opens", "java.base/jdk.internal.loader=ALL-UNNAMED", "--add-opens",
-            "java.base/java.net=ALL-UNNAMED", "--add-opens", "java.base/java.nio=ALL-UNNAMED", "--add-opens",
-            "java.base/java.io=ALL-UNNAMED", "--add-opens", "java.base/java.lang=ALL-UNNAMED", "--add-opens",
-            "java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens", "java.base/java.text=ALL-UNNAMED", "--add-opens",
-            "java.base/java.util=ALL-UNNAMED", "--add-opens", "java.base/jdk.internal.reflect=ALL-UNNAMED", "--add-opens",
-            "java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens", "jdk.naming.dns/com.sun.jndi.dns=ALL-UNNAMED,java.naming",
-            "--add-opens", "java.desktop/sun.awt=ALL-UNNAMED", "--add-opens", "java.desktop/sun.awt.image=ALL-UNNAMED",
-            "--add-opens", "java.desktop/com.sun.imageio.plugins.png=ALL-UNNAMED", "--add-opens",
-            "jdk.dynalink/jdk.dynalink.beans=ALL-UNNAMED", "--add-opens",
-            "java.sql.rowset/javax.sql.rowset.serial=ALL-UNNAMED"
-        ))
+        setJvmArgs(clientJvmArgs)
+    }
+    // runServer 接管判负（2026-09-21 实测）：runs.config("server") 下改 mainClass 抛
+    // UnsupportedOperationException（unimined server run config 不开放该面）；Celeritas
+    // 先例 :104-106 直接 enabled=false。取舍：L0 启动判据走 runClient（Xvfb），
+    // runServer 留 L1。
+    runs.config("server") {
+        enabled = false
     }
 }
 
-// 先例 forge1710:155-161：发布 jar mixin 重映射（stub 无 mixin 类，机制挂上待 L1）
 tasks.named<xyz.wagyourtail.unimined.api.minecraft.task.RemapJarTask>("remapJar") {
     mixinRemap {
         enableBaseMixin()
@@ -99,6 +110,18 @@ dependencies {
     // 均 404 实测 2026-09-21——taumc maven 只发 commit-hash 版（1.12.2 线 d6af8e7 同款））
     implementation("com.github.GTNewHorizons:lwjgl3ify:2.1.18")
     implementation("com.github.GTNewHorizons:lwjgl3ify:2.1.18:forgePatches")
+    // LWJGL3 运行面（lwjgl3ify relaunch 后 MC 请求 org.lwjgl.*，缺则
+    // ClassNotFoundException: org/lwjgl/system/Platform 实测 2026-09-21；
+    // 先例 forge1710:115-123 同款 3.3.3 全套+natives）
+    val lwjglVersion = "3.3.3"
+    implementation("org.lwjgl:lwjgl:${lwjglVersion}")
+    implementation("org.lwjgl:lwjgl-opengl:${lwjglVersion}")
+    implementation("org.lwjgl:lwjgl-glfw:${lwjglVersion}")
+    implementation("org.lwjgl:lwjgl-stb:${lwjglVersion}")
+    runtimeOnly("org.lwjgl:lwjgl:${lwjglVersion}:natives-linux")
+    runtimeOnly("org.lwjgl:lwjgl-opengl:${lwjglVersion}:natives-linux")
+    runtimeOnly("org.lwjgl:lwjgl-glfw:${lwjglVersion}:natives-linux")
+    runtimeOnly("org.lwjgl:lwjgl-stb:${lwjglVersion}:natives-linux")
     // 1.7.10 代 mixin：unimixins（Sponge 桥；先例 :125 0.1.19:dev）
     implementation("io.github.legacymoddingmc:unimixins:0.1.19:dev")
     // 共享源渲染/动画链 JOML 工作类型（1.7.10 无内置；1.12.2 线同款 1.10.5）

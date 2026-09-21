@@ -154,6 +154,15 @@ stonecutter {
         // 构建但 2859 为社区公认末版稳定线）。
         vers("1.12.2-forge", "1.12.2").buildscript = "build.legacy122.gradle.kts"
 
+        // ===== legacy 1.7.10 线（legacy-1710-l0-poc）=====
+        // unimined 构建 POC（Celeritas-mva forge1710 先例形态：
+        // tmp/harvest/celeritas-mva/forge1710/build.gradle:3,71-82,125,155-160：
+        // searge+mcp stable_12 映射、forge 10.13.4.1614（1.7.10 末版）、
+        // unimixins 0.1.19:dev、RFB bootstrap 主类、run Java21、lwjgl3ify）。
+        // 独立 buildscript build.legacy1710.gradle.kts，与 build.legacy122/unimined
+        // 零共享代码路径。
+        vers("1.7.10-forge", "1.7.10").buildscript = "build.legacy1710.gradle.kts"
+
         vcsVersion = "1.20.1-forge"
     }
 }

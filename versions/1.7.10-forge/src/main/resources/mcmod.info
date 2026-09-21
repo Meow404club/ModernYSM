@@ -1,0 +1,16 @@
+[
+{
+  "modid": "openysm",
+  "name": "OpenYSM",
+  "description": "OpenYSM 1.7.10 line (POC stub).",
+  "version": "${version}",
+  "mcversion": "1.7.10",
+  "url": "",
+  "updateUrl": "",
+  "authorList": [],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]

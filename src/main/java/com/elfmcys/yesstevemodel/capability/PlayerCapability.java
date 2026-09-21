@@ -11,6 +11,9 @@ import com.elfmcys.yesstevemodel.util.YsmEntity;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import com.elfmcys.yesstevemodel.client.animation.molang.struct.RoamingStruct;
 import com.elfmcys.yesstevemodel.client.animation.molang.struct.RoamingSyncBatch;
+//? if >=1.21.1 && <21.2
+/*import com.elfmcys.yesstevemodel.platform.neoforge.bettercombat.BetterCombatCompat;*/
+//? if <1.21.1 || >=21.2
 import rip.ysm.compat.bettercombat.BetterCombatCompat;
 //? if (>=21.2 && <26.2)
 /*import com.elfmcys.yesstevemodel.platform.neoforge.firstperson.FirstPersonCompat;*/

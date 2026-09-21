@@ -11,6 +11,9 @@ import rip.ysm.compat.sbackpack.SBackpackCompat;
 import com.elfmcys.yesstevemodel.client.entity.CustomPlayerEntity;
 import com.elfmcys.yesstevemodel.client.animation.molang.functions.ctrl.HandRenderFunction;
 import rip.ysm.compat.gun.tacz.TacCompat;
+//? if >=1.21.1 && <21.2
+/*import com.elfmcys.yesstevemodel.platform.neoforge.bettercombat.BetterCombatCompat;*/
+//? if <1.21.1 || >=21.2
 import rip.ysm.compat.bettercombat.BetterCombatCompat;
 import rip.ysm.compat.carryon.CarryOnCompat;
 import rip.ysm.compat.parcool.ParcoolCompat;

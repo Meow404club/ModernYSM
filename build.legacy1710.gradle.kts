@@ -39,6 +39,9 @@ tasks.withType<JavaCompile>().configureEach {
 // setJvmArgs 整体赋值而非 addAll）
 val clientJvmArgs = listOf(
     "-Dfile.encoding=UTF-8",
+    // 取证打点开关（legacy-1710-l1-ingame-visual）：dev run 面开 translator frame
+    // quadsDrawn 打点（1.12.2 线 c1b96fd 同款口径）；生产 run 面不带此行零行为差
+    "-Dysm.legacy1710.debug=true",
     "-Djava.system.class.loader=com.gtnewhorizons.retrofuturabootstrap.RfbSystemClassLoader",
     "-Djava.security.manager=allow", "--add-opens", "java.base/jdk.internal.loader=ALL-UNNAMED", "--add-opens",
     "java.base/java.net=ALL-UNNAMED", "--add-opens", "java.base/java.nio=ALL-UNNAMED", "--add-opens",

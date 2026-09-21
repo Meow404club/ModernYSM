@@ -3,7 +3,10 @@ package rip.ysm.legacy1710;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
-import org.lwjgl.opengl.GL11;
+// lwjgl3ify 运行面把 org.lwjgl.* 直译为 org.lwjglx.*（NoSuchMethodError 崩溃实证：
+// 编译期 lwjgl3 的 float[] 重载运行面不存在）。直接编 org.lwjglx 面（lwjgl3ify-dev
+// jar 在 compileClasspath，2.1.18 javap 实证 glMultMatrix(FloatBuffer) 唯一形）。
+import org.lwjglx.opengl.GL11;
 
 /**
  * 固定管线翻译层（legacy-1710-l1-render）。
@@ -33,6 +36,13 @@ public final class LegacyModelTranslator {
     private static final Vector3f NORMAL_VEC = new Vector3f();
     private static final float[] MATRIX_BUF = new float[16];
     private static final float[] NORMAL_BUF = new float[9];
+    // lwjgl3ify 运行面 org.lwjglx.opengl.GL11 只有 glMultMatrix(FloatBuffer)（无 float[]
+    // 重载，javap 实证 2.1.18 dev jar）；且 heap wrap buffer 走 nglMultMatrixf 在
+    // llvmpipe 下 SIGSEGV（hs_err_pid39544 实证）——LWJGL3 面必须 direct buffer。
+    private static final java.nio.FloatBuffer MATRIX_FBUF = java.nio.ByteBuffer
+            .allocateDirect(16 * 4).order(java.nio.ByteOrder.nativeOrder()).asFloatBuffer();
+    private static final java.nio.FloatBuffer NORMAL_FBUF = java.nio.ByteBuffer
+            .allocateDirect(9 * 4).order(java.nio.ByteOrder.nativeOrder()).asFloatBuffer();
 
     // 打点：验收需「渲染帧 quadsDrawn/boneParams 打点原文行」。环境变量开关，默认关。
     private static final boolean DEBUG_LOG = Boolean.getBoolean("ysm.legacy1710.debug");
@@ -66,11 +76,13 @@ public final class LegacyModelTranslator {
             }
             LegacyBakedModel.BakedBone bone = model.bones.get(i);
             Matrix4f boneMat = cache[i];
-            boneMat.get(MATRIX_BUF);
-            NORMAL_MAT.set(boneMat).normal().get(NORMAL_BUF);
+            boneMat.get(MATRIX_FBUF);
+            MATRIX_FBUF.rewind();
+            NORMAL_MAT.set(boneMat).normal().get(NORMAL_FBUF);
+            NORMAL_FBUF.rewind();
 
             GL11.glPushMatrix();
-            GL11.glMultMatrixf(MATRIX_BUF);
+            GL11.glMultMatrix(MATRIX_FBUF);
             for (LegacyBakedModel.BakedCube cube : bone.cubes) {
                 for (LegacyBakedModel.BakedQuad quad : cube.quads) {
                     GL11.glBegin(GL11.GL_QUADS);

@@ -357,6 +357,19 @@ sourceSets.main {
                 exclude("slashblade/SlashBladeRenderer.java")
                 srcDir(rootProject.file("src/neoforge-1211-slashblade/java"))
             }
+            // 1.21.1 线 BetterCombat 真 compat（compat-bettercombat-1211 卡，curios
+            // de67a25/slashblade e282543 同构先例）：shim 的 bettercombat/BetterCombatCompat.java
+            // （恒 false）对本线剔除，换 src/neoforge-1211-bettercombat 异包孪生
+            // platform/neoforge/bettercombat（3 文件；javap 两代比对引用面零断裂，
+            // 1.20.1 直译+探测行 LoadingModList→ModList.isLoaded 适形）；消费面 3 文件
+            // import 走 stonecutter 行条件交换；vendor bettercombat-neoforge-2.4.0+
+            // 1.21.1.jar + player-animation-lib 2.0.4 compileOnly（libs/neoforge-1211）。
+            // 仅 1.21.1——21.2~21.10 共用 1211 shim 树，无 bettercombat 真适配不剔，
+            // mod-absent 语义保持。
+            if (stonecutter.current.version == "1.21.1") {
+                exclude("bettercombat/BetterCombatCompat.java")
+                srcDir(rootProject.file("src/neoforge-1211-bettercombat/java"))
+            }
         } else if (stonecutter.eval(stonecutter.current.version, "<26.2")) {
             srcDir(rootProject.file("src/neoforge-2111/shim/rip/ysm/compat"))
         } else if (stonecutter.eval(stonecutter.current.version, "<26.3")) {

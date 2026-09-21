@@ -131,8 +131,7 @@ val legacy122Include = listOf(
 // import 扫描生成，L2 分批做分代 shim 后逐个摘除）——渲染/动画链的 MC 耦合面
 // 由 versions/1.12.2-forge/src/main/java 的 1.12.2 原生类承接。
 val legacy122ExcludeMcDeps = listOf(
-        "com/elfmcys/yesstevemodel/audio/PlaybackFlags.java",
-        "com/elfmcys/yesstevemodel/YesSteveModel.java",
+    "com/elfmcys/yesstevemodel/YesSteveModel.java",
     "com/elfmcys/yesstevemodel/client/model/ModelAssembly.java",
     "com/elfmcys/yesstevemodel/client/model/ModelAssemblyFactory.java",
     "com/elfmcys/yesstevemodel/client/model/PlayerModelBundle.java",
@@ -250,10 +249,7 @@ val legacy122ExcludeMcDeps = listOf(
     "com/elfmcys/yesstevemodel/geckolib3/core/molang/funciton/ContextFunction.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/ContextVariable.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/LambdaVariable.java",
-    "com/elfmcys/yesstevemodel/geckolib3/core/util/TransitionVector3f.java",
     "com/elfmcys/yesstevemodel/geckolib3/util/json/JsonAnimationControllerUtils.java",
-    "com/elfmcys/yesstevemodel/geckolib3/util/json/JsonMolangUtils.java",
-    "com/elfmcys/yesstevemodel/geckolib3/util/json/JsonTextureUtils.java",
     "com/elfmcys/yesstevemodel/util/ResourceCleanupHelper.java",
     "com/elfmcys/yesstevemodel/client/texture/OuterFileTexture.java",
     "com/elfmcys/yesstevemodel/util/log/ChatLogger.java",

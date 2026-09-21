@@ -168,6 +168,9 @@ public final class GuiTourDriver {
             }
             return;
         }
+        //? if >=1.21.1 && <21.2 {
+        combatTick(mc);
+        //? }
         pollCommand(mc);
     }
 
@@ -262,7 +265,55 @@ public final class GuiTourDriver {
             //? }
             return;
         }
+        // count-debt-harness-1211：slashblade/bettercombat 计数债注入命令（>=1.21.1 && <21.2
+        // =恰 1.21.1 线有对应孪生小树，CtrlBinding.java:14 同谓词）。注入刀→守卫+quads 计数
+        // →换剑立靶；攻击键阶梯见 combatTick。
+        //? if >=1.21.1 && <21.2 {
+        if (line.equals("combat")) {
+            HarnessCombatProber.injectAndCount(mc);
+            combatStage = 1;
+            combatTicks = 0;
+            mark("ok combat");
+            return;
+        }
+        //? }
     }
+
+    /** combat 阶梯状态（count-debt-harness-1211）：0=冷却/未武装；1=按键中；2=已收尾；3=终态。 */
+    //? if >=1.21.1 && <21.2 {
+    private static int combatStage;
+    private static int combatTicks;
+    //? }
+
+    /** HarnessCombatProber.combatStep 靶未同步时的重试钩（回 stage0，60 tick 冷却后再试）。 */
+    //? if >=1.21.1 && <21.2 {
+    static void combatRetry() {
+        combatStage = 0;
+        combatTicks = 60;
+    }
+    //? }
+
+    /** combat 阶梯 tick 驱动（onClientTickBody 尾部调用；stage1 先等 40 tick 供立靶同步）。 */
+    //? if >=1.21.1 && <21.2 {
+    private static void combatTick(Minecraft mc) {
+        if (combatStage == 0) {
+            if (combatTicks > 0 && --combatTicks == 0) {
+                combatStage = 1;
+            }
+            return;
+        }
+        if (combatStage > 2) {
+            return;
+        }
+        if (combatStage == 1 && combatTicks++ < 40) {
+            return;
+        }
+        HarnessCombatProber.combatStep(mc, combatStage);
+        if (combatStage == 2) {
+            combatStage = 3;
+        }
+    }
+    //? }
 
     /** 姿势命令实现；返回 false=未知姿势名。 */
     private static boolean setPose(Minecraft mc, String pose) {
@@ -335,8 +386,8 @@ public final class GuiTourDriver {
 
     /** 1.19~1.19.2 签名代 ClientPacketListener 无 sendCommand（1192 named jar javap 实证，命令入口
      *  移 LocalPlayer：1.19=command、1.19.1 起=commandUnsigned（1190/1191 编译实测分界））→ 分档；
-     *  1.19.3 起回归 ClientPacketListener.sendCommand。 */
-    private static void sendChatCommand(Minecraft mc, String command) {
+     *  1.19.3 起回归 ClientPacketListener.sendCommand。包内可见（prober 立靶复用）。 */
+    static void sendChatCommand(Minecraft mc, String command) {
         //? if <1.19.1
         /*mc.player.command(command);*/
         //? if >=1.19.1 && <1.19.3

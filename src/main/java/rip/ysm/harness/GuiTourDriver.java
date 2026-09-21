@@ -168,7 +168,6 @@ public final class GuiTourDriver {
             }
             return;
         }
-        //? if 1.21.1-neoforge {
         //? if >=1.21.1 && <21.2 {
         combatTick(mc);
         //? }

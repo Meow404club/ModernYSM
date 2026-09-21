@@ -11,50 +11,49 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-/**
- * count-debt-harness-1211：slashblade/bettercombat 运行时计数债清偿探测器。
- *
- * 债 1（tasks.feature-debts.debt-slashblade-1211-quad-count）：tour 走查无刀物品注入
- * 手段 → 本类向本地玩家主手注入 slashblade:slashblade，取两路计数：守卫命中
- * （SlashBladeCompat.isSlashBladeItem=true 路径）+ 刀挂渲染 quads>0（BladeModelManager
- * 实加载 WavefrontObject 的 GroupObject.faces 总和，SlashBladeRenderer 取模同链）。
- *
- * 债 2（compat-bettercombat-1211 交卡遗留）：ATTACK_START Publisher 计数——换注入
- * minecraft:iron_sword（bettercombat 武器表覆盖 vanilla 剑，刀物品无 WeaponAttributes
- * 不触发 bc 流程），立 NoAI 村民为靶，GuiTourDriver combatTick 阶梯按住 keyAttack 走
- * 真实攻击键面（Minecraft.doAttack → bc mixin → startUpswing → ATTACK_START）。
- *
- * 全反射实现：本类在 RAW 源集对 1.16.5~1.20.1 forge 线直接编译（stonecutter 不改写
- * RAW，forge 线编译吃原文），slashblade/bettercombat/BuiltInRegistries 符号只在
- * 1.21.1 运行时经 Class.forName 命中，其他线零 NCDFE（调用点全在 armed+combat 命令
- * 门内）。计数口径=日志行（FPM selfdrive hit# 先例，原文进 client.log）。
- * harness 类，生产 jar 排除（build.moddev.gradle.kts:591 exclude rip/ysm/harness/**）。
- */
+// count-debt-harness-1211：slashblade/bettercombat 运行时计数债清偿探测器。
+// 债 1（tasks.feature-debts.debt-slashblade-1211-quad-count）：tour 走查无刀物品注入
+// 手段 → 本类向本地玩家主手注入 slashblade:slashblade，取两路计数：守卫命中
+// （SlashBladeCompat.isSlashBladeItem=true 路径）+ 刀挂渲染 quads>0（BladeModelManager
+// 实加载 WavefrontObject 的 GroupObject.faces 总和，SlashBladeRenderer 取模同链）。
+// 债 2（compat-bettercombat-1211 交卡遗留）：ATTACK_START Publisher 计数——换注入
+// minecraft:iron_sword（bettercombat 武器表覆盖 vanilla 剑，刀物品无 WeaponAttributes
+// 不触发 bc 流程），立 NoAI 村民为靶，GuiTourDriver combatTick 阶梯按住 keyAttack 走
+// 真实攻击键面（Minecraft.doAttack → bc mixin → startUpswing → ATTACK_START）。
+// 全反射实现：本类在 RAW 源集对 1.16.5~26.3 全线直接编译（stonecutter 不改写 RAW），
+// 版本敏感符号一律反射（见各方法头注），仅编译期可见面=各线公共 API。计数口径=日志行
+// （FPM selfdrive hit# 先例，原文进 client.log）。harness 类，生产 jar 排除
+// （build.moddev.gradle.kts:591 exclude rip/ysm/harness/**）。
 public final class HarnessCombatProber {
 
     private HarnessCombatProber() {
     }
 
-    /** ATTACK_START 命中计数（探测 handler 递增）。 */
+    // ATTACK_START 命中计数（探测 handler 递增）。
     private static int attackStartHits;
     private static boolean attackHookRegistered;
 
-    /**
-     * JPMS 跨模块开放：neoforge 每个 mod 是独立命名模块（run5 实证 IllegalAccessException
-     * "cannot access a member of class ... (in module slashblade)"），包未导出→反射拒绝。
-     * Module.addOpens 无调用方限制（仅 SecurityManager 检查），先开包再反射。
-     */
+    // JPMS 跨模块开放：neoforge 每个 mod 是独立命名模块（run5 实证 IllegalAccessException
+    // "cannot access a member of class ... (in module slashblade)"），包未导出→反射拒绝。
+    // Module.addOpens 无调用方限制（仅 SecurityManager 检查），先开包再反射。
+    // 1.16.5 线（Java 8）无 Class.getModule/addOpens：反射 catch 后仅日志，探测路径不炸。
     private static void openReflectively(Class<?> target) {
         try {
-            target.getModule().addOpens(target.getPackage().getName(),
-                    HarnessCombatProber.class.getModule());
+            // Java 8 线无 Class.getModule——JPMS API 本身反射调（1.16.5 编译期无此符号）
+            Method getModule = Class.class.getMethod("getModule");
+            Object targetMod = getModule.invoke(target);
+            Object selfMod = getModule.invoke(HarnessCombatProber.class);
+            Method addOpens = targetMod.getClass().getMethod("addOpens", String.class, targetMod.getClass());
+            addOpens.invoke(targetMod, target.getPackage().getName(), selfMod);
+        } catch (NoSuchMethodException e) {
+            // 非 JPMS 线（1.16.5 Java 8）：无模块系统，反射访问无开包需求，静默跳过
         } catch (Throwable t) {
             System.out.println("[HarnessCombatProber] addOpens failed for " + target + ": " + t);
         }
     }
 
-    /** open 包 + setAccessible（run7 实证：ComponentBackedState 非 public 类——addOpens 只开
-     *  包导出，非 public 类成员反射仍需 setAccessible 抑制访问检查；开包后 setAccessible 可过）。 */
+    // open 包 + setAccessible（run7 实证：ComponentBackedState 非 public 类——addOpens 只开
+    //  包导出，非 public 类成员反射仍需 setAccessible 抑制访问检查；开包后 setAccessible 可过）。
     private static java.lang.reflect.Method accessible(java.lang.reflect.Method m) {
         try {
             m.setAccessible(true);
@@ -72,10 +71,10 @@ public final class HarnessCombatProber {
         return f;
     }
 
-    /** "combat" 命令入口（GuiTourDriver.pollCommand，armed 门内）：刀计数 + 换剑 + 立靶。 */
+    // "combat" 命令入口（GuiTourDriver.pollCommand，armed 门内）：刀计数 + 换剑 + 立靶。
     public static void injectAndCount(Minecraft mc) {
         LocalPlayer player = mc.player;
-        if (player == null || player.level() == null) {
+        if (player == null || mc.level == null) {
             return;
         }
         // ---- 债 1：注入刀 + 守卫/quads 计数 ----
@@ -84,8 +83,8 @@ public final class HarnessCombatProber {
             System.out.println("[HarnessCombatProber] slashblade item not found (mod absent?)");
             return;
         }
-        player.getInventory().items.set(player.getInventory().selected, blade);
-        blade = player.getMainHandItem();
+        setMainHand(player, blade);
+        blade = mc.player.getMainHandItem();
         System.out.println("[HarnessCombatProber] injected main hand = slashblade:slashblade");
 
         // 守卫路径：SlashBladeCompat.isSlashBladeItem（孪生包名 1211 专有，反射取）
@@ -113,17 +112,85 @@ public final class HarnessCombatProber {
         // ---- 债 2：换剑 + 立靶（ATTACK_START 计数由 combatTick 按键后回收） ----
         ItemStack sword = itemByName(mc, "minecraft", "iron_sword");
         if (sword != null) {
-            player.getInventory().items.set(player.getInventory().selected, sword);
+            setMainHand(player, sword);
             System.out.println("[HarnessCombatProber] swapped main hand = minecraft:iron_sword"
                     + " (bettercombat weapon table covers vanilla swords)");
         }
         // 靶：面朝方向 2 格（^ ^ ^2=观察旋转系），NoAI 定住；服务端回环同步后 combatTick 才按键
-        GuiTourDriver.sendChatCommand(mc,
+        sendCommandReflective(mc,
                 "execute at @s run summon minecraft:villager ^ ^ ^2 {NoAI:1b,PersistenceRequired:1b}");
         System.out.println("[HarnessCombatProber] summoned villager target 2 blocks ahead (attack-start probe target)");
     }
 
-    /** BuiltInRegistries.ITEM 取物（1.19.3+ 类名；其他线调用点不可达，反射缺席即 null）。 */
+    // 命令通道反射面：GuiTourDriver.sendChatCommand 在 1.16.5 线 stonecutter 生成物中
+    // 位于 >=1.21.1 闸外不可达（combat 成员同），跨线调用统一反射（找不到符号=静默跳过，
+    // 旧线 combat 命令本来就不会被触发）。
+    private static void sendCommandReflective(Minecraft mc, String command) {
+        try {
+            Method m = GuiTourDriver.class.getMethod("sendChatCommand", Minecraft.class, String.class);
+            m.setAccessible(true);
+            m.invoke(null, mc, command);
+        } catch (NoSuchMethodException e) {
+            System.out.println("[HarnessCombatProber] sendChatCommand absent on this line (expected for <1.21.1): " + e);
+        } catch (Throwable t) {
+            System.out.println("[HarnessCombatProber] sendCommandReflective failed: " + t);
+        }
+    }
+
+    private static void retryCombatReflective() {
+        try {
+            Method m = GuiTourDriver.class.getMethod("combatRetry");
+            m.setAccessible(true);
+            m.invoke(null);
+        } catch (NoSuchMethodException e) {
+            // 旧线无 combat 阶梯，无需重试
+        } catch (Throwable t) {
+            System.out.println("[HarnessCombatProber] retryCombatReflective failed: " + t);
+        }
+    }
+
+    // 主手物品写入反射面：1.16.5 无 getInventory 映射名、26.3 selected/items 转私有——
+    // Inventory.items(NonNullList)/selected(旧 int 字段或新 getSelectedItem 反射分代)。
+    private static void setMainHand(LocalPlayer player, ItemStack stack) {
+        try {
+            Object inv;
+            try {
+                inv = player.getClass().getMethod("getInventory").invoke(player);
+            } catch (NoSuchMethodException e) {
+                java.lang.reflect.Field f = accessible(player.getClass().getField("inventory"));
+                inv = f.get(player);
+            }
+            // selected 写入面：先试 int selected 字段（1.16~26.2 命名映射），
+            // 失败再试 getSelectedItem/setSelectedItem（26.3 SelectedItem 容器化）
+            int slot = -1;
+            try {
+                java.lang.reflect.Field sel = accessible(inv.getClass().getField("selected"));
+                slot = sel.getInt(inv);
+            } catch (NoSuchFieldException e) {
+                try {
+                    Object selStack = inv.getClass().getMethod("getSelected").invoke(inv);
+                    // 26.3 容器化：直接改返回的 ItemStack 内容不可行——改经 setSelected 反射
+                    for (Method m : inv.getClass().getMethods()) {
+                        if (m.getName().equals("setSelected") && m.getParameterCount() == 1) {
+                            m.invoke(inv, stack);
+                            return;
+                        }
+                    }
+                } catch (NoSuchMethodException e2) {
+                    System.out.println("[HarnessCombatProber] main-hand selected face not found: " + e2);
+                }
+            }
+            if (slot >= 0) {
+                java.util.List<?> items = (java.util.List<?>)
+                        accessible(inv.getClass().getField("items")).get(inv);
+                ((java.util.List<ItemStack>) items).set(slot, stack);
+            }
+        } catch (Throwable t) {
+            System.out.println("[HarnessCombatProber] setMainHand failed: " + t);
+        }
+    }
+
+    // 物品取数：注册表访问逐代反射；取不到（mod absent/旧线无该注册表面）即 null。
     private static ItemStack itemByName(Minecraft mc, String namespace, String path) {
         try {
             Class<?> regs = Class.forName("net.minecraft.core.registries.BuiltInRegistries");
@@ -150,7 +217,8 @@ public final class HarnessCombatProber {
         }
     }
 
-    /** 刀挂模型面数：BladeStateAccess.of→getModel→BladeModelManager.getModel→faces 总和。 */
+    // 刀挂模型面数：BladeStateAccess.of→getModel→BladeModelManager.getModel→faces 总和
+    // （全反射；slashblade absent=Class.forName 失败即 MISS，不炸）。
     private static int bladeFaces(ItemStack blade) {
         try {
             Class<?> access = Class.forName(
@@ -234,7 +302,7 @@ public final class HarnessCombatProber {
         }
     }
 
-    /** GuiTourDriver.combatTick 阶梯回调：找靶→按攻击键→松键收尾。stage 由 driver 持有。 */
+    // GuiTourDriver.combatTick 阶梯回调：找靶→按攻击键→松键收尾。stage 由 driver 持有。
     public static void combatStep(Minecraft mc, int stage) {
         LocalPlayer player = mc.player;
         if (player == null || mc.level == null) {
@@ -256,10 +324,10 @@ public final class HarnessCombatProber {
             if (target == null) {
                 // 靶未同步：重发召唤（首轮实证：未 op 客户端命令树无 summon → 本地解析
                 // "Unknown or incomplete command"；tour.sh combat 块先 op Dev 后重发即通）
-                GuiTourDriver.sendChatCommand(mc,
+                sendCommandReflective(mc,
                         "execute at @s run summon minecraft:villager ^ ^ ^2 {NoAI:1b,PersistenceRequired:1b}");
                 System.out.println("[HarnessCombatProber] attack-start: no synced target in reach, summon+retry scheduled");
-                GuiTourDriver.combatRetry();
+                retryCombatReflective();
                 return;
             }
             registerAttackHook();
@@ -276,7 +344,7 @@ public final class HarnessCombatProber {
         }
     }
 
-    /** ATTACK_START 挂钩（动态 Proxy 实现	PlayerAttackStart 接口——Publisher.register 真实路径）。 */
+    // ATTACK_START 挂钩（动态 Proxy 实现 PlayerAttackStart 接口——Publisher.register 真实路径）。
     private static synchronized void registerAttackHook() {
         if (attackHookRegistered) {
             return;

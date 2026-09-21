@@ -57,14 +57,14 @@ public class GeckoLibCache {
     }
 
     private static MolangParser createMolangParser() {
+        MolangParser parser;
         //? if <1.14 {
         if (EXTRA_BINDING.isEmpty()) {
             EXTRA_BINDING.put("math", MathBinding.INSTANCE);
         }
         HashMap<String, Object> map = new HashMap<>(EXTRA_BINDING);
-        return new MolangParser(map);
-        //? }
-        //? if >=1.14 {
+        parser = new MolangParser(map);
+        //?} else {
         if (EXTRA_BINDING.isEmpty()) {
             try {
                 EXTRA_BINDING.put("ysm", YSMBinding.INSTANCE.get());
@@ -77,8 +77,9 @@ public class GeckoLibCache {
         }
         HashMap<String, Object> map2 = new HashMap<>(EXTRA_BINDING);
         map2.put("fn", new FnBinding());
-        return new MolangParser(map2);
-        //? }
+        parser = new MolangParser(map2);
+        //?}
+        return parser;
     }
 
     public static Map<String, Object> getGlobalBindings() {

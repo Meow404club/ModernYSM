@@ -7,7 +7,7 @@ import com.elfmcys.yesstevemodel.molang.runtime.Function;
 import net.minecraft.util.Mth;
 //? }
 //? if <1.14 {
-import rip.ysm.legacy122.Mth;
+/*import rip.ysm.legacy122.Mth;*/
 //? }
 
 public class Sin implements Function {

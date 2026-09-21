@@ -340,5 +340,29 @@ if [ "${HARNESS_WORLDSHOT:-0}" = "1" ]; then
   fi
 fi
 
+# ---- 3.6 combat 探测（opt-in：HARNESS_COMBAT=1，仅 1.21.1-neoforge 有孪生小树）----
+# count-debt-harness-1211：slashblade/bettercombat 计数债。driver "combat" 命令注入刀
+# （守卫+quads 计数即时打 client.log）→ 换剑立靶 → combatTick 阶梯按 keyAttack 走
+# 真实攻击键面（ATTACK_START Publisher 计数）。计数取数=client.log 原文，截图仅存档。
+if [ "${HARNESS_COMBAT:-0}" = "1" ]; then
+  # 首轮实证：Dev 离线客户端默认非 op，summon 命令树本地解析即拒
+  #（"Unknown or incomplete command"）→ 先 op（op 命令服务端控制台直发，无需 op）
+  echo "op Dev" >&3
+  sleep 1
+  rm -f "$CLIENT_DIR/harness.ready"
+  echo "close" > "$CLIENT_DIR/cmd.txt"
+  await_ready "ok close" 60 || echo "[tour] combat: close failed, continuing"
+  rm -f "$CLIENT_DIR/harness.ready"
+  echo "combat" > "$CLIENT_DIR/cmd.txt"
+  if await_ready "ok combat" 60; then
+    sleep 20   # 立靶服务端回环 + combatTick 阶梯（40t 等待 + 攻击 + 收尾）
+    grab combat
+    grep -E "HarnessCombatProber" "$OUT/client.log" || echo "[tour] combat: NO prober output in client.log"
+  else
+    echo "[tour] combat: driver did not ack"
+    grab combat-failed
+  fi
+fi
+
 # ---- 4. 收尾（cleanup 阶梯见 trap）----
 echo "[tour] tour complete, tearing down"

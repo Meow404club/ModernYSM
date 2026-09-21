@@ -6,38 +6,55 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
 
+import java.util.UUID;
+
 /**
- * S2C 实体模型同步包（legacy-1222-l2-full 批②）。
+ * S2C 实体模型同步包（legacy-1222-l2-full 批②；L3-1 改 UUID 键）。
  *
  * 1.12.2 SimpleChannel 等价面 = SimpleNetworkWrapper（forge-1.12.x
  * SimpleNetworkWrapper.java:113 实证：NetworkRegistry.INSTANCE.newChannel 构造 /
- * registerMessage(handler,type,discriminator,Side) / sendTo(EntityPlayerMP)），
- * 1202 孪生树 YSMChannelImpl（SimpleChannel 语义）的字节层同构：varint 实体 id +
- * UTF 模型 id。单默认模型广播=登录/进世界时全实体批量发。
+ * registerMessage(handler,type,discriminator,Side) / sendTo(EntityPlayerMP)）。
+ * L3-1 字节面：8 字节 most/least（UUID，Entity.getUniqueID vanilla-mc-1.12.2
+ * Entity.java:2172）+ UTF 模型 id——entityId 重连复用不串模型。
  */
 public class LegacyModelSyncPacket implements IMessage {
 
-    private int entityId;
+    private UUID entityUuid;
     private String modelId;
 
     public LegacyModelSyncPacket() {
     }
 
-    public LegacyModelSyncPacket(int entityId, String modelId) {
-        this.entityId = entityId;
+    public LegacyModelSyncPacket(UUID entityUuid, String modelId) {
+        this.entityUuid = entityUuid;
         this.modelId = modelId;
     }
 
     @Override
     public void fromBytes(ByteBuf buf) {
-        this.entityId = readVarint(buf);
+        this.entityUuid = new UUID(buf.readLong(), buf.readLong());
         this.modelId = readString(buf);
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
-        writeVarint(buf, this.entityId);
+        UUID uuid = this.entityUuid == null ? new UUID(0L, 0L) : this.entityUuid;
+        buf.writeLong(uuid.getMostSignificantBits());
+        buf.writeLong(uuid.getLeastSignificantBits());
         writeString(buf, this.modelId == null ? "" : this.modelId);
+    }
+
+    private static String readString(ByteBuf buf) {
+        int len = readVarint(buf);
+        byte[] bytes = new byte[len];
+        buf.readBytes(bytes);
+        return new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
+    }
+
+    private static void writeString(ByteBuf buf, String str) {
+        byte[] bytes = str.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        writeVarint(buf, bytes.length);
+        buf.writeBytes(bytes);
     }
 
     private static int readVarint(ByteBuf buf) {
@@ -61,19 +78,6 @@ public class LegacyModelSyncPacket implements IMessage {
         buf.writeByte(value);
     }
 
-    private static String readString(ByteBuf buf) {
-        int len = readVarint(buf);
-        byte[] bytes = new byte[len];
-        buf.readBytes(bytes);
-        return new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
-    }
-
-    private static void writeString(ByteBuf buf, String str) {
-        byte[] bytes = str.getBytes(java.nio.charset.StandardCharsets.UTF_8);
-        writeVarint(buf, bytes.length);
-        buf.writeBytes(bytes);
-    }
-
     /** 客户端 handler：落 LegacyModelRegistry（主线程调度的读面）。 */
     public static class Handler implements IMessageHandler<LegacyModelSyncPacket, IMessage> {
         @Override
@@ -81,14 +85,14 @@ public class LegacyModelSyncPacket implements IMessage {
             if (ctx.side != Side.CLIENT) {
                 return null;
             }
-            final int entityId = message.entityId;
+            final UUID uuid = message.entityUuid;
             final String modelId = message.modelId;
             net.minecraft.client.Minecraft.getMinecraft().addScheduledTask(new Runnable() {
                 @Override
                 public void run() {
-                    LegacyModelRegistry.applySync(entityId, modelId);
+                    LegacyModelRegistry.applySync(uuid, modelId);
                     System.out.printf(
-                            "[ysm-legacy122] model sync: entity=%d model=%s%n", entityId, modelId);
+                            "[ysm-legacy122] model sync: uuid=%s model=%s%n", uuid, modelId);
                 }
             });
             return null;

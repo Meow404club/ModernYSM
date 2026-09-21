@@ -43,8 +43,38 @@ public final class LegacyModelLoader {
 
     /** 装载真实模型；成功 true（state 已喂真实 bundle），失败 false（fallback 生效）。 */
     public static boolean loadDefaultModel() {
-        // 批④配置面：config/openysm-legacy122.cfg model.id 行切换 builtin 目录
+        // 批④配置面：config/openysm-legacy122.cfg model.id 行切换 builtin 目录。
+        // L3-1：非 default 的全局默认 id 也入按 id 缓存；主面 setBundle 语义保持
         String modelId = rip.ysm.LegacyConfig.modelId();
+        if (LegacyModelRegistry.DEFAULT_MODEL_ID.equals(modelId)) {
+            return loadInto(modelId, true);
+        }
+        if (!loadModel(modelId)) {
+            return false;
+        }
+        LegacyModelState.setBundle(LAST_BUNDLE.get(modelId),
+                LegacyModelState.modelOf(modelId), LegacyModelState.textureOf(modelId));
+        return true;
+    }
+
+    // ponytail: loadModel→loadDefaultModel 回传 bundle 用进程内 map（ClientModelInfo
+    // 无轻量回读面；双实体量级下单条目 map 足够）
+    private static final java.util.Map<String, ClientModelInfo> LAST_BUNDLE =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** L3-1：按 id 装载任意 builtin 模型入 LegacyModelState 缓存（已装载幂等跳过）。 */
+    public static boolean loadModel(String modelId) {
+        if (modelId == null || LegacyModelRegistry.DEFAULT_MODEL_ID.equals(modelId)) {
+            return false; // default 由 loadDefaultModel 主面装载
+        }
+        if (LegacyModelState.modelOf(modelId) != null) {
+            return true;
+        }
+        return loadInto(modelId, false);
+    }
+
+    /** 装载 builtin <id>；main=同时喂主面（loadDefaultModel 路径，日志/回退 L2 语义）。 */
+    private static boolean loadInto(String modelId, boolean main) {
         String builtinPath = BUILTIN_PREFIX + modelId;
         Path builtDir = extractBuiltinDefault(modelId, builtinPath);
         if (builtDir == null) {
@@ -55,21 +85,28 @@ public final class LegacyModelLoader {
             ClientModelInfo bundle = YSMClientMapper.buildParsedBundle(raw, modelId);
             MainModelData data = bundle.getMainModelData();
             if (data == null || data.getModels().isEmpty()) {
-                System.out.println("[ysm-legacy122] parsed bundle has no main model, fallback to test model");
+                System.out.println("[ysm-legacy122] parsed bundle has no main model for id=" + modelId
+                        + ", fallback to test model");
                 return false;
             }
             GeoModel mainModel = data.getModels().get(0);
             OuterFileTexture texture = resolveMainTexture(data);
-            LegacyModelState.setBundle(bundle, mainModel, texture);
+            if (main) {
+                LegacyModelState.setBundle(bundle, mainModel, texture);
+            } else {
+                LAST_BUNDLE.put(modelId, bundle);
+                LegacyModelState.registerModel(modelId, bundle, mainModel, texture);
+            }
             System.out.printf(
-                    "[ysm-legacy122] real model loaded: id=default bones=%d textures=%d tex=%s%n",
+                    "[ysm-legacy122] real model loaded: id=%s bones=%d textures=%d tex=%s%n",
+                    modelId,
                     mainModel.bakedBones == null ? -1 : mainModel.bakedBones.size(),
                     data.getTextureMap() == null ? 0 : data.getTextureMap().size(),
                     texture == null ? "none" : "bound");
             return true;
         } catch (Exception e) {
-            System.out.println("[ysm-legacy122] real model load failed, fallback to test model: " + e);
-            e.printStackTrace();
+            System.out.println("[ysm-legacy122] real model load failed for id=" + modelId
+                    + ", fallback to test model: " + e);
             return false;
         }
     }

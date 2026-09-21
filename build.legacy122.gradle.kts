@@ -323,6 +323,19 @@ tasks.named<JavaCompile>("compileJava") {
     dependsOn(tasks.named("compileTwinJava"))
     classpath += sourceSets.getByName("twin").output
 }
+// main 源路径含 build/generated/stonecutter/main/java（313bdf4 起）——生成树由
+// stonecutterGenerate 产出，但 RFB 线该目录为纯路径 srcDir，FileCollection 不挂
+// stonecutterGenerate 任务依赖，clean 后/新 worktree 首跑 compileJava 会在空生成树上
+// 编译 → 58 个 "geckolib3 包不存在"（dev 顶 b83a111 门禁红实证 2026-09-21）。
+// build.forge.gradle.kts:286 createMinecraftArtifacts dependsOn stonecutterGenerate 先例
+// 同款，补显式任务依赖（幂等，已生成时 up-to-date 秒过）。
+tasks.named<JavaCompile>("compileJava") {
+    dependsOn(tasks.named("stonecutterGenerate"))
+}
+// twin 源集同样走 stonecutter 剥离（//? 条件块在 twin/classes 面同样不剥离必炸）
+tasks.named<JavaCompile>("compileTwinJava") {
+    dependsOn(tasks.named("stonecutterGenerateTwin"))
+}
 tasks.named<Jar>("jar") {
     from(sourceSets.getByName("twin").output)
 }

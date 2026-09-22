@@ -44,20 +44,21 @@ public class LegacyModelSyncPacket implements IMessage {
         writeString(buf, this.modelId == null ? "" : this.modelId);
     }
 
-    private static String readString(ByteBuf buf) {
+    // 包内共享字节面（L3-2 列表/选择包同构复用）
+    static String readString(ByteBuf buf) {
         int len = readVarint(buf);
         byte[] bytes = new byte[len];
         buf.readBytes(bytes);
         return new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
     }
 
-    private static void writeString(ByteBuf buf, String str) {
+    static void writeString(ByteBuf buf, String str) {
         byte[] bytes = str.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         writeVarint(buf, bytes.length);
         buf.writeBytes(bytes);
     }
 
-    private static int readVarint(ByteBuf buf) {
+    static int readVarint(ByteBuf buf) {
         int value = 0;
         int shift = 0;
         while (true) {
@@ -70,7 +71,7 @@ public class LegacyModelSyncPacket implements IMessage {
         }
     }
 
-    private static void writeVarint(ByteBuf buf, int value) {
+    static void writeVarint(ByteBuf buf, int value) {
         while ((value & ~0x7f) != 0) {
             buf.writeByte((value & 0x7f) | 0x80);
             value >>>= 7;

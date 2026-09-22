@@ -4,7 +4,7 @@ package rip.ysm.yui;
  * 版本中性绘制原语接口（YUI 后端接缝，docs/ADR-YSM-UI-UNIFIED ADR-1）。
  *
  * <p>铁律（ADR-2）：本包零 vanilla import、零条件轴——同一份编译产物喂全部版本线，
- * grep 门禁（零 {@code import net.minecraft} / {@code import com.mojang} / {@code //?}）是挂载
+ * grep 门禁（import 语句零 vanilla/mojang 命名空间、零条件轴指令）是挂载
  * 1.12.2 白名单（build.legacy122.gradle.kts legacy122Include）的硬前提。
  *
  * <p>实现按能力代切（ADR-1），当前 2+1 个：
@@ -54,7 +54,9 @@ public interface YuiBackend {
     void drawText(String text, int x, int y, int color, boolean shadow, Align align);
 
     /** 居中文本（恒带阴影，vanilla drawCenteredString 语义）。 */
-    void drawTextCentered(String text, int centerX, int y, int color);
+    default void drawTextCentered(String text, int centerX, int y, int color) {
+        drawText(text, centerX, y, color, true, Align.CENTER);
+    }
 
     /** 文本像素宽（当前 GUI 字体）。 */
     int textWidth(String text);

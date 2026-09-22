@@ -3,6 +3,7 @@ package rip.ysm;
 import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
 import rip.ysm.legacy122.LegacyModelState;
 import rip.ysm.legacy122.LegacyModelLoader;
+import rip.ysm.legacy122.LegacyModelSelectScreen;
 import rip.ysm.legacy122.LegacyRenderHook;
 import rip.ysm.legacy122.LegacySyncChannel;
 import rip.ysm.legacy122.LegacyTestModel;
@@ -35,6 +36,10 @@ public class OpenYSMStub {
         boolean real = LegacyModelLoader.loadDefaultModel();
         if (!real) {
             LegacyModelState.setBundle(null, LegacyTestModel.build());
+        }
+        // L3-2 GUI：模型选择键位+列表屏仅客户端（SideOnly 类引用收进 dist 分支）
+        if (event.getSide().isClient()) {
+            LegacyModelSelectScreen.init();
         }
         System.out.println("[ysm-legacy122] init done: hook registered, realModel=" + real);
     }

@@ -131,7 +131,14 @@ public final class LegacyModelLoader {
             if ("jar".equals(uri.getScheme())) {
                 JarURLConnection conn = (JarURLConnection) uri.toURL().openConnection();
                 conn.setUseCaches(false);
-                String prefix = conn.getEntryName() + "/";
+                // getEntryName 对目录 URL 保留尾斜杠（jshell 实证 ".../wine_fox/"），
+                // 直接拼 "/" 会得到 "...//" 零匹配——RFB dev 类路径仅 dev.jar 携带
+                // mod 资源（RunMinecraftTask -cp 实证），jar 分支是唯一活路径
+                String entry = conn.getEntryName();
+                if (entry.endsWith("/")) {
+                    entry = entry.substring(0, entry.length() - 1);
+                }
+                String prefix = entry + "/";
                 java.util.Set<String> seen = new java.util.TreeSet<>();
                 try (ZipFile zip = new ZipFile(conn.getJarFileURL().getFile())) {
                     Enumeration<? extends ZipEntry> entries = zip.entries();

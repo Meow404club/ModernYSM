@@ -55,6 +55,17 @@ public final class YuiSmokeScreen1122 {
     /** 冒烟屏内容（中性组件布局；坐标全 GUI 逻辑坐标）。 */
     private static final class SmokeScreen extends YuiScreen {
 
+        private YuiScrollView scroll;
+
+        @Override
+        public boolean mouseScrolled(int mouseX, int mouseY, double delta) {
+            boolean r = super.mouseScrolled(mouseX, mouseY, delta);
+            if (r && this.scroll != null) {
+                System.out.println("[ysm-yui-smoke] scroll -> scrollY=" + this.scroll.scrollY);
+            }
+            return r;
+        }
+
         @Override
         protected void layout() {
             int pw = 250;
@@ -90,13 +101,30 @@ public final class YuiSmokeScreen1122 {
 
             // 可滚列表：20 行溢出视口，验证 scissor 裁剪+偏移+拇指
             int rows = 20;
-            YuiScrollView scroll = new YuiScrollView(px + 8, py + 48, pw - 16, ph - 48 - 26,
+            this.scroll = new YuiScrollView(px + 8, py + 48, pw - 16 - 36, ph - 48 - 26,
                     rows * 14);
             for (int i = 0; i < rows; i++) {
-                scroll.add(new YuiLabel(px + 14, py + 48 + i * 14 + 3, pw - 32, 10,
+                this.scroll.add(new YuiLabel(px + 14, py + 48 + i * 14 + 3, pw - 60, 10,
                         "Row " + (i + 1) + " / " + rows));
             }
-            add(scroll);
+            add(this.scroll);
+
+            // 滚轮回退（本环境 lwjgl3ify d6af8e7 滚轮事件不达 GuiScreen，见 host 类注）：
+            // ▲▼ 走与滚轮完全相同的 mouseScrolled 分发路径（坐标取视口内一点），证明滚动机制本体
+            final YuiScrollView scrollRef = this.scroll;
+            int bx = px + pw - 40;
+            add(new YuiFlatButton(bx, py + 48, 32, 14, "^", new Runnable() {
+                @Override
+                public void run() {
+                    SmokeScreen.this.mouseScrolled(scrollRef.x + 10, scrollRef.y + 10, 1.0);
+                }
+            }));
+            add(new YuiFlatButton(bx, py + ph - 40, 32, 14, "v", new Runnable() {
+                @Override
+                public void run() {
+                    SmokeScreen.this.mouseScrolled(scrollRef.x + 10, scrollRef.y + 10, -1.0);
+                }
+            }));
 
             YuiLabel hint = new YuiLabel(this.width / 2, py + ph - 16, 0, 10,
                     "Esc=close  wheel=scroll");

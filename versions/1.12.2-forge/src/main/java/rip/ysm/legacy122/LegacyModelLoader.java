@@ -117,11 +117,15 @@ public final class LegacyModelLoader {
     /**
      * L3-2：枚举可用 builtin 模型 id（两级形式 "包/子模组"）。dir+jar 两分支由
      * listSubdirs 覆盖；打包根（ysm-pack.json）展开为各含 ysm.json 的子模组 id。
+     * 保留 id "default"（主面隐式，GUI 前置唯一一行）不入枚举防双行。
      * 服务端登录下发 + C2S 选择校验共用此面（classpath 纯读，无客户端依赖）。
      */
     public static java.util.List<String> listBuiltinModels() {
         java.util.List<String> out = new java.util.ArrayList<>();
         for (String child : listSubdirs(BUILTIN_PREFIX)) {
+            if (LegacyModelRegistry.DEFAULT_MODEL_ID.equals(child)) {
+                continue;
+            }
             if (resourceExists(BUILTIN_PREFIX + child + "/ysm.json")) {
                 out.add(child);
             } else if (resourceExists(BUILTIN_PREFIX + child + "/ysm-pack.json")) {

@@ -81,11 +81,6 @@ public final class LegacyModelLoader {
         return loadInto(modelId, false);
     }
 
-    /** 审查修①：读侧查负缓存，避免回退路径每帧打日志。 */
-    public static boolean isLoadFailed(String modelId) {
-        return modelId != null && LOAD_FAILED.containsKey(modelId);
-    }
-
     /**
      * 审查打回修②：builtin 装载链支持 ysm-pack.json 打包根。wine_fox 等包是
      * ysm-pack.json 在根、子模组 01_taisho_maid…22_elf 各带 ysm.json 的结构——
@@ -120,8 +115,8 @@ public final class LegacyModelLoader {
     }
 
     /** 枚举 classpath 目录子项（dev=文件系统 / 生产=jar 条目，两态覆盖）。 */
-    private static java.util.List<String> listSubdirs(String dirPath) {
-        java.util.List<String> out = new java.util.ArrayList<>();
+    private static java.util.SortedSet<String> listSubdirs(String dirPath) {
+        java.util.SortedSet<String> out = new java.util.TreeSet<>();
         try {
             URL url = LegacyModelLoader.class.getClassLoader().getResource(dirPath);
             if (url == null) {
@@ -139,23 +134,20 @@ public final class LegacyModelLoader {
                     entry = entry.substring(0, entry.length() - 1);
                 }
                 String prefix = entry + "/";
-                java.util.Set<String> seen = new java.util.TreeSet<>();
                 try (ZipFile zip = new ZipFile(conn.getJarFileURL().getFile())) {
                     Enumeration<? extends ZipEntry> entries = zip.entries();
                     while (entries.hasMoreElements()) {
                         String name = entries.nextElement().getName();
                         if (name.startsWith(prefix) && name.length() > prefix.length()) {
                             String rest = name.substring(prefix.length());
-                            seen.add(rest.contains("/") ? rest.substring(0, rest.indexOf('/')) : rest);
+                            out.add(rest.contains("/") ? rest.substring(0, rest.indexOf('/')) : rest);
                         }
                     }
                 }
-                out.addAll(seen);
             } else {
                 try (java.util.stream.Stream<Path> list = Files.list(Paths.get(uri))) {
                     list.filter(Files::isDirectory).forEach(p -> out.add(p.getFileName().toString()));
                 }
-                java.util.Collections.sort(out);
             }
         } catch (Exception e) {
             System.out.println("[ysm-legacy122] listSubdirs failed for " + dirPath + ": " + e);

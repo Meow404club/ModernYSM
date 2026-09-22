@@ -121,6 +121,7 @@ val legacy122Include = listOf(
     "rip/ysm/security/**",
     "rip/ysm/zstd/**",
     "rip/ysm/util/**",
+    "rip/ysm/yui/**",
     "rip/ysm/legacy122/**",
     "rip/ysm/OpenYSMStub.java",
     "rip/ysm/LegacyConfig.java",

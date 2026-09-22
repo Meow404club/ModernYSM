@@ -70,6 +70,8 @@ public final class LegacyModelSelectScreen extends GuiScreen {
     public static void init() {
         ClientRegistry.registerKeyBinding(OPEN_GUI);
         MinecraftForge.EVENT_BUS.register(LegacyModelSelectScreen.class);
+        // EXPERIMENTAL（M-U1 冒烟屏，独立 J 键）：M-U2 收编冒烟屏时一并撤
+        rip.ysm.legacy122.yui.YuiSmokeScreen1122.initExperimental();
     }
 
     /** S2C 可用模型列表落点（LegacyModelListPacket.Handler）。 */

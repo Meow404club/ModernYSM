@@ -5,7 +5,6 @@ import java.util.function.Supplier;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.ScaledResolution;
 
 import org.lwjgl.input.Mouse;
 
@@ -17,8 +16,15 @@ import rip.ysm.yui.YuiScreen;
  *
  * <p>1.12.2 代际差异面（vanilla-mc-1122 反编译实证）：mouseClicked 抛 IOException
  * （GuiScreen.java:311，L3-2 在产 LegacyModelSelectScreen.java:216 同款）；
- * mouseReleased protected（:324）；ScaledResolution 单参构造（:13）；
- * 滚轮走 handleMouseInput + Mouse.getEventDWheel（GuiSlot 同面）。
+ * mouseReleased protected（:324）；ScaledResolution 单参构造（:13）。
+ *
+ * <p>滚轮特例（lwjgl3ify d6af8e7 运行时实证 2026-09-22，RFB client 日志）：
+ * GLFW 滚轮回调有 firing（lwjgl3ify DEBUG-MOUSE wheel 日志），addWheelEvent 也入队，
+ * 但 {@code Mouse.next()} 从不向 GuiScreen.handleInput 弹出滚轮事件
+ * （event_dwheel 只在 addWheelEvent/addButton/addMove 写入点间存留）——
+ * 事件驱动的 handleMouseInput 面收不到滚轮。故本壳改用累积器
+ * {@code Mouse.getDWheel()}（读即清零，经典 LWJGL2 API）在 updateScreen 逐 tick
+ * 轮询喂给中性 YuiScreen。经典 LWJGL2 面同 API 兼容（M-U3 1.7.10 可复用同形）。
  *
  * <p>背景：drawScreen 先 drawDefaultBackground（尘土底/暗化）再渲染中性组件，
  * GuiIngameMenu 同序。
@@ -58,18 +64,6 @@ public final class YuiScreenHost1122 extends GuiScreen {
     }
 
     @Override
-    public void handleMouseInput() throws IOException {
-        super.handleMouseInput();
-        int wheel = Mouse.getEventDWheel();
-        if (wheel != 0) {
-            // 坐标换算同 GuiScreen.handleMouseInput 本地数学（GuiScreen.java:369 区段）
-            int mouseX = Mouse.getEventX() * this.width / this.mc.displayWidth;
-            int mouseY = this.height - Mouse.getEventY() * this.height / this.mc.displayHeight - 1;
-            this.screen.mouseScrolled(mouseX, mouseY, wheel > 0 ? 1.0 : -1.0);
-        }
-    }
-
-    @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
         super.keyTyped(typedChar, keyCode);
         if (keyCode == 1) {
@@ -83,6 +77,16 @@ public final class YuiScreenHost1122 extends GuiScreen {
     @Override
     public void updateScreen() {
         this.screen.tick();
+        // 滚轮：lwjgl3ify(d6af8e7) 下 GLFW 滚轮回调有 firing（DEBUG-MOUSE 日志），但
+        // Mouse.next() 不弹出滚轮事件、累积器 getDWheel() 恒 0（2026-09-22 运行时实证，
+        // 见类注）；而同帧按钮事件可达。故逐 tick 轮询 getDWheel（健康 LWJGL2 面=经典
+        // API；本环境实测恒 0，滚轮输入由消费侧回退路径兜底，见 YuiSmokeScreen1122）。
+        int wheel = Mouse.getDWheel();
+        if (wheel != 0) {
+            int mouseX = Mouse.getX() * this.width / this.mc.displayWidth;
+            int mouseY = this.height - Mouse.getY() * this.height / this.mc.displayHeight - 1;
+            this.screen.mouseScrolled(mouseX, mouseY, wheel > 0 ? 1.0 : -1.0);
+        }
     }
 
     @Override

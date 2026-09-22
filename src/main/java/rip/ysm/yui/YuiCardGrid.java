@@ -47,9 +47,9 @@ public class YuiCardGrid extends YuiWidget {
         this.pageLabel.align = YuiBackend.Align.CENTER;
     }
 
-    /** 追加卡片（按加入序自动落格；超 PAGE_SIZE 部分进后续页）。 */
+    /** 追加卡片（按加入序落格；页内槽位=全局序 % 页容量——格位逐页重复，主线 :506-509 同式）。 */
     public YuiModelCard addCard(YuiModelCard card) {
-        int index = this.cards.size();
+        int index = this.cards.size() % PAGE_SIZE;
         card.x = this.x + (index % COLS) * PITCH_X;
         card.y = this.y + (index / COLS) * PITCH_Y;
         this.cards.add(card);

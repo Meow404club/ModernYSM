@@ -14,28 +14,39 @@ import rip.ysm.legacy122.LegacyModelSelectScreen;
 import rip.ysm.legacy122.LegacySyncChannel;
 import rip.ysm.yui.YuiBackend;
 import rip.ysm.yui.YuiCardGrid;
+import rip.ysm.yui.YuiColors;
 import rip.ysm.yui.YuiFlatButton;
 import rip.ysm.yui.YuiLabel;
 import rip.ysm.yui.YuiModelCard;
 import rip.ysm.yui.YuiPanel;
+import rip.ysm.yui.YuiPreview;
 import rip.ysm.yui.YuiScreen;
+import rip.ysm.yui.YuiWidget;
 
 /**
- * 1.12.2 模型选择屏（yui 卡片形态消费者，M-U2 重做）。
+ * 1.12.2 模型选择屏（yui 卡片形态消费者，M-U2 r2 布局对齐主线）。
  *
  * <p>功能链不变（0f19e6e，只换皮）：列表=default + 服务端登录下发
  * （{@link LegacyModelSelectScreen#setAvailable}），点选→
  * {@link LegacySyncChannel#requestSelect}（网络/校验/持久化/广播零改动）。
- * 布局=YuiPanel + 标题 + YuiCardGrid（5x2 翻页）+ Done；卡内实时预览=
- * {@link LegacyCardPreview}（POC 配方），非 default 模型屏内逐 tick 惰性装载
- * （loadModel 幂等+负缓存），装载完成前空槽。
  *
- * <p>翻页主路径=Pager 按钮；滚轮（host tick 轮询喂入）与 ▲▼/◀▶ 键为回退
- * （lwjgl3ify GuiScreen 面滚轮桥断裂实证，M-U1）。
+ * <p>布局=主线 PlayerModelScreen 几何逐项对位（init :389-390/:506-538、render
+ * :567-568/:586-591、renderModelPreview :805-887）：420x235 面板居中
+ * （guiLeft=(w-420)/2、guiTop=(h-235)/2），左栏 135（大预览 scissor 5..130 ×
+ * +29..+200、锚 +190、模型名 split 125 @+205、版本串 @+226 暗灰）+ 右栏 282
+ * （网格 slotX=+143+55*(i%5)、slotY=+28+93*(i/5)；翻页钮 52x14 @+198/+308、
+ * 页码居中 +279）。1.12.2 位图字体/固定管线质感差=不可消除项（后端代际差）。
+ * 主线搜索框/分类/上传图标不在此期（无功能对应，纯装饰不建）。
+ *
+ * <p>非 default 模型屏内逐 tick 惰性装载（loadModel 幂等+负缓存），装载完成前
+ * 空槽。翻页主路径=Pager 按钮；滚轮（host tick 轮询喂入）与 ▲▼/◀▶ 键为回退。
+ * 854x480@scale2（GUI 427x240）起面板完整可见；更小窗=面板裁剪，与主线小窗
+ * 同性质（ponytail：RFB 窗口下限 854x480，无更小场景）。
  */
 public final class YuiModelSelectScreen extends YuiScreen {
 
-    private static final int PANEL_WIDTH = 300;
+    private static final int PANEL_WIDTH = 420;
+    private static final int PANEL_HEIGHT = 235;
 
     private final List<String> modelIds = new ArrayList<String>();
     private final List<YuiModelCard> cards = new ArrayList<YuiModelCard>();
@@ -57,22 +68,50 @@ public final class YuiModelSelectScreen extends YuiScreen {
 
     @Override
     protected void layout() {
-        int px = (this.width - PANEL_WIDTH) / 2;
-        int py = 24;
-        int ph = this.height - 64;
-        add(new YuiPanel(px, py, PANEL_WIDTH, ph));
+        int left = (this.width - PANEL_WIDTH) / 2;
+        int top = (this.height - PANEL_HEIGHT) / 2;
 
-        YuiLabel title = new YuiLabel(this.width / 2, py + 8, 0, 10, "YSM Models");
-        title.align = YuiBackend.Align.CENTER;
-        add(title);
+        // 双面板 135+3 缝+282（PlayerModelScreen.render :567-568 同位；无顶强调线）
+        YuiPanel leftPanel = new YuiPanel(left, top, 135, PANEL_HEIGHT);
+        leftPanel.accentLine = false;
+        add(leftPanel);
+        YuiPanel rightPanel = new YuiPanel(left + 138, top, 282, PANEL_HEIGHT);
+        rightPanel.accentLine = false;
+        add(rightPanel);
 
-        int gridX = px + (PANEL_WIDTH - YuiCardGrid.GRID_WIDTH) / 2;
-        int gridY = py + 26;
-        this.grid = new YuiCardGrid(gridX, gridY, gridY + YuiCardGrid.GRID_HEIGHT + 6);
+        // 左栏大预览：当前选中模型，头/身随鼠标（renderModelPreview :816 scissor 同位）
+        add(new YuiWidget(left + 5, top + 29, 125, 171) {
+            @Override
+            public void render(YuiBackend backend, int mouseX, int mouseY, float partialTick) {
+                YuiPreview pane = LegacyCardPreview.pane();
+                backend.preview(pane, this.x, this.y,
+                        this.x + this.width, this.y + this.height, mouseX, mouseY, partialTick);
+            }
+        });
+
+        // 左栏模型名：split 125 @+205 起，行距 10，居中 135（:870-883 同几何）
+        String name = this.selected == null ? "" : this.selected;
+        List<String> nameLines = YuiLabel.split(this.backend, name, 125, 2);
+        int nameY = top + 205;
+        for (int i = 0; i < nameLines.size(); i++) {
+            YuiLabel line = new YuiLabel(left + 67, nameY, 0, 10, nameLines.get(i));
+            line.align = YuiBackend.Align.CENTER;
+            add(line);
+            nameY += 10;
+        }
+
+        // 左栏版本串（:592-605 同位暗灰）
+        YuiLabel version = new YuiLabel(left + 2, top + 226, 0, 10, "openysm legacy122");
+        version.color = YuiColors.TEXT_DIM;
+        version.shadow = false;
+        add(version);
+
+        // 卡网格 5x2（:506-538 同式）+ 翻页行（:488-501/@586-591 同位）
+        this.grid = new YuiCardGrid(left + 143, top + 28, top + 215);
         add(this.grid);
         for (int i = 0; i < this.modelIds.size(); i++) {
             final String id = this.modelIds.get(i);
-            YuiModelCard card = new YuiModelCard(0, 0, id, new LegacyCardPreview(id), new Runnable() {
+            YuiModelCard card = new YuiModelCard(0, 0, id, LegacyCardPreview.card(id), new Runnable() {
                 @Override
                 public void run() {
                     select(id);
@@ -83,8 +122,8 @@ public final class YuiModelSelectScreen extends YuiScreen {
             this.cards.add(card);
         }
 
-        // Done（FlatIconButton 115x15 扁平语言）
-        add(new YuiFlatButton(this.width / 2 - 57, py + ph + 8, 115, 15,
+        // Done（1.12.2 验收要求显式关屏；主线翻页行语言 52x14 扁平）
+        add(new YuiFlatButton(left + 360, top + 215, 52, 14,
                 I18n.format("gui.done"), new Runnable() {
                     @Override
                     public void run() {

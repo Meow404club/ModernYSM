@@ -31,6 +31,7 @@ public final class LegacyModelTranslator {
     private static final Matrix4f LOCAL_BONE_MAT = new Matrix4f();
     private static final Matrix3f NORMAL_MAT = new Matrix3f();
     private static final Vector3f NORMAL_VEC = new Vector3f();
+    private static final Vector3f VECTOR = new Vector3f();
     private static final float[] MATRIX_BUF = new float[16];
     private static final float[] NORMAL_BUF = new float[9];
 
@@ -66,13 +67,12 @@ public final class LegacyModelTranslator {
         GlStateManager.scale(-1.0F, 1.0F, 1.0F);
 
         // 1.12.2 无 RenderSystem 分离投影——GL 状态即管线状态，无需 MatrixBridge.proj/modelView
-        Matrix4f rootPose = new Matrix4f();
-        Matrix4f[] cache = new Matrix4f[bones.size()];
         boolean[] visibleCache = new boolean[bones.size()];
+        Matrix4f[] cache = skeleton(bones, boneParams, visibleCache);
 
         int quadsDrawn = 0;
         for (int i = 0; i < bones.size(); i++) {
-            if (!isVisibleBone(i, bones, boneParams, cache, visibleCache, rootPose)) {
+            if (!visibleCache[i]) {
                 continue;
             }
             GeoModel.BakedBone bone = bones.get(i);
@@ -113,7 +113,54 @@ public final class LegacyModelTranslator {
     }
 
     // NativeModelRenderer.calculateBoneMatrix 同款数学（rootPose 恒单位阵：
-    // 1.12.2 定位走 GL 状态栈，非模型矩阵），可见性判定镜像 offset6-10 契约
+    // 1.12.2 定位走 GL 状态栈，非模型矩阵），可见性判定镜像 offset6-10 契约。
+    // M-U2 r2：矩阵计算提为 skeleton() 单源——render() 与 computeBounds()（GUI 卡内
+    // 预览自适应缩放）共用同一骨矩阵，避免两份矩阵数学漂移。
+    private static Matrix4f[] skeleton(java.util.List<GeoModel.BakedBone> bones,
+                                       float[] boneParams, boolean[] visibleCache) {
+        Matrix4f rootPose = new Matrix4f();
+        Matrix4f[] cache = new Matrix4f[bones.size()];
+        for (int i = 0; i < bones.size(); i++) {
+            isVisibleBone(i, bones, boneParams, cache, visibleCache, rootPose);
+        }
+        return cache;
+    }
+
+    /**
+     * 模型空间 AABB（min x/y/z, max x/y/z），仅可见骨；GUI 预览自适应缩放用
+     *（不同模型尺寸/原点差异大，固定 scale 会巨大化或裁切——主线 ModelButton
+     * 观感=模型恰好收在槽内）。调用方按模型缓存，一次计算重复消费。
+     */
+    public static float[] computeBounds(GeoModel model, float[] boneParams) {
+        if (model == null || model.bakedBones == null || model.bakedBones.isEmpty()) {
+            return null;
+        }
+        boolean[] visible = new boolean[model.bakedBones.size()];
+        Matrix4f[] cache = skeleton(model.bakedBones, boneParams, visible);
+        float minX = Float.MAX_VALUE, minY = Float.MAX_VALUE, minZ = Float.MAX_VALUE;
+        float maxX = -Float.MAX_VALUE, maxY = -Float.MAX_VALUE, maxZ = -Float.MAX_VALUE;
+        VECTOR.set(0.0F, 0.0F, 0.0F);
+        for (int i = 0; i < model.bakedBones.size(); i++) {
+            if (!visible[i]) {
+                continue;
+            }
+            Matrix4f mat = cache[i];
+            for (GeoModel.BakedCube cube : model.bakedBones.get(i).cubes) {
+                for (GeoModel.BakedQuad quad : cube.quads) {
+                    for (int v = 0; v < 4; v++) {
+                        VECTOR.set(quad.positions[v * 3], quad.positions[v * 3 + 1],
+                                quad.positions[v * 3 + 2]);
+                        mat.transformPosition(VECTOR);
+                        minX = Math.min(minX, VECTOR.x); maxX = Math.max(maxX, VECTOR.x);
+                        minY = Math.min(minY, VECTOR.y); maxY = Math.max(maxY, VECTOR.y);
+                        minZ = Math.min(minZ, VECTOR.z); maxZ = Math.max(maxZ, VECTOR.z);
+                    }
+                }
+            }
+        }
+        return new float[] {minX, minY, minZ, maxX, maxY, maxZ};
+    }
+
     private static boolean isVisibleBone(int idx, java.util.List<GeoModel.BakedBone> bones,
                                          float[] boneParams, Matrix4f[] cache, boolean[] visibleCache,
                                          Matrix4f rootPose) {

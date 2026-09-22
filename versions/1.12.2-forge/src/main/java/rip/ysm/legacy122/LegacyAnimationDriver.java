@@ -23,8 +23,11 @@ public final class LegacyAnimationDriver {
     }
 
     public static void tick(EntityPlayer player, float partialTick) {
-        GeoModel model = LegacyModelState.mainModel();
-        float[] params = LegacyModelState.currentBoneParams();
+        tick(player, partialTick, LegacyModelState.mainModel(), LegacyModelState.currentBoneParams());
+    }
+
+    /** L3-1：异模型驱动重载——模型+骨参数面由 LegacyRenderHook 按被渲染玩家指定。 */
+    public static void tick(EntityPlayer player, float partialTick, GeoModel model, float[] params) {
         if (model == null || params == null || model.bakedBones == null) {
             return;
         }

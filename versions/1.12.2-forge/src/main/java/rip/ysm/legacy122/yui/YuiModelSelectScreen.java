@@ -51,6 +51,7 @@ public final class YuiModelSelectScreen extends YuiScreen {
     private final List<String> modelIds = new ArrayList<String>();
     private final List<YuiModelCard> cards = new ArrayList<YuiModelCard>();
     private final List<String> loadQueue = new ArrayList<String>();
+    private final List<YuiLabel> nameLabels = new ArrayList<YuiLabel>();
     private String selected;
     private YuiCardGrid grid;
 
@@ -89,16 +90,10 @@ public final class YuiModelSelectScreen extends YuiScreen {
             }
         });
 
-        // 左栏模型名：split 125 @+205 起，行距 10，居中 135（:870-883 同几何）
-        String name = this.selected == null ? "" : this.selected;
-        List<String> nameLines = YuiLabel.split(this.backend, name, 125, 2);
-        int nameY = top + 205;
-        for (int i = 0; i < nameLines.size(); i++) {
-            YuiLabel line = new YuiLabel(left + 67, nameY, 0, 10, nameLines.get(i));
-            line.align = YuiBackend.Align.CENTER;
-            add(line);
-            nameY += 10;
-        }
+        // 左栏模型名：split 125 @+205 起，行距 10，居中 135（:870-883 同几何）；
+        // 标签持引用，select() 时刷新（左栏预览读 registry 即时切换，名字不能滞后）
+        this.nameLabels.clear();
+        this.setNameLines(this.selected);
 
         // 左栏版本串（:592-605 同位暗灰）
         YuiLabel version = new YuiLabel(left + 2, top + 226, 0, 10, "openysm legacy122");
@@ -140,6 +135,25 @@ public final class YuiModelSelectScreen extends YuiScreen {
         }
     }
 
+    /** 左栏模型名两行刷新（split 125，同 layout 几何）。 */
+    private void setNameLines(String name) {
+        int left = (this.width - PANEL_WIDTH) / 2;
+        int top = (this.height - PANEL_HEIGHT) / 2;
+        List<String> lines = YuiLabel.split(this.backend, name == null ? "" : name, 125, 2);
+        while (this.nameLabels.size() < lines.size()) {
+            YuiLabel line = new YuiLabel(left + 67, top + 205, 0, 10, "");
+            line.align = YuiBackend.Align.CENTER;
+            this.nameLabels.add(line);
+            add(line);
+        }
+        for (int i = 0; i < this.nameLabels.size(); i++) {
+            YuiLabel label = this.nameLabels.get(i);
+            label.text = i < lines.size() ? lines.get(i) : "";
+            label.x = left + 67;
+            label.y = top + 205 + i * 10;
+        }
+    }
+
     @Override
     public boolean keyPressed(int keyCode, char typedChar) {
         // 翻页键盘回退：▲/◀ 上一页，▼/▶ 下一页
@@ -160,6 +174,7 @@ public final class YuiModelSelectScreen extends YuiScreen {
         for (int i = 0; i < this.cards.size(); i++) {
             this.cards.get(i).selected = this.modelIds.get(i).equals(id);
         }
+        this.setNameLines(id);
         LegacySyncChannel.requestSelect(id);
         System.out.println("[ysm-legacy122] gui selected: " + id);
     }

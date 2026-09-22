@@ -25,6 +25,7 @@ public final class LegacyConfig {
     private static final String ASSIGNMENTS_KEY = "assignments";
 
     private static String modelId = LegacyModelRegistry.DEFAULT_MODEL_ID;
+    private static File cfgFile;
     private static final Map<UUID, String> ASSIGNMENTS = new HashMap<>();
 
     private LegacyConfig() {
@@ -32,7 +33,8 @@ public final class LegacyConfig {
 
     /** preInit 调：读 config/openysm-legacy122.cfg 的 model 面。 */
     public static void load(File configDir) {
-        Configuration cfg = new Configuration(new File(configDir, "openysm-legacy122.cfg"));
+        cfgFile = new File(configDir, "openysm-legacy122.cfg");
+        Configuration cfg = new Configuration(cfgFile);
         cfg.load();
         modelId = cfg.getString(MODEL_ID_KEY, CATEGORY,
                 LegacyModelRegistry.DEFAULT_MODEL_ID, "YSM model id (builtin folder under assets/yes_steve_model/builtin)");
@@ -66,5 +68,40 @@ public final class LegacyConfig {
     public static String modelIdFor(UUID uuid) {
         String id = uuid == null ? null : ASSIGNMENTS.get(uuid);
         return id == null || id.isEmpty() ? modelId : id;
+    }
+
+    /**
+     * L3-2 GUI 选择落盘：更新 uuid 指派并回写 cfg（default/空=移除指派回退
+     * model.id）。Property.set+save（Configuration.java:672 get(String[],comment)
+     * / Property.java:1179 set(String[]) 实证）。
+     */
+    public static void assign(UUID uuid, String modelId) {
+        if (uuid == null) {
+            return;
+        }
+        if (modelId == null || modelId.isEmpty()
+                || LegacyModelRegistry.DEFAULT_MODEL_ID.equals(modelId)) {
+            ASSIGNMENTS.remove(uuid);
+        } else {
+            ASSIGNMENTS.put(uuid, modelId);
+        }
+        saveAssignments();
+    }
+
+    private static void saveAssignments() {
+        if (cfgFile == null) {
+            return;
+        }
+        Configuration cfg = new Configuration(cfgFile);
+        cfg.load();
+        String[] lines = new String[ASSIGNMENTS.size()];
+        int i = 0;
+        for (Map.Entry<UUID, String> e : ASSIGNMENTS.entrySet()) {
+            lines[i++] = e.getKey() + "=" + e.getValue();
+        }
+        cfg.get(CATEGORY, ASSIGNMENTS_KEY, lines, "Per-player model assignment, entries formatted uuid=modelId").set(lines);
+        if (cfg.hasChanged()) {
+            cfg.save();
+        }
     }
 }

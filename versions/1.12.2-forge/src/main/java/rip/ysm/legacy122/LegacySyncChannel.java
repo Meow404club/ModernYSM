@@ -42,6 +42,11 @@ public final class LegacySyncChannel {
         channel = NetworkRegistry.INSTANCE.newSimpleChannel(CHANNEL);
         channel.registerMessage(LegacyModelSyncPacket.Handler.class,
                 LegacyModelSyncPacket.class, DISCRIMINATOR, Side.CLIENT);
+        // L3-2：可用模型列表（S2C）+ 玩家选择（C2S）
+        channel.registerMessage(LegacyModelListPacket.Handler.class,
+                LegacyModelListPacket.class, DISCRIMINATOR + 1, Side.CLIENT);
+        channel.registerMessage(LegacyModelSelectPacket.Handler.class,
+                LegacyModelSelectPacket.class, DISCRIMINATOR + 2, Side.SERVER);
         System.out.println("[ysm-legacy122] sync channel registered: " + CHANNEL);
     }
 
@@ -58,6 +63,20 @@ public final class LegacySyncChannel {
             UUID uuid = tracked.getUniqueID();
             String modelId = LegacyModelRegistry.serverModelIdOf(uuid);
             channel.sendToAllTracking(new LegacyModelSyncPacket(uuid, modelId), tracked);
+        }
+    }
+
+    /** 服务端：下发可用模型列表（L3-2，登录时随登记同步）。 */
+    public static void sendAvailable(EntityPlayerMP player) {
+        if (channel != null && player != null) {
+            channel.sendTo(new LegacyModelListPacket(LegacyModelLoader.listBuiltinModels()), player);
+        }
+    }
+
+    /** 客户端：GUI 选择回传（C2S，SimpleNetworkWrapper :318；单机走集成服回环）。 */
+    public static void requestSelect(String modelId) {
+        if (channel != null) {
+            channel.sendToServer(new LegacyModelSelectPacket(modelId));
         }
     }
 
@@ -82,6 +101,7 @@ public final class LegacySyncChannel {
         LegacyModelRegistry.assignServer(uuid, modelId);
         syncAllTo(player);
         syncToTracking(player);
+        sendAvailable(player);
         System.out.printf(
                 "[ysm-legacy122] assign on login: uuid=%s entityId=%d model=%s%n",
                 uuid, player.getEntityId(), modelId);

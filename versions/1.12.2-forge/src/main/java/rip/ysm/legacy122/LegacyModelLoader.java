@@ -114,6 +114,27 @@ public final class LegacyModelLoader {
         return LegacyModelLoader.class.getClassLoader().getResource(path) != null;
     }
 
+    /**
+     * L3-2：枚举可用 builtin 模型 id（两级形式 "包/子模组"）。dir+jar 两分支由
+     * listSubdirs 覆盖；打包根（ysm-pack.json）展开为各含 ysm.json 的子模组 id。
+     * 服务端登录下发 + C2S 选择校验共用此面（classpath 纯读，无客户端依赖）。
+     */
+    public static java.util.List<String> listBuiltinModels() {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        for (String child : listSubdirs(BUILTIN_PREFIX)) {
+            if (resourceExists(BUILTIN_PREFIX + child + "/ysm.json")) {
+                out.add(child);
+            } else if (resourceExists(BUILTIN_PREFIX + child + "/ysm-pack.json")) {
+                for (String sub : listSubdirs(BUILTIN_PREFIX + child + "/")) {
+                    if (resourceExists(BUILTIN_PREFIX + child + "/" + sub + "/ysm.json")) {
+                        out.add(child + "/" + sub);
+                    }
+                }
+            }
+        }
+        return out;
+    }
+
     /** 枚举 classpath 目录子项（dev=文件系统 / 生产=jar 条目，两态覆盖）。 */
     private static java.util.SortedSet<String> listSubdirs(String dirPath) {
         java.util.SortedSet<String> out = new java.util.TreeSet<>();

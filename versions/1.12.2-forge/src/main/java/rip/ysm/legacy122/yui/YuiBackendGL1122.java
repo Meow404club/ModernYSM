@@ -131,7 +131,18 @@ public final class YuiBackendGL1122 implements YuiBackend {
         return this.mc.displayHeight;
     }
 
-    // preview：接口默认空实现（M-U1）。1.12.2 固定管线实体预览走 M-U1R 研究卡
-    // （GuiInventory.drawEntityOnScreen GuiInventory.java:92 等价性+GL 状态恢复清单），
-    // RenderManager 路径不可用（legacy 渲染走 RenderPlayerEvent 接管），真实现须直调版本树翻译层。
+    // preview：M-U2 落地（收编 POC be0a794 结论）。签名契约（YuiPreview javadoc）：
+    // 返回后 scissor 已弹 + 深度测试已关（模型 z 写深度挡后续 2D quad，vanilla 先例
+    // GuiContainer.drawScreen:73；scissor 掩深度写入=槽外零泄漏）。RenderManager
+    // 路径不可用（legacy 渲染走 RenderPlayerEvent 接管），实体绘制直调版本树翻译层
+    // （消费侧 YuiPreview 实现内完成）。
+    @Override
+    public void preview(YuiPreview preview, int x1, int y1, int x2, int y2,
+                        float mouseX, float mouseY, float partialTick) {
+        GL11.glEnable(GL11.GL_DEPTH_TEST); // 模型自遮挡需要（GUI 进场态不保证）
+        scissorPush(x1, y1, x2, y2);
+        preview.render(x1, y1, x2, y2, mouseX, mouseY, partialTick);
+        scissorPop();
+        GL11.glDisable(GL11.GL_DEPTH_TEST); // 契约收口：后续 2D 叠序可见（host 帧末恢复）
+    }
 }

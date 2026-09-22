@@ -1,15 +1,15 @@
 package rip.ysm.yui;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * 模型卡（52x90）：实底 + 卡内预览槽（scissor，槽高 h-20）+ 底部居中标签
- * （≤2 行，split 宽 45）+ hover 奶油 1px 描边。
+ * （≤2 行，split 宽 45）+ 奶油 1px 描边（hover 或选中常显）。
  * 形态真相源：主线 ModelButton.renderWidget（ModelButton.java:242-331）——
  * bg -12369342(:262)/预览槽 scissor h-20(:277-293)/标签 ≤2 行 45 宽 色 15986656
- * (:302-314)/hover -790560 1px 描边(:315-320)；选中蓝底为消费面选择语义
- * （FlatColorButton:76 -14774017 同值）。锁定遮罩/star 图标不在此期（消费面无此概念）。
+ * (:302-314)/hover -790560 1px 描边(:315-320)。r2：选中态弃蓝底（主线卡片语言
+ * 无选中蓝底，蓝底是 r1 发明）改为描边常显——主线当前模型语义由左栏大预览承载。
+ * 锁定遮罩/star 图标不在此期（消费面无此概念）。
  *
  * <p>预览槽经 {@link YuiBackend#preview} 下放版本后端；后端契约：返回后 scissor
  * 已弹出、深度测试已关（模型 z 写深度挡后续 2D，GuiContainer:73 先例），
@@ -38,14 +38,13 @@ public class YuiModelCard extends YuiWidget {
 
     @Override
     public void render(YuiBackend backend, int mouseX, int mouseY, float partialTick) {
-        backend.fillRect(this.x, this.y, this.x + this.width, this.y + this.height,
-                this.selected ? YuiColors.SELECTED : YuiColors.ROW);
+        backend.fillRect(this.x, this.y, this.x + this.width, this.y + this.height, YuiColors.ROW);
         if (this.preview != null) {
             backend.preview(this.preview, this.x, this.y,
                     this.x + this.width, this.y + SLOT_HEIGHT, mouseX, mouseY, partialTick);
         }
         // 标签 ≤2 行：两行 y+h-19/-10，单行 y+h-15（ModelButton :302-314 同几何）
-        List<String> lines = splitLabel(backend, this.label, 45);
+        List<String> lines = YuiLabel.split(backend, this.label, 45, 2);
         if (lines.size() > 1) {
             backend.drawTextCentered(lines.get(0), this.x + this.width / 2,
                     this.y + this.height - 19, YuiColors.TEXT);
@@ -55,7 +54,8 @@ public class YuiModelCard extends YuiWidget {
             backend.drawTextCentered(lines.get(0), this.x + this.width / 2,
                     this.y + this.height - 15, YuiColors.TEXT);
         }
-        if (isHovered(mouseX, mouseY)) {
+        // hover 描边（ModelButton :315-320 同色）；选中=描边常显（主线卡片无选中蓝底）
+        if (this.selected || isHovered(mouseX, mouseY)) {
             backend.outlineRect1px(this.x, this.y, this.width, this.height, YuiColors.ACCENT);
         }
     }
@@ -69,30 +69,5 @@ public class YuiModelCard extends YuiWidget {
             return true;
         }
         return false;
-    }
-
-    /**
-     * 标签折行：贪心逐字符、宽度 45、截断至 2 行。主线 font.split(msg,45) 的
-     * 中性近似（yui 树无 Font 面，只有 {@link YuiBackend#textWidth}）；
-     * 超宽截断与主线同语义（>2 行静默丢弃）。
-     */
-    private static List<String> splitLabel(YuiBackend backend, String text, int maxWidth) {
-        List<String> lines = new ArrayList<String>();
-        StringBuilder cur = new StringBuilder();
-        for (int i = 0; i < text.length(); i++) {
-            cur.append(text.charAt(i));
-            if (backend.textWidth(cur.toString()) > maxWidth && cur.length() > 1) {
-                cur.deleteCharAt(cur.length() - 1);
-                lines.add(cur.toString());
-                if (lines.size() == 2) {
-                    return lines;
-                }
-                cur.setLength(0);
-            }
-        }
-        if (cur.length() > 0 || lines.isEmpty()) {
-            lines.add(cur.toString());
-        }
-        return lines;
     }
 }

@@ -130,6 +130,8 @@ public final class LegacyModelTranslator {
      * 模型空间 AABB（min x/y/z, max x/y/z），仅可见骨；GUI 预览自适应缩放用
      *（不同模型尺寸/原点差异大，固定 scale 会巨大化或裁切——主线 ModelButton
      * 观感=模型恰好收在槽内）。调用方按模型缓存，一次计算重复消费。
+     * 注意：可见性读骨参数旗标（offset6-8 scale=0 全隐），调用前 params 必须
+     * 动画中性化（LegacyAnimationDriver.tick 即置位），否则返回 null。
      */
     public static float[] computeBounds(GeoModel model, float[] boneParams) {
         if (model == null || model.bakedBones == null || model.bakedBones.isEmpty()) {
@@ -158,7 +160,7 @@ public final class LegacyModelTranslator {
                 }
             }
         }
-        return new float[] {minX, minY, minZ, maxX, maxY, maxZ};
+        return maxX < minX ? null : new float[] {minX, minY, minZ, maxX, maxY, maxZ};
     }
 
     private static boolean isVisibleBone(int idx, java.util.List<GeoModel.BakedBone> bones,

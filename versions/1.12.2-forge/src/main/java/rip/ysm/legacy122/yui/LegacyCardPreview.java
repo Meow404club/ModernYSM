@@ -77,6 +77,9 @@ public final class LegacyCardPreview implements YuiPreview {
         if (model == null || params == null || model.bakedBones == null || model.bakedBones.isEmpty()) {
             return; // 未装载（屏内逐 tick 惌性装载中）：空槽
         }
+        // 动画先于 bounds：首帧 params 为全零初始态（scale 旗标=0 → 全骨不可见），
+        // tick 置中性位后 AABB 才有效（16:33 采证 bounds=±3.4e38 空盒根因）
+        LegacyAnimationDriver.tick((System.currentTimeMillis() % 1000000L) * 0.001F, 0.45F, model, params);
         float[] b = boundsOf(id, model, params);
         if (b == null) {
             return;
@@ -127,10 +130,7 @@ public final class LegacyCardPreview implements YuiPreview {
         GlStateManager.rotate(-pitchDeg, 1.0F, 0.0F, 0.0F); // :106 俯仰（实体 rotationPitch 等效值）
         GlStateManager.rotate(180.0F - yawDeg, 0.0F, 1.0F, 0.0F); // :107-111 applyRotations 等效（renderYawOffset=yawDeg）
 
-        // idle 动画：时间相位直驱（GuiScreen 无 limbSwing 源，相位重载自 be0a794 收编）
-        LegacyAnimationDriver.tick((System.currentTimeMillis() % 1000000L) * 0.001F, 0.45F, model, params);
-
-        // 必改②：:113-116 RenderManager.renderEntity → 翻译层直调
+        // 必改②：:113-116 RenderManager.renderEntity → 翻译层直调（动画已在 bounds 前驱动）
         LegacyModelTranslator.render(model, params, 1.0F, 1.0F, 1.0F, 1.0F);
 
         GlStateManager.popMatrix();                      // :123

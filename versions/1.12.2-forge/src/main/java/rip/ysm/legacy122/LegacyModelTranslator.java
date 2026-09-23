@@ -48,6 +48,21 @@ public final class LegacyModelTranslator {
      * @param r/g/b/a     颜色
      */
     public static void render(GeoModel model, float[] boneParams, float r, float g, float b, float a) {
+        // GUI 预览入口：无实体上下文（lightmap=-1 不做发光骨 lightmap 覆盖）、
+        // 无受击面（hurtRed=0 不做红闪覆盖）
+        render(model, boneParams, r, g, b, a, -1, 0.0F);
+    }
+
+    /**
+     * 世界路径全量入口（LegacyRenderHook 专用）。
+     *
+     * @param lightmap 被渲染实体 getBrightnessForRender()（vanilla-mc-1.12.2 Entity.java:1106
+     *                 无参形）；-1=无实体上下文（GUI 预览），发光骨不做 lightmap 覆盖
+     * @param hurtRed  受击红闪二次覆盖强度（0=关；取实体 getBrightness()，vanilla-mc-1.7.10
+     *                 RendererLivingEntity.doRender:170-186 同款二次覆盖面，双线一致）
+     */
+    public static void render(GeoModel model, float[] boneParams, float r, float g, float b, float a,
+                              int lightmap, float hurtRed) {
         if (model == null || model.bakedBones == null || model.bakedBones.isEmpty()) {
             return;
         }
@@ -64,10 +79,81 @@ public final class LegacyModelTranslator {
         GlStateManager.enableRescaleNormal();
         GlStateManager.scale(-1.0F, 1.0F, 1.0F);
 
+        // item1：镂空/半透明渲染状态自管（vanilla-mc-1.12.2 RenderLivingBase.doRender:114
+        // enableAlpha 被 RenderPlayerEvent.Pre 取消连坐→此前镂空按不透明画）。
+        // 语义对位主线 IGeoRenderer.getRenderType:120-130：isTranslucentTexture→
+        // entityTranslucent（blend srcAlpha 无 alpha test）否则 entityCutoutNoCull
+        //（alpha test 0.1）。ghost 顶点 alpha<1 时 alphaFunc 降 1/255（GlStateManager
+        // Profile.c=TRANSPARENT 同值，GlStateManager.java:1041-1053 求证）。
+        // set/unset 严格配对：只清自己开的。
+        boolean translucentTexture = model.isTranslucentTexture(0);
+        if (translucentTexture) {
+            GlStateManager.enableBlend();
+            GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
+                    GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+                    GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+        } else {
+            GlStateManager.enableAlpha();
+            GlStateManager.alphaFunc(GL11.GL_GREATER, a < 1.0F ? 1.0F / 255.0F : 0.1F);
+        }
+
         // 1.12.2 无 RenderSystem 分离投影——GL 状态即管线状态，无需 MatrixBridge.proj/modelView
         boolean[] visibleCache = new boolean[bones.size()];
         Matrix4f[] cache = skeleton(bones, boneParams, visibleCache);
 
+        int quadsDrawn = drawGeometry(bones, boneParams, visibleCache, cache, r, g, b, a, lightmap);
+
+        // item3：受击红闪二次覆盖面（hurtTime>0||deathTime>0 由 hook 判定，hurtRed=
+        // 实体 getBrightness()）。vanilla-mc-1.7.10 RendererLivingEntity.doRender:170-186
+        // 同款面（blend srcAlpha + depthFunc GL_EQUAL 同深度重绘，红=brightness、
+        // alpha 0.4），双线一致；122 vanilla 用 texenv COMBINE 插值（setBrightness:246-250
+        // 常量 (1,0,0,0.3)），固定管线取二次覆盖配方为双线统一实现。覆盖面不做
+        // glow lightmap 切换（lightmap=-1）。
+        if (hurtRed > 0.0F) {
+            GL11.glEnable(GL11.GL_BLEND);
+            GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+            GL11.glDepthFunc(GL11.GL_EQUAL);
+            drawGeometry(bones, boneParams, visibleCache, cache, hurtRed, 0.0F, 0.0F, 0.4F, -1);
+            GL11.glDepthFunc(GL11.GL_LEQUAL);
+            GL11.glDisable(GL11.GL_BLEND);
+            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        }
+
+        if (translucentTexture) {
+            GlStateManager.disableBlend();
+        } else {
+            GlStateManager.disableAlpha();
+        }
+
+        GlStateManager.disableRescaleNormal();
+        GlStateManager.popMatrix();
+
+        if (DEBUG_LOG && (debugFrame++ % 40 == 0)) {
+            System.out.printf("[ysm-legacy122] translator frame=%d bones=%d quadsDrawn=%d boneParams=%d translucent=%b glowBones=%d hurtRed=%.2f rootBoneRot=(%.3f,%.3f,%.3f)%n",
+                    debugFrame, bones.size(), quadsDrawn, boneParams == null ? -1 : boneParams.length,
+                    translucentTexture, glowBoneCount(bones), hurtRed,
+                    boneParams == null ? 0 : boneParams[0], boneParams == null ? 0 : boneParams[1],
+                    boneParams == null ? 0 : boneParams[2]);
+        }
+    }
+
+    private static int glowBoneCount(java.util.List<GeoModel.BakedBone> bones) {
+        int n = 0;
+        for (GeoModel.BakedBone bone : bones) {
+            if (bone.glow) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    /**
+     * 骨循环直绘（主面/受击红闪覆盖面共用）。lightmap>=0 时 ysmGlow 发光骨做
+     * lightmap (240,240) 局部覆盖（item2）；<0 不触碰 lightmap（GUI 预览/覆盖面）。
+     */
+    private static int drawGeometry(java.util.List<GeoModel.BakedBone> bones, float[] boneParams,
+                                    boolean[] visibleCache, Matrix4f[] cache,
+                                    float r, float g, float b, float a, int lightmap) {
         int quadsDrawn = 0;
         for (int i = 0; i < bones.size(); i++) {
             if (!visibleCache[i]) {
@@ -77,6 +163,15 @@ public final class LegacyModelTranslator {
             Matrix4f boneMat = cache[i];
             boneMat.get(MATRIX_BUF);
             NORMAL_MAT.set(boneMat).normal().get(NORMAL_BUF);
+
+            // item2：ysmGlow 发光骨 lightmap 全亮局部覆盖（主线 NativeModelRenderer:291
+            // bone.glow ? LightTexture.pack(15,15) : packedLight 同语义；固定管线等价面=
+            // lightmap 纹理坐标临时置 (240,240)，画完恢复实体坐标）。
+            boolean glow = bone.glow && lightmap >= 0;
+            if (glow) {
+                net.minecraft.client.renderer.OpenGlHelper.setLightmapTextureCoords(
+                        net.minecraft.client.renderer.OpenGlHelper.lightmapTexUnit, 240.0F, 240.0F);
+            }
 
             GL11.glPushMatrix();
             GL11.glMultMatrixf(MATRIX_BUF);
@@ -97,17 +192,16 @@ public final class LegacyModelTranslator {
                 }
             }
             GL11.glPopMatrix();
-        }
 
-        GlStateManager.disableRescaleNormal();
-        GlStateManager.popMatrix();
-
-        if (DEBUG_LOG && (debugFrame++ % 40 == 0)) {
-            System.out.printf("[ysm-legacy122] translator frame=%d bones=%d quadsDrawn=%d boneParams=%d rootBoneRot=(%.3f,%.3f,%.3f)%n",
-                    debugFrame, bones.size(), quadsDrawn, boneParams == null ? -1 : boneParams.length,
-                    boneParams == null ? 0 : boneParams[0], boneParams == null ? 0 : boneParams[1],
-                    boneParams == null ? 0 : boneParams[2]);
+            if (glow) {
+                // 恢复实体 lightmap 坐标（vanilla RenderManager.renderEntityStatic:328
+                // 同款 b%65536 / b/65536 拆包）
+                net.minecraft.client.renderer.OpenGlHelper.setLightmapTextureCoords(
+                        net.minecraft.client.renderer.OpenGlHelper.lightmapTexUnit,
+                        (float) (lightmap % 65536), (float) (lightmap / 65536));
+            }
         }
+        return quadsDrawn;
     }
 
     // NativeModelRenderer.calculateBoneMatrix 同款数学（rootPose 恒单位阵：

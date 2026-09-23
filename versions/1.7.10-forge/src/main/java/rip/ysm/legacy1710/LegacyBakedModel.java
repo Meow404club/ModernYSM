@@ -17,8 +17,14 @@ public final class LegacyBakedModel {
 
     public final List<BakedBone> bones = new ArrayList<>();
 
+    // 主贴图（textureMap 首个，恒绑 index 0）半透明扫描结果——GeoModel.isTranslucentTexture(0)
+    // 同源（TranslucencyScanner），LegacyGeoModelConverter 装载
+    public boolean translucent;
+
     public static class BakedBone {
         public String name;
+        // ysmGlow 前缀骨（GeoBone GLOWING_PREFIX 同语义，主线 NativeModelRenderer:291 全亮）
+        public boolean glow;
         public int parentIdx = -1;
         public float pivotX;
         public float pivotY;

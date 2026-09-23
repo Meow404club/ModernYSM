@@ -6,9 +6,9 @@ import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
  * GeoModel→LegacyBakedModel 机械映射（legacy1710-l2a-model-load）。
  *
  * 共享 GeoModel.BakedBone/BakedQuad（GeoModel.java:111-133）与 LegacyBakedModel
- * 逐字段同构（positions12/uv8/normal3 float 契约），BakedQuad 多一个 isTranslucent
- *（固定管线翻译层不消费，丢弃）。parentIdx 是 bakedBones 列表下标——转换保序，
- * 下标语义不变。glow/partMask/rotX-Y-Z 等翻译层不消费的字段一并丢弃。
+ * 逐字段同构（positions12/uv8/normal3 float 契约）。parentIdx 是 bakedBones 列表
+ * 下标——转换保序，下标语义不变。glow（item2 发光骨全亮面）与主贴图 translucent
+ *（item1 alpha/blend 状态面）翻译层已消费，一并携带；partMask/rotX-Y-Z 等仍丢弃。
  */
 public final class LegacyGeoModelConverter {
 
@@ -20,9 +20,11 @@ public final class LegacyGeoModelConverter {
         if (geo == null || geo.bakedBones == null) {
             return out;
         }
+        out.translucent = geo.isTranslucentTexture(0);
         for (GeoModel.BakedBone src : geo.bakedBones) {
             LegacyBakedModel.BakedBone bone = new LegacyBakedModel.BakedBone();
             bone.name = src.name;
+            bone.glow = src.glow;
             bone.parentIdx = src.parentIdx;
             bone.pivotX = src.pivotX;
             bone.pivotY = src.pivotY;

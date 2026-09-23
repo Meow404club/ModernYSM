@@ -422,16 +422,16 @@ tasks.named<Jar>("jar") {
             "FMLCorePluginContainsFMLMod" to "true",
         )
     }
-    // ===== debt-1710-fastutil-release-jar（L2b 同卡必修）=====
-    // release jar（jar→remapJar 链）打包 fastutil：1.7.10 vanilla 不带 fastutil
-    //（122 线靠 MC 传递，1710 无此面），生产环境装载 GeoModel 解析链
-    //（IntList/ObjectArrayList 字段）即 NoClassDefFoundError。bundle=原样合并不
-    // relocate（1.7.10 生态零 fastutil 碰撞面，老式 mod 内嵌 libs 惯例同形）；
+    // ===== debt-1710-fastutil-release-jar + debt-1710-joml-release-jar =====
+    // release jar（jar→remapJar 链）打包 fastutil/joml：1.7.10 vanilla 两者都不带
+    //（122 线靠 MC 传递，1710 无此面），生产环境装载解析链即 NoClassDefFoundError
+    //（GeoModel 的 IntList/ObjectArrayList 字段 / YSMFolderDeserializer 的 org.joml）。
+    // bundle=原样合并不 relocate（1.7.10 生态零碰撞面，老式 mod 内嵌 libs 惯例同形）；
     // ponytail: 全量 fastutil 23MB 入包，体积敏感时换 fastutil-core 子集即可。
     dependsOn(configurations.getByName("runtimeClasspath").buildDependencies)
     from({
         configurations.getByName("runtimeClasspath")
-            .filter { it.name.startsWith("fastutil-") }
+            .filter { it.name.startsWith("fastutil-") || it.name.startsWith("joml-") }
             .map { project.zipTree(it) }
     }) {
         exclude("META-INF/**", "module-info.class")

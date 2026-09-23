@@ -21,10 +21,10 @@ import rip.ysm.yui.YuiScreen;
  * （ScaledResolution.java:13）；initGui/drawScreen/handleMouseInput/updateScreen/
  * doesGuiPauseGame/onGuiClosed 两代同形。
  *
- * <p>滚轮：M-U1 1122 面运行时实证（lwjgl3ify d6af8e7）GLFW 滚轮回调有 firing 但
- * Mouse.next() 不向 GuiScreen 弹出滚轮事件、getDWheel 累积器恒 0——1.7.10 桥同款
- * 风险（M-U3 runClient 如实取证，预期阴性）。host 沿用 YuiScreenHost1122 的
- * getDWheel 逐 tick 轮询（健康 LWJGL2 面兼容），滚轮输入由消费侧 ▲▼ 键回退兜底。
+ * <p>滚轮：host 用 getDWheel 逐 tick 轮询（YuiScreenHost1122.updateScreen 同形）。
+ * 1.7.10 的 lwjgl3ify 2.1.18 桥下 getDWheel 有真实增量（M-U3 runClient 实证
+ * scrollY 14..84 双向，推翻 122 面 M-U1 阴性预期——版本桥行为差异留档）；
+ * vanilla GuiScreen 事件路径滚轮仍死，轮询是喂 YuiScreen 的唯一路径。
  *
  * <p>背景：drawScreen 先 drawDefaultBackground（尘土底/暗化）再渲染中性组件。
  */
@@ -76,8 +76,8 @@ public final class YuiScreenHost1710 extends GuiScreen {
     @Override
     public void updateScreen() {
         this.screen.tick();
-        // 滚轮：逐 tick 轮询 getDWheel 累积器（YuiScreenHost1122.updateScreen 同形；
-        // lwjgl3ify 桥下预期恒 0=阴性证据，1.12.2 面 2026-09-22 实证口径一致）
+        // 滚轮：逐 tick 轮询 getDWheel 累积器（lwjgl3ify 2.1.18 桥下有真实增量，
+        // M-U3 runClient 实证；vanilla GuiScreen 事件路径滚轮死=轮询是唯一路径）
         int wheel = Mouse.getDWheel();
         if (wheel != 0) {
             int mouseX = Mouse.getX() * this.width / this.mc.displayWidth;

@@ -57,7 +57,9 @@ public class YuiScrollView extends YuiWidget {
                 continue; // 视口外剔除
             }
             w.y = shifted;
-            w.render(backend, mouseX, mouseY + this.scrollY, partialTick);
+            // 子件已在视口系（y 临时移位），鼠标同样传视口系原值——滚动态 hover 才配对
+            //（曾错传内容系 +scrollY，错位 2×scrollY；debt-yui-scrollview-hover-mismatch）
+            w.render(backend, mouseX, mouseY, partialTick);
             w.y = shifted + this.scrollY;
         }
         backend.scissorPop();

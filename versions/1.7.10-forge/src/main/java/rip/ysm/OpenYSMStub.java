@@ -6,6 +6,7 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import net.minecraft.util.ResourceLocation;
 import rip.ysm.legacy1710.LegacyModelLoader;
 import rip.ysm.legacy1710.LegacyModelState;
+import rip.ysm.legacy1710.LegacySyncChannel;
 import rip.ysm.legacy1710.LegacyTestModel;
 import rip.ysm.legacy1710.yui1710.YuiSmokeScreen1710;
 
@@ -17,7 +18,8 @@ import rip.ysm.legacy1710.yui1710.YuiSmokeScreen1710;
  * init：真实 .ysm 装载链（builtin <model.id> 解压→YSMFolderDeserializer→
  * YSMClientMapper→GeoModel→converter→LegacyModelState+真实贴图）；失败回退
  * L1 LegacyTestModel 程序化人形。渲染接缝=RendererLivingEntity.renderModel
- * mixin（1.7.10 无 RenderPlayerEvent）。网络同步 L2b、GUI 选择 L3a。
+ * mixin（1.7.10 无 RenderPlayerEvent）。网络同步 L2b（LegacySyncChannel 双端共面）、
+ * GUI 选择 L3a。
  */
 @Mod(modid = "openysm", name = "OpenYSM", version = "2.6.6.6")
 public class OpenYSMStub {
@@ -29,6 +31,8 @@ public class OpenYSMStub {
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
+        // 网络同步（L2b）：四包注册+登录/登出事件配对——双端共面
+        LegacySyncChannel.init();
         // 真实装载链绑定 Minecraft（mcDataDir 解压落盘）——仅客户端面执行
         boolean real = false;
         if (event.getSide().isClient()) {

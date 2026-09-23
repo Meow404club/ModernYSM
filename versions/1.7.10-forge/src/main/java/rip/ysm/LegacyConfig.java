@@ -4,9 +4,9 @@ import net.minecraftforge.common.config.Configuration;
 import rip.ysm.legacy1710.LegacyModelRegistry;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 1.7.10 配置面（legacy1710-l2a-model-load）。
@@ -29,7 +29,8 @@ public final class LegacyConfig {
 
     private static String modelId = LegacyModelRegistry.DEFAULT_MODEL_ID;
     private static File cfgFile;
-    private static final Map<UUID, String> ASSIGNMENTS = new HashMap<>();
+    // 1.7.10 C2S handler 跑 netty 线程（无 MinecraftServer.addScheduledTask）→并发化
+    private static final Map<UUID, String> ASSIGNMENTS = new ConcurrentHashMap<>();
 
     private LegacyConfig() {
     }

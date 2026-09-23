@@ -109,8 +109,12 @@ public final class YuiSmokeScreen1710 {
             title.align = rip.ysm.yui.YuiBackend.Align.CENTER;
             add(title);
 
-            // 三枚扁平钮：toggle 自身选中态 / 恒选中演示 / 关屏（Done 语言）。
-            // 放底部翻页行左段（网格左留白 0..146）：顶行曾与卡网格相撞（Close 被卡盖住）
+            // 四枚扁平钮：toggle 自身选中态 / 恒选中演示 / 关屏（Done 语言）/ Select。
+            // 放底部翻页行（左段 0..146+右段 360..416）：顶行曾与卡网格相撞（Close 被卡盖住）。
+            // L2b 第四枚 Select：requestSelect 链冒烟（availableModels 首项→C2S→
+            // 服务端 netty 线程校验/持久化/指派→syncTo 回环）；L3a 模型选择屏收编。
+            // rebase 冲突解决（review-merge）：L3b 150b904 把按钮行挪底行后，Select 原
+            // 顶行位落在卡网格上——移底行右段（pager next 右侧空档），语义不变。
             final YuiFlatButton[] holder = new YuiFlatButton[1];
             holder[0] = new YuiFlatButton(px + 8, py + 215, 42, 14, "Tog", new Runnable() {
                 @Override
@@ -128,6 +132,18 @@ public final class YuiSmokeScreen1710 {
                 public void run() {
                     System.out.println("[ysm-yui-smoke] close");
                     Minecraft.getMinecraft().displayGuiScreen((GuiScreen) null);
+                }
+            }));
+            add(new YuiFlatButton(px + 360, py + 215, 52, 14, "Select", new Runnable() {
+                @Override
+                public void run() {
+                    java.util.List<String> ids = rip.ysm.legacy1710.LegacySyncChannel.availableModels();
+                    String pick = ids.isEmpty() ? null : ids.get(0);
+                    System.out.println("[ysm-yui-smoke] select -> available=" + ids.size()
+                            + " pick=" + pick);
+                    if (pick != null) {
+                        rip.ysm.legacy1710.LegacySyncChannel.requestSelect(pick);
+                    }
                 }
             }));
 

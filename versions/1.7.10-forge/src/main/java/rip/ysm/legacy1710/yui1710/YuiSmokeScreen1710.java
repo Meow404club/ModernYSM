@@ -17,7 +17,7 @@ import rip.ysm.yui.YuiLabel;
 import rip.ysm.yui.YuiModelCard;
 import rip.ysm.yui.YuiPanel;
 import rip.ysm.yui.YuiScreen;
-import rip.ysm.yui.YuiScrollView;
+import rip.ysm.yui.YuiCardGrid;
 
 /**
  * 【实验性质·验收冒烟屏】M-U3 GATE_1710UI 证据用：经 yui 中性组件 +
@@ -71,7 +71,7 @@ public final class YuiSmokeScreen1710 {
     /** 冒烟屏内容（中性组件布局；坐标全 GUI 逻辑坐标）。 */
     private static final class SmokeScreen extends YuiScreen {
 
-        private YuiScrollView scroll;
+        private YuiCardGrid grid;
         /** 非 default 可用模型逐 tick 惰性装载队列（122 屏同式；loadModel 幂等+负缓存）。 */
         private final java.util.List<String> loadQueue =
                 new java.util.ArrayList<String>(rip.ysm.legacy1710.LegacyModelLoader.listBuiltinModels());
@@ -83,13 +83,18 @@ public final class YuiSmokeScreen1710 {
             }
         }
 
+        /** 键控翻页（</> ；主路径=pager 钮，同 122 屏语言）。 */
         @Override
-        public boolean mouseScrolled(int mouseX, int mouseY, double delta) {
-            boolean r = super.mouseScrolled(mouseX, mouseY, delta);
-            if (r && this.scroll != null) {
-                System.out.println("[ysm-yui-smoke] scroll -> scrollY=" + this.scroll.scrollY);
+        public boolean keyPressed(int keyCode, char typedChar) {
+            if (keyCode == Keyboard.KEY_COMMA && this.grid != null) {
+                this.grid.flipPage(-1);
+                return true;
             }
-            return r;
+            if (keyCode == Keyboard.KEY_PERIOD && this.grid != null) {
+                this.grid.flipPage(1);
+                return true;
+            }
+            return super.keyPressed(keyCode, typedChar);
         }
 
         @Override
@@ -125,31 +130,24 @@ public final class YuiSmokeScreen1710 {
                 }
             }));
 
-            // 可滚内容：真模型卡网格（L3b：Registry 枚举接真数据——default 主面
-            // 前置+LegacyModelLoader.listBuiltinModels 两级 id compareTo 序；
-            // 每卡=LegacyPreview1710.card 真实模型预览，preview_animation 采样驱动、
+            // 卡网格（L3b：Registry 枚举接真数据——default 主面前置+
+            // LegacyModelLoader.listBuiltinModels 两级 id compareTo 序；每卡=
+            // LegacyPreview1710.card 真实模型预览，preview_animation 采样驱动、
             // 空串=绑定位静像、12_little=disable false+hold_on_last_frame+hover
-            // 三态样本）+ 3 行文本居尾，验证 scissor 裁剪+偏移+拇指+槽外零污染。
-            // 选择链无（L3a 功能化边界），点卡只打日志。
-            int cols = 5;
-            int pitchX = 55;
-            int pitchY = 95; // 卡 90 + 行距 5
-            int cardTop = py + 48;
-            int gridW = cols * pitchX - 3; // 末列按卡宽 52 收口
+            // 三态样本）。用 YuiCardGrid 5x2+翻页（122 真屏同款几何：
+            // PlayerModelScreen.init :506-538 slotX/slotY+FlatColorButton :488-501）
+            // 而非 ScrollView——共享 YuiScrollView.render 子件视口系坐标×内容系
+            // 鼠标配对错位（滚动后卡内 hover 永错位，缺陷已报主会话），且翻页
+            // 正是 L3a 真屏形态。选择链无（L3a 功能化边界），点卡只打日志。
             java.util.List<String> ids = new java.util.ArrayList<String>();
             ids.add(null); // default 主面
             ids.addAll(rip.ysm.legacy1710.LegacyModelLoader.listBuiltinModels());
-            int gridRows = (ids.size() + cols - 1) / cols;
-            int cardsH = gridRows * pitchY - 5;
-            this.scroll = new YuiScrollView(px + 8, cardTop, pw - 16 - 36, ph - 48 - 26,
-                    cardsH + 3 * 14);
-            int gridX = px + 8 + (this.scroll.width - gridW) / 2;
+            this.grid = new YuiCardGrid(px + 143, py + 28, py + 215);
             for (int i = 0; i < ids.size(); i++) {
                 final String id = ids.get(i);
                 String label = id == null ? "default"
                         : id.substring(id.lastIndexOf('/') + 1);
-                this.scroll.add(new YuiModelCard(gridX + (i % cols) * pitchX,
-                        cardTop + (i / cols) * pitchY, label, LegacyPreview1710.card(id),
+                this.grid.addCard(new YuiModelCard(0, 0, label, LegacyPreview1710.card(id),
                         new Runnable() {
                             @Override
                             public void run() {
@@ -157,32 +155,11 @@ public final class YuiSmokeScreen1710 {
                             }
                         }));
             }
-            int rows = 3;
-            for (int i = 0; i < rows; i++) {
-                this.scroll.add(new YuiLabel(px + 14, cardTop + cardsH + i * 14 + 3, pw - 60, 10,
-                        "Row " + (i + 1) + " / " + rows));
-            }
-            add(this.scroll);
-
-            // 滚轮回退（lwjgl3ify 桥下滚轮事件不达 GuiScreen 的预期，YuiScreenHost1710 类注）：
-            // ▲▼ 走与滚轮完全相同的 mouseScrolled 分发路径（坐标取视口内一点），证明滚动机制本体
-            final YuiScrollView scrollRef = this.scroll;
-            int bx = px + pw - 40;
-            add(new YuiFlatButton(bx, cardTop, 32, 14, "^", new Runnable() {
-                @Override
-                public void run() {
-                    SmokeScreen.this.mouseScrolled(scrollRef.x + 10, scrollRef.y + 10, 1.0);
-                }
-            }));
-            add(new YuiFlatButton(bx, py + ph - 40, 32, 14, "v", new Runnable() {
-                @Override
-                public void run() {
-                    SmokeScreen.this.mouseScrolled(scrollRef.x + 10, scrollRef.y + 10, -1.0);
-                }
-            }));
+            this.grid.setPage(ids.size() > 10 ? 1 : 0); // 默认露出 wine_fox 页（12_little 可见）
+            add(this.grid);
 
             YuiLabel hint = new YuiLabel(this.width / 2, py + ph - 16, 0, 10,
-                    "Esc=close  wheel/uv=scroll");
+                    "Esc=close  </> page");
             hint.color = YuiColors.TEXT_DIM;
             hint.align = rip.ysm.yui.YuiBackend.Align.CENTER;
             add(hint);

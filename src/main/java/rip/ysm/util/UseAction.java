@@ -1,6 +1,9 @@
 package rip.ysm.util;
 
+//? if >=1.13
 import net.minecraft.world.item.ItemStack;
+//? if <1.13
+/*import net.minecraft.item.ItemStack;*/
 
 /**
  * UseAnim 泛型 API 收编门面（Rl/isValid 同模式）。
@@ -26,8 +29,15 @@ public enum UseAction {
     TOOT_HORN,
     BRUSH;
 
-    /** 从 ItemStack 取使用动作（跨代映射到本枚举）。 */
+    /** 从 ItemStack 取使用动作（跨代映射到本枚举）。
+     * 1.12.2：ItemStack.getItemUseAction() → net.minecraft.item.EnumAction（compile jar
+     * recompiled_minecraft-1.12.2.jar javap 实证），常量 NONE/EAT/DRINK/BLOCK/BOW
+     * 全在本枚举（1.12.2 无三叉戟故无 SPEAR）；1.13+ 改名 getUseAnimation()。
+     * name() 跨代映射不变。 */
     public static UseAction of(ItemStack stack) {
+        //? if <1.13
+        /*return UseAction.valueOf(stack.getItemUseAction().name());*/
+        //? if >=1.13
         return UseAction.valueOf(stack.getUseAnimation().name());
     }
 }

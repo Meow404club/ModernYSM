@@ -214,7 +214,6 @@ val legacy122ExcludeMcDeps = listOf(
     // NativeModelRenderer 依赖 com.mojang.blaze3d.platform.NativeImage/TextureUtil
     // native 面（1.12.2 无 blaze3d），不做 shim——1.12.2 原生 ModelRenderer 承接。
     "com/elfmcys/yesstevemodel/geckolib3/geo/NativeModelRenderer.java",
-    "com/elfmcys/yesstevemodel/geckolib3/geo/exception/GeckoLibException.java",
     "com/elfmcys/yesstevemodel/geckolib3/util/AnimationUtils.java",
     "com/elfmcys/yesstevemodel/geckolib3/util/MathInterpolation.java",
     "com/elfmcys/yesstevemodel/geckolib3/util/MolangUtils.java",
@@ -236,14 +235,11 @@ val legacy122ExcludeMcDeps = listOf(
     "com/elfmcys/yesstevemodel/util/YSMMessageFormatter.java",
     "com/elfmcys/yesstevemodel/util/YSMNativeHelper.java",
     "com/elfmcys/yesstevemodel/util/YsmEntity.java",
-    "com/elfmcys/yesstevemodel/util/YsmFrame.java",
     "com/elfmcys/yesstevemodel/util/YsmTag.java",
     "com/elfmcys/yesstevemodel/util/YsmText.java",
     "com/elfmcys/yesstevemodel/util/log/ChatLogger.java",
     "com/elfmcys/yesstevemodel/util/log/ILogger.java",
     "rip/ysm/util/RenderCompat.java",
-    "rip/ysm/util/Rl.java",
-    "rip/ysm/util/UseAction.java",
     "com/elfmcys/yesstevemodel/client/model/AnimationDataProvider.java",
     "com/elfmcys/yesstevemodel/client/model/ModelResourceBundle.java",
     "com/elfmcys/yesstevemodel/client/model/processor/ControllerFactory.java",

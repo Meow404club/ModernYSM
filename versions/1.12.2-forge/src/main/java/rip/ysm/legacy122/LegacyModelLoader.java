@@ -139,6 +139,101 @@ public final class LegacyModelLoader {
         return out;
     }
 
+    // ---- M-U2 r3 语义B：包枚举面（主线 PlayerModelScreen 分组导航的数据源侧，
+    //      数据结构=ServerModelManager.scanDirectoryPacks:1189-1238 的
+    //      ysm-pack.json{name,description,lang}+ysm-pack.png）----
+
+    /** 顶层包路径列表（builtin 直下带 ysm-pack.json 的目录；String compareTo 序）。 */
+    public static java.util.List<String> listPackPaths() {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        for (String child : listSubdirs(BUILTIN_PREFIX)) {
+            if (resourceExists(BUILTIN_PREFIX + child + "/ysm-pack.json")) {
+                out.add(child);
+            }
+        }
+        return out;
+    }
+
+    /** 包内子模型 id 列表（两级 "包/子模组"，带 ysm.json；compareTo 序）。 */
+    public static java.util.List<String> listPackModels(String packPath) {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        if (packPath == null || !resourceExists(BUILTIN_PREFIX + packPath + "/ysm-pack.json")) {
+            return out;
+        }
+        for (String sub : listSubdirs(BUILTIN_PREFIX + packPath + "/")) {
+            if (resourceExists(BUILTIN_PREFIX + packPath + "/" + sub + "/ysm.json")) {
+                out.add(packPath + "/" + sub);
+            }
+        }
+        return out;
+    }
+
+    /** 包图标资源在否（ysm-pack.png）。 */
+    public static boolean packIconExists(String packPath) {
+        return packPath != null && resourceExists(BUILTIN_PREFIX + packPath + "/ysm-pack.png");
+    }
+
+    /** ysm-pack.json 元数据（纯 Gson 解析，无客户端依赖；null=无包或解析失败）。 */
+    public static PackMeta packMeta(String packPath) {
+        if (packPath == null) {
+            return null;
+        }
+        try (InputStream in = LegacyModelLoader.class.getClassLoader()
+                .getResourceAsStream(BUILTIN_PREFIX + packPath + "/ysm-pack.json")) {
+            if (in == null) {
+                return null;
+            }
+            com.google.gson.JsonObject obj = new com.google.gson.JsonParser().parse(
+                    new java.io.InputStreamReader(in, java.nio.charset.StandardCharsets.UTF_8))
+                    .getAsJsonObject();
+            String name = obj.has("name") ? obj.get("name").getAsString() : packPath;
+            String desc = obj.has("description") ? obj.get("description").getAsString() : "";
+            java.util.Map<String, String[]> lang = new java.util.LinkedHashMap<String, String[]>();
+            if (obj.has("lang") && obj.get("lang").isJsonObject()) {
+                com.google.gson.JsonObject langObj = obj.getAsJsonObject("lang");
+                for (Map.Entry<String, com.google.gson.JsonElement> e : langObj.entrySet()) {
+                    if (!e.getValue().isJsonObject()) {
+                        continue;
+                    }
+                    com.google.gson.JsonObject entry = e.getValue().getAsJsonObject();
+                    lang.put(e.getKey(), new String[] {
+                            entry.has("name") ? entry.get("name").getAsString() : null,
+                            entry.has("description") ? entry.get("description").getAsString() : null});
+                }
+            }
+            return new PackMeta(name, desc, lang);
+        } catch (Exception e) {
+            System.out.println("[ysm-legacy122] pack meta parse failed for " + packPath + ": " + e);
+            return null;
+        }
+    }
+
+    /** ysm-pack.json 内容（ModelPackData 主线同构的最小面）。 */
+    public static final class PackMeta {
+        public final String name;
+        public final String description;
+        /** locale → {name, description}（可空项）。 */
+        public final Map<String, String[]> lang;
+
+        PackMeta(String name, String description, Map<String, String[]> lang) {
+            this.name = name;
+            this.description = description;
+            this.lang = lang;
+        }
+
+        /** 本地化名（lang[locale].name → name 回退，主线 getLocalizedString 同语义）。 */
+        public String localizedName(String locale) {
+            String[] l = locale == null ? null : this.lang.get(locale);
+            return l != null && l[0] != null ? l[0] : this.name;
+        }
+
+        /** 本地化描述（lang[locale].description → description 回退）。 */
+        public String localizedDescription(String locale) {
+            String[] l = locale == null ? null : this.lang.get(locale);
+            return l != null && l[1] != null ? l[1] : this.description;
+        }
+    }
+
     /** 枚举 classpath 目录子项（dev=文件系统 / 生产=jar 条目，两态覆盖）。 */
     private static java.util.SortedSet<String> listSubdirs(String dirPath) {
         java.util.SortedSet<String> out = new java.util.TreeSet<>();

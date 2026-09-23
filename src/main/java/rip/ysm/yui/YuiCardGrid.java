@@ -8,6 +8,8 @@ import java.util.List;
  * slotX/slotY 同式）；翻页钮 52x14 扁平（:488-501 FlatColorButton，网格内相对
  * 位 prev=+55/next=+165）+ 页码 n/m 居中（:586-591）。网格持有卡片按页显隐；
  * 滚轮翻页为辅（lwjgl3ify GuiScreen 面滚轮桥断裂实证，Pager 按钮是主路径）。
+ * r3：格位泛化为 YuiWidget——包卡（YuiPackCard）与模型卡同槽混排，
+ * 包前模型后（主线 init :510-522 槽位填充序）。
  */
 public class YuiCardGrid extends YuiWidget {
 
@@ -22,7 +24,7 @@ public class YuiCardGrid extends YuiWidget {
     /** 网格整体占高（末行按卡高收口）。 */
     public static final int GRID_HEIGHT = (ROWS - 1) * PITCH_Y + YuiModelCard.CARD_HEIGHT;
 
-    private final List<YuiModelCard> cards = new ArrayList<YuiModelCard>();
+    private final List<YuiWidget> cells = new ArrayList<YuiWidget>();
     private final YuiFlatButton prevButton;
     private final YuiFlatButton nextButton;
     private final YuiLabel pageLabel;
@@ -48,17 +50,21 @@ public class YuiCardGrid extends YuiWidget {
     }
 
     /** 追加卡片（按加入序落格；页内槽位=全局序 % 页容量——格位逐页重复，主线 :506-509 同式）。 */
-    public YuiModelCard addCard(YuiModelCard card) {
-        int index = this.cards.size() % PAGE_SIZE;
-        card.x = this.x + (index % COLS) * PITCH_X;
-        card.y = this.y + (index / COLS) * PITCH_Y;
-        this.cards.add(card);
+    public YuiWidget addCard(YuiWidget cell) {
+        int index = this.cells.size() % PAGE_SIZE;
+        cell.x = this.x + (index % COLS) * PITCH_X;
+        cell.y = this.y + (index / COLS) * PITCH_Y;
+        this.cells.add(cell);
         applyVisibility();
-        return card;
+        return cell;
+    }
+
+    public int cellCount() {
+        return this.cells.size();
     }
 
     public int pageCount() {
-        return Math.max(1, (this.cards.size() + PAGE_SIZE - 1) / PAGE_SIZE);
+        return Math.max(1, (this.cells.size() + PAGE_SIZE - 1) / PAGE_SIZE);
     }
 
     public void flipPage(int delta) {
@@ -69,19 +75,28 @@ public class YuiCardGrid extends YuiWidget {
         }
     }
 
+    public int page() {
+        return this.page;
+    }
+
+    public void setPage(int page) {
+        this.page = Math.max(0, Math.min(page, pageCount() - 1));
+        applyVisibility();
+    }
+
     private void applyVisibility() {
-        for (int i = 0; i < this.cards.size(); i++) {
-            this.cards.get(i).visible = i / PAGE_SIZE == this.page;
+        for (int i = 0; i < this.cells.size(); i++) {
+            this.cells.get(i).visible = i / PAGE_SIZE == this.page;
         }
         this.pageLabel.text = (this.page + 1) + "/" + pageCount();
     }
 
     @Override
     public void render(YuiBackend backend, int mouseX, int mouseY, float partialTick) {
-        for (int i = 0; i < this.cards.size(); i++) {
-            YuiModelCard card = this.cards.get(i);
-            if (card.visible) {
-                card.render(backend, mouseX, mouseY, partialTick);
+        for (int i = 0; i < this.cells.size(); i++) {
+            YuiWidget cell = this.cells.get(i);
+            if (cell.visible) {
+                cell.render(backend, mouseX, mouseY, partialTick);
             }
         }
         this.prevButton.render(backend, mouseX, mouseY, partialTick);
@@ -95,9 +110,9 @@ public class YuiCardGrid extends YuiWidget {
                 || this.nextButton.mouseClicked(mouseX, mouseY, button)) {
             return true;
         }
-        for (int i = this.cards.size() - 1; i >= 0; i--) {
-            YuiModelCard card = this.cards.get(i);
-            if (card.visible && card.mouseClicked(mouseX, mouseY, button)) {
+        for (int i = this.cells.size() - 1; i >= 0; i--) {
+            YuiWidget cell = this.cells.get(i);
+            if (cell.visible && cell.mouseClicked(mouseX, mouseY, button)) {
                 return true;
             }
         }

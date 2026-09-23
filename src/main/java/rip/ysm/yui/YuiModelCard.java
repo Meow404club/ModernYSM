@@ -22,8 +22,14 @@ public class YuiModelCard extends YuiWidget {
     /** 预览槽高 = 卡高 - 标签区 20（ModelButton :278-283 同值）。 */
     public static final int SLOT_HEIGHT = CARD_HEIGHT - 20;
 
-    /** 选中态（消费面写回，渲染蓝底）。 */
+    /** 选中态（消费面写回，渲染描边常显）。 */
     public boolean selected;
+
+    /**
+     * 键盘焦点态（消费面写回）。主线 ModelButton:315 hoveredOrFocused 同语义：
+     * focus 与 hover 同样画描边（focus 动画由预览实现侧消费）。
+     */
+    public boolean focused;
 
     private final String label;
     private final YuiPreview preview;
@@ -54,8 +60,8 @@ public class YuiModelCard extends YuiWidget {
             backend.drawTextCentered(lines.get(0), this.x + this.width / 2,
                     this.y + this.height - 15, YuiColors.TEXT);
         }
-        // hover 描边（ModelButton :315-320 同色）；选中=描边常显（主线卡片无选中蓝底）
-        if (this.selected || isHovered(mouseX, mouseY)) {
+        // hover/焦点描边（ModelButton :315 hoveredOrFocused 同色）；选中=描边常显
+        if (this.selected || this.focused || isHovered(mouseX, mouseY)) {
             backend.outlineRect1px(this.x, this.y, this.width, this.height, YuiColors.ACCENT);
         }
     }

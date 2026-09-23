@@ -5,6 +5,7 @@ import cpw.mods.fml.common.event.FMLInitializationEvent;
 import net.minecraft.util.ResourceLocation;
 import rip.ysm.legacy1710.LegacyModelState;
 import rip.ysm.legacy1710.LegacyTestModel;
+import rip.ysm.legacy1710.yui1710.YuiSmokeScreen1710;
 
 /**
  * 1.7.10 线入口（legacy-1710-l0-poc → l1-render）。
@@ -22,5 +23,9 @@ public class OpenYSMStub {
                 new ResourceLocation("yes_steve_model", "textures/entity/default.png"));
         System.out.println("[ysm-legacy1710] init done: L1 render hook armed, bones="
                 + LegacyModelState.boneCount());
+        // YUI 冒烟屏（experimental，M-U3）：键位+tick 轮询仅客户端（SideOnly 类引用收进 dist 分支）
+        if (event.getSide().isClient()) {
+            YuiSmokeScreen1710.initExperimental();
+        }
     }
 }

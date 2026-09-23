@@ -25,13 +25,13 @@ base.archivesName = "${property("archives_name")}-forge-mc1.7.10"
 group = property("maven_group") as String
 
 // 1.7.10 = Java 8 目标字节码；daemon/toolchain 跑 JDK21（unimined 官方 testing 同款）
+// L2a 实测：options.release=8 屏蔽 sun.misc.Unsafe（共享链 util/UnsafeUtil+rip/ysm/zstd
+// 依赖面，122 线 build.legacy122.gradle.kts:30-33 同走 source/target 1.8 无 release）——
+// 与 122 线同机制：source/targetCompatibility 1.8（major 52 同值）
 java {
     toolchain { languageVersion = JavaLanguageVersion.of(21) }
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
-}
-tasks.withType<JavaCompile>().configureEach {
-    options.release = 8
 }
 
 // client/server run 共享 JVM 参数（先例 forge1710:87-99 逐项；须在 unimined.minecraft
@@ -106,6 +106,17 @@ val forgePatchDeps by configurations.creating {
 }
 
 dependencies {
+    // ===== 共享解析链三依赖（research-legacy1710-l2-l3 block1 new_deps）=====
+    // fastutil：GeoModel 字段 IntList/ObjectArrayList + YSMClientMapper:43——1.7.10
+    // vanilla 不带 fastutil（1.12.2 自带，build.legacy122.gradle.kts:347 注释实证其靠
+    // MC 传递），须显式声明。8.5.13=研究裁定基线（Java 8 字节码面）。
+    implementation("it.unimi.dsi:fastutil:8.5.13")
+    // asm-tree：GeoModel.java:25-29 ClassReader/ClassNode/FieldNode/MethodNode 面；
+    // asm-tree 传递携带 asm 核心（ClassReader 所在）。launchwrapper 自带 asm-all 同包
+    // org.objectweb.asm——运行期以 launchwrapper 先加载为准（研究 risk 已留档）。
+    implementation("org.ow2.asm:asm-tree:9.7")
+    // jetbrains annotations：GeoModel @NotNull（CLASS retention，不进运行面）
+    compileOnly("org.jetbrains:annotations:24.0.0")
     // lwjgl3ify 现代化 runtime（用户裁决 2026-09-20）：forgePatches=运行面打补丁，
     // dev=编译/开发面。坐标 2.1.18（先例 forge1710:113-114 GTNH jitpack 同版）。
     // lwjgl3ify（GTNH jitpack 坐标，先例 forge1710:113-114 逐字：com.github.GTNewHorizons:
@@ -131,34 +142,275 @@ dependencies {
     implementation("org.joml:joml:1.10.5")
 }
 
-// ===== 源集挂载（yui-1710-backend-screen / M-U3 该线首挂共享源）=====
-// L0 曾用 setSrcDirs 只挂版本 stub（共享源 1.7.10 全量编译 100 错截断，legacy-1710-l0-poc
-// 实测）。M-U3 起改 include 白名单只挂版本中性 UI 树 rip/ysm/yui（Java 8/零 vanilla
-// import/零条件轴——grep 门禁是挂载硬前提），其余共享面待 L2+ 分批挂：
-// build.legacy122.gradle.kts legacy122Include(:103) 同款机制。生成树路径
-// build/generated/stonecutter/main/java 与 122 线同款（stonecutter 0.7 布局）。
-val yui1710Include = listOf(
-    "rip/ysm/yui/**",         // 中性 UI 树（本卡挂载目标）
-    "rip/ysm/legacy1710/**",  // 版本树渲染翻译层
+// ===== 源集挂载（M-U3 挂 yui 树；L2a legacy1710-l2a-model-load 扩到全解析链）=====
+// L0 曾用 setSrcDirs 只挂版本 stub；M-U3 起 include 白名单；本卡把 1.12.2 线
+// legacy122Include（build.legacy122.gradle.kts:103-129）+legacy122ExcludeMcDeps
+//（:134-289）机制整体同挂：geckolib3 资源解析链（YSMFolderDeserializer 全文零
+// net.minecraft import 求证，YSMClientMapper 闭包全在白名单+排除集）+resource/model/
+// util/config/rip.ysm 工具树。legacy122/legacy1710 两包名互换，其余逐条同构。
+// 生成树路径 build/generated/stonecutter/main/java（stonecutter 0.7 布局）。
+val legacy1710Include = listOf(
+    "com/elfmcys/yesstevemodel/geckolib3/**",
+    "com/elfmcys/yesstevemodel/molang/**",
+    "com/elfmcys/yesstevemodel/client/ClientModelInfo.java",
+    "com/elfmcys/yesstevemodel/audio/AudioTrackData.java",
+    "com/elfmcys/yesstevemodel/audio/AudioCodec.java",
+    "com/elfmcys/yesstevemodel/client/model/**",
+    "com/elfmcys/yesstevemodel/client/texture/**",
+    "com/elfmcys/yesstevemodel/client/gui/custom/**",
+
+    "rip/ysm/imagestream/**",
+    "org/gagravarr/**",
+
+    "com/elfmcys/yesstevemodel/resource/**",
+    "com/elfmcys/yesstevemodel/model/**",
+    "com/elfmcys/yesstevemodel/util/**",
+    "com/elfmcys/yesstevemodel/config/**",
+    "rip/ysm/algorithms/**",
+    "rip/ysm/security/**",
+    "rip/ysm/zstd/**",
+    "rip/ysm/util/**",
+    "rip/ysm/yui/**",
+    "rip/ysm/legacy1710/**",
+    // 共享 molang math 六文件的 <1.14 分支硬编码 import rip.ysm.legacy122.Mth——
+    // 包名是共享链契约点，1710 在版本树该包名下提供同名 shim（Mth.java 头注详述）
+    "rip/ysm/legacy122/Mth.java",
     "rip/ysm/OpenYSMStub.java",
+    "rip/ysm/LegacyConfig.java",
+    "net/sourceforge/pinyin4j/**",
 )
+// 白名单内仍绑定 MC 依赖面的重文件（122 线 L1 由 import 扫描生成同名排除集；
+// 1710 轴 stonecutter 剥离组合与 122 不逐位相同——按编译报错面逐个迭代增补，
+// 迭代记录见交卡报告）。批C 永久归档段与 122 同语义：GeoEntityRenderer 族=
+// 现代 GPU 管线（1710 固定管线无对应物，翻译层 LegacyModelTranslator 降级替代），
+// NativeModelRenderer=blaze3d NativeImage 面，均不回接编译面。
+val legacy1710ExcludeMcDeps = listOf(
+    "com/elfmcys/yesstevemodel/YesSteveModel.java",
+    "com/elfmcys/yesstevemodel/client/model/ModelAssembly.java",
+    "com/elfmcys/yesstevemodel/client/model/ModelAssemblyFactory.java",
+    "com/elfmcys/yesstevemodel/client/model/PlayerModelBundle.java",
+    "com/elfmcys/yesstevemodel/client/model/ProjectileModelBundle.java",
+    "com/elfmcys/yesstevemodel/client/model/VehicleModelBundle.java",
+    "com/elfmcys/yesstevemodel/client/model/processor/ArmorSlotProcessor.java",
+    "com/elfmcys/yesstevemodel/config/ModSoundEvents.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/AnimatableEntity.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/EntityFrameStateTracker.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/builtin/QueryBinding.java",
+    "com/elfmcys/yesstevemodel/client/animation/molang/YSMBinding.java",
+    "com/elfmcys/yesstevemodel/client/animation/molang/CtrlBinding.java",
+    "com/elfmcys/yesstevemodel/client/animation/molang/TLMBinding.java",
+    "com/elfmcys/yesstevemodel/client/animation/molang/ArgsVariable.java",
+    "com/elfmcys/yesstevemodel/config/ExtraPlayerRenderConfig.java",
+    "com/elfmcys/yesstevemodel/config/GeneralConfig.java",
+    "com/elfmcys/yesstevemodel/config/LoadingStateConfig.java",
+    "com/elfmcys/yesstevemodel/config/ServerConfig.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/builtin/query/BiomeHasAllTags.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/builtin/query/BiomeHasAnyTag.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/builtin/query/EquipmentItemAnyTag.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/builtin/query/EquippedItemAllTags.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/builtin/query/IsItemNameAny.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/builtin/query/MaxDurability.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/builtin/query/Position.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/builtin/query/PositionDelta.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/builtin/query/RelativeBlockHasAllTags.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/builtin/query/RelativeBlockHasAnyTag.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/builtin/query/RemainingDurability.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/builtin/query/RotationToCamera.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/builtin/math/Random.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/binding/variable/ControllerVariableBinding.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/binding/variable/ForeignVariableBinding.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/binding/variable/ScopedVariableBinding.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/binding/variable/TempVariableRegistry.java",
+    "com/elfmcys/yesstevemodel/geckolib3/util/json/JsonKeyFrameUtils.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/builtin/math/RandomInteger.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/builtin/math/DieRoll.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/builtin/math/DieRollInteger.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/funciton/blocks/AbstractBlockFunction.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/funciton/blocks/BlockFunction.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/funciton/entity/AbstractArrowEntityFunction.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/funciton/entity/AbstractClientPlayerFunction.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/funciton/entity/AbstractProjectileFunction.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/funciton/entity/ArrowEntityFunction.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/funciton/entity/EntityFunction.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/funciton/entity/LivingEntityFunction.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/funciton/entity/LocalPlayerEntityFunction.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/funciton/entity/MobEntityFunction.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/funciton/entity/TamableEntityFunction.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/funciton/item/ItemFunction.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/funciton/item/ItemStackFunction.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/block/BlockBehaviorVariable.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/block/BlockStateVariable.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/block/BlockVariable.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/entity/AbstractArrowEntityVariable.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/entity/ArrowEntityVariable.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/entity/ClientPlayerEntityVariable.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/entity/EntityVariable.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/entity/FishingHookEntityVariable.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/entity/LivingEntityVariable.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/entity/LocalPlayerEntityVariable.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/entity/MobEntityVariable.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/entity/PlayerEntityVariable.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/entity/ProjectileEntityVariable.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/entity/TamableEntityVariable.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/entity/ThrowableProjectileEntityVariable.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/item/ItemStackVariable.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/item/ItemVariable.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/processor/AnimationProcessor.java",
+    // ===== 批C 永久归档（与 build.legacy122.gradle.kts:206 同语义）=====
+    "com/elfmcys/yesstevemodel/geckolib3/geo/GeoEntityRenderer.java",
+    "com/elfmcys/yesstevemodel/geckolib3/geo/GeoLayerRenderer.java",
+    "com/elfmcys/yesstevemodel/geckolib3/geo/GeoReplacedEntityRenderer.java",
+    "com/elfmcys/yesstevemodel/geckolib3/geo/IGeoRenderer.java",
+    "com/elfmcys/yesstevemodel/geckolib3/geo/NativeModelRenderer.java",
+    "com/elfmcys/yesstevemodel/geckolib3/geo/exception/GeckoLibException.java",
+    "com/elfmcys/yesstevemodel/geckolib3/util/AnimationUtils.java",
+    "com/elfmcys/yesstevemodel/geckolib3/util/MathInterpolation.java",
+    "com/elfmcys/yesstevemodel/geckolib3/util/MolangUtils.java",
+    "com/elfmcys/yesstevemodel/geckolib3/util/RenderUtils.java",
+    "com/elfmcys/yesstevemodel/geckolib3/util/VectorUtils.java",
+    "com/elfmcys/yesstevemodel/geckolib3/util/json/JsonAnimationUtils.java",
+    "com/elfmcys/yesstevemodel/model/ClientOnlyHostBridge.java",
+    "com/elfmcys/yesstevemodel/model/ModelLoadResult.java",
+    "com/elfmcys/yesstevemodel/model/format/ServerModelData.java",
+    "com/elfmcys/yesstevemodel/model/format/UUIDComponentData.java",
+    "com/elfmcys/yesstevemodel/util/AnimatableCacheUtil.java",
+    "com/elfmcys/yesstevemodel/util/CameraUtil.java",
+    "com/elfmcys/yesstevemodel/util/ComponentUtil.java",
+    "com/elfmcys/yesstevemodel/util/EquipmentUtil.java",
+    "com/elfmcys/yesstevemodel/util/InputUtil.java",
+    "com/elfmcys/yesstevemodel/util/ItemTagsConstants.java",
+    "com/elfmcys/yesstevemodel/util/ParticleEffectUtil.java",
+    "com/elfmcys/yesstevemodel/util/ThreadLocalItemTagSets.java",
+    "com/elfmcys/yesstevemodel/util/YSMMessageFormatter.java",
+    "com/elfmcys/yesstevemodel/util/YSMNativeHelper.java",
+    "com/elfmcys/yesstevemodel/util/YsmEntity.java",
+    "com/elfmcys/yesstevemodel/util/YsmFrame.java",
+    "com/elfmcys/yesstevemodel/util/YsmTag.java",
+    "com/elfmcys/yesstevemodel/util/YsmText.java",
+    "com/elfmcys/yesstevemodel/util/log/ChatLogger.java",
+    "com/elfmcys/yesstevemodel/util/log/ILogger.java",
+    "rip/ysm/util/RenderCompat.java",
+    "rip/ysm/util/Rl.java",
+    "rip/ysm/util/UseAction.java",
+    "com/elfmcys/yesstevemodel/client/model/AnimationDataProvider.java",
+    "com/elfmcys/yesstevemodel/client/model/ModelResourceBundle.java",
+    "com/elfmcys/yesstevemodel/client/model/processor/ControllerFactory.java",
+    "com/elfmcys/yesstevemodel/client/model/processor/ControllerSlotBinder.java",
+    "com/elfmcys/yesstevemodel/client/model/processor/ModelProcessor.java",
+    "com/elfmcys/yesstevemodel/client/model/processor/NamedModelProcessor.java",
+    "com/elfmcys/yesstevemodel/client/model/processor/ParallelProcessor.java",
+    "com/elfmcys/yesstevemodel/client/model/processor/ProcessorPipeline.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/builtin/query/DebugOut.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/funciton/ContextFunction.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/ContextVariable.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/LambdaVariable.java",
+    "com/elfmcys/yesstevemodel/geckolib3/util/json/JsonAnimationControllerUtils.java",
+    "com/elfmcys/yesstevemodel/util/ResourceCleanupHelper.java",
+    "com/elfmcys/yesstevemodel/client/texture/OuterFileTexture.java",
+    "com/elfmcys/yesstevemodel/client/renderer/AnimationDebugOverlay.java",
+    "com/elfmcys/yesstevemodel/client/texture/ITextureMap.java",
+    "com/elfmcys/yesstevemodel/geckolib3/util/MatrixBridge.java",
+    "com/elfmcys/yesstevemodel/model/ServerModelManager.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/context/AnimationContext.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/molang/context/IContext.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/controller/AnimationControllerInstance.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/controller/AnimationControllerRuntime.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/controller/CompositeAnimationController.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/controller/controllers/FirstPersonArmAnimationController.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/controller/controllers/PlayerAnimationController.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/controller/controllers/ProjectileAnimationController.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/controller/controllers/VehicleAnimationController.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/controller/PredicateBasedController.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/event/InstructionKeyFrameExecutor.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/event/predicate/AnimationEvent.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/event/SoundKeyFrameExecutor.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/AnimationPoint.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/BoneAnimationQueue.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/ConstantPoint.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/KeyFramePoint.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/keyframe/TransitionPoint.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/manager/AnimationData.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/controller/IAnimationController.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/controller/AnimationControllerContext.java",
+    "com/elfmcys/yesstevemodel/geckolib3/core/controller/BoneTransformProvider.java",
+)
+// ===== twin 源集（1.12.2 线 build.legacy122.gradle.kts:296 同机制整体移植）=====
+// 共享 YesSteveModel/NativeLibLoader/ChatLogger/AnimationDebugOverlay/OuterFileTexture/
+// ShadersTextureType 绑定现代 MC 面，1710 无对应——1.7.10 原生孪生（同包同名）放
+// versions/1.7.10-forge/src/twin/java：twin classes 挂 main 编译/运行类路径与 jar
+// 打包，包结构对消费点透明。twin 文件零条件轴（不走 stonecutter 剥离面）。
+sourceSets {
+    create("twin") {
+        java {
+            srcDir(file("src/twin/java"))
+        }
+    }
+}
+// main 源路径含 build/generated/stonecutter/main/java——生成树由 stonecutterGenerate
+// 产出，但该目录对 unimined 线是纯路径 srcDir（build.legacy122.gradle.kts:335 同款），
+// 补显式任务依赖（幂等）。
+tasks.named<JavaCompile>("compileJava") {
+    dependsOn(tasks.named("stonecutterGenerate"))
+    // 显式任务依赖（output FileCollection 理论自带 dependsOn，122 线 RFB 实测不生效）
+    dependsOn(tasks.named("compileTwinJava"))
+    classpath += sourceSets.getByName("twin").output
+    // 共享解析链首轮编译错误 >100 会被 javac 默认上限截断——122 线 :80 同款放开
+    options.compilerArgs.addAll(listOf("-Xmaxerrs", "10000"))
+}
+// main 编译/运行不挂 twin.output（会经 compileClasspath 传染 twinClasses 依赖，
+// 与 twin 继承 main 编译面成环）——twin classes 由 jar 打包 + compileJava 显式并
+tasks.named<Jar>("jar") {
+    from(sourceSets.getByName("twin").output)
+}
 afterEvaluate {
     sourceSets.main {
         java {
+            // 共享面必须走 stonecutter 展开树（//? 条件剥离在生成步；raw 条件块两侧
+            // 代码都在直接编译必炸）。avif/webp/jpeg 解码 vendor 挂 1.16.5 线 imagestream
+            //（build.legacy122.gradle.kts:365 先例同款，纯净零 MC import 实证）——
+            // .ysm 解析链 YSMFolderDeserializer/YSMClientMapper 依赖
             setSrcDirs(listOf(
                 file("build/generated/stonecutter/main/java"),
                 file("src/main/java"),
+                rootProject.file("versions/1.16.5-forge/src/imagestream"),
             ))
-            include(yui1710Include)
+            include(legacy1710Include)
+            exclude("com/elfmcys/yesstevemodel/geckolib3/extended/**")
+            exclude(legacy1710ExcludeMcDeps)
         }
-        resources.setSrcDirs(listOf(file("src/main/resources")))
+        resources.setSrcDirs(listOf(
+            file("src/main/resources"),
+            // 内置模型包（builtin/default+wine_fox 等）在共享资源树——装载链
+            // BUILTIN_PREFIX classpath 直读的数据面（122 线 :372 同款双资源目录）
+            rootProject.file("src/main/resources"),
+        ))
     }
 }
-// 生成树对 RFB/unimined 线是纯路径 srcDir，FileCollection 不挂 stonecutterGenerate 任务
-// 依赖（build.legacy122.gradle.kts:335 同款，clean 后/新 worktree 首跑会编译空生成树）——
-// 补显式依赖（幂等，已生成时 up-to-date 秒过）。
-tasks.named<JavaCompile>("compileJava") {
-    dependsOn(tasks.named("stonecutterGenerate"))
+// 双资源目录（版本独有面列前=优先）：mcmod.info 等重叠条目以版本面为准
+tasks.named<ProcessResources>("processResources") {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+// twin 编译面（122 线 :307-314/:345-353 同机制）：twin 需与 main 同源的 MC 编译面
+//（AbstractTexture/Minecraft/log4j）。compileTwinJava.classpath 取 main.compileClasspath
+// 摘除 twin.output（防环）；twinCompileClasspath 另继承 implementation/compileOnly
+// 外部依赖（fastutil/joml 等）——双机制同挂与 122 逐项同构。
+afterEvaluate {
+    tasks.named<JavaCompile>("compileTwinJava") {
+        classpath = sourceSets.main.get().compileClasspath - sourceSets.getByName("twin").output
+    }
+}
+afterEvaluate {
+    sourceSets.main {
+        java {
+            srcDir(sourceSets.getByName("twin").output)
+        }
+    }
+}
+afterEvaluate {
+    configurations.getByName("twinCompileClasspath").extendsFrom(
+        configurations.getByName("implementation"),
+        configurations.getByName("compileOnly"),
+    )
 }
 
 tasks.named<Jar>("jar") {

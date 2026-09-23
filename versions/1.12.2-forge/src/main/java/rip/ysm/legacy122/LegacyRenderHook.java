@@ -61,7 +61,7 @@ public final class LegacyRenderHook {
             rm.renderEngine.bindTexture(LegacyModelState.texture());
         }
         LegacyAnimationDriver.tick(event.getEntityPlayer(), event.getPartialRenderTick(),
-                model, boneParams);
+                model, boneParams, LegacyModelState.bundleOf(modelId));
         LegacyModelTranslator.render(model, boneParams,
                 1.0f, 1.0f, 1.0f, 1.0f);
     }

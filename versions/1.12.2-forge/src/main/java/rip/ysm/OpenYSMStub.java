@@ -30,17 +30,27 @@ public class OpenYSMStub {
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
-        MinecraftForge.EVENT_BUS.register(LegacyRenderHook.class);
+        // RenderHook @SideOnly(CLIENT)（SideTransformer 服务端拒绝加载，runRFBServer
+        // run2 实证 LoaderExceptionModCrash）——类引用收进 dist 分支（本方法
+        // LegacyModelSelectScreen 同款先例），客户端注册行为零变化
+        if (event.getSide().isClient()) {
+            MinecraftForge.EVENT_BUS.register(LegacyRenderHook.class);
+        }
         MinecraftForge.EVENT_BUS.register(LegacySyncChannel.class);
         LegacySyncChannel.init();
-        boolean real = LegacyModelLoader.loadDefaultModel();
-        if (!real) {
-            LegacyModelState.setBundle(null, LegacyTestModel.build());
-        }
-        // L3-2 GUI：模型选择键位+列表屏仅客户端（SideOnly 类引用收进 dist 分支）
+        // 模型装载面仅客户端（run3 实证：builtDirOf→Minecraft.getMinecraft() 触
+        // SideTransformer 服务端拒绝 net/minecraft/client/Minecraft）；服务端只持
+        // uuid→id 登记（LegacyModelRegistry），同步链发 id 字符串不需 GeoModel
+        boolean real = false;
         if (event.getSide().isClient()) {
+            real = LegacyModelLoader.loadDefaultModel();
+            if (!real) {
+                LegacyModelState.setBundle(null, LegacyTestModel.build());
+            }
+            // L3-2 GUI：模型选择键位+列表屏仅客户端（SideOnly 类引用收进 dist 分支）
             LegacyModelSelectScreen.init();
         }
-        System.out.println("[ysm-legacy122] init done: hook registered, realModel=" + real);
+        System.out.println("[ysm-legacy122] init done: hook registered, realModel=" + real
+                + ", side=" + (event.getSide().isClient() ? "client" : "server"));
     }
 }

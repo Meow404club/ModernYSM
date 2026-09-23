@@ -27,7 +27,10 @@ import java.util.UUID;
  */
 public final class LegacySyncChannel {
 
-    private static final String CHANNEL = "openysm:legacy122_model_sync";
+    // ≤20 字符硬约束：S3FPacketCustomPayload channel 字段 readString(20)，真 socket
+    // 连接（dedicated/LAN）超限即 DecoderException 踢线（runRFBServer join 实测
+    // "28 > 20"——集成服本地通道不序列化，L3-1 未暴露）。与 1710 线通道同名同长 18。
+    private static final String CHANNEL = "openysm_model_sync";
     private static final int DISCRIMINATOR = 1;
 
     private static SimpleNetworkWrapper channel;

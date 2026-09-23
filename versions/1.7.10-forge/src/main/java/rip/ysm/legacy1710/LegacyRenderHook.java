@@ -90,10 +90,32 @@ public final class LegacyRenderHook {
         ModelProperties props = bundle == null ? null : bundle.getInfo().getModelProperties();
         float heightScale = props == null ? 1.0F : props.getHeightScale();
         float widthScale = props == null ? 1.0F : props.getWidthScale();
-        GL11.glPushMatrix();
-        GL11.glScalef(heightScale, widthScale, heightScale);
-        LegacyModelTranslator.render(model, boneParams, 1.0f, 1.0f, 1.0f, 1.0f, lightmap, hurtRed);
-        GL11.glPopMatrix();
+        // item6：隐身检查。此前 takeover cancel 掉 vanilla renderModel（其自带隐身守卫
+        // RendererLivingEntity.java:225-241）后无条件画 YSM 模型→隐身玩家仍全渲染。
+        // 复制 vanilla renderModel 三态：可见→不透明画；隐身但观察者可见→ghost
+        // 半透明 0.15（:229 glColor4f(1,1,1,0.15)+blend+alphaFunc 1/255+depthMask
+        // false）；隐身且观察者不可见→跳过绘制（tick 照跑，对位 vanilla else 支
+        // setRotationAngles 保活语义）。
+        boolean visibleBody = !player.isInvisible();
+        boolean ghost = !visibleBody && !player.isInvisibleToPlayer(Minecraft.getMinecraft().thePlayer);
+        if (visibleBody || ghost) {
+            if (ghost) {
+                GL11.glDepthMask(false);
+                GL11.glEnable(GL11.GL_BLEND);
+                GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+                GL11.glAlphaFunc(GL11.GL_GREATER, 1.0F / 255.0F);
+            }
+            GL11.glPushMatrix();
+            GL11.glScalef(heightScale, widthScale, heightScale);
+            LegacyModelTranslator.render(model, boneParams, 1.0f, 1.0f, 1.0f,
+                    ghost ? 0.15f : 1.0f, lightmap, hurtRed);
+            GL11.glPopMatrix();
+            if (ghost) {
+                GL11.glDisable(GL11.GL_BLEND);
+                GL11.glAlphaFunc(GL11.GL_GREATER, 0.1F);
+                GL11.glDepthMask(true);
+            }
+        }
         return true;
     }
 }

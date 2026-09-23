@@ -84,11 +84,35 @@ public final class LegacyRenderHook {
         ModelProperties props = bundle == null ? null : bundle.getInfo().getModelProperties();
         float heightScale = props == null ? 1.0F : props.getHeightScale();
         float widthScale = props == null ? 1.0F : props.getWidthScale();
-        GlStateManager.pushMatrix();
-        GlStateManager.scale(heightScale, widthScale, heightScale);
-        LegacyModelTranslator.render(model, boneParams,
-                1.0f, 1.0f, 1.0f, 1.0f, lightmap, hurtRed);
-        GlStateManager.popMatrix();
+        // item6：隐身检查（此前隐身玩家仍全渲染）。vanilla-mc-1.12.2
+        // RenderLivingBase.renderModel:184-199 同款三态：可见→不透明画；隐身但
+        // 观察者可见（isInvisibleToPlayer=false，队伍 seeFriendlyInvisibles 等）→
+        // ghost 半透明 0.15（Profile.c=TRANSPARENT 同值）；隐身且观察者不可见→
+        // 跳过绘制（动画 tick 照跑，对位 vanilla else 支 setRotationAngles 保活）。
+        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
+        boolean visibleBody = !player.isInvisible();
+        boolean ghost = !visibleBody && !player.isInvisibleToPlayer(mc.player);
+        if (visibleBody || ghost) {
+            if (ghost) {
+                GlStateManager.enableBlend();
+                GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
+                        GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+                        GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+                GlStateManager.depthMask(false);
+            }
+            GlStateManager.pushMatrix();
+            GlStateManager.scale(heightScale, widthScale, heightScale);
+            LegacyModelTranslator.render(model, boneParams,
+                    1.0f, 1.0f, 1.0f, ghost ? 0.15F : 1.0f, lightmap, hurtRed);
+            GlStateManager.popMatrix();
+            if (ghost) {
+                // Profile.c clean 同款（GlStateManager.java:1048-1052）
+                GlStateManager.depthMask(true);
+                GlStateManager.disableBlend();
+                GlStateManager.alphaFunc(org.lwjgl.opengl.GL11.GL_GREATER, 0.1F);
+                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            }
+        }
         // item4：名牌恢复（Pre 取消吞 vanilla doRender 主链连坐名牌渲染面）
         renderNameTag(player, event.getPartialRenderTick());
     }

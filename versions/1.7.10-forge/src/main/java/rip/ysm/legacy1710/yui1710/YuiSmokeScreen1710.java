@@ -21,9 +21,11 @@ import rip.ysm.yui.YuiScrollView;
 
 /**
  * 【实验性质·验收冒烟屏】M-U3 GATE_1710UI 证据用：经 yui 中性组件 +
- * YuiBackendGL1710 后端渲染 面板+扁平钮(hover/选中态)+5x2 占位卡槽（1710 L3
- * 模型卡片网格前身，占位本地数据）+标签+可滚 ScrollView（▲▼ 回退）。
+ * YuiBackendGL1710 后端渲染 面板+扁平钮(hover/选中态)+真模型卡网格
+ * （L3b 起：default 前置+listBuiltinModels 枚举全部 builtin，卡内真实模型
+ * 预览，逐 tick 惰性装载）+标签+可滚 ScrollView（▲▼ 回退）。
  * 形态与 YuiSmokeScreen1122（M-U1）逐项同构——1.7.10 面是渲染/输入桥的第二取证点。
+ * 选择链/包导航/键盘导航不在此屏（L3a 模型选择屏边界）。
  *
  * <p>EXPERIMENTAL：本类与 OpenYSMStub.init 的挂点行随 1710 L3（模型枚举/网络同步
  * 落地）收编或整类删除，不进长期 API 面。
@@ -70,6 +72,16 @@ public final class YuiSmokeScreen1710 {
     private static final class SmokeScreen extends YuiScreen {
 
         private YuiScrollView scroll;
+        /** 非 default 可用模型逐 tick 惰性装载队列（122 屏同式；loadModel 幂等+负缓存）。 */
+        private final java.util.List<String> loadQueue =
+                new java.util.ArrayList<String>(rip.ysm.legacy1710.LegacyModelLoader.listBuiltinModels());
+
+        @Override
+        public void tick() {
+            if (!this.loadQueue.isEmpty()) {
+                rip.ysm.legacy1710.LegacyModelLoader.loadModel(this.loadQueue.remove(0));
+            }
+        }
 
         @Override
         public boolean mouseScrolled(int mouseX, int mouseY, double delta) {
@@ -82,8 +94,8 @@ public final class YuiSmokeScreen1710 {
 
         @Override
         protected void layout() {
-            int pw = 280;
-            int ph = 190;
+            int pw = 420;
+            int ph = 235;
             int px = (this.width - pw) / 2;
             int py = (this.height - ph) / 2;
 
@@ -113,29 +125,39 @@ public final class YuiSmokeScreen1710 {
                 }
             }));
 
-            // 可滚内容：5x2 卡槽（L2a 起首卡=真实模型预览卡，preview_animation 经
-            // LegacyAnimationSampler 采样驱动、空串=绑定位静像；L3a 模型选择屏收编）
-            // + 12 行文本溢出视口，验证 scissor 裁剪+偏移+拇指
-            int rows = 12;
+            // 可滚内容：真模型卡网格（L3b：Registry 枚举接真数据——default 主面
+            // 前置+LegacyModelLoader.listBuiltinModels 两级 id compareTo 序；
+            // 每卡=LegacyPreview1710.card 真实模型预览，preview_animation 采样驱动、
+            // 空串=绑定位静像、12_little=disable false+hold_on_last_frame+hover
+            // 三态样本）+ 3 行文本居尾，验证 scissor 裁剪+偏移+拇指+槽外零污染。
+            // 选择链无（L3a 功能化边界），点卡只打日志。
             int cols = 5;
+            int pitchX = 55;
+            int pitchY = 95; // 卡 90 + 行距 5
             int cardTop = py + 48;
-            int cardsH = 2 * (70 + 5);
+            int gridW = cols * pitchX - 3; // 末列按卡宽 52 收口
+            java.util.List<String> ids = new java.util.ArrayList<String>();
+            ids.add(null); // default 主面
+            ids.addAll(rip.ysm.legacy1710.LegacyModelLoader.listBuiltinModels());
+            int gridRows = (ids.size() + cols - 1) / cols;
+            int cardsH = gridRows * pitchY - 5;
             this.scroll = new YuiScrollView(px + 8, cardTop, pw - 16 - 36, ph - 48 - 26,
-                    cardsH + rows * 14);
-            this.scroll.add(new YuiModelCard(
-                    px + 8 + (this.scroll.width - cols * 45 + 5) / 2, cardTop,
-                    "preview", LegacyPreview1710.card(null), null));
-            for (int i = 1; i < cols * 2; i++) {
-                final int n = i;
-                this.scroll.add(new YuiFlatButton(px + 8 + (this.scroll.width - cols * 45 + 5) / 2
-                        + (i % cols) * 45, cardTop + (i / cols) * 75, 40, 70, "C" + n,
+                    cardsH + 3 * 14);
+            int gridX = px + 8 + (this.scroll.width - gridW) / 2;
+            for (int i = 0; i < ids.size(); i++) {
+                final String id = ids.get(i);
+                String label = id == null ? "default"
+                        : id.substring(id.lastIndexOf('/') + 1);
+                this.scroll.add(new YuiModelCard(gridX + (i % cols) * pitchX,
+                        cardTop + (i / cols) * pitchY, label, LegacyPreview1710.card(id),
                         new Runnable() {
                             @Override
                             public void run() {
-                                System.out.println("[ysm-yui-smoke] card " + n + " picked");
+                                System.out.println("[ysm-yui-smoke] card " + id + " picked");
                             }
                         }));
             }
+            int rows = 3;
             for (int i = 0; i < rows; i++) {
                 this.scroll.add(new YuiLabel(px + 14, cardTop + cardsH + i * 14 + 3, pw - 60, 10,
                         "Row " + (i + 1) + " / " + rows));

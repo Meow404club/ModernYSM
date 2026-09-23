@@ -8,7 +8,7 @@ import rip.ysm.legacy1710.LegacyModelLoader;
 import rip.ysm.legacy1710.LegacyModelState;
 import rip.ysm.legacy1710.LegacySyncChannel;
 import rip.ysm.legacy1710.LegacyTestModel;
-import rip.ysm.legacy1710.yui1710.YuiSmokeScreen1710;
+import rip.ysm.legacy1710.yui1710.YuiModelSelectScreen1710;
 
 /**
  * 1.7.10 线入口（legacy-1710-l0-poc → l1-render → L2a 真实装载）。
@@ -45,9 +45,9 @@ public class OpenYSMStub {
         System.out.println("[ysm-legacy1710] init done: realModel=" + real
                 + " bones=" + LegacyModelState.boneCount()
                 + " tex=" + (LegacyModelState.realTexture() != null ? "bound" : "placeholder"));
-        // YUI 冒烟屏（experimental，M-U3；L2a 增真实模型预览卡）：仅客户端
+        // 模型选择 GUI（L3a，Y 键；M-U3 冒烟屏已整屏收编撤除）：仅客户端
         if (event.getSide().isClient()) {
-            YuiSmokeScreen1710.initExperimental();
+            YuiModelSelectScreen1710.init();
         }
     }
 }

@@ -59,10 +59,6 @@ public class YuiCardGrid extends YuiWidget {
         return cell;
     }
 
-    public int cellCount() {
-        return this.cells.size();
-    }
-
     public int pageCount() {
         return Math.max(1, (this.cells.size() + PAGE_SIZE - 1) / PAGE_SIZE);
     }

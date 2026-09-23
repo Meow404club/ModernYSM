@@ -36,7 +36,10 @@ import java.util.Map;
  *     同式），查不到→返回 false（主线 hasAnimation()==false → PlayState.STOP，
  *     PlayerBaseAnimationPredicate.java:16-19=绑定位静像，无 idle 回退）。</li>
  * <li>loop 动画按 animationLength（tick，YSMClientMapper :604 length*20）取模循环；
- *     PLAY_ONCE/HOLD 播完钳在末帧（转场/混合层不做=研究最小档，GUI 预览不可感知）。</li>
+ *     非 LOOP（PLAY_ONCE/HOLD_ON_LAST_FRAME）播完钳在 len 持末帧——主线仅 LOOP
+ *     取模（AnimationControllerInstance.java:148-163），非 LOOP 经
+ *     startEndingTransition min(t,len)（:211）+ InterpolationLookup:58 末帧兜底
+ *     （转场/混合层不做=研究最小档，GUI 预览不可感知）。</li>
  * <li>molang 表达式关键帧走共享 ExpressionEvaluator（常量关键帧完全不触达求值器；
  *     表达式失败时 evalSafe 降级 0=该骨回中性位，不崩溃）。</li>
  * <li>骨骼隐藏双源（r3 追加）：消费侧=LegacyModelTranslator（offset9=hidden/
@@ -97,12 +100,16 @@ public final class LegacyAnimationSampler {
             return false;
         }
         boolean loop = anim.loop == ILoopType.EDefaultLoopTypes.LOOP;
-        float t = tick % len;
-        if (t < 0.0f) {
-            t += len;
-        }
-        if (!loop && t > len) {
-            t = len;
+        float t;
+        if (loop) {
+            t = tick % len;
+            if (t < 0.0f) {
+                t += len;
+            }
+        } else {
+            // PLAY_ONCE/HOLD_ON_LAST_FRAME：播完持末帧（钳 len，非取模——
+            // 取模会使非 LOOP 无限重播，审查阻塞项修正）
+            t = Math.min(Math.max(tick, 0.0f), len);
         }
         for (int i = 0; i < anim.boneAnimations.size(); i++) {
             BoneAnimation bone = anim.boneAnimations.get(i);

@@ -168,11 +168,6 @@ public final class LegacyModelLoader {
         return out;
     }
 
-    /** 包图标资源在否（ysm-pack.png）。 */
-    public static boolean packIconExists(String packPath) {
-        return packPath != null && resourceExists(BUILTIN_PREFIX + packPath + "/ysm-pack.png");
-    }
-
     /** ysm-pack.json 元数据（纯 Gson 解析，无客户端依赖；null=无包或解析失败）。 */
     public static PackMeta packMeta(String packPath) {
         if (packPath == null) {
@@ -225,12 +220,6 @@ public final class LegacyModelLoader {
         public String localizedName(String locale) {
             String[] l = locale == null ? null : this.lang.get(locale);
             return l != null && l[0] != null ? l[0] : this.name;
-        }
-
-        /** 本地化描述（lang[locale].description → description 回退）。 */
-        public String localizedDescription(String locale) {
-            String[] l = locale == null ? null : this.lang.get(locale);
-            return l != null && l[1] != null ? l[1] : this.description;
         }
     }
 

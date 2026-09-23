@@ -168,12 +168,10 @@ public final class LegacyCardPreview implements YuiPreview {
         if (!this.followMouse) {
             if (!pb.resolved) {
                 pb.hoverAnim = LegacyAnimationSampler.findAnimation(bundle, "hover") != null;
-                pb.fadeoutAnim = LegacyAnimationSampler.findAnimation(bundle, "hover_fadeout") != null;
+                Animation fadeout = LegacyAnimationSampler.findAnimation(bundle, "hover_fadeout");
+                pb.fadeoutAnim = fadeout != null;
+                pb.fadeoutMs = fadeout == null ? 0.0F : fadeout.animationLength * 50.0F; // ModelButton:156
                 pb.focusAnim = LegacyAnimationSampler.findAnimation(bundle, "focus") != null;
-                if (pb.fadeoutAnim) {
-                    Animation fadeout = LegacyAnimationSampler.findAnimation(bundle, "hover_fadeout");
-                    pb.fadeoutMs = fadeout == null ? 0.0F : fadeout.animationLength * 50.0F; // ModelButton:156
-                }
                 pb.resolved = true;
             }
             boolean hovered = mouseX >= x1 && mouseX < x2 && mouseY >= y1 && mouseY < y2;

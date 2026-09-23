@@ -38,12 +38,13 @@ public final class LegacyPackIcon {
 
     /** 包图标（缺失回退 default_pack_icon；两者皆缺=null，调用方画实底）。 */
     public static YuiBackend.Texture icon(String packPath) {
-        YuiBackend.Texture cached = CACHE.get(packPath);
-        if (cached == null) {
-            cached = load(packPath);
-            CACHE.put(packPath, cached);
+        // containsKey 守卫：load 可能返回 null，ConcurrentHashMap 不容 null value
+        if (CACHE.containsKey(packPath)) {
+            return CACHE.get(packPath);
         }
-        return cached;
+        YuiBackend.Texture texture = load(packPath);
+        CACHE.put(packPath, texture);
+        return texture;
     }
 
     private static YuiBackend.Texture load(String packPath) {

@@ -94,6 +94,11 @@ public final class LegacyModelState {
                 ? params : null;
     }
 
+    /** 已装载模型 id 集（default 走主面不入表；热重载面枚举用，122 同名同义）。 */
+    public static java.util.Set<String> loadedModelIds() {
+        return java.util.Collections.unmodifiableSet(MODELS.keySet());
+    }
+
     /** 按模型 id 取纹理；default 走主面。 */
     public static OuterFileTexture textureOf(String modelId) {
         if (LegacyModelRegistry.DEFAULT_MODEL_ID.equals(modelId) || modelId == null) {

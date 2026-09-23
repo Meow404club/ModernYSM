@@ -98,6 +98,11 @@ public final class LegacyPreview1710 implements YuiPreview {
         focusedId = modelId;
     }
 
+    /** 模型重载后清播放态（hover/fadeout/focus 解析缓存随旧 bundle 作废，下帧重解析；122 同名同义）。 */
+    public static void onModelReloaded(String modelId) {
+        PLAYBACKS.remove(modelId);
+    }
+
     /** 每模型 hover/时间轴态（122 LegacyCardPreview.Playback 同构）。 */
     private static final class Playback {
         boolean hovered;

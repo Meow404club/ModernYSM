@@ -127,9 +127,9 @@ public final class LegacyModelTranslator {
         GL11.glPopMatrix();
 
         if (DEBUG_LOG && (debugFrame++ % 40 == 0)) {
-            System.out.printf("[ysm-legacy1710] translator frame=%d bones=%d quadsDrawn=%d boneParams=%d translucent=%b glowBones=%d%n",
+            System.out.printf("[ysm-legacy1710] translator frame=%d bones=%d quadsDrawn=%d boneParams=%d translucent=%b glowBones=%d hurtRed=%.2f%n",
                     debugFrame, boneCount, quadsDrawn, boneParams == null ? -1 : boneParams.length,
-                    translucentTexture, glowBoneCount(model));
+                    translucentTexture, glowBoneCount(model), hurtRed);
         }
     }
 

@@ -225,7 +225,6 @@ val legacy122ExcludeMcDeps = listOf(
     "com/elfmcys/yesstevemodel/util/AnimatableCacheUtil.java",
     "com/elfmcys/yesstevemodel/util/CameraUtil.java",
     "com/elfmcys/yesstevemodel/util/ComponentUtil.java",
-    "com/elfmcys/yesstevemodel/util/EquipmentUtil.java",
     "com/elfmcys/yesstevemodel/util/InputUtil.java",
     "com/elfmcys/yesstevemodel/util/ItemTagsConstants.java",
     "com/elfmcys/yesstevemodel/util/ParticleEffectUtil.java",

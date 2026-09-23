@@ -141,7 +141,6 @@ val legacy122ExcludeMcDeps = listOf(
     "com/elfmcys/yesstevemodel/client/model/processor/ArmorSlotProcessor.java",
     "com/elfmcys/yesstevemodel/config/ModSoundEvents.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/AnimatableEntity.java",
-    "com/elfmcys/yesstevemodel/geckolib3/core/EntityFrameStateTracker.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/molang/builtin/QueryBinding.java",
     "com/elfmcys/yesstevemodel/client/animation/molang/YSMBinding.java",
     "com/elfmcys/yesstevemodel/client/animation/molang/CtrlBinding.java",

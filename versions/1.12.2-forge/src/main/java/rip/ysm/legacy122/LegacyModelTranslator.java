@@ -28,7 +28,6 @@ public final class LegacyModelTranslator {
     private LegacyModelTranslator() {
     }
 
-    private static final Matrix4f LOCAL_BONE_MAT = new Matrix4f();
     private static final Matrix3f NORMAL_MAT = new Matrix3f();
     private static final Vector3f NORMAL_VEC = new Vector3f();
     private static final float[] MATRIX_BUF = new float[16];
@@ -66,13 +65,12 @@ public final class LegacyModelTranslator {
         GlStateManager.scale(-1.0F, 1.0F, 1.0F);
 
         // 1.12.2 无 RenderSystem 分离投影——GL 状态即管线状态，无需 MatrixBridge.proj/modelView
-        Matrix4f rootPose = new Matrix4f();
-        Matrix4f[] cache = new Matrix4f[bones.size()];
         boolean[] visibleCache = new boolean[bones.size()];
+        Matrix4f[] cache = skeleton(bones, boneParams, visibleCache);
 
         int quadsDrawn = 0;
         for (int i = 0; i < bones.size(); i++) {
-            if (!isVisibleBone(i, bones, boneParams, cache, visibleCache, rootPose)) {
+            if (!visibleCache[i]) {
                 continue;
             }
             GeoModel.BakedBone bone = bones.get(i);
@@ -113,7 +111,19 @@ public final class LegacyModelTranslator {
     }
 
     // NativeModelRenderer.calculateBoneMatrix 同款数学（rootPose 恒单位阵：
-    // 1.12.2 定位走 GL 状态栈，非模型矩阵），可见性判定镜像 offset6-10 契约
+    // 1.12.2 定位走 GL 状态栈，非模型矩阵），可见性判定镜像 offset6-10 契约。
+    // M-U2 r2：矩阵计算提为 skeleton() 单源。r3：computeBounds（AABB 自适应
+    // 缩放）随 FILL0.80 发明一并弃用——主线卡内=固定 scale30×heightScale 原点锚。
+    private static Matrix4f[] skeleton(java.util.List<GeoModel.BakedBone> bones,
+                                       float[] boneParams, boolean[] visibleCache) {
+        Matrix4f rootPose = new Matrix4f();
+        Matrix4f[] cache = new Matrix4f[bones.size()];
+        for (int i = 0; i < bones.size(); i++) {
+            isVisibleBone(i, bones, boneParams, cache, visibleCache, rootPose);
+        }
+        return cache;
+    }
+
     private static boolean isVisibleBone(int idx, java.util.List<GeoModel.BakedBone> bones,
                                          float[] boneParams, Matrix4f[] cache, boolean[] visibleCache,
                                          Matrix4f rootPose) {

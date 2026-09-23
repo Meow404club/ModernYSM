@@ -28,11 +28,6 @@ public final class LegacyAnimationDriver {
 
     /** L3-1：异模型驱动重载——模型+骨参数面由 LegacyRenderHook 按被渲染玩家指定。 */
     public static void tick(EntityPlayer player, float partialTick, GeoModel model, float[] params) {
-        if (model == null || params == null || model.bakedBones == null) {
-            return;
-        }
-        long tick = LegacyModelState.nextAnimTick();
-
         // 1.12.2 行走相位（RenderLivingBase.doRender 同款插值）：
         // limbSwingAmount=步幅强度（0=静止），limbSwing=相位
         float limbSwingAmount = 0.0f;
@@ -53,6 +48,20 @@ public final class LegacyAnimationDriver {
             // ponytail: speed 未单独参与相位（vanilla 以 limbSwing 累计），保留变量名对位
             speed = speed * 0.0f + speed;
         }
+        tick(limbSwing, limbSwingAmount, model, params);
+    }
+
+    /**
+     * 相位直驱重载（M-U2 自实验分支 be0a794 收编，POC 实证）：无实体渲染管线的
+     * 调用方按给定相位/幅度直接驱动。r3 起 GUI 卡内/左栏预览改由
+     * {@link LegacyAnimationSampler} 按 preview_animation 采样驱动（主线语义），
+     * 本重载现仅服务世界路径 tick(player,...) 委托；同一 params 契约与骨骼名字匹配。
+     */
+    public static void tick(float limbSwing, float limbSwingAmount, GeoModel model, float[] params) {
+        if (model == null || params == null || model.bakedBones == null) {
+            return;
+        }
+        long tick = LegacyModelState.nextAnimTick();
 
         float swing = MathHelper.sin(limbSwing * 0.6662f) * 1.4f * limbSwingAmount;
 

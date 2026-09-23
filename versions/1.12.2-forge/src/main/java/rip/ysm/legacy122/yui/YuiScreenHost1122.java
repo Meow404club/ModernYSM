@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 
 import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.GL11;
 
 import rip.ysm.yui.YuiScreen;
 
@@ -49,6 +50,9 @@ public final class YuiScreenHost1122 extends GuiScreen {
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         this.drawDefaultBackground();
         this.screen.render(mouseX, mouseY, partialTicks);
+        // preview 契约收口（YuiBackendGL1122.preview 返回后深度关）：帧末恢复，
+        // 关屏后世界渲染 GL 态干净（GuiContainer:73 关深度先例的对称收尾）
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
     }
 
     @Override
@@ -80,7 +84,7 @@ public final class YuiScreenHost1122 extends GuiScreen {
         // 滚轮：lwjgl3ify(d6af8e7) 下 GLFW 滚轮回调有 firing（DEBUG-MOUSE 日志），但
         // Mouse.next() 不弹出滚轮事件、累积器 getDWheel() 恒 0（2026-09-22 运行时实证，
         // 见类注）；而同帧按钮事件可达。故逐 tick 轮询 getDWheel（健康 LWJGL2 面=经典
-        // API；本环境实测恒 0，滚轮输入由消费侧回退路径兜底，见 YuiSmokeScreen1122）。
+        // API；本环境实测恒 0，滚轮输入由消费侧回退路径兜底（Pager 按钮/▲▼ 键翻页）。
         int wheel = Mouse.getDWheel();
         if (wheel != 0) {
             int mouseX = Mouse.getX() * this.width / this.mc.displayWidth;

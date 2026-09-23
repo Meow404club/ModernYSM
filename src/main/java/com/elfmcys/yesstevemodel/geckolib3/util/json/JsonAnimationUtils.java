@@ -16,7 +16,13 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
+// 1.12.2 无 net.minecraft.server.ChainedJsonException（1.14 起）→ 同简单名 shim
+// versions/1.12.2-forge .../rip/ysm/legacy122/json/ChainedJsonException import 缝交换，
+// 正文零改动；非活跃分支预注释（1.20.1 raw 编译线 CtrlBinding 先例）
+//? if >=1.14
 import net.minecraft.server.ChainedJsonException;
+//? if <1.14
+/*import rip.ysm.legacy122.json.ChainedJsonException;*/
 
 import java.util.*;
 

@@ -48,6 +48,21 @@ public final class LegacyModelTranslator {
      * @param r/g/b/a     颜色
      */
     public static void render(GeoModel model, float[] boneParams, float r, float g, float b, float a) {
+        // GUI 预览入口：无实体上下文（lightmap=-1 不做发光骨 lightmap 覆盖）、
+        // 无受击面（hurtRed=0 不做红闪覆盖）
+        render(model, boneParams, r, g, b, a, -1, 0.0F);
+    }
+
+    /**
+     * 世界路径全量入口（LegacyRenderHook 专用）。
+     *
+     * @param lightmap 被渲染实体 getBrightnessForRender()（vanilla-mc-1.12.2 Entity.java:1106
+     *                 无参形）；-1=无实体上下文（GUI 预览），发光骨不做 lightmap 覆盖
+     * @param hurtRed  受击红闪二次覆盖强度（0=关；取实体 getBrightness()，vanilla-mc-1.7.10
+     *                 RendererLivingEntity.doRender:170-186 同款二次覆盖面，双线一致）
+     */
+    public static void render(GeoModel model, float[] boneParams, float r, float g, float b, float a,
+                              int lightmap, float hurtRed) {
         if (model == null || model.bakedBones == null || model.bakedBones.isEmpty()) {
             return;
         }
@@ -63,6 +78,24 @@ public final class LegacyModelTranslator {
         GlStateManager.pushMatrix();
         GlStateManager.enableRescaleNormal();
         GlStateManager.scale(-1.0F, 1.0F, 1.0F);
+
+        // item1：镂空/半透明渲染状态自管（vanilla-mc-1.12.2 RenderLivingBase.doRender:114
+        // enableAlpha 被 RenderPlayerEvent.Pre 取消连坐→此前镂空按不透明画）。
+        // 语义对位主线 IGeoRenderer.getRenderType:120-130：isTranslucentTexture→
+        // entityTranslucent（blend srcAlpha 无 alpha test）否则 entityCutoutNoCull
+        //（alpha test 0.1）。ghost 顶点 alpha<1 时 alphaFunc 降 1/255（GlStateManager
+        // Profile.c=TRANSPARENT 同值，GlStateManager.java:1041-1053 求证）。
+        // set/unset 严格配对：只清自己开的。
+        boolean translucentTexture = model.isTranslucentTexture(0);
+        if (translucentTexture) {
+            GlStateManager.enableBlend();
+            GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
+                    GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+                    GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+        } else {
+            GlStateManager.enableAlpha();
+            GlStateManager.alphaFunc(GL11.GL_GREATER, a < 1.0F ? 1.0F / 255.0F : 0.1F);
+        }
 
         // 1.12.2 无 RenderSystem 分离投影——GL 状态即管线状态，无需 MatrixBridge.proj/modelView
         boolean[] visibleCache = new boolean[bones.size()];
@@ -99,15 +132,32 @@ public final class LegacyModelTranslator {
             GL11.glPopMatrix();
         }
 
+        if (translucentTexture) {
+            GlStateManager.disableBlend();
+        } else {
+            GlStateManager.disableAlpha();
+        }
+
         GlStateManager.disableRescaleNormal();
         GlStateManager.popMatrix();
 
         if (DEBUG_LOG && (debugFrame++ % 40 == 0)) {
-            System.out.printf("[ysm-legacy122] translator frame=%d bones=%d quadsDrawn=%d boneParams=%d rootBoneRot=(%.3f,%.3f,%.3f)%n",
+            System.out.printf("[ysm-legacy122] translator frame=%d bones=%d quadsDrawn=%d boneParams=%d translucent=%b glowBones=%d rootBoneRot=(%.3f,%.3f,%.3f)%n",
                     debugFrame, bones.size(), quadsDrawn, boneParams == null ? -1 : boneParams.length,
+                    translucentTexture, glowBoneCount(bones),
                     boneParams == null ? 0 : boneParams[0], boneParams == null ? 0 : boneParams[1],
                     boneParams == null ? 0 : boneParams[2]);
         }
+    }
+
+    private static int glowBoneCount(java.util.List<GeoModel.BakedBone> bones) {
+        int n = 0;
+        for (GeoModel.BakedBone bone : bones) {
+            if (bone.glow) {
+                n++;
+            }
+        }
+        return n;
     }
 
     // NativeModelRenderer.calculateBoneMatrix 同款数学（rootPose 恒单位阵：

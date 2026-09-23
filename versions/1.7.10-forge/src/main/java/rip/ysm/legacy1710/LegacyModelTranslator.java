@@ -54,6 +54,23 @@ public final class LegacyModelTranslator {
      * （1.7.10 RendererLivingEntity.renderLivingAt:244 同款），本方法从模型原点起绘。
      */
     public static void render(LegacyBakedModel model, float[] boneParams, float r, float g, float b, float a) {
+        // GUI 预览入口：无实体上下文（lightmap=-1 不做发光骨 lightmap 覆盖）、
+        // 无受击面（hurtRed=0 不做红闪覆盖）
+        render(model, boneParams, r, g, b, a, -1, 0.0F);
+    }
+
+    /**
+     * 世界路径全量入口（LegacyRenderHook 专用）。
+     *
+     * @param lightmap 被渲染实体 getBrightnessForRender(partialTick)（vanilla-mc-1.7.10
+     *                 Entity.java:841 带参形）；-1=无实体上下文（GUI 预览），发光骨不做
+     *                 lightmap 覆盖
+     * @param hurtRed  受击红闪二次覆盖强度（0=关；取实体 getBrightness(partialTick)，
+     *                 vanilla-mc-1.7.10 RendererLivingEntity.doRender:170-186 同款二次
+     *                 覆盖面，双线一致）
+     */
+    public static void render(LegacyBakedModel model, float[] boneParams, float r, float g, float b, float a,
+                              int lightmap, float hurtRed) {
         if (model == null || model.bones.isEmpty()) {
             return;
         }
@@ -64,6 +81,19 @@ public final class LegacyModelTranslator {
         // 脚在模型空间 y=0，无 -1.501 平移。
         GL11.glPushMatrix();
         GL11.glScalef(-1.0F, 1.0F, 1.0F);
+
+        // item1：镂空/半透明渲染状态自管。1.7.10 侧 vanilla doRender:109 已开 alpha test
+        //（注入点之前）——cutout 语义只需保 alphaFunc（0.1 基线；ghost 顶点 alpha<1 时
+        // 降 1/255，vanilla renderModel:229-236 ghost 面同值）；半透明贴图走 blend
+        // srcAlpha（主线 entityTranslucent 语义）。set/unset 严格配对。
+        boolean translucentTexture = model.translucent;
+        if (translucentTexture) {
+            GL11.glEnable(GL11.GL_BLEND);
+            GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        } else {
+            GL11.glEnable(GL11.GL_ALPHA_TEST);
+            GL11.glAlphaFunc(GL11.GL_GREATER, a < 1.0F ? 1.0F / 255.0F : 0.1F);
+        }
 
         Matrix4f rootPose = new Matrix4f();
         Matrix4f[] cache = new Matrix4f[boneCount];
@@ -103,10 +133,30 @@ public final class LegacyModelTranslator {
 
         GL11.glPopMatrix();
 
-        if (DEBUG_LOG && (debugFrame++ % 40 == 0)) {
-            System.out.printf("[ysm-legacy1710] translator frame=%d bones=%d quadsDrawn=%d boneParams=%d%n",
-                    debugFrame, boneCount, quadsDrawn, boneParams == null ? -1 : boneParams.length);
+        if (translucentTexture) {
+            GL11.glDisable(GL11.GL_BLEND);
+        } else {
+            // enable 面归 vanilla doRender:109，只恢复 alphaFunc 0.1 基线
+            GL11.glAlphaFunc(GL11.GL_GREATER, 0.1F);
         }
+
+        GL11.glPopMatrix();
+
+        if (DEBUG_LOG && (debugFrame++ % 40 == 0)) {
+            System.out.printf("[ysm-legacy1710] translator frame=%d bones=%d quadsDrawn=%d boneParams=%d translucent=%b glowBones=%d%n",
+                    debugFrame, boneCount, quadsDrawn, boneParams == null ? -1 : boneParams.length,
+                    translucentTexture, glowBoneCount(model));
+        }
+    }
+
+    private static int glowBoneCount(LegacyBakedModel model) {
+        int n = 0;
+        for (LegacyBakedModel.BakedBone bone : model.bones) {
+            if (bone.glow) {
+                n++;
+            }
+        }
+        return n;
     }
 
     // NativeModelRenderer.calculateBoneMatrix 同款数学（rootPose 恒单位阵：

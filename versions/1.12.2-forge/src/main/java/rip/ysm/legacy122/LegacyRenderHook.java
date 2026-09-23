@@ -4,19 +4,32 @@ import com.elfmcys.yesstevemodel.client.ClientModelInfo;
 import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
 import com.elfmcys.yesstevemodel.resource.models.ModelProperties;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraftforge.client.event.RenderPlayerEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**
- * 1.12.2 渲染接缝（legacy-1222-l1-render commit 4；L3-1 按 UUID 查表取模型）。
+ * 1.12.2 渲染接缝核心（wave-d-b2：接缝从 RenderPlayerEvent.Pre 迁至
+ * RenderLivingBase.renderModel HEAD mixin，RenderLivingBaseMixin 注入）。
  *
- * RenderPlayerEvent.Pre（forge 14.23.x，tmp/refs/forge-api/forge-1.12.x RenderPlayerEvent.java:54
- * @Cancelable 实证）拦玩家渲染→翻译层接管；L3-1 读侧：按被渲染玩家
- * EntityPlayer.getUniqueID 查 LegacyModelRegistry.modelIdOf（S2C 同步落表，缺省
- * 回退 default），再从 LegacyModelState 按 id 取模型+骨参数+纹理；查不到的
- * 非 default id 由 LegacyModelLoader.loadModel 惰性装载（装载失败回退 default）。
+ * 迁移根因：Forge 14.23.x RenderPlayerEvent.Pre 在 RenderPlayer.doRender 顶触发
+ * （forge 1.12.x patches RenderPlayer.java.patch 原文），取消吞掉 super.doRender
+ * 全链——renderLivingAt 定位/applyRotations（RenderPlayer 覆写：睡床对齐+死亡倾倒+
+ * 鞘翅姿态）/prepareScale/setBrightness/renderLayers（盔甲披风鞘翅手持层）/名牌
+ * 全部缺失，模型悬空在眼高（harness/out/wd-b1 item5 截图实证：脚下 vanilla 影子
+ * 才是玩家真实位置）。改缝后 vanilla 主链照跑仅模型绘制被取消（renderModel:136，
+ * prepareScale:99 之后 renderLayers:143 之前）——定位/姿态/层/名牌全部继承，
+ * 零自补代码；B1 名牌补渲（原 renderNameTag/canRenderName/bodyYaw）随之退役，
+ * 名牌回归 vanilla super.doRender:157 passSpecialRender 面方向。
+ *
+ * 注入点 GL 后缀=prepareScale 的 scale(-1,-1,1)·preRenderCallback(0.9375)·
+ * translate(0,-1.501,0)（vanilla-mc-1.12.2 RenderLivingBase.java:160-167 +
+ * RenderPlayer.java:124-127），逆变换 translate(0,1.501,0)·scale(1/0.9375)·
+ * scale(-1,-1,1) 还原实体空间——translator「脚在 y=0」契约不变。
+ *
+ * B1 七项在新接缝下的去留：item1 alpha/blend、item2 glow、item3 受击红、
+ * item5 height/widthScale、item6 隐身三态、item7 partialTick 均在 translator/
+ * hook 内自管，保留；item4 名牌删除（vanilla 面恢复）。item6 必须保留：vanilla
+ * 隐身三态在 renderModel:184-201 内部，被本接管 cancel 绕过。
  */
 @SideOnly(Side.CLIENT)
 public final class LegacyRenderHook {
@@ -24,71 +37,78 @@ public final class LegacyRenderHook {
     private LegacyRenderHook() {
     }
 
-    @SubscribeEvent
-    public static void onRenderPlayerPre(RenderPlayerEvent.Pre event) {
-        String modelId = LegacyModelRegistry.modelIdOf(event.getEntityPlayer().getUniqueID());
+    /**
+     * renderModel 注入回调（RenderLivingBaseMixin）。返回 true=已接管（vanilla
+     * mainModel.render 被取消）。ageInTicks=handleRotationFloat（doRender:97，
+     * ticksExisted+partialTick）——partialTick 反演同 1710 item7（renderModel
+     * 形参无 partialTick）。
+     *
+     * 读侧：按被渲染玩家 getUniqueID 查 LegacyModelRegistry.modelIdOf（S2C 同步
+     * 落表，缺省回退 default），再从 LegacyModelState 按 id 取模型+骨参数+变体
+     * 纹理；查不到的非 default id 由 LegacyModelLoader.loadModel 惰性装载（失败
+     * 负缓存后回退 default，返回 false 走 vanilla 绘制）。
+     */
+    public static boolean takeover(net.minecraft.entity.EntityLivingBase base, float ageInTicks) {
+        if (!(base instanceof net.minecraft.client.entity.AbstractClientPlayer)) {
+            return false;
+        }
+        net.minecraft.entity.player.EntityPlayer player =
+                (net.minecraft.entity.player.EntityPlayer) base;
+        float partialTick = ageInTicks - (float) player.ticksExisted;
+        String modelId = LegacyModelRegistry.modelIdOf(player.getUniqueID());
         if (!LegacyModelRegistry.DEFAULT_MODEL_ID.equals(modelId)
                 && LegacyModelState.modelOf(modelId) == null) {
             // 惰性装载（同步包先于渲染到达的正常路径不会走到这里；兜底）。
-            // 修①：失败已负缓存于 LegacyModelLoader，此处不再每帧打日志
+            // 失败已负缓存于 LegacyModelLoader，此处不再每帧打日志
             if (!LegacyModelLoader.loadModel(modelId)) {
                 modelId = LegacyModelRegistry.DEFAULT_MODEL_ID;
             }
         }
         GeoModel model = LegacyModelState.modelOf(modelId);
         if (model == null || model.bakedBones == null || model.bakedBones.isEmpty()) {
-            return;
+            return false;
         }
         float[] boneParams = LegacyModelState.paramsOf(modelId, model);
         if (boneParams == null) {
-            return;
+            return false;
         }
-        // 1.12.2 无 PoseStack：RenderManager.renderEntityWithYawPitch 已在 GL 建好
-        // 实体定位状态（vanilla-mc-1.12.2 RenderManager 实证 doRender 链），翻译层
-        // 从模型原点起绘，vanilla RenderPlayer 取消即无原版模型重叠
-        event.setCanceled(true);
-        net.minecraft.client.renderer.entity.RenderManager rm = net.minecraft.client.Minecraft
-                .getMinecraft().getRenderManager();
-        // L2 纹理面：真实 OuterFileTexture 优先，null 回退 L1 占位皮肤
+        // 纹理绑定：按玩家稳定变体优先（B2 多纹理面），null 回退 L1 占位皮肤
         //（1.12.2 RenderManager 纹理入口是 public 字段 renderEngine，RenderManager.java:123）
         com.elfmcys.yesstevemodel.client.texture.OuterFileTexture tex =
-                LegacyModelState.textureOf(modelId);
+                LegacyModelState.variantOf(modelId, player.getUniqueID());
+        net.minecraft.client.renderer.entity.RenderManager rm = net.minecraft.client.Minecraft
+                .getMinecraft().getRenderManager();
         if (tex != null) {
             // 解析态纹理（byte[] 构造）不走 TextureManager 装载面——首次绑定前
             // 就地解码+上传（OuterFileTexture.ensureUploaded，DynamicTexture 同款 GL 路径）
             tex.ensureUploaded();
             // 1.12.2 TextureManager 只有 bindTexture(ResourceLocation)（TextureManager.java:32
             // MCP 实证）——AbstractTexture 直挂 glTextureId 走 bindTexture(int) 同款 GL 绑定
-            net.minecraft.client.renderer.GlStateManager.bindTexture(tex.getGlTextureId());
+            GlStateManager.bindTexture(tex.getGlTextureId());
         } else {
             rm.renderEngine.bindTexture(LegacyModelState.texture());
         }
-        LegacyAnimationDriver.tick(event.getEntityPlayer(), event.getPartialRenderTick(),
+        LegacyAnimationDriver.tick(player, partialTick,
                 model, boneParams, LegacyModelState.bundleOf(modelId));
         // item2：实体 lightmap 坐标传 translator（ysmGlow 发光骨 240 全亮覆盖+恢复用；
-        // isBurning 置 15728880 与 vanilla RenderManager.renderEntityStatic:324-328 同款）。
-        // rebase 冲突解决（review-merge）：与 wave-d-anim1 状态机卡正交——驱动侧保
-        // bundle 实参（状态机），lightmap/hurtRed 计算保留（B1 item2/3），translator
-        // 尾调共用。声明取 item3 强类型 EntityPlayer（deathTime 访问面）。
-        net.minecraft.entity.player.EntityPlayer player = event.getEntityPlayer();
+        // isBurning 置 15728880 与 vanilla RenderManager.renderEntityStatic:322-328 同款）。
         int lightmap = player.isBurning() ? 15728880 : player.getBrightnessForRender();
         // item3：受击红闪（hurtTime/deathTime 是 EntityLivingBase 公有字段；红强度=
-        // getBrightness()，vanilla 1710 doRender:177 glColor4f(var29,0,0,0.4) 同源）
+        // getBrightness()，vanilla 1710 doRender:177 glColor4f(var29,0,0,0.4) 同源）。
+        // 注：接缝迁移后 vanilla setDoRenderBrightness（doRender:135）的红色 COMBINE
+        // texenv 也在本绘制窗内生效（与 vanilla 玩家同面），叠加本二次覆盖红≈稍强。
         float hurtRed = player.hurtTime > 0 || player.deathTime > 0 ? player.getBrightness() : 0.0F;
-        // item5：模型 properties height_scale/width_scale 世界路径（此前恒 1:1，
-        // 仅 GUI 预览消费）。语义对位主线 IGeoRenderer.renderEarly:89-93：
-        // scale(heightScale, widthScale, heightScale)（x/z=heightScale，y=widthScale，
-        // RealCameraApiBinder:1108 同构求证）；缩放锚=模型原点（脚 y=0）。push/pop
-        // 限定在模型绘制内——item4 名牌须在未缩放空间画（主线名牌在实体变换外）。
+        // item5：模型 properties height_scale/width_scale。语义对位主线
+        // IGeoRenderer.renderEarly:89-93：scale(heightScale, widthScale, heightScale)；
+        // 缩放锚=模型原点（脚 y=0）。
         ClientModelInfo bundle = LegacyModelState.bundleOf(modelId);
         ModelProperties props = bundle == null ? null : bundle.getInfo().getModelProperties();
         float heightScale = props == null ? 1.0F : props.getHeightScale();
         float widthScale = props == null ? 1.0F : props.getWidthScale();
-        // item6：隐身检查（此前隐身玩家仍全渲染）。vanilla-mc-1.12.2
-        // RenderLivingBase.renderModel:184-199 同款三态：可见→不透明画；隐身但
-        // 观察者可见（isInvisibleToPlayer=false，队伍 seeFriendlyInvisibles 等）→
-        // ghost 半透明 0.15（Profile.c=TRANSPARENT 同值）；隐身且观察者不可见→
-        // 跳过绘制（动画 tick 照跑，对位 vanilla else 支 setRotationAngles 保活）。
+        // item6：隐身检查（vanilla 三态在 renderModel:184-201 内部，被接管绕过）。
+        // 可见→不透明画；隐身但观察者可见（isInvisibleToPlayer=false，队伍
+        // seeFriendlyInvisibles 等）→ ghost 半透明 0.15（Profile.c 同值）；隐身且
+        // 观察者不可见→跳过绘制（动画 tick 照跑）。
         net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
         boolean visibleBody = !player.isInvisible();
         boolean ghost = !visibleBody && !player.isInvisibleToPlayer(mc.player);
@@ -101,6 +121,12 @@ public final class LegacyRenderHook {
                 GlStateManager.depthMask(false);
             }
             GlStateManager.pushMatrix();
+            // prepareScale 后缀逆变换（S(-1,-1,1)·U(0.9375)·T(0,-1.501,0) 的
+            // T⁻¹·U⁻¹·S⁻¹，还原实体空间脚原点；1.501/0.9375 同 vanilla 常量）
+            GlStateManager.translate(0.0F, 1.501F, 0.0F);
+            float inv = 1.0F / 0.9375F;
+            GlStateManager.scale(inv, inv, inv);
+            GlStateManager.scale(-1.0F, -1.0F, 1.0F);
             GlStateManager.scale(heightScale, widthScale, heightScale);
             LegacyModelTranslator.render(model, boneParams,
                     1.0f, 1.0f, 1.0f, ghost ? 0.15F : 1.0f, lightmap, hurtRed);
@@ -113,117 +139,6 @@ public final class LegacyRenderHook {
                 GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
             }
         }
-        // item4：名牌恢复（Pre 取消吞 vanilla doRender 主链连坐名牌渲染面）
-        renderNameTag(player, event.getPartialRenderTick());
-    }
-
-    /**
-     * 名牌补渲（item4）。语义逐面复制 vanilla-mc-1.12.2：
-     * canRenderName（RenderLivingBase.java:387-411，含隐身显隐+计分板
-     * EnumVisible 四档规则+isGuiEnabled/renderViewEntity/isBeingRidden 门）→
-     * renderName 距离门（RenderLivingBase renderName：潜行 32 格否则 64 格）→
-     * renderLivingLabel（Render.java:293-304：名牌高度=height+0.5-潜行 0.25、
-     * 潜行走 seeThrough 面交 EntityRenderer.drawNameplate:1778 公有静态）。
-     *
-     * 1.12.2 renderName 在 doRender popMatrix 后的相机空间画（名牌不受实体
-     * 旋转影响）；本 hook 的 GL 栈已含 applyRotations 的 rotate(180- yawBody)
-     * （mu2-r3 采证：定位+朝向已就位），先 rotate(yawBody-180) 退掉实体朝向
-     * 再画。死亡倒地/Dinnerbone 翻转面未退（edge case，倒地帧名牌随之倾斜）。
-     */
-    private static void renderNameTag(net.minecraft.entity.player.EntityPlayer player, float partialTick) {
-        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
-        net.minecraft.client.renderer.entity.RenderManager rm = mc.getRenderManager();
-        if (!canRenderName(player, rm)) {
-            return;
-        }
-        double dist = player.getDistanceSq(rm.renderViewEntity);
-        float maxDist = player.isSneaking() ? 32.0F : 64.0F;
-        if (dist >= (double) (maxDist * maxDist)) {
-            return;
-        }
-        String str = player.getDisplayName().getFormattedText();
-        boolean sneaking = player.isSneaking();
-        float labelY = player.height + 0.5F - (sneaking ? 0.25F : 0.0F);
-        int verticalShift = "deadmau5".equals(str) ? -10 : 0;
-        net.minecraft.client.renderer.GlStateManager.pushMatrix();
-        net.minecraft.client.renderer.GlStateManager.rotate(bodyYaw(player, partialTick) - 180.0F, 0.0F, 1.0F, 0.0F);
-        // vanilla renderName 显式 alphaFunc(516,0.1)（其前置 enableAlpha 来自
-        // doRender:114，本 hook 被取消连坐）——本面自管 enable/restore 配对
-        net.minecraft.client.renderer.GlStateManager.enableAlpha();
-        net.minecraft.client.renderer.GlStateManager.alphaFunc(org.lwjgl.opengl.GL11.GL_GREATER, 0.1F);
-        net.minecraft.client.renderer.EntityRenderer.drawNameplate(rm.getFontRenderer(), str,
-                0.0F, labelY, 0.0F, verticalShift,
-                rm.playerViewY, rm.playerViewX, rm.options.thirdPersonView == 2, sneaking);
-        net.minecraft.client.renderer.GlStateManager.disableAlpha();
-        net.minecraft.client.renderer.GlStateManager.popMatrix();
-    }
-
-    /** vanilla-mc-1.12.2 RenderLivingBase.canRenderName:387-411 同款语义。 */
-    private static boolean canRenderName(net.minecraft.entity.player.EntityPlayer player,
-                                         net.minecraft.client.renderer.entity.RenderManager rm) {
-        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
-        net.minecraft.client.entity.EntityPlayerSP viewer = mc.player;
-        boolean visible = !player.isInvisibleToPlayer(viewer);
-        if (player != viewer) {
-            net.minecraft.scoreboard.Team entityTeam = player.getTeam();
-            if (entityTeam != null) {
-                net.minecraft.scoreboard.Team viewerTeam = viewer.getTeam();
-                switch (entityTeam.getNameTagVisibility()) {
-                    case ALWAYS:
-                        return visible;
-                    case NEVER:
-                        return false;
-                    case HIDE_FOR_OTHER_TEAMS:
-                        return viewerTeam == null ? visible
-                                : entityTeam.isSameTeam(viewerTeam)
-                                && (entityTeam.getSeeFriendlyInvisiblesEnabled() || visible);
-                    case HIDE_FOR_OWN_TEAM:
-                        return viewerTeam == null ? visible
-                                : !entityTeam.isSameTeam(viewerTeam) && visible;
-                    default:
-                        return true;
-                }
-            }
-        }
-        return net.minecraft.client.Minecraft.isGuiEnabled()
-                && player != rm.renderViewEntity && visible && !player.isBeingRidden();
-    }
-
-    /**
-     * 实体朝向 yaw（含骑乘钳制），vanilla-mc-1.12.2 RenderLivingBase.doRender:55-93
-     * 的 applyRotations 入参同款计算（1.7.10 RendererLivingEntity.doRender:70-88
-     * 逐行同构）；interpolateRotation 为 protected 本处内联（wrapDegrees 差值插值）。
-     */
-    private static float bodyYaw(net.minecraft.entity.player.EntityPlayer player, float partialTick) {
-        float yaw = interpolateRotation(player.prevRenderYawOffset, player.renderYawOffset, partialTick);
-        if (player.isRiding() && player.getRidingEntity() instanceof net.minecraft.entity.EntityLivingBase) {
-            net.minecraft.entity.EntityLivingBase mount =
-                    (net.minecraft.entity.EntityLivingBase) player.getRidingEntity();
-            yaw = interpolateRotation(mount.prevRenderYawOffset, mount.renderYawOffset, partialTick);
-            float headYaw = interpolateRotation(player.prevRotationYawHead, player.rotationYawHead, partialTick);
-            float clamped = net.minecraft.util.math.MathHelper.wrapDegrees(headYaw - yaw);
-            if (clamped < -85.0F) {
-                clamped = -85.0F;
-            }
-            if (clamped >= 85.0F) {
-                clamped = 85.0F;
-            }
-            yaw = headYaw - clamped;
-            if (clamped * clamped > 2500.0F) {
-                yaw += clamped * 0.2F;
-            }
-        }
-        return yaw;
-    }
-
-    private static float interpolateRotation(float prev, float current, float partialTick) {
-        float delta = current - prev;
-        while (delta < -180.0F) {
-            delta += 360.0F;
-        }
-        while (delta >= 180.0F) {
-            delta -= 360.0F;
-        }
-        return prev + delta * partialTick;
+        return true;
     }
 }

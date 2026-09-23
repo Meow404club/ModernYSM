@@ -105,8 +105,12 @@ public final class LegacyModelLoader {
                     modelId, fp);
             return true;
         }
-        // 旧纹理先记录（getGlTextureId 首调会申请 GL id，hasGlId 无副作用读取）；
+        // 旧变体集先快照（B2 多纹理：热重载须删全部变体 GL id，否则每轮泄漏 N-1 个）；
         // 装载失败时旧 state 原样存活（loadInto 失败路径不触碰 state）
+        java.util.List<OuterFileTexture> oldVariants = new java.util.ArrayList<>();
+        if (LegacyModelState.variantsOf(modelId) != null) {
+            oldVariants.addAll(LegacyModelState.variantsOf(modelId).values());
+        }
         OuterFileTexture oldTex = LegacyModelState.textureOf(modelId);
         Integer oldId = oldTex != null && oldTex.hasGlId()
                 ? Integer.valueOf(oldTex.getGlTextureId()) : null;
@@ -121,8 +125,8 @@ public final class LegacyModelLoader {
         // GL 防泄漏：旧纹理 id 删除（未上传过=无 id，deleteGlTexture 自身 no-op+复位，
         // vanilla-mc-1710 AbstractTexture.java:12-17）；新旧实例必异体（buildParsedBundle
         // 每次 toTexture 新建，122 审查同款论证）
-        if (oldId != null) {
-            oldTex.deleteGlTexture();
+        for (OuterFileTexture oldVariant : oldVariants) {
+            oldVariant.deleteGlTexture();
         }
         // 新纹理即时上传（触发点=client tick/键盘路径，与渲染同线程，GL 合法）；
         // 新旧纹理 id 配对进日志=泄漏证据（连续重载 id 有界复用）

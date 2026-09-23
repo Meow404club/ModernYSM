@@ -123,6 +123,9 @@ val legacy122Include = listOf(
     "rip/ysm/util/**",
     "rip/ysm/yui/**",
     "rip/ysm/legacy122/**",
+    // wave-d-b2：renderModel 接缝 mixin（不在白名单=静默剔除，ClassNotFoundException
+    // 实证；twin 摆放不可行=twin compileClasspath 摘 twin.output 后 main 类不可见）
+    "rip/ysm/mixin/**",
     "rip/ysm/OpenYSMStub.java",
     "rip/ysm/LegacyConfig.java",
     "net/sourceforge/pinyin4j/**",

@@ -197,7 +197,12 @@ public final class YuiModelSelectScreen extends YuiScreen {
         }
     }
 
-    /** 键盘导航：▲/◀ 焦点-1，▼/▶ 焦点+1（页内环绕；翻页走 Pager/滚轮）。 */
+    /**
+     * 键盘导航：▲/◀ 焦点-1，▼/▶ 焦点+1（页内环绕；翻页走 Pager/滚轮）。
+     * L3-3：屏内 R 触发热重载（1.12.2 键循环被 Minecraft.java:1464 currentScreen
+     * 门控，屏开着键位轮询不入——屏内触发只能挂此钩子）；triggerReload 尾部
+     * displayGuiScreen 重建本屏（enterPack/navigateUp 同款重入模式）=列表就地刷新。
+     */
     @Override
     public boolean keyPressed(int keyCode, char typedChar) {
         if (keyCode == Keyboard.KEY_UP || keyCode == Keyboard.KEY_LEFT) {
@@ -206,6 +211,10 @@ public final class YuiModelSelectScreen extends YuiScreen {
         }
         if (keyCode == Keyboard.KEY_DOWN || keyCode == Keyboard.KEY_RIGHT) {
             moveFocus(1);
+            return true;
+        }
+        if (keyCode == Keyboard.KEY_R) {
+            LegacyModelSelectScreen.triggerReload("key-gui");
             return true;
         }
         return super.keyPressed(keyCode, typedChar);

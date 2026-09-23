@@ -80,6 +80,24 @@ public final class LegacySyncChannel {
         }
     }
 
+    /**
+     * L3-3：重载后服务端一致性——可用列表重下发（S2C ListPacket，包结构/包名
+     * 变化即随新值）+ 每玩家全量登记重广播（登录四件套同面：syncAllTo+跟踪补发）。
+     * 调用方=客户端触发路径经 MinecraftServer.addScheduledTask 落服务线程。
+     */
+    public static void rebroadcastAll(MinecraftServer server) {
+        if (channel == null || server == null) {
+            return;
+        }
+        for (EntityPlayerMP player : server.getPlayerList().getPlayers()) {
+            sendAvailable(player);
+            syncAllTo(player);
+            syncToTracking(player);
+        }
+        System.out.printf("[ysm-legacy122] reload rebroadcast: players=%d%n",
+                server.getPlayerList().getPlayers().size());
+    }
+
     /** 服务端：向新玩家发全量已登记模型（进世界即知在榜玩家各自的模型）。 */
     private static void syncAllTo(EntityPlayerMP player) {
         for (EntityPlayerMP other : player.getServer().getPlayerList().getPlayers()) {

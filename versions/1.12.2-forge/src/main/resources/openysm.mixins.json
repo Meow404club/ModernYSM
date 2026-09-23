@@ -4,6 +4,10 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "openysm.refmap.json",
   "mixins": [],
-  "client": [],
-  "injectors": { "defaultRequire": 1 }
+  "client": [
+    "RenderLivingBaseMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
 }

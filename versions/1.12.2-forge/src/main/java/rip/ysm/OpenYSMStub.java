@@ -4,7 +4,6 @@ import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
 import rip.ysm.legacy122.LegacyModelState;
 import rip.ysm.legacy122.LegacyModelLoader;
 import rip.ysm.legacy122.LegacyModelSelectScreen;
-import rip.ysm.legacy122.LegacyRenderHook;
 import rip.ysm.legacy122.LegacySyncChannel;
 import rip.ysm.legacy122.LegacyTestModel;
 import net.minecraftforge.common.MinecraftForge;
@@ -13,9 +12,10 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
 /**
- * 1.12.2 线入口（legacy-1222-l1-render，L2 legacy-1222-l2-full 接真实装载）。
+ * 1.12.2 线入口（legacy-1222-l1-render，L2 legacy-1222-l2-full 接真实装载；
+ * wave-d-b2：渲染接缝改 RenderLivingBase.renderModel mixin——RenderLivingBaseMixin
+ * 经 jar 清单 MixinConfigs→mixinbooter 装载，无需事件注册）。
  *
- * init：注册 LegacyRenderHook（RenderPlayerEvent.Pre 拦截→翻译层）。
  * L2 模型面：真实 .ysm 装载链（内置 builtin/default 解压→YSMFolderDeserializer→
  * YSMClientMapper.buildParsedBundle→真实 GeoModel+真实贴图）成功即替换 state；
  * 失败回退 L1 LegacyTestModel 程序化人形（fallback 保留）。
@@ -30,12 +30,6 @@ public class OpenYSMStub {
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
-        // RenderHook @SideOnly(CLIENT)（SideTransformer 服务端拒绝加载，runRFBServer
-        // run2 实证 LoaderExceptionModCrash）——类引用收进 dist 分支（本方法
-        // LegacyModelSelectScreen 同款先例），客户端注册行为零变化
-        if (event.getSide().isClient()) {
-            MinecraftForge.EVENT_BUS.register(LegacyRenderHook.class);
-        }
         MinecraftForge.EVENT_BUS.register(LegacySyncChannel.class);
         LegacySyncChannel.init();
         // 模型装载面仅客户端（run3 实证：builtDirOf→Minecraft.getMinecraft() 触

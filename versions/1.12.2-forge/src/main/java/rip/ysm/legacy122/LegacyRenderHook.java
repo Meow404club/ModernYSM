@@ -74,5 +74,117 @@ public final class LegacyRenderHook {
         float hurtRed = player.hurtTime > 0 || player.deathTime > 0 ? player.getBrightness() : 0.0F;
         LegacyModelTranslator.render(model, boneParams,
                 1.0f, 1.0f, 1.0f, 1.0f, lightmap, hurtRed);
+        // item4：名牌恢复（Pre 取消吞 vanilla doRender 主链连坐名牌渲染面）
+        renderNameTag(player, event.getPartialRenderTick());
+    }
+
+    /**
+     * 名牌补渲（item4）。语义逐面复制 vanilla-mc-1.12.2：
+     * canRenderName（RenderLivingBase.java:387-411，含隐身显隐+计分板
+     * EnumVisible 四档规则+isGuiEnabled/renderViewEntity/isBeingRidden 门）→
+     * renderName 距离门（RenderLivingBase renderName：潜行 32 格否则 64 格）→
+     * renderLivingLabel（Render.java:293-304：名牌高度=height+0.5-潜行 0.25、
+     * 潜行走 seeThrough 面交 EntityRenderer.drawNameplate:1778 公有静态）。
+     *
+     * 1.12.2 renderName 在 doRender popMatrix 后的相机空间画（名牌不受实体
+     * 旋转影响）；本 hook 的 GL 栈已含 applyRotations 的 rotate(180- yawBody)
+     * （mu2-r3 采证：定位+朝向已就位），先 rotate(yawBody-180) 退掉实体朝向
+     * 再画。死亡倒地/Dinnerbone 翻转面未退（edge case，倒地帧名牌随之倾斜）。
+     */
+    private static void renderNameTag(net.minecraft.entity.player.EntityPlayer player, float partialTick) {
+        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
+        net.minecraft.client.renderer.entity.RenderManager rm = mc.getRenderManager();
+        if (!canRenderName(player, rm)) {
+            return;
+        }
+        double dist = player.getDistanceSq(rm.renderViewEntity);
+        float maxDist = player.isSneaking() ? 32.0F : 64.0F;
+        if (dist >= (double) (maxDist * maxDist)) {
+            return;
+        }
+        String str = player.getDisplayName().getFormattedText();
+        boolean sneaking = player.isSneaking();
+        float labelY = player.height + 0.5F - (sneaking ? 0.25F : 0.0F);
+        int verticalShift = "deadmau5".equals(str) ? -10 : 0;
+        net.minecraft.client.renderer.GlStateManager.pushMatrix();
+        net.minecraft.client.renderer.GlStateManager.rotate(bodyYaw(player, partialTick) - 180.0F, 0.0F, 1.0F, 0.0F);
+        // vanilla renderName 显式 alphaFunc(516,0.1)（其前置 enableAlpha 来自
+        // doRender:114，本 hook 被取消连坐）——本面自管 enable/restore 配对
+        net.minecraft.client.renderer.GlStateManager.enableAlpha();
+        net.minecraft.client.renderer.GlStateManager.alphaFunc(org.lwjgl.opengl.GL11.GL_GREATER, 0.1F);
+        net.minecraft.client.renderer.EntityRenderer.drawNameplate(rm.getFontRenderer(), str,
+                0.0F, labelY, 0.0F, verticalShift,
+                rm.playerViewY, rm.playerViewX, rm.options.thirdPersonView == 2, sneaking);
+        net.minecraft.client.renderer.GlStateManager.disableAlpha();
+        net.minecraft.client.renderer.GlStateManager.popMatrix();
+    }
+
+    /** vanilla-mc-1.12.2 RenderLivingBase.canRenderName:387-411 同款语义。 */
+    private static boolean canRenderName(net.minecraft.entity.player.EntityPlayer player,
+                                         net.minecraft.client.renderer.entity.RenderManager rm) {
+        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
+        net.minecraft.client.entity.EntityPlayerSP viewer = mc.player;
+        boolean visible = !player.isInvisibleToPlayer(viewer);
+        if (player != viewer) {
+            net.minecraft.scoreboard.Team entityTeam = player.getTeam();
+            if (entityTeam != null) {
+                net.minecraft.scoreboard.Team viewerTeam = viewer.getTeam();
+                switch (entityTeam.getNameTagVisibility()) {
+                    case ALWAYS:
+                        return visible;
+                    case NEVER:
+                        return false;
+                    case HIDE_FOR_OTHER_TEAMS:
+                        return viewerTeam == null ? visible
+                                : entityTeam.isSameTeam(viewerTeam)
+                                && (entityTeam.getSeeFriendlyInvisiblesEnabled() || visible);
+                    case HIDE_FOR_OWN_TEAM:
+                        return viewerTeam == null ? visible
+                                : !entityTeam.isSameTeam(viewerTeam) && visible;
+                    default:
+                        return true;
+                }
+            }
+        }
+        return net.minecraft.client.Minecraft.isGuiEnabled()
+                && player != rm.renderViewEntity && visible && !player.isBeingRidden();
+    }
+
+    /**
+     * 实体朝向 yaw（含骑乘钳制），vanilla-mc-1.12.2 RenderLivingBase.doRender:55-93
+     * 的 applyRotations 入参同款计算（1.7.10 RendererLivingEntity.doRender:70-88
+     * 逐行同构）；interpolateRotation 为 protected 本处内联（wrapDegrees 差值插值）。
+     */
+    private static float bodyYaw(net.minecraft.entity.player.EntityPlayer player, float partialTick) {
+        float yaw = interpolateRotation(player.prevRenderYawOffset, player.renderYawOffset, partialTick);
+        if (player.isRiding() && player.getRidingEntity() instanceof net.minecraft.entity.EntityLivingBase) {
+            net.minecraft.entity.EntityLivingBase mount =
+                    (net.minecraft.entity.EntityLivingBase) player.getRidingEntity();
+            yaw = interpolateRotation(mount.prevRenderYawOffset, mount.renderYawOffset, partialTick);
+            float headYaw = interpolateRotation(player.prevRotationYawHead, player.rotationYawHead, partialTick);
+            float clamped = net.minecraft.util.math.MathHelper.wrapDegrees(headYaw - yaw);
+            if (clamped < -85.0F) {
+                clamped = -85.0F;
+            }
+            if (clamped >= 85.0F) {
+                clamped = 85.0F;
+            }
+            yaw = headYaw - clamped;
+            if (clamped * clamped > 2500.0F) {
+                yaw += clamped * 0.2F;
+            }
+        }
+        return yaw;
+    }
+
+    private static float interpolateRotation(float prev, float current, float partialTick) {
+        float delta = current - prev;
+        while (delta < -180.0F) {
+            delta += 360.0F;
+        }
+        while (delta >= 180.0F) {
+            delta -= 360.0F;
+        }
+        return prev + delta * partialTick;
     }
 }

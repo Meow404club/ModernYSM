@@ -49,10 +49,10 @@ public final class LegacyRenderHook {
         event.setCanceled(true);
         net.minecraft.client.renderer.entity.RenderManager rm = net.minecraft.client.Minecraft
                 .getMinecraft().getRenderManager();
-        // L2 纹理面：真实 OuterFileTexture 优先，null 回退 L1 占位皮肤
+        // L2 纹理面：按玩家稳定变体优先（B2 多纹理面），null 回退 L1 占位皮肤
         //（1.12.2 RenderManager 纹理入口是 public 字段 renderEngine，RenderManager.java:123）
         com.elfmcys.yesstevemodel.client.texture.OuterFileTexture tex =
-                LegacyModelState.textureOf(modelId);
+                LegacyModelState.variantOf(modelId, event.getEntityPlayer().getUniqueID());
         if (tex != null) {
             // 解析态纹理（byte[] 构造）不走 TextureManager 装载面——首次绑定前
             // 就地解码+上传（OuterFileTexture.ensureUploaded，DynamicTexture 同款 GL 路径）

@@ -68,10 +68,10 @@ public final class LegacyRenderHook {
             return false;
         }
 
-        // 纹理绑定：解析态 OuterFileTexture 直绑（首次绑定前就地解码+上传），
+        // 纹理绑定（B2 多纹理面）：按玩家稳定变体直绑（首次绑定前就地解码+上传），
         // null 回退占位皮肤/玩家皮肤 RL
         com.elfmcys.yesstevemodel.client.texture.OuterFileTexture tex =
-                LegacyModelState.textureOf(modelId);
+                LegacyModelState.variantOf(modelId, player.getUniqueID());
         if (tex != null) {
             tex.ensureUploaded();
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, tex.getGlTextureId());

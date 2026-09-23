@@ -4,9 +4,11 @@ import com.elfmcys.yesstevemodel.client.ClientModelInfo;
 import com.elfmcys.yesstevemodel.client.model.MainModelData;
 import com.elfmcys.yesstevemodel.client.texture.OuterFileTexture;
 import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
+import com.elfmcys.yesstevemodel.util.data.OrderedStringMap;
 import net.minecraft.util.ResourceLocation;
 
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
@@ -112,6 +114,53 @@ public final class LegacyModelState {
             return boundTexture;
         }
         return TEXTURES.get(modelId);
+    }
+
+    // ponytail: 变体表不落缓存，直接读 bundle textureMap（OrderedStringMap 保序，
+    // 装载/热重载后自动跟随新 bundle；单模型变体量级个位数，逐帧读无压力）
+    private static final Map<UUID, String> LAST_VARIANT = new ConcurrentHashMap<>();
+
+    /**
+     * 多纹理变体表（B2）：bundle textureMap 保序快照（name→texture）。
+     * default 走主面 bundle；程序化回退路径（bundle=null）返回 null。
+     */
+    public static OrderedStringMap<String, OuterFileTexture> variantsOf(String modelId) {
+        ClientModelInfo info = bundleOf(modelId);
+        MainModelData data = info == null ? null : info.getMainModelData();
+        return data == null ? null : data.getTextureMap();
+    }
+
+    /**
+     * 按玩家稳定选变体（B2 多纹理面）。主线选择面=GUI 选名+网络同步 per-player
+     * textureIndex（PlayerTextureScreen→C2SRequestSwitchModelPacket 服务端校验→
+     * S2CSetModelAndTexturePacket→LivingAnimatable.updateCurrentTexture indexOf），
+     * legacy 无该同步链——可达成口径=UUID hash 稳定散列（同玩家同模型恒同变体，
+     * 玩家间差异化）；单纹理模型恒 0 零回归。变更换发一条绑定日志
+     * （textureIndex/绑定名=验收采证面）。
+     */
+    public static OuterFileTexture variantOf(String modelId, UUID uuid) {
+        OrderedStringMap<String, OuterFileTexture> map = variantsOf(modelId);
+        if (map == null || map.isEmpty()) {
+            return null;
+        }
+        if (uuid == null || map.size() == 1) {
+            return map.getValueAt(0);
+        }
+        long bits = uuid.getMostSignificantBits() ^ uuid.getLeastSignificantBits();
+        int idx = Math.floorMod((int) (bits ^ (bits >>> 32)) ^ modelId.hashCode(), map.size());
+        OuterFileTexture tex = map.getValuesList().get(idx);
+        // 防膨胀：>256 玩家全清，误清代价=重打一条日志
+        String sig = modelId + "|" + idx;
+        if (!sig.equals(LAST_VARIANT.get(uuid))) {
+            if (LAST_VARIANT.size() > 256) {
+                LAST_VARIANT.clear();
+            }
+            LAST_VARIANT.put(uuid, sig);
+            Logger.getLogger("yes_steve_model").info(String.format(
+                    "[ysm-legacy122] texture variant: player=%s model=%s textureIndex=%d/%d name=%s",
+                    uuid, modelId, idx, map.size(), map.getKeyAt(idx)));
+        }
+        return tex;
     }
 
     /** M-U2 r3：按模型 id 取解析 bundle（ModelProperties+动画文件）；default 走主面。 */

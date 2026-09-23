@@ -22,8 +22,6 @@ public final class LegacyModelState {
     private static ClientModelInfo mainBundle;
     private static LegacyBakedModel mainModel;
     private static float[] boneParams;
-    private static float[] currentBoneParams;
-    private static long animTick;
     private static ResourceLocation texture;
     private static OuterFileTexture boundTexture;
 
@@ -49,7 +47,6 @@ public final class LegacyModelState {
         mainBundle = info;
         mainModel = model;
         boneParams = model == null ? null : new float[model.bones.size() * 12];
-        currentBoneParams = boneParams;
         boundTexture = realTexture instanceof OuterFileTexture
                 ? (OuterFileTexture) realTexture : null;
         texture = boundTexture != null
@@ -127,16 +124,8 @@ public final class LegacyModelState {
         return model != null && model == mainModel ? boneParams : null;
     }
 
-    public static float[] currentBoneParams() {
-        return currentBoneParams;
-    }
-
     public static ResourceLocation texture() {
         return texture;
-    }
-
-    public static long nextAnimTick() {
-        return ++animTick;
     }
 
     public static int boneCount() {

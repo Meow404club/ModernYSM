@@ -81,7 +81,9 @@ public final class LegacyRenderHook {
             tm.bindTexture(texRl != null ? texRl : player.getLocationSkin());
         }
 
-        LegacyAnimationDriver.tick(player, partialTick, model, boneParams);
+        // wave-d-anim1：驱动委托世界状态机（bundle 实参同 122 twin；5 参签名）
+        ClientModelInfo bundle = LegacyModelState.bundleOf(modelId);
+        LegacyAnimationDriver.tick(player, partialTick, model, boneParams, bundle);
         // item2：实体 lightmap 坐标传 translator（ysmGlow 发光骨 240 全亮覆盖+恢复用；
         // isBurning 置 15728880 与 vanilla RenderManager.func_147939_a:232-240 同款；
         // getBrightnessForRender/getBrightness 形参不参与计算）
@@ -94,7 +96,6 @@ public final class LegacyRenderHook {
         // 语义对位主线 IGeoRenderer.renderEarly:89-93：scale(heightScale, widthScale,
         // heightScale)；缩放锚=模型原点（脚 y=0）。push/pop 限定模型绘制内——不泄入
         // vanilla renderModel 后续 shouldRenderPass 盔甲层（原版 biped 定位，保持原尺寸）。
-        ClientModelInfo bundle = LegacyModelState.bundleOf(modelId);
         ModelProperties props = bundle == null ? null : bundle.getInfo().getModelProperties();
         float heightScale = props == null ? 1.0F : props.getHeightScale();
         float widthScale = props == null ? 1.0F : props.getWidthScale();

@@ -147,9 +147,11 @@ public final class LegacyPreview1710 implements YuiPreview {
         float anchorY;
         if (this.followMouse) {
             // GuiInventory:60/77-80 配方（122 面采证头随鼠标方向实证）：
-            // yBodyRot 等效 atan(dx/40)*20 → rotate(180-yaw)；var4=锚y-mouseY→pitch
+            // yBodyRot 等效 atan(dx/40)*20 → rotate(180-yaw)；pitch 度量点=槽内头部
+            // 高度 y1+56（122 LegacyCardPreview 采证常数——vanilla 画法度量点在
+            // 锚点上方，错用脚底锚 y1+161 会恒俯视；debt ③ 对齐修正）
             yawRot = 180.0F - (float) Math.atan((x1 + 62.0F - mouseX) / 40.0F) * 20.0F;
-            pitchRot = -(float) Math.atan((y1 + 161.0F - mouseY) / 40.0F) * 20.0F;
+            pitchRot = -(float) Math.atan((y1 + 56.0F - mouseY) / 40.0F) * 20.0F;
             anchorX = x1 + 62.0F;   // guiLeft+67（槽 x1=guiLeft+5，主线 :836）
             anchorY = y1 + 161.0F;  // guiTop+190
         } else {

@@ -74,6 +74,9 @@ public final class LegacyCardPreview implements YuiPreview {
     /** 焦点光标模型 id（屏侧键盘导航写入；null=无）。 */
     private static volatile String focusedId;
 
+    // 采证打点开关（LegacyModelTranslator 同款）
+    private static final boolean DEBUG = Boolean.getBoolean("ysm.legacy122.debug");
+
     private final String modelId;
     private final boolean followMouse;
 
@@ -133,22 +136,29 @@ public final class LegacyCardPreview implements YuiPreview {
 
         // --- 姿态/缩放/锚点（主线 ModelPreviewRenderer:773/785/846 + ModelButton:287）---
         float scale = (this.followMouse ? PANE_SCALE : CARD_SCALE) * heightScale;
-        float previewYaw;
-        float pitchDeg; // GL rotate(-pitchDeg, X) 的参——主线 rotationX(tilt) ⇔ pitchDeg=-tilt
+        // 终值 rotate 角：yawRot 绕 Y，pitchRot 绕 X（正=俯视倾）
+        float yawRot;
+        float pitchRot;
         float anchorX;
         float anchorY;
         if (this.followMouse) {
-            previewYaw = (float) Math.atan((x1 + 62.0F - mouseX) / 40.0F) * 20.0F;
-            pitchDeg = -(float) Math.atan((y1 + 56.0F - mouseY) / 40.0F) * 20.0F;
+            // GuiInventory:92-106 配方（r2 采证头随鼠标方向实证）：yBodyRot 等效
+            // atan(dx/40)*20 → applyRotations rotate(180-yaw)
+            yawRot = 180.0F - (float) Math.atan((x1 + 62.0F - mouseX) / 40.0F) * 20.0F;
+            pitchRot = -(float) Math.atan((y1 + 56.0F - mouseY) / 40.0F) * 20.0F;
             anchorX = x1 + 62.0F;  // guiLeft+67（槽 x1=guiLeft+5，:836）
             anchorY = y1 + 161.0F; // guiTop+190
         } else {
-            previewYaw = disableRot ? 180.0F : 200.0F; // :846
-            pitchDeg = disableRot ? 0.0F : 10.0F;      // :785 rotationX(0 / -10)
-            anchorX = x1 + (x2 - x1) / 2.0F;           // x+26（:287 x+w/2）
-            anchorY = y1 + 65.0F;                      // y+65（:287 y+h/2+20）
+            float previewYaw = disableRot ? 180.0F : 200.0F; // :846
+            // 基向换算：本配方正面=rotate(180,Y)（vanilla 纸娃娃/r2 pane 实证），
+            // 主线正面=setupRotations Y(180-bodyYaw) 的 bodyYaw=180 ⇒ 总角
+            // θ = 180 + (180-previewYaw) ≡ -previewYaw；previewYaw=200 ⇒ 正面偏 20°
+            yawRot = -previewYaw;
+            pitchRot = disableRot ? 0.0F : -10.0F; // :785 rotationX(0 / -10)
+            anchorX = x1 + (x2 - x1) / 2.0F;       // x+26（:287 x+w/2）
+            anchorY = y1 + 65.0F;                  // y+65（:287 y+h/2+20）
             if (disableRot) {
-                anchorY += 5.5F;                       // :773 translate(0, 5.5, 1000)
+                anchorY += 5.5F;                   // :773 translate(0, 5.5, 1000)
             }
         }
 
@@ -172,6 +182,12 @@ public final class LegacyCardPreview implements YuiPreview {
                 pb.starts.put(hovered ? "hover" : "hover_fadeout", Long.valueOf(now));
                 if (!hovered) {
                     pb.unhoverMs = now;
+                }
+                // 三态边沿打点（-Dysm.legacy122.debug 开；builtin 包无 hover/fadeout/
+                // focus 动画名→containsKey 语义下该态跳过回 base=主线同行为）
+                if (DEBUG) {
+                    System.out.printf("[ysm-legacy122] card hover edge: id=%s hovered=%b hoverAnim=%b fadeoutMs=%.0f focusAnim=%b%n",
+                            id, hovered, pb.hoverAnim, pb.fadeoutMs, pb.focusAnim);
                 }
             }
             if (hovered && pb.hoverAnim) {
@@ -214,8 +230,8 @@ public final class LegacyCardPreview implements YuiPreview {
         GlStateManager.rotate(135.0F, 0.0F, 1.0F, 0.0F); // :100
         RenderHelper.enableStandardItemLighting();       // :101（glLight 位置按当前矩阵捕获=光源方位）
         GlStateManager.rotate(-135.0F, 0.0F, 1.0F, 0.0F); // :102
-        GlStateManager.rotate(-pitchDeg, 1.0F, 0.0F, 0.0F); // 俯仰（rotationX(tilt) ⇔ pitchDeg=-tilt）
-        GlStateManager.rotate(180.0F - previewYaw, 0.0F, 1.0F, 0.0F); // yBodyRot=previewYaw 的 applyRotations 等效
+        GlStateManager.rotate(pitchRot, 1.0F, 0.0F, 0.0F); // 俯仰（rotationX(tilt) 等效）
+        GlStateManager.rotate(yawRot, 0.0F, 1.0F, 0.0F); // yBodyRot=previewYaw 的 applyRotations 等效
 
         // 必改②：RenderManager.renderEntity → 翻译层直调（动画已采样进 params）
         LegacyModelTranslator.render(model, params, 1.0F, 1.0F, 1.0F, 1.0F);

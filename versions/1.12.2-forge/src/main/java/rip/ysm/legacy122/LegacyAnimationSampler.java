@@ -39,6 +39,13 @@ import java.util.Map;
  *     PLAY_ONCE/HOLD 播完钳在末帧（转场/混合层不做=研究最小档，GUI 预览不可感知）。</li>
  * <li>molang 表达式关键帧走共享 ExpressionEvaluator（常量关键帧完全不触达求值器；
  *     表达式失败时 evalSafe 降级 0=该骨回中性位，不崩溃）。</li>
+ * <li>骨骼隐藏双源（r3 追加）：消费侧=LegacyModelTranslator（offset9=hidden/
+ *     offset10=skipChildren，父链子树继承，scale0 同判不可见——镜像
+ *     NativeModelRenderer.calculateBoneMatrix:328-345）；写入侧=resetParams
+ *     置中性 0 + applyDebugHide 验收钩子（env YSM_LEGACY122_HIDE_BONE_TEST）。
+ *     静态源（GeoBone 三旗标）在共享 bake 即恒 false（主线同码
+ *     YSMClientMapper:457），格式内亦无隐藏关键帧通道（rot/pos/scale 之外
+ *     无通道）——两线对称，见交付报告。</li>
  * </ul>
  */
 public final class LegacyAnimationSampler {
@@ -134,7 +141,31 @@ public final class LegacyAnimationSampler {
             params[p + 10] = 0f;
             params[p + 11] = 0f;
         }
+        applyDebugHide(model, params);
     }
+
+    // ponytail: 隐藏旗标消费侧验收钩子——环境变量 YSM_LEGACY122_HIDE_BONE_TEST=
+    // <骨名>[,<骨名>]，skip: 前缀写 offset10。对命名骨写 offset9=1。格式内无隐藏
+    // 关键帧通道（builtin 全量扫描 rot/pos/scale 三通道），静态源在主线 bake 侧同为
+    // 恒 false（YSMClientMapper:457 GeoBone(...,false,false,false)），此钩子是
+    // offset9/10 写入面的唯一活路径=消费语义的可证伪驱动器，升级路径=控制器/
+    // 脚本面落地时替换。走环境变量（gradle run 子进程自动继承，免动 build 文件）。
+    private static void applyDebugHide(GeoModel model, float[] params) {
+        String spec = System.getenv("YSM_LEGACY122_HIDE_BONE_TEST");
+        if (spec == null || spec.isEmpty()) {
+            return;
+        }
+        for (String entry : spec.split(",")) {
+            boolean skip = entry.startsWith("skip:");
+            String boneName = skip ? entry.substring(5) : entry;
+            for (int i = 0; i < model.bakedBones.size(); i++) {
+                if (boneName.equals(model.bakedBones.get(i).name)) {
+                    params[i * 12 + (skip ? 10 : 9)] = 1.0f;
+                }
+            }
+        }
+    }
+
 
     /** 覆盖 t 的关键帧求值写契约（关键帧按 startTick 有序连续，线性扫足够）。 */
     private static void applyChannel(List<BoneKeyFrame> frames, float t, float[] params, int off) {

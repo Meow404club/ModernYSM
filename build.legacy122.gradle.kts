@@ -395,8 +395,37 @@ tasks.register<com.gtnewhorizons.retrofuturagradle.minecraft.RunMinecraftTask>(
     javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
 }
 
+// runRFBServer（legacy-final-misc）：RunMinecraftTask 原生支持 DEDICATED_SERVER
+//（retrofuturagradle-1.4.8.jar RunMinecraftTask 构造器 Distribution.DEDICATED_SERVER
+// 分支：默认 args "nogui" + workingDir server.properties 探测，字节码实证）；
+// bouncer 面 GradleStartServer 读 gradlestart.bouncerServer（默认
+// net.minecraft.launchwrapper.Launch，GradleStartServer.class 常量池实证），照
+// runRFBClient 同构换 bouncerServer=RetroFuturaBootstrap Main + RfbSystemClassLoader。
+// 服务端无资产需求（taskDownloadVanillaAssets 为 client 面），dependsOn 只留 patchedMc+jar。
+tasks.register<com.gtnewhorizons.retrofuturagradle.minecraft.RunMinecraftTask>(
+    "runRFBServer", com.gtnewhorizons.retrofuturagradle.util.Distribution.DEDICATED_SERVER
+).configure {
+    val mcTasks = project.extensions.getByType<com.gtnewhorizons.retrofuturagradle.minecraft.MinecraftTasks>()
+    classpath(forgePatchDeps)
+    classpath(mcpTasks.taskPackageMcLauncher)
+    classpath(mcpTasks.taskPackagePatchedMc)
+    classpath(sourceSets.main.get().compileClasspath)
+    classpath(tasks.named("jar"))
+    setup(project)
+    dependsOn(mcpTasks.taskPackagePatchedMc, "jar")
+    // GradleStartServer（非 GradleStart）：server 面读 gradlestart.bouncerServer/
+    // serverTweaker=FMLServerTweaker（GradleStartServer.class 常量池实证）；首跑实测
+    // GradleStart 只认 bouncerClient → 走裸 launchwrapper Launch.main，RFB Main 未接管
+    // → PluginLoader.findPluginManifests NPE compatLoader null（server-122.log run1）
+    mainClass.set("GradleStartServer")
+    extraJvmArgs.add("-Djava.system.class.loader=com.gtnewhorizons.retrofuturabootstrap.RfbSystemClassLoader")
+    systemProperty("gradlestart.bouncerServer", "com.gtnewhorizons.retrofuturabootstrap.Main")
+    systemProperty("fml.coreMods.load", "zone.rong.mixinbooter.MixinBooterPlugin")
+    javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
+}
+
 // RFB 默认 runClient/runServer 不可用（launchwrapper URLClassLoader cast，实测）；
-// server 同理需 forgePatches 前置——POC 验收走 runRFBClient。
+// server 同理需 forgePatches 前置——client 走 runRFBClient、server 走 runRFBServer。
 tasks.named("runClient") { enabled = false }
 
 tasks.processResources.configure {

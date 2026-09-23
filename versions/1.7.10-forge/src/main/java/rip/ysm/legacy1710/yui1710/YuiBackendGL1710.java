@@ -87,6 +87,16 @@ public final class YuiBackendGL1710 implements YuiBackend {
 
     @Override
     public void scissorPush(int x1, int y1, int x2, int y2) {
+        int[] outer = this.scissorStack.peek();
+        if (outer != null) {
+            // GL scissor 是替换非相交：嵌套 push 必须与外层矩形求交，否则滚动容器
+            // 内的 preview 槽部分滚出视口时槽内容泄漏到视口外（L3b 冒烟屏卡网格
+            // 入 ScrollView 场景；122 后端同构，其消费面无嵌套暂不需同步）
+            x1 = Math.max(x1, outer[0]);
+            y1 = Math.max(y1, outer[1]);
+            x2 = Math.min(x2, outer[2]);
+            y2 = Math.min(y2, outer[3]);
+        }
         this.scissorStack.push(new int[] {x1, y1, x2, y2});
         applyScissor(x1, y1, x2, y2);
     }
@@ -105,8 +115,9 @@ public final class YuiBackendGL1710 implements YuiBackend {
     private void applyScissor(int x1, int y1, int x2, int y2) {
         int s = scaled().getScaleFactor();
         GL11.glEnable(GL11.GL_SCISSOR_TEST);
+        // 求交后可退化为空矩形：负宽高是 GL_INVALID_VALUE，钳 0（零尺寸=什么都不画）
         GL11.glScissor(x1 * s, this.mc.displayHeight - y2 * s,
-                (x2 - x1) * s, (y2 - y1) * s);
+                Math.max(0, (x2 - x1) * s), Math.max(0, (y2 - y1) * s));
     }
 
     @Override

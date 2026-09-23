@@ -125,10 +125,11 @@ dependencies {
     // vanilla 不带 fastutil（1.12.2 自带，build.legacy122.gradle.kts:347 注释实证其靠
     // MC 传递），须显式声明。8.5.13=研究裁定基线（Java 8 字节码面）。
     implementation("it.unimi.dsi:fastutil:8.5.13")
-    // asm-tree：GeoModel.java:25-29 ClassReader/ClassNode/FieldNode/MethodNode 面；
-    // asm-tree 传递携带 asm 核心（ClassReader 所在）。launchwrapper 自带 asm-all 同包
-    // org.objectweb.asm——运行期以 launchwrapper 先加载为准（研究 risk 已留档）。
-    implementation("org.ow2.asm:asm-tree:9.7")
+    // asm-tree：GeoModel.java:25-29 ClassReader/ClassNode/FieldNode/MethodNode 编译面；
+    // asm-tree 传递携带 asm 核心（ClassReader 所在）。compileOnly=运行期靠 launchwrapper
+    // 自带 asm-all（研究 risk 预案落地：run7 实证 asm 9.7 进运行面会打断 1.7.10 世界
+    // 生成 biome 注册面——"Invalid Biome id"，launchwrapper/fixForge 变换器同包冲突）
+    compileOnly("org.ow2.asm:asm-tree:9.7")
     // jetbrains annotations：GeoModel @NotNull（CLASS retention，不进运行面）
     compileOnly("org.jetbrains:annotations:24.0.0")
     // lwjgl3ify 现代化 runtime（用户裁决 2026-09-20）：forgePatches=运行面打补丁，

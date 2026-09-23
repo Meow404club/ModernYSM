@@ -77,9 +77,10 @@ public final class LegacyModelSelectScreen {
 
     /**
      * 键位轮询（1.12.2 无 InputEvent.KeyInputEvent，ClientTickEvent+isPressed 标准面）。
-     * L3-3 重载键注意：1.12.2 键面对开屏按键也计数（KeyBinding.onTick 于
-     * Minecraft.java:1592 无 currentScreen 守卫）——重载键须限定 无屏/选择屏开着
-     * 两态，防聊天打字（含 /ysmreload 的 r 字符）误触。
+     * L3-3 重载键注意：1.12.2 整个键循环被 Minecraft.java:1464
+     * "currentScreen == null || allowUserInput" 门控——开屏（含聊天打字）时
+     * KeyBinding.onTick 根本不入（运行实证：选择屏开着按 R 零触发），
+     * 选择屏内触发走 YuiModelSelectScreen.keyPressed 的 R 钩子。
      */
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) {
@@ -87,8 +88,7 @@ public final class LegacyModelSelectScreen {
             return;
         }
         Minecraft mc = Minecraft.getMinecraft();
-        if (RELOAD_MODELS.isPressed() && mc.player != null
-                && (mc.currentScreen == null || mc.currentScreen instanceof YuiScreenHost1122)) {
+        if (RELOAD_MODELS.isPressed() && mc.player != null && mc.currentScreen == null) {
             triggerReload("key");
         }
         if (OPEN_GUI.isPressed() && mc.player != null && mc.currentScreen == null) {
@@ -97,12 +97,12 @@ public final class LegacyModelSelectScreen {
     }
 
     /**
-     * L3-3 重载入口（键位/命令共用）：客户端重装载→集成服在即（单机/LAN 宿主）
-     * 服务线程重广播（可用列表重下发+指派重广播=同步一致性）→选择屏开着就地
-     * 重建（displayGuiScreen 重入 initGui→factory 重跑，listBuiltinModels/
-     * listPackModels/packMeta 取新值；命令路径聊天屏先关，instanceof 守卫自然跳过）。
+     * L3-3 重载入口（键位/屏内 R/命令共用）：客户端重装载→集成服在即（单机/LAN
+     * 宿主）服务线程重广播（可用列表重下发+指派重广播=同步一致性）→选择屏开着
+     * 就地重建（displayGuiScreen 重入 initGui→factory 重跑，listBuiltinModels/
+     * listPackModels/packMeta 取新值；命令路径聊天屏开着，instanceof 守卫自然跳过）。
      */
-    private static void triggerReload(String source) {
+    public static void triggerReload(String source) {
         long start = System.currentTimeMillis();
         int n = LegacyModelLoader.reloadLoadedModels();
         System.out.printf("[ysm-legacy122] reload triggered (%s): models reloaded=%d in %dms%n",

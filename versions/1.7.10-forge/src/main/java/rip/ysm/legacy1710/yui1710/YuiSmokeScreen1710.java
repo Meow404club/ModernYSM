@@ -14,6 +14,7 @@ import org.lwjgl.input.Keyboard;
 import rip.ysm.yui.YuiColors;
 import rip.ysm.yui.YuiFlatButton;
 import rip.ysm.yui.YuiLabel;
+import rip.ysm.yui.YuiModelCard;
 import rip.ysm.yui.YuiPanel;
 import rip.ysm.yui.YuiScreen;
 import rip.ysm.yui.YuiScrollView;
@@ -112,16 +113,20 @@ public final class YuiSmokeScreen1710 {
                 }
             }));
 
-            // 可滚内容：5x2 占位卡槽（本线 L3 模型卡片网格的前身形态，占位本地数据）+
-            // 12 行文本溢出视口，验证 scissor 裁剪+偏移+拇指
+            // 可滚内容：5x2 卡槽（L2a 起首卡=真实模型预览卡，preview_animation 经
+            // LegacyAnimationSampler 采样驱动、空串=绑定位静像；L3a 模型选择屏收编）
+            // + 12 行文本溢出视口，验证 scissor 裁剪+偏移+拇指
             int rows = 12;
             int cols = 5;
             int cardTop = py + 48;
             int cardsH = 2 * (70 + 5);
             this.scroll = new YuiScrollView(px + 8, cardTop, pw - 16 - 36, ph - 48 - 26,
                     cardsH + rows * 14);
-            for (int i = 0; i < cols * 2; i++) {
-                final int n = i + 1;
+            this.scroll.add(new YuiModelCard(
+                    px + 8 + (this.scroll.width - cols * 45 + 5) / 2, cardTop,
+                    "preview", LegacyPreview1710.of(null), null));
+            for (int i = 1; i < cols * 2; i++) {
+                final int n = i;
                 this.scroll.add(new YuiFlatButton(px + 8 + (this.scroll.width - cols * 45 + 5) / 2
                         + (i % cols) * 45, cardTop + (i / cols) * 75, 40, 70, "C" + n,
                         new Runnable() {

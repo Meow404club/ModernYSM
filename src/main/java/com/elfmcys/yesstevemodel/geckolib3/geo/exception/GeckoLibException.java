@@ -1,6 +1,9 @@
 package com.elfmcys.yesstevemodel.geckolib3.geo.exception;
 
+//? if >=1.14
 import net.minecraft.resources.ResourceLocation;
+//? if <1.14
+/*import net.minecraft.util.ResourceLocation;*/
 
 public class GeckoLibException extends RuntimeException {
     private static final long serialVersionUID = 1;

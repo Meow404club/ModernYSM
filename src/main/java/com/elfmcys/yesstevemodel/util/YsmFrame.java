@@ -19,7 +19,10 @@ public final class YsmFrame {
         /*return minecraft.getTimer().getGameTimeDeltaPartialTick(false);*/
         //? if >=1.21.2
         /*return minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false);*/
-        //? if <1.21
+        // 1.12.2：getRenderPartialTicks()（compile jar javap Minecraft:2651 实证）
+        //? if <1.14
+        /*return minecraft.getRenderPartialTicks();*/
+        //? if >=1.14 && <1.21
         return minecraft.getFrameTime();
     }
 }

@@ -55,6 +55,20 @@ val clientJvmArgs = listOf(
     "java.sql.rowset/javax.sql.rowset.serial=ALL-UNNAMED"
 )
 
+// ===== twin 源集（1.12.2 线 build.legacy122.gradle.kts:296 同机制整体移植）=====
+// 共享 YesSteveModel/NativeLibLoader/ChatLogger/AnimationDebugOverlay/OuterFileTexture/
+// ShadersTextureType 绑定现代 MC 面，1710 无对应——1.7.10 原生孪生（同包同名）放
+// versions/1.7.10-forge/src/twin/java：twin classes 挂 main 编译/运行类路径与 jar
+// 打包，包结构对消费点透明。twin 文件零条件轴（不走 stonecutter 剥离面）。
+// 声明在 unimined.minecraft 块之前（源集先于消费其的配置块声明）。
+sourceSets {
+    create("twin") {
+        java {
+            srcDir(file("src/twin/java"))
+        }
+    }
+}
+
 unimined.minecraft {
     version(property("deps.minecraft") as String)
 
@@ -334,33 +348,29 @@ val legacy1710ExcludeMcDeps = listOf(
     "com/elfmcys/yesstevemodel/geckolib3/core/controller/AnimationControllerContext.java",
     "com/elfmcys/yesstevemodel/geckolib3/core/controller/BoneTransformProvider.java",
 )
-// ===== twin 源集（1.12.2 线 build.legacy122.gradle.kts:296 同机制整体移植）=====
-// 共享 YesSteveModel/NativeLibLoader/ChatLogger/AnimationDebugOverlay/OuterFileTexture/
-// ShadersTextureType 绑定现代 MC 面，1710 无对应——1.7.10 原生孪生（同包同名）放
-// versions/1.7.10-forge/src/twin/java：twin classes 挂 main 编译/运行类路径与 jar
-// 打包，包结构对消费点透明。twin 文件零条件轴（不走 stonecutter 剥离面）。
-sourceSets {
-    create("twin") {
-        java {
-            srcDir(file("src/twin/java"))
-        }
-    }
-}
+// ===== twin 源集（声明见 unimined.minecraft 块上方）=====
 // main 源路径含 build/generated/stonecutter/main/java——生成树由 stonecutterGenerate
 // 产出，但该目录对 unimined 线是纯路径 srcDir（build.legacy122.gradle.kts:335 同款），
 // 补显式任务依赖（幂等）。
 tasks.named<JavaCompile>("compileJava") {
     dependsOn(tasks.named("stonecutterGenerate"))
-    // 显式任务依赖（output FileCollection 理论自带 dependsOn，122 线 RFB 实测不生效）
+    // twin classes 同目录合并后先于 main 编译（main 消费 twin 类：ClientModelInfo→
+    // OuterFileTexture）。目录用 .get() 取裸 File（classesDirectory Property 自带
+    // compileJava 产出边，直接入 classpath 会成 self-cycle）
     dependsOn(tasks.named("compileTwinJava"))
-    classpath += sourceSets.getByName("twin").output
+    classpath += files(sourceSets.main.get().java.classesDirectory.get().asFile)
     // 共享解析链首轮编译错误 >100 会被 javac 默认上限截断——122 线 :80 同款放开
     options.compilerArgs.addAll(listOf("-Xmaxerrs", "10000"))
 }
-// main 编译/运行不挂 twin.output（会经 compileClasspath 传染 twinClasses 依赖，
-// 与 twin 继承 main 编译面成环）——twin classes 由 jar 打包 + compileJava 显式并
-tasks.named<Jar>("jar") {
-    from(sourceSets.getByName("twin").output)
+// twin classes 输出并入 main classes 目录（单一 "(main)" 条目）：run1 构造正常但
+// 运行期 OuterFileTexture CNFE（twin classes 不在 launch -cp）；run2/3/5 实证任何
+// 额外 twin 类路径条目（runtimeClasspath += / combineWith）都会令 FML mod 构造
+// 失败（getMod()==null "appears not to have constructed correctly"）。同目录合并=
+// launch -cp 形态与 run1 完全一致且 twin classes 对 LaunchClassLoader 可见，jar
+// 打包经 main.output 自动携带。
+tasks.named<JavaCompile>("compileTwinJava") {
+    dependsOn(tasks.named("stonecutterGenerate")) // 幂等，与 122 线 twin 剥离纪律同源
+    destinationDirectory.set(sourceSets.main.get().java.classesDirectory)
 }
 afterEvaluate {
     sourceSets.main {
@@ -390,28 +400,18 @@ afterEvaluate {
 tasks.named<ProcessResources>("processResources") {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
-// twin 编译面（122 线 :307-314/:345-353 同机制）：twin 需与 main 同源的 MC 编译面
-//（AbstractTexture/Minecraft/log4j）。compileTwinJava.classpath 取 main.compileClasspath
-// 摘除 twin.output（防环）；twinCompileClasspath 另继承 implementation/compileOnly
-// 外部依赖（fastutil/joml 等）——双机制同挂与 122 逐项同构。
-afterEvaluate {
-    tasks.named<JavaCompile>("compileTwinJava") {
-        classpath = sourceSets.main.get().compileClasspath - sourceSets.getByName("twin").output
-    }
-}
-afterEvaluate {
-    sourceSets.main {
-        java {
-            srcDir(sourceSets.getByName("twin").output)
-        }
-    }
-}
+// twin 编译面：twinCompileClasspath 补 MC 面（minecraft=合并打补丁 jar，
+// minecraftLibraries=log4j/gson 等 vanilla 库，run4 实证缺此二配置 twin 编译炸
+// net.minecraft/log4j 不存在）+ implementation/compileOnly 外部依赖。
 afterEvaluate {
     configurations.getByName("twinCompileClasspath").extendsFrom(
+        configurations.getByName("minecraft"),
+        configurations.getByName("minecraftLibraries"),
         configurations.getByName("implementation"),
         configurations.getByName("compileOnly"),
     )
 }
+// twin 运行面=同目录合并机制（见 compileTwinJava 块说明），无类路径条目变更。
 
 tasks.named<Jar>("jar") {
     manifest {

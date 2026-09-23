@@ -213,7 +213,6 @@ val legacy122ExcludeMcDeps = listOf(
     // native 面（1.12.2 无 blaze3d），不做 shim——1.12.2 原生 ModelRenderer 承接。
     "com/elfmcys/yesstevemodel/geckolib3/geo/NativeModelRenderer.java",
     "com/elfmcys/yesstevemodel/geckolib3/util/MathInterpolation.java",
-    "com/elfmcys/yesstevemodel/model/ClientOnlyHostBridge.java",
     "com/elfmcys/yesstevemodel/geckolib3/util/MolangUtils.java",
     "com/elfmcys/yesstevemodel/geckolib3/util/RenderUtils.java",
     "com/elfmcys/yesstevemodel/model/ClientOnlyHostBridge.java",
@@ -249,7 +248,6 @@ val legacy122ExcludeMcDeps = listOf(
     "com/elfmcys/yesstevemodel/geckolib3/core/molang/variable/LambdaVariable.java",
     "com/elfmcys/yesstevemodel/util/ResourceCleanupHelper.java",
     "com/elfmcys/yesstevemodel/client/texture/OuterFileTexture.java",
-    "com/elfmcys/yesstevemodel/util/log/ChatLogger.java",
     "com/elfmcys/yesstevemodel/client/renderer/AnimationDebugOverlay.java",
     "com/elfmcys/yesstevemodel/client/texture/ITextureMap.java",
     "com/elfmcys/yesstevemodel/geckolib3/util/MatrixBridge.java",

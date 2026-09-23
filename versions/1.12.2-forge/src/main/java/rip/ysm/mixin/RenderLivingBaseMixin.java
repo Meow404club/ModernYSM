@@ -11,6 +11,10 @@ import rip.ysm.legacy122.LegacyRenderHook;
 /**
  * RenderLivingBase.renderModel 切面（wave-d-b2-texture-pose 接缝迁移）。
  *
+ * 位置注记：本类在 twin 源集（src/twin/java，无 include 白名单、jar 打包必含）——
+ * main 源集 include 白名单（build.legacy122.gradle.kts legacy122Include）未列
+ * rip/ysm/mixin/**，放 main/src 会被静默剔除（ClassNotFoundException 实证）。
+ *
  * Forge 14.23.x RenderPlayerEvent.Pre 在 RenderPlayer.doRender 顶触发（forge 1.12.x
  * patches/minecraft/net/minecraft/client/renderer/entity/RenderPlayer.java.patch
  * 原文：func_76986_a 首行 post Pre，cancel 即 return）——取消吞掉 super.doRender

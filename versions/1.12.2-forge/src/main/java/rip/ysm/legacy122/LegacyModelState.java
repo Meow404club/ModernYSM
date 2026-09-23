@@ -25,8 +25,6 @@ public final class LegacyModelState {
     private static ClientModelInfo mainBundle;
     private static GeoModel mainModel;
     private static float[] boneParams;
-    private static float[] currentBoneParams;
-    private static long animTick;
     private static ResourceLocation texture;
     private static OuterFileTexture boundTexture;
 
@@ -60,7 +58,6 @@ public final class LegacyModelState {
         mainModel = model;
         boneParams = mainModel == null || mainModel.bakedBones == null
                 ? null : new float[mainModel.bakedBones.size() * 12];
-        currentBoneParams = boneParams;
         // L2 纹理面：真实贴图优先（OuterFileTexture 直 bind），null 回退占位皮肤
         boundTexture = realTexture instanceof OuterFileTexture
                 ? (OuterFileTexture) realTexture : null;
@@ -142,19 +139,7 @@ public final class LegacyModelState {
         return model == mainModel ? boneParams : null;
     }
 
-    public static float[] currentBoneParams() {
-        return currentBoneParams;
-    }
-
     public static ResourceLocation texture() {
         return texture;
-    }
-
-    public static long nextAnimTick() {
-        return ++animTick;
-    }
-
-    public static long animTick() {
-        return animTick;
     }
 }

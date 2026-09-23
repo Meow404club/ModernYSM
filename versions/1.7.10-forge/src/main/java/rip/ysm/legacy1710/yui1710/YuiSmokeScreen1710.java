@@ -17,13 +17,15 @@ import rip.ysm.yui.YuiLabel;
 import rip.ysm.yui.YuiModelCard;
 import rip.ysm.yui.YuiPanel;
 import rip.ysm.yui.YuiScreen;
-import rip.ysm.yui.YuiScrollView;
+import rip.ysm.yui.YuiCardGrid;
 
 /**
  * 【实验性质·验收冒烟屏】M-U3 GATE_1710UI 证据用：经 yui 中性组件 +
- * YuiBackendGL1710 后端渲染 面板+扁平钮(hover/选中态)+5x2 占位卡槽（1710 L3
- * 模型卡片网格前身，占位本地数据）+标签+可滚 ScrollView（▲▼ 回退）。
+ * YuiBackendGL1710 后端渲染 面板+扁平钮(hover/选中态)+真模型卡网格
+ * （L3b 起：default 前置+listBuiltinModels 枚举全部 builtin，卡内真实模型
+ * 预览，逐 tick 惰性装载）+标签+可滚 ScrollView（▲▼ 回退）。
  * 形态与 YuiSmokeScreen1122（M-U1）逐项同构——1.7.10 面是渲染/输入桥的第二取证点。
+ * 选择链/包导航/键盘导航不在此屏（L3a 模型选择屏边界）。
  *
  * <p>EXPERIMENTAL：本类与 OpenYSMStub.init 的挂点行随 1710 L3（模型枚举/网络同步
  * 落地）收编或整类删除，不进长期 API 面。
@@ -69,21 +71,36 @@ public final class YuiSmokeScreen1710 {
     /** 冒烟屏内容（中性组件布局；坐标全 GUI 逻辑坐标）。 */
     private static final class SmokeScreen extends YuiScreen {
 
-        private YuiScrollView scroll;
+        private YuiCardGrid grid;
+        /** 非 default 可用模型逐 tick 惰性装载队列（122 屏同式；loadModel 幂等+负缓存）。 */
+        private final java.util.List<String> loadQueue =
+                new java.util.ArrayList<String>(rip.ysm.legacy1710.LegacyModelLoader.listBuiltinModels());
 
         @Override
-        public boolean mouseScrolled(int mouseX, int mouseY, double delta) {
-            boolean r = super.mouseScrolled(mouseX, mouseY, delta);
-            if (r && this.scroll != null) {
-                System.out.println("[ysm-yui-smoke] scroll -> scrollY=" + this.scroll.scrollY);
+        public void tick() {
+            if (!this.loadQueue.isEmpty()) {
+                rip.ysm.legacy1710.LegacyModelLoader.loadModel(this.loadQueue.remove(0));
             }
-            return r;
+        }
+
+        /** 键控翻页（</> ；主路径=pager 钮，同 122 屏语言）。 */
+        @Override
+        public boolean keyPressed(int keyCode, char typedChar) {
+            if (keyCode == Keyboard.KEY_COMMA && this.grid != null) {
+                this.grid.flipPage(-1);
+                return true;
+            }
+            if (keyCode == Keyboard.KEY_PERIOD && this.grid != null) {
+                this.grid.flipPage(1);
+                return true;
+            }
+            return super.keyPressed(keyCode, typedChar);
         }
 
         @Override
         protected void layout() {
-            int pw = 280;
-            int ph = 190;
+            int pw = 420;
+            int ph = 235;
             int px = (this.width - pw) / 2;
             int py = (this.height - ph) / 2;
 
@@ -92,9 +109,10 @@ public final class YuiSmokeScreen1710 {
             title.align = rip.ysm.yui.YuiBackend.Align.CENTER;
             add(title);
 
-            // 三枚扁平钮：toggle 自身选中态 / 恒选中演示 / 关屏（Done 语言）
+            // 三枚扁平钮：toggle 自身选中态 / 恒选中演示 / 关屏（Done 语言）。
+            // 放底部翻页行左段（网格左留白 0..146）：顶行曾与卡网格相撞（Close 被卡盖住）
             final YuiFlatButton[] holder = new YuiFlatButton[1];
-            holder[0] = new YuiFlatButton(px + 8, py + 28, 70, 14, "Toggle", new Runnable() {
+            holder[0] = new YuiFlatButton(px + 8, py + 215, 42, 14, "Tog", new Runnable() {
                 @Override
                 public void run() {
                     holder[0].selected = !holder[0].selected;
@@ -102,10 +120,10 @@ public final class YuiSmokeScreen1710 {
                 }
             });
             add(holder[0]);
-            YuiFlatButton selected = new YuiFlatButton(px + 86, py + 28, 70, 14, "Selected", null);
+            YuiFlatButton selected = new YuiFlatButton(px + 54, py + 215, 42, 14, "Sel", null);
             selected.selected = true;
             add(selected);
-            add(new YuiFlatButton(px + 164, py + 28, 70, 14, "Close", new Runnable() {
+            add(new YuiFlatButton(px + 100, py + 215, 42, 14, "X", new Runnable() {
                 @Override
                 public void run() {
                     System.out.println("[ysm-yui-smoke] close");
@@ -113,57 +131,34 @@ public final class YuiSmokeScreen1710 {
                 }
             }));
 
-            // 可滚内容：5x2 卡槽（L2a 起首卡=真实模型预览卡，preview_animation 经
-            // LegacyAnimationSampler 采样驱动、空串=绑定位静像；L3a 模型选择屏收编）
-            // + 12 行文本溢出视口，验证 scissor 裁剪+偏移+拇指
-            int rows = 12;
-            int cols = 5;
-            int cardTop = py + 48;
-            int cardsH = 2 * (70 + 5);
-            this.scroll = new YuiScrollView(px + 8, cardTop, pw - 16 - 36, ph - 48 - 26,
-                    cardsH + rows * 14);
-            this.scroll.add(new YuiModelCard(
-                    px + 8 + (this.scroll.width - cols * 45 + 5) / 2, cardTop,
-                    "preview", LegacyPreview1710.of(null), null));
-            for (int i = 1; i < cols * 2; i++) {
-                final int n = i;
-                this.scroll.add(new YuiFlatButton(px + 8 + (this.scroll.width - cols * 45 + 5) / 2
-                        + (i % cols) * 45, cardTop + (i / cols) * 75, 40, 70, "C" + n,
+            // 卡网格（L3b：Registry 枚举接真数据——default 主面前置+
+            // LegacyModelLoader.listBuiltinModels 两级 id compareTo 序；每卡=
+            // LegacyPreview1710.card 真实模型预览，preview_animation 采样驱动、
+            // 空串=绑定位静像、12_little=disable false+hold_on_last_frame+hover
+            // 三态样本）。用 YuiCardGrid 5x2+翻页（122 真屏同款几何：
+            // PlayerModelScreen.init :506-538 slotX/slotY+FlatColorButton :488-501）
+            // 而非 ScrollView——共享 YuiScrollView.render 子件视口系坐标×内容系
+            // 鼠标配对错位（滚动后卡内 hover 永错位，缺陷已报主会话），且翻页
+            // 正是 L3a 真屏形态。选择链无（L3a 功能化边界），点卡只打日志。
+            java.util.List<String> ids = new java.util.ArrayList<String>();
+            ids.add(null); // default 主面
+            ids.addAll(rip.ysm.legacy1710.LegacyModelLoader.listBuiltinModels());
+            this.grid = new YuiCardGrid(px + 143, py + 28, py + 215);
+            for (int i = 0; i < ids.size(); i++) {
+                final String id = ids.get(i);
+                String label = id == null ? "default"
+                        : id.substring(id.lastIndexOf('/') + 1);
+                this.grid.addCard(new YuiModelCard(0, 0, label, LegacyPreview1710.card(id),
                         new Runnable() {
                             @Override
                             public void run() {
-                                System.out.println("[ysm-yui-smoke] card " + n + " picked");
+                                System.out.println("[ysm-yui-smoke] card " + id + " picked");
                             }
                         }));
             }
-            for (int i = 0; i < rows; i++) {
-                this.scroll.add(new YuiLabel(px + 14, cardTop + cardsH + i * 14 + 3, pw - 60, 10,
-                        "Row " + (i + 1) + " / " + rows));
-            }
-            add(this.scroll);
+            this.grid.setPage(ids.size() > 10 ? 1 : 0); // 默认露出 wine_fox 页（12_little 可见）
+            add(this.grid);
 
-            // 滚轮回退（lwjgl3ify 桥下滚轮事件不达 GuiScreen 的预期，YuiScreenHost1710 类注）：
-            // ▲▼ 走与滚轮完全相同的 mouseScrolled 分发路径（坐标取视口内一点），证明滚动机制本体
-            final YuiScrollView scrollRef = this.scroll;
-            int bx = px + pw - 40;
-            add(new YuiFlatButton(bx, cardTop, 32, 14, "^", new Runnable() {
-                @Override
-                public void run() {
-                    SmokeScreen.this.mouseScrolled(scrollRef.x + 10, scrollRef.y + 10, 1.0);
-                }
-            }));
-            add(new YuiFlatButton(bx, py + ph - 40, 32, 14, "v", new Runnable() {
-                @Override
-                public void run() {
-                    SmokeScreen.this.mouseScrolled(scrollRef.x + 10, scrollRef.y + 10, -1.0);
-                }
-            }));
-
-            YuiLabel hint = new YuiLabel(this.width / 2, py + ph - 16, 0, 10,
-                    "Esc=close  wheel/uv=scroll");
-            hint.color = YuiColors.TEXT_DIM;
-            hint.align = rip.ysm.yui.YuiBackend.Align.CENTER;
-            add(hint);
         }
     }
 

@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 public final class LegacyModelState {
 
     private static ClientModelInfo bundle;
+    private static ClientModelInfo mainBundle;
     private static GeoModel mainModel;
     private static float[] boneParams;
     private static float[] currentBoneParams;
@@ -33,6 +34,9 @@ public final class LegacyModelState {
     private static final Map<String, GeoModel> MODELS = new ConcurrentHashMap<>();
     private static final Map<String, OuterFileTexture> TEXTURES = new ConcurrentHashMap<>();
     private static final Map<String, float[]> PARAMS = new ConcurrentHashMap<>();
+    // M-U2 r3 语义A：保留解析 bundle——preview_animation/disable_preview_rotation/
+    // height_scale/动画文件全在里面（主线 ModelAssembly 同构），预览播放器按 id 取用
+    private static final Map<String, ClientModelInfo> BUNDLES = new ConcurrentHashMap<>();
 
     private LegacyModelState() {
     }
@@ -52,6 +56,7 @@ public final class LegacyModelState {
     //（AbstractTexture 子类，RenderManager.renderEngine.bindTexture 直通）
     public static void setBundle(ClientModelInfo info, GeoModel model, Object realTexture) {
         bundle = info;
+        mainBundle = info;
         mainModel = model;
         boneParams = mainModel == null || mainModel.bakedBones == null
                 ? null : new float[mainModel.bakedBones.size() * 12];
@@ -78,6 +83,7 @@ public final class LegacyModelState {
         TEXTURES.put(modelId, tex);
         PARAMS.put(modelId, model == null || model.bakedBones == null
                 ? null : new float[model.bakedBones.size() * 12]);
+        BUNDLES.put(modelId, info);
         Logger.getLogger("yes_steve_model").info(String.format(
                 "[ysm-legacy122] model registered: id=%s bones=%d realTex=%b",
                 modelId,
@@ -109,6 +115,14 @@ public final class LegacyModelState {
             return boundTexture;
         }
         return TEXTURES.get(modelId);
+    }
+
+    /** M-U2 r3：按模型 id 取解析 bundle（ModelProperties+动画文件）；default 走主面。 */
+    public static ClientModelInfo bundleOf(String modelId) {
+        if (LegacyModelRegistry.DEFAULT_MODEL_ID.equals(modelId) || modelId == null) {
+            return mainBundle;
+        }
+        return BUNDLES.get(modelId);
     }
 
     public static OuterFileTexture realTexture() {

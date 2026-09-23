@@ -28,10 +28,8 @@ public final class LegacyModelTranslator {
     private LegacyModelTranslator() {
     }
 
-    private static final Matrix4f LOCAL_BONE_MAT = new Matrix4f();
     private static final Matrix3f NORMAL_MAT = new Matrix3f();
     private static final Vector3f NORMAL_VEC = new Vector3f();
-    private static final Vector3f VECTOR = new Vector3f();
     private static final float[] MATRIX_BUF = new float[16];
     private static final float[] NORMAL_BUF = new float[9];
 
@@ -114,8 +112,8 @@ public final class LegacyModelTranslator {
 
     // NativeModelRenderer.calculateBoneMatrix 同款数学（rootPose 恒单位阵：
     // 1.12.2 定位走 GL 状态栈，非模型矩阵），可见性判定镜像 offset6-10 契约。
-    // M-U2 r2：矩阵计算提为 skeleton() 单源——render() 与 computeBounds()（GUI 卡内
-    // 预览自适应缩放）共用同一骨矩阵，避免两份矩阵数学漂移。
+    // M-U2 r2：矩阵计算提为 skeleton() 单源。r3：computeBounds（AABB 自适应
+    // 缩放）随 FILL0.80 发明一并弃用——主线卡内=固定 scale30×heightScale 原点锚。
     private static Matrix4f[] skeleton(java.util.List<GeoModel.BakedBone> bones,
                                        float[] boneParams, boolean[] visibleCache) {
         Matrix4f rootPose = new Matrix4f();
@@ -124,43 +122,6 @@ public final class LegacyModelTranslator {
             isVisibleBone(i, bones, boneParams, cache, visibleCache, rootPose);
         }
         return cache;
-    }
-
-    /**
-     * 模型空间 AABB（min x/y/z, max x/y/z），仅可见骨；GUI 预览自适应缩放用
-     *（不同模型尺寸/原点差异大，固定 scale 会巨大化或裁切——主线 ModelButton
-     * 观感=模型恰好收在槽内）。调用方按模型缓存，一次计算重复消费。
-     * 注意：可见性读骨参数旗标（offset6-8 scale=0 全隐），调用前 params 必须
-     * 动画中性化（LegacyAnimationDriver.tick 即置位），否则返回 null。
-     */
-    public static float[] computeBounds(GeoModel model, float[] boneParams) {
-        if (model == null || model.bakedBones == null || model.bakedBones.isEmpty()) {
-            return null;
-        }
-        boolean[] visible = new boolean[model.bakedBones.size()];
-        Matrix4f[] cache = skeleton(model.bakedBones, boneParams, visible);
-        float minX = Float.MAX_VALUE, minY = Float.MAX_VALUE, minZ = Float.MAX_VALUE;
-        float maxX = -Float.MAX_VALUE, maxY = -Float.MAX_VALUE, maxZ = -Float.MAX_VALUE;
-        VECTOR.set(0.0F, 0.0F, 0.0F);
-        for (int i = 0; i < model.bakedBones.size(); i++) {
-            if (!visible[i]) {
-                continue;
-            }
-            Matrix4f mat = cache[i];
-            for (GeoModel.BakedCube cube : model.bakedBones.get(i).cubes) {
-                for (GeoModel.BakedQuad quad : cube.quads) {
-                    for (int v = 0; v < 4; v++) {
-                        VECTOR.set(quad.positions[v * 3], quad.positions[v * 3 + 1],
-                                quad.positions[v * 3 + 2]);
-                        mat.transformPosition(VECTOR);
-                        minX = Math.min(minX, VECTOR.x); maxX = Math.max(maxX, VECTOR.x);
-                        minY = Math.min(minY, VECTOR.y); maxY = Math.max(maxY, VECTOR.y);
-                        minZ = Math.min(minZ, VECTOR.z); maxZ = Math.max(maxZ, VECTOR.z);
-                    }
-                }
-            }
-        }
-        return maxX < minX ? null : new float[] {minX, minY, minZ, maxX, maxY, maxZ};
     }
 
     private static boolean isVisibleBone(int idx, java.util.List<GeoModel.BakedBone> bones,

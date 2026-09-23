@@ -73,7 +73,11 @@ public final class LegacyRenderHook {
         }
 
         LegacyAnimationDriver.tick(player, 0.5f, model, boneParams);
-        LegacyModelTranslator.render(model, boneParams, 1.0f, 1.0f, 1.0f, 1.0f);
+        // item2：实体 lightmap 坐标传 translator（ysmGlow 发光骨 240 全亮覆盖+恢复用；
+        // isBurning 置 15728880 与 vanilla RenderManager.func_147939_a:232-240 同款；
+        // getBrightnessForRender 形参不参与计算，partialTick 值无影响）
+        int lightmap = player.isBurning() ? 15728880 : player.getBrightnessForRender(0.5f);
+        LegacyModelTranslator.render(model, boneParams, 1.0f, 1.0f, 1.0f, 1.0f, lightmap, 0.0F);
         return true;
     }
 }

@@ -62,7 +62,13 @@ public final class LegacyRenderHook {
         }
         LegacyAnimationDriver.tick(event.getEntityPlayer(), event.getPartialRenderTick(),
                 model, boneParams, LegacyModelState.bundleOf(modelId));
+        // item2：实体 lightmap 坐标传 translator（ysmGlow 发光骨 240 全亮覆盖+恢复用；
+        // isBurning 置 15728880 与 vanilla RenderManager.renderEntityStatic:324-328 同款）。
+        // rebase 冲突解决（review-merge）：与 wave-d-anim1 状态机卡正交——驱动侧保
+        // bundle 实参（状态机），lightmap 计算保留（B1 item2），translator 尾调共用。
+        net.minecraft.entity.Entity player = event.getEntityPlayer();
+        int lightmap = player.isBurning() ? 15728880 : player.getBrightnessForRender();
         LegacyModelTranslator.render(model, boneParams,
-                1.0f, 1.0f, 1.0f, 1.0f);
+                1.0f, 1.0f, 1.0f, 1.0f, lightmap, 0.0F);
     }
 }

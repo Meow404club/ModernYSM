@@ -111,6 +111,16 @@ public final class LegacyModelTranslator {
             NORMAL_MAT.set(boneMat).normal().get(NORMAL_FBUF);
             NORMAL_FBUF.rewind();
 
+            // item2：ysmGlow 发光骨 lightmap 全亮局部覆盖（主线 NativeModelRenderer:291
+            // bone.glow ? LightTexture.pack(15,15) : packedLight 同语义；固定管线等价面=
+            // lightmap 纹理坐标临时置 (240,240)，画完恢复实体坐标）。lightmap<0（GUI
+            // 预览无实体上下文）不覆盖。
+            boolean glow = bone.glow && lightmap >= 0;
+            if (glow) {
+                net.minecraft.client.renderer.OpenGlHelper.setLightmapTextureCoords(
+                        net.minecraft.client.renderer.OpenGlHelper.lightmapTexUnit, 240.0F, 240.0F);
+            }
+
             GL11.glPushMatrix();
             GL11.glMultMatrix(MATRIX_FBUF);
             for (LegacyBakedModel.BakedCube cube : bone.cubes) {
@@ -129,6 +139,14 @@ public final class LegacyModelTranslator {
                 }
             }
             GL11.glPopMatrix();
+
+            if (glow) {
+                // 恢复实体 lightmap 坐标（vanilla RenderManager.func_147939_a:240
+                // 同款 b%65536 / b/65536 拆包）
+                net.minecraft.client.renderer.OpenGlHelper.setLightmapTextureCoords(
+                        net.minecraft.client.renderer.OpenGlHelper.lightmapTexUnit,
+                        (float) (lightmap % 65536), (float) (lightmap / 65536));
+            }
         }
 
         GL11.glPopMatrix();

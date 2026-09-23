@@ -43,18 +43,25 @@ public final class YuiSmokeScreen1710 {
     /** init（FMLInitializationEvent 调用链，客户端分支）调：注册键位+tick 轮询。 */
     public static void initExperimental() {
         ClientRegistry.registerKeyBinding(SMOKE_KEY);
-        // 1.7.10 tick 事件在 FML 总线（见类注），MinecraftForge.EVENT_BUS 不发 ClientTickEvent
-        FMLCommonHandler.instance().bus().register(YuiSmokeScreen1710.class);
+        // 1.7.10 tick 事件在 FML 总线（见类注），MinecraftForge.EVENT_BUS 不发 ClientTickEvent。
+        // 须传监听器实例：1.7.10 cpw EventBus 只有 register(Object)（EventBus.java:45，
+        // 无 1.12.2 代的 register(Class) 重载）——传 Class 字面量会被当作监听器对象扫
+        // java.lang.Class 的方法，零命中零报错静默失效（本卡 runClient 实测踩坑）。
+        FMLCommonHandler.instance().bus().register(new TickListener());
     }
 
-    @SubscribeEvent
-    public static void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || !SMOKE_KEY.isPressed()) {
-            return;
-        }
-        Minecraft mc = Minecraft.getMinecraft();
-        if (mc.thePlayer != null && mc.currentScreen == null) {
-            mc.displayGuiScreen(new YuiScreenHost1710(SmokeScreen::new));
+    // public：1.7.10 ASMEventHandler 生成的调用类在 cpw 包内，嵌套监听器类须 public
+    // 可达（private 嵌套类 → IllegalAccessError，本卡 runClient 实测踩坑）
+    public static final class TickListener {
+        @SubscribeEvent
+        public void onClientTick(TickEvent.ClientTickEvent event) {
+            if (event.phase != TickEvent.Phase.END || !SMOKE_KEY.isPressed()) {
+                return;
+            }
+            Minecraft mc = Minecraft.getMinecraft();
+            if (mc.thePlayer != null && mc.currentScreen == null) {
+                mc.displayGuiScreen(new YuiScreenHost1710(SmokeScreen::new));
+            }
         }
     }
 

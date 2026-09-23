@@ -98,6 +98,11 @@ public final class LegacyModelTranslator {
         Matrix4f rootPose = new Matrix4f();
         Matrix4f[] cache = new Matrix4f[boneCount];
         boolean[] visibleCache = new boolean[boneCount];
+        // 骨矩阵/可见性惰性缓存先整树填充（122 skeleton() 同位；item3 重构时曾随
+        // 抽取丢失导致 quadsDrawn=0，runserver 复现后修复）
+        for (int i = 0; i < boneCount; i++) {
+            isVisibleBone(i, model, boneParams, cache, visibleCache, rootPose);
+        }
 
         int quadsDrawn = drawGeometry(model, boneParams, visibleCache, cache, r, g, b, a, lightmap);
 

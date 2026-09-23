@@ -217,7 +217,6 @@ val legacy122ExcludeMcDeps = listOf(
     "com/elfmcys/yesstevemodel/model/ClientOnlyHostBridge.java",
     "com/elfmcys/yesstevemodel/geckolib3/util/MolangUtils.java",
     "com/elfmcys/yesstevemodel/geckolib3/util/RenderUtils.java",
-    "com/elfmcys/yesstevemodel/geckolib3/util/VectorUtils.java",
     "com/elfmcys/yesstevemodel/model/ClientOnlyHostBridge.java",
     "com/elfmcys/yesstevemodel/model/ModelLoadResult.java",
     "com/elfmcys/yesstevemodel/model/format/ServerModelData.java",

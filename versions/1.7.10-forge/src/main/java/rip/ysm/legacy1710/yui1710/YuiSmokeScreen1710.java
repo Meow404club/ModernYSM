@@ -109,9 +109,10 @@ public final class YuiSmokeScreen1710 {
             title.align = rip.ysm.yui.YuiBackend.Align.CENTER;
             add(title);
 
-            // 三枚扁平钮：toggle 自身选中态 / 恒选中演示 / 关屏（Done 语言）
+            // 三枚扁平钮：toggle 自身选中态 / 恒选中演示 / 关屏（Done 语言）。
+            // 放底部翻页行左段（网格左留白 0..146）：顶行曾与卡网格相撞（Close 被卡盖住）
             final YuiFlatButton[] holder = new YuiFlatButton[1];
-            holder[0] = new YuiFlatButton(px + 8, py + 28, 70, 14, "Toggle", new Runnable() {
+            holder[0] = new YuiFlatButton(px + 8, py + 215, 42, 14, "Tog", new Runnable() {
                 @Override
                 public void run() {
                     holder[0].selected = !holder[0].selected;
@@ -119,10 +120,10 @@ public final class YuiSmokeScreen1710 {
                 }
             });
             add(holder[0]);
-            YuiFlatButton selected = new YuiFlatButton(px + 86, py + 28, 70, 14, "Selected", null);
+            YuiFlatButton selected = new YuiFlatButton(px + 54, py + 215, 42, 14, "Sel", null);
             selected.selected = true;
             add(selected);
-            add(new YuiFlatButton(px + 164, py + 28, 70, 14, "Close", new Runnable() {
+            add(new YuiFlatButton(px + 100, py + 215, 42, 14, "X", new Runnable() {
                 @Override
                 public void run() {
                     System.out.println("[ysm-yui-smoke] close");
@@ -158,11 +159,6 @@ public final class YuiSmokeScreen1710 {
             this.grid.setPage(ids.size() > 10 ? 1 : 0); // 默认露出 wine_fox 页（12_little 可见）
             add(this.grid);
 
-            YuiLabel hint = new YuiLabel(this.width / 2, py + ph - 16, 0, 10,
-                    "Esc=close  </> page");
-            hint.color = YuiColors.TEXT_DIM;
-            hint.align = rip.ysm.yui.YuiBackend.Align.CENTER;
-            add(hint);
         }
     }
 

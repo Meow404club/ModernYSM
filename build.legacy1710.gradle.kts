@@ -89,10 +89,18 @@ unimined.minecraft {
         mainClass = "com.gtnewhorizons.retrofuturabootstrap.Main"
         setJvmArgs(clientJvmArgs)
     }
-    // runServer 接管判负（2026-09-21 实测）：runs.config("server") 下改 mainClass 抛
-    // UnsupportedOperationException（unimined server run config 不开放该面）；Celeritas
-    // 先例 :104-106 直接 enabled=false。取舍：L0 启动判据走 runClient（Xvfb），
-    // runServer 留 L1。
+    // runServer 归档 enabled=false（legacy-final-misc 2026-09-23 复核更新）：
+    // ① L0 记录的"runs.config("server") 改 mainClass 抛 UnsupportedOperationException"
+    //    在 unimined 1.4.1 不再复现——配置期实测 mainClass/javaVersion/setJvmArgs 全收
+    //   （:1.7.10-forge:help BUILD SUCCESSFUL，/tmp/lfm-1710-conf-test.log）；
+    // ② 真实判负根因在更深的 launch 链：runServer 执行 FMLDeobfTweaker→
+    //    Class.forName(Loader)→Loader.<clinit> Splitter.on 抛 IllegalAccessError
+    //    （guava 双载入劈叉：Splitter 落 LaunchClassLoader、Splitter$2 落 System
+    //    loader，/tmp/lfm-1710-server.log L440 实测）——launchwrapper dev 环境双
+    //    loader guava 可见性不一致，非一行 buildscript 面可修。unimined 官方
+    //    1710 样例也无 server run 先例（tmp/harvest/unimined-testing-1710/build.gradle
+    //    仅 client）。结论：1710 线 dedicated server 归档（Celeritas :104-106 同款
+    //    enabled=false），server 面语义由 122 线 runRFBServer 全链证据背书。
     runs.config("server") {
         enabled = false
     }

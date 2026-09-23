@@ -102,6 +102,11 @@ public class OuterFileTexture extends net.minecraft.client.renderer.texture.Abst
         return super.getGlTextureId();
     }
 
+    /** L3-3：GL id 已分配与否（getGlTextureId 首调会申请 id，无副作用读取供重载日志/删除判定）。 */
+    public boolean hasGlId() {
+        return this.glTextureId != -1;
+    }
+
     public BufferedImage getImage() {
         return ensureDecoded();
     }

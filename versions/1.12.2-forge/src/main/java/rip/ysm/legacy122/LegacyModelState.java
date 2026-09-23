@@ -125,6 +125,11 @@ public final class LegacyModelState {
         return BUNDLES.get(modelId);
     }
 
+    /** L3-3：已装载非 default 模型 id 集（重载枚举面；MODELS 活键集视图）。 */
+    public static java.util.Set<String> loadedModelIds() {
+        return java.util.Collections.unmodifiableSet(MODELS.keySet());
+    }
+
     public static OuterFileTexture realTexture() {
         return boundTexture;
     }

@@ -131,15 +131,34 @@ dependencies {
     implementation("org.joml:joml:1.10.5")
 }
 
-// stub 阶段不挂共享源：stonecutter 默认会把共享 src/main 展开树塞进 main 源集
-//（实测 NativeLibLoader/YesSteveModel 等 modern 面符号 1.7.10 全不在，首轮 100 错截断）。
-// L0 只编版本 stub（零 //? 条件，无需展开树）；共享源分代白名单挂载是 L1+ 的事
-//（build.legacy122.gradle.kts legacy122Include 先例）。
+// ===== 源集挂载（yui-1710-backend-screen / M-U3 该线首挂共享源）=====
+// L0 曾用 setSrcDirs 只挂版本 stub（共享源 1.7.10 全量编译 100 错截断，legacy-1710-l0-poc
+// 实测）。M-U3 起改 include 白名单只挂版本中性 UI 树 rip/ysm/yui（Java 8/零 vanilla
+// import/零条件轴——grep 门禁是挂载硬前提），其余共享面待 L2+ 分批挂：
+// build.legacy122.gradle.kts legacy122Include(:103) 同款机制。生成树路径
+// build/generated/stonecutter/main/java 与 122 线同款（stonecutter 0.7 布局）。
+val yui1710Include = listOf(
+    "rip/ysm/yui/**",         // 中性 UI 树（本卡挂载目标）
+    "rip/ysm/legacy1710/**",  // 版本树渲染翻译层
+    "rip/ysm/OpenYSMStub.java",
+)
 afterEvaluate {
     sourceSets.main {
-        java.setSrcDirs(listOf(file("src/main/java")))
+        java {
+            setSrcDirs(listOf(
+                file("build/generated/stonecutter/main/java"),
+                file("src/main/java"),
+            ))
+            include(yui1710Include)
+        }
         resources.setSrcDirs(listOf(file("src/main/resources")))
     }
+}
+// 生成树对 RFB/unimined 线是纯路径 srcDir，FileCollection 不挂 stonecutterGenerate 任务
+// 依赖（build.legacy122.gradle.kts:335 同款，clean 后/新 worktree 首跑会编译空生成树）——
+// 补显式依赖（幂等，已生成时 up-to-date 秒过）。
+tasks.named<JavaCompile>("compileJava") {
+    dependsOn(tasks.named("stonecutterGenerate"))
 }
 
 tasks.named<Jar>("jar") {

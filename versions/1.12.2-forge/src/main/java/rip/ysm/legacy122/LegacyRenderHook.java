@@ -65,10 +65,14 @@ public final class LegacyRenderHook {
         // item2：实体 lightmap 坐标传 translator（ysmGlow 发光骨 240 全亮覆盖+恢复用；
         // isBurning 置 15728880 与 vanilla RenderManager.renderEntityStatic:324-328 同款）。
         // rebase 冲突解决（review-merge）：与 wave-d-anim1 状态机卡正交——驱动侧保
-        // bundle 实参（状态机），lightmap 计算保留（B1 item2），translator 尾调共用。
-        net.minecraft.entity.Entity player = event.getEntityPlayer();
+        // bundle 实参（状态机），lightmap/hurtRed 计算保留（B1 item2/3），translator
+        // 尾调共用。声明取 item3 强类型 EntityPlayer（deathTime 访问面）。
+        net.minecraft.entity.player.EntityPlayer player = event.getEntityPlayer();
         int lightmap = player.isBurning() ? 15728880 : player.getBrightnessForRender();
+        // item3：受击红闪（hurtTime/deathTime 是 EntityLivingBase 公有字段；红强度=
+        // getBrightness()，vanilla 1710 doRender:177 glColor4f(var29,0,0,0.4) 同源）
+        float hurtRed = player.hurtTime > 0 || player.deathTime > 0 ? player.getBrightness() : 0.0F;
         LegacyModelTranslator.render(model, boneParams,
-                1.0f, 1.0f, 1.0f, 1.0f, lightmap, 0.0F);
+                1.0f, 1.0f, 1.0f, 1.0f, lightmap, hurtRed);
     }
 }

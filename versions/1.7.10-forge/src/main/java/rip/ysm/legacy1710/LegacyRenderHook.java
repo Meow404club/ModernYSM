@@ -77,7 +77,10 @@ public final class LegacyRenderHook {
         // isBurning 置 15728880 与 vanilla RenderManager.func_147939_a:232-240 同款；
         // getBrightnessForRender 形参不参与计算，partialTick 值无影响）
         int lightmap = player.isBurning() ? 15728880 : player.getBrightnessForRender(0.5f);
-        LegacyModelTranslator.render(model, boneParams, 1.0f, 1.0f, 1.0f, 1.0f, lightmap, 0.0F);
+        // item3：受击红闪（vanilla 1710 doRender:176 hurtTime>0||deathTime>0 面，
+        // 红强度=getBrightness(partialTick) 同源 :177 var29）
+        float hurtRed = player.hurtTime > 0 || player.deathTime > 0 ? player.getBrightness(0.5f) : 0.0F;
+        LegacyModelTranslator.render(model, boneParams, 1.0f, 1.0f, 1.0f, 1.0f, lightmap, hurtRed);
         return true;
     }
 }

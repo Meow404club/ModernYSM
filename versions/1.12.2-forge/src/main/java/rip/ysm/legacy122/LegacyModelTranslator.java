@@ -101,6 +101,59 @@ public final class LegacyModelTranslator {
         boolean[] visibleCache = new boolean[bones.size()];
         Matrix4f[] cache = skeleton(bones, boneParams, visibleCache);
 
+        int quadsDrawn = drawGeometry(bones, boneParams, visibleCache, cache, r, g, b, a, lightmap);
+
+        // item3：受击红闪二次覆盖面（hurtTime>0||deathTime>0 由 hook 判定，hurtRed=
+        // 实体 getBrightness()）。vanilla-mc-1.7.10 RendererLivingEntity.doRender:170-186
+        // 同款面（blend srcAlpha + depthFunc GL_EQUAL 同深度重绘，红=brightness、
+        // alpha 0.4），双线一致；122 vanilla 用 texenv COMBINE 插值（setBrightness:246-250
+        // 常量 (1,0,0,0.3)），固定管线取二次覆盖配方为双线统一实现。覆盖面不做
+        // glow lightmap 切换（lightmap=-1）。
+        if (hurtRed > 0.0F) {
+            GL11.glEnable(GL11.GL_BLEND);
+            GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+            GL11.glDepthFunc(GL11.GL_EQUAL);
+            drawGeometry(bones, boneParams, visibleCache, cache, hurtRed, 0.0F, 0.0F, 0.4F, -1);
+            GL11.glDepthFunc(GL11.GL_LEQUAL);
+            GL11.glDisable(GL11.GL_BLEND);
+            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        }
+
+        if (translucentTexture) {
+            GlStateManager.disableBlend();
+        } else {
+            GlStateManager.disableAlpha();
+        }
+
+        GlStateManager.disableRescaleNormal();
+        GlStateManager.popMatrix();
+
+        if (DEBUG_LOG && (debugFrame++ % 40 == 0)) {
+            System.out.printf("[ysm-legacy122] translator frame=%d bones=%d quadsDrawn=%d boneParams=%d translucent=%b glowBones=%d rootBoneRot=(%.3f,%.3f,%.3f)%n",
+                    debugFrame, bones.size(), quadsDrawn, boneParams == null ? -1 : boneParams.length,
+                    translucentTexture, glowBoneCount(bones),
+                    boneParams == null ? 0 : boneParams[0], boneParams == null ? 0 : boneParams[1],
+                    boneParams == null ? 0 : boneParams[2]);
+        }
+    }
+
+    private static int glowBoneCount(java.util.List<GeoModel.BakedBone> bones) {
+        int n = 0;
+        for (GeoModel.BakedBone bone : bones) {
+            if (bone.glow) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    /**
+     * 骨循环直绘（主面/受击红闪覆盖面共用）。lightmap>=0 时 ysmGlow 发光骨做
+     * lightmap (240,240) 局部覆盖（item2）；<0 不触碰 lightmap（GUI 预览/覆盖面）。
+     */
+    private static int drawGeometry(java.util.List<GeoModel.BakedBone> bones, float[] boneParams,
+                                    boolean[] visibleCache, Matrix4f[] cache,
+                                    float r, float g, float b, float a, int lightmap) {
         int quadsDrawn = 0;
         for (int i = 0; i < bones.size(); i++) {
             if (!visibleCache[i]) {
@@ -113,8 +166,7 @@ public final class LegacyModelTranslator {
 
             // item2：ysmGlow 发光骨 lightmap 全亮局部覆盖（主线 NativeModelRenderer:291
             // bone.glow ? LightTexture.pack(15,15) : packedLight 同语义；固定管线等价面=
-            // lightmap 纹理坐标临时置 (240,240)，画完恢复实体坐标）。lightmap<0（GUI
-            // 预览无实体上下文）不覆盖。
+            // lightmap 纹理坐标临时置 (240,240)，画完恢复实体坐标）。
             boolean glow = bone.glow && lightmap >= 0;
             if (glow) {
                 net.minecraft.client.renderer.OpenGlHelper.setLightmapTextureCoords(
@@ -149,33 +201,7 @@ public final class LegacyModelTranslator {
                         (float) (lightmap % 65536), (float) (lightmap / 65536));
             }
         }
-
-        if (translucentTexture) {
-            GlStateManager.disableBlend();
-        } else {
-            GlStateManager.disableAlpha();
-        }
-
-        GlStateManager.disableRescaleNormal();
-        GlStateManager.popMatrix();
-
-        if (DEBUG_LOG && (debugFrame++ % 40 == 0)) {
-            System.out.printf("[ysm-legacy122] translator frame=%d bones=%d quadsDrawn=%d boneParams=%d translucent=%b glowBones=%d rootBoneRot=(%.3f,%.3f,%.3f)%n",
-                    debugFrame, bones.size(), quadsDrawn, boneParams == null ? -1 : boneParams.length,
-                    translucentTexture, glowBoneCount(bones),
-                    boneParams == null ? 0 : boneParams[0], boneParams == null ? 0 : boneParams[1],
-                    boneParams == null ? 0 : boneParams[2]);
-        }
-    }
-
-    private static int glowBoneCount(java.util.List<GeoModel.BakedBone> bones) {
-        int n = 0;
-        for (GeoModel.BakedBone bone : bones) {
-            if (bone.glow) {
-                n++;
-            }
-        }
-        return n;
+        return quadsDrawn;
     }
 
     // NativeModelRenderer.calculateBoneMatrix 同款数学（rootPose 恒单位阵：

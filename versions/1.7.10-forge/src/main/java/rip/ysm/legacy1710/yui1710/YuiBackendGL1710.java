@@ -137,8 +137,17 @@ public final class YuiBackendGL1710 implements YuiBackend {
         return this.mc.displayHeight;
     }
 
-    // preview：接口默认空实现（本卡范围）。1.7.10 预览配方随 1710 L2 真模型装载另卡
-    //（vanilla 参照 GuiInventory.drawEntityOnScreen GuiInventory.java:63-97：GL11 固定管线
-    // + RenderHelper 标准光照 + RenderManager.instance.renderEntityWithPosYaw，无 stencil；
-    // legacy 渲染走 RendererLivingEntity mixin 接管，GUI 内须直调版本树翻译层）。
+    // preview：L2a 落地（YuiBackendGL1122.java:140 同契约）。返回后 scissor 已弹 +
+    // 深度测试已关（模型 z 写深度挡后续 2D quad，vanilla GuiContainer.drawScreen:73
+    // 先例；scissor 掩深度写入=槽外零泄漏）。实体绘制直调版本树翻译层
+    //（消费侧 LegacyPreview1710 内完成）。
+    @Override
+    public void preview(YuiPreview preview, int x1, int y1, int x2, int y2,
+                        float mouseX, float mouseY, float partialTick) {
+        GL11.glEnable(GL11.GL_DEPTH_TEST); // 模型自遮挡需要（GUI 进场态不保证）
+        scissorPush(x1, y1, x2, y2);
+        preview.render(x1, y1, x2, y2, mouseX, mouseY, partialTick);
+        scissorPop();
+        GL11.glDisable(GL11.GL_DEPTH_TEST); // 契约收口：后续 2D 叠序可见（host 帧末恢复）
+    }
 }

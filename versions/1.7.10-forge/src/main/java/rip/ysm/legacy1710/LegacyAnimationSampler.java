@@ -7,7 +7,7 @@ import com.elfmcys.yesstevemodel.geckolib3.core.builder.ILoopType;
 import com.elfmcys.yesstevemodel.geckolib3.core.keyframe.BoneAnimation;
 import com.elfmcys.yesstevemodel.geckolib3.core.keyframe.bone.BoneKeyFrame;
 import com.elfmcys.yesstevemodel.geckolib3.file.AnimationFile;
-import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
+
 import com.elfmcys.yesstevemodel.molang.runtime.ExpressionEvaluator;
 import org.joml.Vector3f;
 
@@ -50,6 +50,10 @@ import java.util.Map;
  *     YSMClientMapper:457），格式内亦无隐藏关键帧通道（rot/pos/scale 之外
  *     无通道）——两线对称，见交付报告。</li>
  * </ul>
+ *
+ * <p>1710 移植（legacy1710-l2a-model-load）：逻辑逐字拷（122 树内最新版，含
+ * PLAY_ONCE 钳末帧修 4fc6675），唯一差异=模型参数类型 GeoModel→LegacyBakedModel
+ *（GeoModel 经 LegacyGeoModelConverter 机械映射后消费，逐字段同构）。
  */
 public final class LegacyAnimationSampler {
 
@@ -87,12 +91,12 @@ public final class LegacyAnimationSampler {
      * @param tick     动画时间轴（tick；调用方由 ms/50 推得，跨帧单调）
      * @return false=无此动画（params 已是绑定位=主线 STOP 语义）
      */
-    public static boolean sample(GeoModel model, float[] params, ClientModelInfo bundle,
+    public static boolean sample(LegacyBakedModel model, float[] params, ClientModelInfo bundle,
                                  String animName, float tick) {
         resetParams(model, params);
         Animation anim = findAnimation(bundle, animName);
         if (anim == null || anim.boneAnimations.isEmpty()
-                || model == null || model.bakedBones == null || params == null) {
+                || model == null || model.bones == null || params == null) {
             return false;
         }
         float len = anim.animationLength;
@@ -129,11 +133,11 @@ public final class LegacyAnimationSampler {
     }
 
     /** 全骨重置=绑定位（rot 0/pos 0/scale 1/旗标 0；12 float/骨契约）。 */
-    public static void resetParams(GeoModel model, float[] params) {
-        if (model == null || model.bakedBones == null || params == null) {
+    public static void resetParams(LegacyBakedModel model, float[] params) {
+        if (model == null || model.bones == null || params == null) {
             return;
         }
-        for (int i = 0; i < model.bakedBones.size() && (i * 12 + 11) < params.length; i++) {
+        for (int i = 0; i < model.bones.size() && (i * 12 + 11) < params.length; i++) {
             int p = i * 12;
             params[p] = 0f;
             params[p + 1] = 0f;
@@ -157,7 +161,7 @@ public final class LegacyAnimationSampler {
     // 恒 false（YSMClientMapper:457 GeoBone(...,false,false,false)），此钩子是
     // offset9/10 写入面的唯一活路径=消费语义的可证伪驱动器，升级路径=控制器/
     // 脚本面落地时替换。走环境变量（gradle run 子进程自动继承，免动 build 文件）。
-    private static void applyDebugHide(GeoModel model, float[] params) {
+    private static void applyDebugHide(LegacyBakedModel model, float[] params) {
         String spec = System.getenv("YSM_LEGACY122_HIDE_BONE_TEST");
         if (spec == null || spec.isEmpty()) {
             return;
@@ -165,8 +169,8 @@ public final class LegacyAnimationSampler {
         for (String entry : spec.split(",")) {
             boolean skip = entry.startsWith("skip:");
             String boneName = skip ? entry.substring(5) : entry;
-            for (int i = 0; i < model.bakedBones.size(); i++) {
-                if (boneName.equals(model.bakedBones.get(i).name)) {
+            for (int i = 0; i < model.bones.size(); i++) {
+                if (boneName.equals(model.bones.get(i).name)) {
                     params[i * 12 + (skip ? 10 : 9)] = 1.0f;
                 }
             }
@@ -199,12 +203,12 @@ public final class LegacyAnimationSampler {
         params[off + 2] = v.z;
     }
 
-    private static int boneIndex(GeoModel model, String boneName) {
+    private static int boneIndex(LegacyBakedModel model, String boneName) {
         if (boneName == null) {
             return -1;
         }
-        for (int i = 0; i < model.bakedBones.size(); i++) {
-            if (boneName.equals(model.bakedBones.get(i).name)) {
+        for (int i = 0; i < model.bones.size(); i++) {
+            if (boneName.equals(model.bones.get(i).name)) {
                 return i;
             }
         }

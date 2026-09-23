@@ -1,5 +1,8 @@
 {
   "key.category.yes_steve_model": "Yes Steve Model",
+  "key.categories.openysm": "OpenYSM",
+  "key.openysm.select_model": "Select Player Model",
+  "key.openysm.reload_models": "Reload YSM Models",
   "gui.yes_steve_model.close": "Close",
   "gui.yes_steve_model.pre_page": "Pre Page",
   "gui.yes_steve_model.next_page": "Next Page",

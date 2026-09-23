@@ -113,10 +113,36 @@ public final class LegacySyncChannel {
         }
     }
 
-    /** 服务端：向新玩家发全量已登记模型（进世界即知在榜玩家各自的模型）。 */
+    /**
+     * 热重载同位（122 rebroadcastAll 适形）：重载后服务端一致性——可用列表重下发
+     * （S2C ListPacket，包结构/包名变化即随新值）+每玩家全量登记重广播+周围补发
+     * （登录四件套同面）。调用方=客户端触发路径（YuiModelSelectScreen1710.
+     * triggerReload）——1.7.10 无 MinecraftServer.addScheduledTask，按 L2b C2S
+     * netty 内联同形态：sendTo/sendToAllAround 均 netty channel 写，线程安全。
+     */
+    public static void rebroadcastAll() {
+        net.minecraft.server.MinecraftServer server =
+                FMLCommonHandler.instance().getMinecraftServerInstance();
+        if (channel == null || server == null) {
+            return;
+        }
+        // 快照：调用方在 client 线程，服务线程可并发增删 playerEntityList
+        List<EntityPlayerMP> players = new java.util.ArrayList<EntityPlayerMP>(
+                server.getConfigurationManager().playerEntityList);
+        for (EntityPlayerMP player : players) {
+            sendAvailable(player);
+            syncAllTo(player);
+            syncToAround(player);
+        }
+        System.out.printf("[ysm-legacy1710] reload rebroadcast: players=%d%n", players.size());
+    }
+
+    /** 服务端：向新玩家发全量已登记模型（进世界即知在榜玩家各自的模型；快照防跨线程变异）。 */
     private static void syncAllTo(EntityPlayerMP player) {
-        for (EntityPlayerMP other : (List<EntityPlayerMP>) FMLCommonHandler.instance()
-                .getMinecraftServerInstance().getConfigurationManager().playerEntityList) {
+        List<EntityPlayerMP> others = new java.util.ArrayList<EntityPlayerMP>(
+                FMLCommonHandler.instance().getMinecraftServerInstance()
+                        .getConfigurationManager().playerEntityList);
+        for (EntityPlayerMP other : others) {
             UUID uuid = other.getUniqueID();
             syncTo(player, uuid, LegacyModelRegistry.serverModelIdOf(uuid));
         }

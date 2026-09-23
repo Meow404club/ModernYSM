@@ -1,5 +1,8 @@
 {
   "key.category.yes_steve_model": "是，史蒂夫模型",
+  "key.categories.openysm": "OpenYSM",
+  "key.openysm.select_model": "选择玩家模型",
+  "key.openysm.reload_models": "重载 YSM 模型",
   "gui.yes_steve_model.close": "关闭",
   "gui.yes_steve_model.pre_page": "前一页",
   "gui.yes_steve_model.next_page": "后一页",

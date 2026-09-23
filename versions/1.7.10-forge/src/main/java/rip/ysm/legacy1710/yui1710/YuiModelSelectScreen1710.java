@@ -56,9 +56,14 @@ public final class YuiModelSelectScreen1710 {
     private static final KeyBinding SELECT_KEY =
             new KeyBinding("key.openysm.select_model", Keyboard.KEY_Y, "key.categories.openysm");
 
+    /** 模型重载键（默认 R；122 RELOAD_MODELS 同键位，主线 reload 命令的键位适形）。 */
+    private static final KeyBinding RELOAD_KEY =
+            new KeyBinding("key.openysm.reload_models", Keyboard.KEY_R, "key.categories.openysm");
+
     /** init（FMLInitializationEvent 客户端分支）调：注册键位+tick 轮询。 */
     public static void init() {
         ClientRegistry.registerKeyBinding(SELECT_KEY);
+        ClientRegistry.registerKeyBinding(RELOAD_KEY);
         FMLCommonHandler.instance().bus().register(new TickListener());
     }
 
@@ -66,13 +71,44 @@ public final class YuiModelSelectScreen1710 {
     public static final class TickListener {
         @SubscribeEvent
         public void onClientTick(TickEvent.ClientTickEvent event) {
-            if (event.phase != TickEvent.Phase.END || !SELECT_KEY.isPressed()) {
+            if (event.phase != TickEvent.Phase.END) {
                 return;
             }
             Minecraft mc = Minecraft.getMinecraft();
+            // 键循环门控（vanilla-mc-1710 Minecraft.java:1282 currentScreen==null||
+            // allowUserInput，122 :1464 同族实证）——屏开着 KeyBinding.onTick 不入，
+            // 屏内 R 触发走 ModelSelectScreen.keyPressed 钩子
             if (mc.thePlayer != null && mc.currentScreen == null) {
-                mc.displayGuiScreen(new YuiScreenHost1710(ModelSelectScreen::new));
+                if (RELOAD_KEY.isPressed()) {
+                    triggerReload("key");
+                }
+                if (SELECT_KEY.isPressed()) {
+                    mc.displayGuiScreen(new YuiScreenHost1710(ModelSelectScreen::new));
+                }
             }
+        }
+    }
+
+    /**
+     * 热重载入口（键位/屏内 R 共用，122 LegacyModelSelectScreen.triggerReload 同构）：
+     * 客户端重装载→集成服在即（单机/LAN 宿主）服务端重广播（可用列表重下发+指派
+     * 重广播=同步一致性）→选择屏开着就地重建（displayGuiScreen 重入 initGui→
+     * factory 重跑，listPackModels/packMeta 取新值）。
+     */
+    public static void triggerReload(String source) {
+        long start = System.currentTimeMillis();
+        int n = LegacyModelLoader.reloadLoadedModels();
+        System.out.printf("[ysm-legacy1710] reload triggered (%s): models reloaded=%d in %dms%n",
+                source, n, System.currentTimeMillis() - start);
+        // 1.7.10 无 MinecraftServer.addScheduledTask（vanilla-mc-1710 MinecraftServer
+        // 全文实证，C2S netty 内联同族）——按 L2b 既有形态：重广播纯网络面直发
+        // （sendTo/sendToAllAround=netty channel 线程安全写，LegacyModelSelectPacket 类注同款论证）
+        if (FMLCommonHandler.instance().getMinecraftServerInstance() != null) {
+            LegacySyncChannel.rebroadcastAll();
+        }
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.currentScreen instanceof YuiScreenHost1710) {
+            mc.displayGuiScreen(new YuiScreenHost1710(ModelSelectScreen::new));
         }
     }
 
@@ -231,6 +267,10 @@ public final class YuiModelSelectScreen1710 {
             }
             if (keyCode == Keyboard.KEY_DOWN || keyCode == Keyboard.KEY_RIGHT) {
                 moveFocus(1);
+                return true;
+            }
+            if (keyCode == Keyboard.KEY_R) {
+                YuiModelSelectScreen1710.triggerReload("key-gui");
                 return true;
             }
             return super.keyPressed(keyCode, typedChar);

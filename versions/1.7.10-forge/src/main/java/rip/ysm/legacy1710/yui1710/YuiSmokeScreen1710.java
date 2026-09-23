@@ -124,7 +124,7 @@ public final class YuiSmokeScreen1710 {
                     cardsH + rows * 14);
             this.scroll.add(new YuiModelCard(
                     px + 8 + (this.scroll.width - cols * 45 + 5) / 2, cardTop,
-                    "preview", LegacyPreview1710.of(null), null));
+                    "preview", LegacyPreview1710.card(null), null));
             for (int i = 1; i < cols * 2; i++) {
                 final int n = i;
                 this.scroll.add(new YuiFlatButton(px + 8 + (this.scroll.width - cols * 45 + 5) / 2

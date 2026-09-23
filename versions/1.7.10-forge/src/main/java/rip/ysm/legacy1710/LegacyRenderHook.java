@@ -1,5 +1,7 @@
 package rip.ysm.legacy1710;
 
+import com.elfmcys.yesstevemodel.client.ClientModelInfo;
+import com.elfmcys.yesstevemodel.resource.models.ModelProperties;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -80,7 +82,18 @@ public final class LegacyRenderHook {
         // item3：受击红闪（vanilla 1710 doRender:176 hurtTime>0||deathTime>0 面，
         // 红强度=getBrightness(partialTick) 同源 :177 var29）
         float hurtRed = player.hurtTime > 0 || player.deathTime > 0 ? player.getBrightness(0.5f) : 0.0F;
+        // item5：模型 properties height_scale/width_scale 世界路径（此前恒 1:1）。
+        // 语义对位主线 IGeoRenderer.renderEarly:89-93：scale(heightScale, widthScale,
+        // heightScale)；缩放锚=模型原点（脚 y=0）。push/pop 限定模型绘制内——不泄入
+        // vanilla renderModel 后续 shouldRenderPass 盔甲层（原版 biped 定位，保持原尺寸）。
+        ClientModelInfo bundle = LegacyModelState.bundleOf(modelId);
+        ModelProperties props = bundle == null ? null : bundle.getInfo().getModelProperties();
+        float heightScale = props == null ? 1.0F : props.getHeightScale();
+        float widthScale = props == null ? 1.0F : props.getWidthScale();
+        GL11.glPushMatrix();
+        GL11.glScalef(heightScale, widthScale, heightScale);
         LegacyModelTranslator.render(model, boneParams, 1.0f, 1.0f, 1.0f, 1.0f, lightmap, hurtRed);
+        GL11.glPopMatrix();
         return true;
     }
 }

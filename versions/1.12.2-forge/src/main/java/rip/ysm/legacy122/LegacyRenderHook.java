@@ -1,6 +1,9 @@
 package rip.ysm.legacy122;
 
+import com.elfmcys.yesstevemodel.client.ClientModelInfo;
 import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
+import com.elfmcys.yesstevemodel.resource.models.ModelProperties;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -72,8 +75,20 @@ public final class LegacyRenderHook {
         // item3：受击红闪（hurtTime/deathTime 是 EntityLivingBase 公有字段；红强度=
         // getBrightness()，vanilla 1710 doRender:177 glColor4f(var29,0,0,0.4) 同源）
         float hurtRed = player.hurtTime > 0 || player.deathTime > 0 ? player.getBrightness() : 0.0F;
+        // item5：模型 properties height_scale/width_scale 世界路径（此前恒 1:1，
+        // 仅 GUI 预览消费）。语义对位主线 IGeoRenderer.renderEarly:89-93：
+        // scale(heightScale, widthScale, heightScale)（x/z=heightScale，y=widthScale，
+        // RealCameraApiBinder:1108 同构求证）；缩放锚=模型原点（脚 y=0）。push/pop
+        // 限定在模型绘制内——item4 名牌须在未缩放空间画（主线名牌在实体变换外）。
+        ClientModelInfo bundle = LegacyModelState.bundleOf(modelId);
+        ModelProperties props = bundle == null ? null : bundle.getInfo().getModelProperties();
+        float heightScale = props == null ? 1.0F : props.getHeightScale();
+        float widthScale = props == null ? 1.0F : props.getWidthScale();
+        GlStateManager.pushMatrix();
+        GlStateManager.scale(heightScale, widthScale, heightScale);
         LegacyModelTranslator.render(model, boneParams,
                 1.0f, 1.0f, 1.0f, 1.0f, lightmap, hurtRed);
+        GlStateManager.popMatrix();
         // item4：名牌恢复（Pre 取消吞 vanilla doRender 主链连坐名牌渲染面）
         renderNameTag(player, event.getPartialRenderTick());
     }

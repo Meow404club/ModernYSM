@@ -29,7 +29,7 @@ public abstract class RendererLivingEntityMixin {
     private void ysm$takeoverRender(EntityLivingBase entity, float limbSwing, float limbSwingAmount,
                                     float ageInTicks, float netHeadYaw, float headPitch, float scale,
                                     CallbackInfo ci) {
-        if (LegacyRenderHook.takeover(entity)) {
+        if (LegacyRenderHook.takeover(entity, ageInTicks)) {
             ci.cancel();
         }
     }

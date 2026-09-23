@@ -38,12 +38,19 @@ public final class LegacyRenderHook {
      * renderModel 注入回调。返回 true = 已接管（vanilla render 被取消）。
      * player 为被渲染实体（1.7.10 renderModel 参数是 EntityLivingBase，RenderPlayer
      * 链实际传入 AbstractClientPlayer）。
+     *
+     * ageInTicks 用于还原 partialTick（item7）：1.7.10 renderModel 形参无
+     * partialTick，doRender:111 传入的第三参 ageInTicks=handleRotationFloat
+     * （RendererLivingEntity.java:271-273）= ticksExisted + partialTick，
+     * ticksExisted 为 int（Entity.java:85）→ 差值即 vanilla 本帧实际使用的
+     * partialTick。此前恒 0.5 造成动画姿态半帧抖动。
      */
-    public static boolean takeover(Object entity) {
+    public static boolean takeover(Object entity, float ageInTicks) {
         if (!(entity instanceof AbstractClientPlayer)) {
             return false;
         }
         AbstractClientPlayer player = (AbstractClientPlayer) entity;
+        float partialTick = ageInTicks - (float) player.ticksExisted;
         // L2a 读侧：UUID→模型 id；未装载的非 default id 惰性装载（失败负缓存，
         // 不打每帧日志），装载失败回退 default
         String modelId = LegacyModelRegistry.modelIdOf(player.getUniqueID());
@@ -74,14 +81,15 @@ public final class LegacyRenderHook {
             tm.bindTexture(texRl != null ? texRl : player.getLocationSkin());
         }
 
-        LegacyAnimationDriver.tick(player, 0.5f, model, boneParams);
+        LegacyAnimationDriver.tick(player, partialTick, model, boneParams);
         // item2：实体 lightmap 坐标传 translator（ysmGlow 发光骨 240 全亮覆盖+恢复用；
         // isBurning 置 15728880 与 vanilla RenderManager.func_147939_a:232-240 同款；
-        // getBrightnessForRender 形参不参与计算，partialTick 值无影响）
-        int lightmap = player.isBurning() ? 15728880 : player.getBrightnessForRender(0.5f);
+        // getBrightnessForRender/getBrightness 形参不参与计算）
+        int lightmap = player.isBurning() ? 15728880 : player.getBrightnessForRender(partialTick);
         // item3：受击红闪（vanilla 1710 doRender:176 hurtTime>0||deathTime>0 面，
         // 红强度=getBrightness(partialTick) 同源 :177 var29）
-        float hurtRed = player.hurtTime > 0 || player.deathTime > 0 ? player.getBrightness(0.5f) : 0.0F;
+        float hurtRed = player.hurtTime > 0 || player.deathTime > 0
+                ? player.getBrightness(partialTick) : 0.0F;
         // item5：模型 properties height_scale/width_scale 世界路径（此前恒 1:1）。
         // 语义对位主线 IGeoRenderer.renderEarly:89-93：scale(heightScale, widthScale,
         // heightScale)；缩放锚=模型原点（脚 y=0）。push/pop 限定模型绘制内——不泄入

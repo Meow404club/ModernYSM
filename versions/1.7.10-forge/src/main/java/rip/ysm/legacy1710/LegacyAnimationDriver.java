@@ -81,8 +81,8 @@ public final class LegacyAnimationDriver {
                     limbs++;
                 }
             }
-            System.out.printf("[ysm-legacy1710] animTick=%d limbSwing=%.4f limbSwingAmount=%.4f movingBones=%d bones=%d%n",
-                    tick, limbSwing, limbSwingAmount, limbs, model.bones.size());
+            System.out.printf("[ysm-legacy1710] animTick=%d partialTick=%.4f limbSwing=%.4f limbSwingAmount=%.4f movingBones=%d bones=%d%n",
+                    tick, partialTick, limbSwing, limbSwingAmount, limbs, model.bones.size());
         }
     }
 }

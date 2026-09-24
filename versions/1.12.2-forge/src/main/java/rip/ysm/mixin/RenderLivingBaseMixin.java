@@ -11,9 +11,9 @@ import rip.ysm.legacy122.LegacyRenderHook;
 /**
  * RenderLivingBase.renderModel 切面（wave-d-b2-texture-pose 接缝迁移）。
  *
- * 位置注记：本类在 twin 源集（src/twin/java，无 include 白名单、jar 打包必含）——
- * main 源集 include 白名单（build.legacy122.gradle.kts legacy122Include）未列
- * rip/ysm/mixin/**，放 main/src 会被静默剔除（ClassNotFoundException 实证）。
+ * 位置注记：本类在 main 源集，legacy122Include 白名单收编 rip/ysm/mixin/**
+ * （build.legacy122.gradle.kts——白名单外共享源被静默剔除，ClassNotFoundException
+ * 实证；twin 摆放不可行=twin compileClasspath 摘 twin.output 后 main 类不可见）。
  *
  * Forge 14.23.x RenderPlayerEvent.Pre 在 RenderPlayer.doRender 顶触发（forge 1.12.x
  * patches/minecraft/net/minecraft/client/renderer/entity/RenderPlayer.java.patch

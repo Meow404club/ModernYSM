@@ -38,6 +38,12 @@ public final class LegacyModelLoader {
 
     private static final String BUILTIN_PREFIX = "assets/yes_steve_model/builtin/";
 
+    static {
+        // v.*/q.*/ysm.* 空语义绑定须先于任何动画解析（buildParsedBundle）就位
+        //（fix-122-08sta-scale，1710 蓝本同款）
+        LegacyMolangNullBindings.install();
+    }
+
     private LegacyModelLoader() {
     }
 

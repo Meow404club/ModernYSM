@@ -152,6 +152,8 @@ public final class YuiModelSelectScreen extends YuiScreen {
                             enterPack(packPath);
                         }
                     });
+            // 包描述 hover tooltip（wave-d-b4：主线 PackIconButton.renderDescription 适形）
+            card.tooltip = packDescription(packPath);
             this.grid.addCard(card);
             this.pageCells.add(card);
             this.pageCellIds.add(null);
@@ -291,6 +293,17 @@ public final class YuiModelSelectScreen extends YuiScreen {
         }
         return packPath.substring(packPath.lastIndexOf('/') + 1);
     }
+    /** 包描述 tooltip 文本：ysm-pack.json description（lang 优先；空白/缺 meta→null）。 */
+    private static String packDescription(String packPath) {
+        LegacyModelLoader.PackMeta meta = LegacyModelLoader.packMeta(packPath);
+        if (meta == null) {
+            return null;
+        }
+        String locale = Minecraft.getMinecraft().getLanguageManager()
+                .getCurrentLanguage().getLanguageCode();
+        return meta.localizedDescription(locale);
+    }
+
 
     /**
      * 卡显示名（wave-d-b4 ShowModelIdFirst）：开关开=路径末段 id（主线

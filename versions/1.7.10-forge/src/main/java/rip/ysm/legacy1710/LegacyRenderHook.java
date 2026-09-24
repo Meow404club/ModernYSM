@@ -50,6 +50,15 @@ public final class LegacyRenderHook {
             return false;
         }
         AbstractClientPlayer player = (AbstractClientPlayer) entity;
+        // DisableSelfModel/DisableOtherModel（wave-d-b4）：主线 ReplacePlayerRenderEvent
+        // :36/:39 同语义——本端开 self 关=自己走 vanilla 绘制，other 关=他人走 vanilla
+        boolean self = Minecraft.getMinecraft().thePlayer == player;
+        if (self && rip.ysm.LegacyConfig.disableSelfModel()) {
+            return false;
+        }
+        if (!self && rip.ysm.LegacyConfig.disableOtherModel()) {
+            return false;
+        }
         float partialTick = ageInTicks - (float) player.ticksExisted;
         // L2a 读侧：UUID→模型 id；未装载的非 default id 惰性装载（失败负缓存，
         // 不打每帧日志），装载失败回退 default

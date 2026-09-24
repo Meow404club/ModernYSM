@@ -54,6 +54,17 @@ public final class LegacyRenderHook {
         }
         net.minecraft.entity.player.EntityPlayer player =
                 (net.minecraft.entity.player.EntityPlayer) base;
+        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
+        // DisableSelfModel/DisableOtherModel（wave-d-b4）：主线 ReplacePlayerRenderEvent
+        // :36/:39 同语义——本端开 self 关=自己走 vanilla 绘制，other 关=他人走 vanilla。
+        // vanilla 面恢复即名牌/盔甲层等同步回 vanilla（接管取消=零绘制）
+        boolean self = mc.player == player;
+        if (self && rip.ysm.LegacyConfig.disableSelfModel()) {
+            return false;
+        }
+        if (!self && rip.ysm.LegacyConfig.disableOtherModel()) {
+            return false;
+        }
         float partialTick = ageInTicks - (float) player.ticksExisted;
         String modelId = LegacyModelRegistry.modelIdOf(player.getUniqueID());
         if (!LegacyModelRegistry.DEFAULT_MODEL_ID.equals(modelId)
@@ -109,7 +120,6 @@ public final class LegacyRenderHook {
         // 可见→不透明画；隐身但观察者可见（isInvisibleToPlayer=false，队伍
         // seeFriendlyInvisibles 等）→ ghost 半透明 0.15（Profile.c 同值）；隐身且
         // 观察者不可见→跳过绘制（动画 tick 照跑）。
-        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
         boolean visibleBody = !player.isInvisible();
         boolean ghost = !visibleBody && !player.isInvisibleToPlayer(mc.player);
         if (visibleBody || ghost) {

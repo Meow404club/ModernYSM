@@ -213,6 +213,8 @@ public final class LegacyPreview1710 implements YuiPreview {
             pb.starts.put(effective, start);
         }
         float tick = (now - start.longValue()) / 50.0F;
+        // molang 求值上下文（D-molang-1）：预览无实体，anim_time 由采样器写入
+        rip.ysm.legacy122.LegacyMolangContext.beginFrame(null, 0.0f);
         boolean animated = LegacyAnimationSampler.sample(model, params, bundle, effective, tick);
         if (DEBUG && (debugFrame++ % 40 == 0)) {
             System.out.printf(

@@ -19,6 +19,7 @@ import rip.ysm.legacy122.LegacyAnimationSampler;
 import rip.ysm.legacy122.LegacyModelRegistry;
 import rip.ysm.legacy122.LegacyModelState;
 import rip.ysm.legacy122.LegacyModelTranslator;
+import rip.ysm.legacy122.LegacyMolangContext;
 import rip.ysm.yui.YuiPreview;
 
 import java.util.Map;
@@ -209,6 +210,8 @@ public final class LegacyCardPreview implements YuiPreview {
             start = Long.valueOf(now); // 首播注册；同名动画跨刷新持续（不重置时间轴）
             pb.starts.put(effective, start);
         }
+        // molang 求值上下文（D-molang-1）：预览无实体，anim_time 由采样器写入
+        LegacyMolangContext.beginFrame(null, 0.0f);
         LegacyAnimationSampler.sample(model, params, bundle, effective, (now - start.longValue()) / 50.0F);
 
         // --- 纹理双路（LegacyRenderHook.onRenderPlayerPre 同款：OuterFileTexture 直绑 / RL 回退）---

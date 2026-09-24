@@ -100,6 +100,17 @@ public class YuiCardGrid extends YuiWidget {
         this.pageLabel.render(backend, mouseX, mouseY, partialTick);
     }
 
+    /** 后置 tooltip pass 用（YuiScreen.renderTooltip）：悬停且可见、带 tooltip 的卡。 */
+    YuiWidget hoveredCardWithTooltip(int mouseX, int mouseY) {
+        for (int i = this.cells.size() - 1; i >= 0; i--) {
+            YuiWidget cell = this.cells.get(i);
+            if (cell.visible && cell.tooltip != null && cell.isHovered(mouseX, mouseY)) {
+                return cell;
+            }
+        }
+        return null;
+    }
+
     @Override
     public boolean mouseClicked(int mouseX, int mouseY, int button) {
         if (this.prevButton.mouseClicked(mouseX, mouseY, button)

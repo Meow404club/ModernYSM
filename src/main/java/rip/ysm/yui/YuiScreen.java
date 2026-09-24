@@ -65,7 +65,19 @@ public abstract class YuiScreen {
         YuiWidget hovered = null;
         for (int i = this.widgets.size() - 1; i >= 0; i--) {
             YuiWidget w = this.widgets.get(i);
-            if (w.visible && w.tooltip != null && w.isHovered(mouseX, mouseY)) {
+            if (!w.visible) {
+                continue;
+            }
+            // 卡网格的卡不进 widgets 表——经网格聚合取悬停卡
+            if (w instanceof YuiCardGrid) {
+                YuiWidget cell = ((YuiCardGrid) w).hoveredCardWithTooltip(mouseX, mouseY);
+                if (cell != null) {
+                    hovered = cell;
+                    break;
+                }
+                continue;
+            }
+            if (w.tooltip != null && w.isHovered(mouseX, mouseY)) {
                 hovered = w;
                 break;
             }

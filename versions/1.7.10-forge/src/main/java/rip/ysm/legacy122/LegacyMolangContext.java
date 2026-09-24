@@ -58,7 +58,7 @@ public final class LegacyMolangContext {
     private static final class Frame {
         EntityPlayer player;
         float partialTick;
-        float animTimeTicks;
+        float animTimeSeconds;
     }
 
     private static final Frame FRAME = new Frame();
@@ -70,7 +70,7 @@ public final class LegacyMolangContext {
     public static void beginFrame(@Nullable EntityPlayer player, float partialTick) {
         FRAME.player = player;
         FRAME.partialTick = partialTick;
-        FRAME.animTimeTicks = 0.0f;
+        FRAME.animTimeSeconds = 0.0f;
         if (DEBUG && player != null && debugFrame++ % 20 == 0) {
             LOG.info(String.format(
                     "[ysm-legacy1710] molangFrame vanilla-truth: swingProgressInt=%d swingProgress=%.4f hurtTime=%d health=%.1f groundSpeed=%.3f",
@@ -81,9 +81,10 @@ public final class LegacyMolangContext {
         }
     }
 
-    /** 采样器每次施加动画时写（=该动画的局部时间轴，tick）。 */
-    public static void setAnimTime(float ticks) {
-        FRAME.animTimeTicks = ticks;
+    /** 采样器每次施加动画时写（=该动画的局部时间轴，秒；主线
+     * AnimationControllerInstance:164 setAnimTime(adjustedTick/20.0f) 同单位）。 */
+    public static void setAnimTime(float seconds) {
+        FRAME.animTimeSeconds = seconds;
     }
 
     // ==================== 叶子求值面 ====================
@@ -205,7 +206,7 @@ public final class LegacyMolangContext {
             @Override
             Map<String, Object> build() {
                 Map<String, Object> m = new HashMap<>();
-                m.put("anim_time", new Leaf("anim_time", () -> FRAME.animTimeTicks / 20.0f));
+                m.put("anim_time", new Leaf("anim_time", () -> FRAME.animTimeSeconds));
                 m.put("vertical_speed", new Leaf("vertical_speed", () -> {
                     EntityPlayer p = FRAME.player;
                     return p == null ? null : 20.0f * (float) (p.posY - p.prevPosY);

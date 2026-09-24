@@ -191,9 +191,10 @@ public final class LegacyAnimationSampler {
             // 取模会使非 LOOP 无限重播，审查阻塞项修正）
             t = Math.min(Math.max(tick, 0.0f), len);
         }
-        // molang 表达式关键帧供给（D-molang-1）：query.anim_time=本动画局部时间轴
-        // （秒，主线 AnimationControllerInstance:164 setAnimTime(adjustedTick/20) 同式）
-        rip.ysm.legacy122.LegacyMolangContext.setAnimTime(t);
+        // molang 表达式关键帧供给（D-molang-1）：query.anim_time=本动画局部时间轴。
+        // t 为 ticks，此处 /20 换算成秒（主线 AnimationControllerInstance:164
+        // setAnimTime(adjustedTick/20.0f) 同式；Bedrock 规范 anim_time 单位=秒）
+        rip.ysm.legacy122.LegacyMolangContext.setAnimTime(t / 20.0f);
         for (int i = 0; i < anim.boneAnimations.size(); i++) {
             BoneAnimation bone = anim.boneAnimations.get(i);
             int idx = boneIndex(model, bone.boneName);

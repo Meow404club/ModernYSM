@@ -36,7 +36,7 @@ import java.util.logging.Logger;
  * Variable.evaluate 求值（渲染线程），本类静态 Frame 快照由世界链
  * （LegacyAnimationDriver.beginFrame 传 player+partialTick）与 GUI 预览链
  * （LegacyCardPreview beginFrame(null,0)）每帧写入；采样器每次施加动画时
- * setAnimTime(t)——对位主线 AnimationControllerInstance:164 setAnimTime(adjustedTick/20)
+ * setAnimTime(t/20 秒)——对位主线 AnimationControllerInstance:164 setAnimTime(adjustedTick/20.0f)
  * （query.anim_time 单位=秒）。未落地变量沿 08sta 空语义兜底：NullVariable 求值恒
  * null（asFloat 0/asBoolean false/?? 透传右值），未注册命名空间走 NULL_NS 空链——
  * `!v.roaming.car` 得 1、`v.roaming.car` 得 0 的 08sta 语义保持（v 命名空间落地为
@@ -81,7 +81,7 @@ public final class LegacyMolangContext {
     private static final class Frame {
         EntityPlayer player;
         float partialTick;
-        float animTimeTicks;
+        float animTimeSeconds;
     }
 
     private static final Frame FRAME = new Frame();
@@ -93,7 +93,7 @@ public final class LegacyMolangContext {
     public static void beginFrame(@Nullable EntityPlayer player, float partialTick) {
         FRAME.player = player;
         FRAME.partialTick = partialTick;
-        FRAME.animTimeTicks = 0.0f;
+        FRAME.animTimeSeconds = 0.0f;
         if (DEBUG && player != null && debugFrame++ % 20 == 0) {
             LOG.info(String.format(
                     "[ysm-legacy122] molangFrame vanilla-truth: swingProgressInt=%d swingProgress=%.4f hurtTime=%d health=%.1f groundSpeed=%.3f",
@@ -104,9 +104,10 @@ public final class LegacyMolangContext {
         }
     }
 
-    /** 采样器每次施加动画时写（=该动画的局部时间轴，tick）。 */
-    public static void setAnimTime(float ticks) {
-        FRAME.animTimeTicks = ticks;
+    /** 采样器每次施加动画时写（=该动画的局部时间轴，秒；主线
+     * AnimationControllerInstance:164 setAnimTime(adjustedTick/20.0f) 同单位）。 */
+    public static void setAnimTime(float seconds) {
+        FRAME.animTimeSeconds = seconds;
     }
 
     // ==================== 叶子求值面 ====================
@@ -228,7 +229,7 @@ public final class LegacyMolangContext {
             @Override
             Map<String, Object> build() {
                 Map<String, Object> m = new HashMap<>();
-                m.put("anim_time", new Leaf("anim_time", () -> FRAME.animTimeTicks / 20.0f));
+                m.put("anim_time", new Leaf("anim_time", () -> FRAME.animTimeSeconds));
                 m.put("vertical_speed", new Leaf("vertical_speed", () -> {
                     EntityPlayer p = FRAME.player;
                     return p == null ? null : 20.0f * (float) (p.posY - p.prevPosY);

@@ -198,6 +198,8 @@ val legacy1710Include = listOf(
     // 共享 molang math 六文件的 <1.14 分支硬编码 import rip.ysm.legacy122.Mth——
     // 包名是共享链契约点，1710 在版本树该包名下提供同名 shim（Mth.java 头注详述）
     "rip/ysm/legacy122/Mth.java",
+    // 共享 PrimaryBinding <1.14 分支同款契约 import（D-molang-1：molang 高频真值供给）
+    "rip/ysm/legacy122/LegacyMolangContext.java",
     "rip/ysm/OpenYSMStub.java",
     "rip/ysm/LegacyConfig.java",
     "net/sourceforge/pinyin4j/**",

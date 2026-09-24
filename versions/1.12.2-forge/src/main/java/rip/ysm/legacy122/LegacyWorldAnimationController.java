@@ -306,6 +306,7 @@ final class LegacyWorldAnimationController {
 
         // 无动画数据的模型走收编的程序化路径（LegacyTestModel 桩面），真实 .ysm 全走状态机
         if (!hasAnimationData(bundle)) {
+            LegacyMolangContext.publishMainState(null);
             procedural(player, limbSwing, limbSwingAmount, model, params);
             return;
         }
@@ -313,6 +314,8 @@ final class LegacyWorldAnimationController {
         // 状态裁决：先匹配先赢（AnimationManager.java:56-72 同构）；骑乘→null（:49-52
         // vehicle!=null && vehicle.isAlive() → STOP）
         String state = ridingAlive(player) ? null : resolve(player, limbSwingAmount);
+        // molang ctrl.<状态> 真值发布（D-molang-1）：本帧裁决名，骑乘=null=主线 STOP
+        LegacyMolangContext.publishMainState(state);
         // pin 置位先于查动画（setAnimation:103 同序：等值早退的键）
         String from = lastRequested;
         boolean requested = state != null && !state.equals(lastRequested);

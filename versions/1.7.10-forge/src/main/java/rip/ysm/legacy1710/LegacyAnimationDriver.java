@@ -24,6 +24,9 @@ public final class LegacyAnimationDriver {
 
     public static void tick(EntityPlayer player, float partialTick, LegacyBakedModel model,
                             float[] params, ClientModelInfo bundle) {
+        // molang 求值上下文（D-molang-1）：实体+partialTick 直供表达式关键帧
+        // （类在共享契约包 rip.ysm.legacy122，PrimaryBinding <1.14 注册点同名）
+        rip.ysm.legacy122.LegacyMolangContext.beginFrame(player, partialTick);
         float limbSwing = 0.0f;
         float limbSwingAmount = 0.0f;
         if (player != null) {

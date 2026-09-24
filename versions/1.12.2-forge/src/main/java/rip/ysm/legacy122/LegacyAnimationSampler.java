@@ -42,6 +42,10 @@ import java.util.Map;
  *     （转场/混合层不做=研究最小档，GUI 预览不可感知）。</li>
  * <li>molang 表达式关键帧走共享 ExpressionEvaluator（常量关键帧完全不触达求值器；
  *     表达式失败时 evalSafe 降级 0=该骨回中性位，不崩溃）。</li>
+ * <li>并行槽常驻动画（fix-122-08sta-scale 追加，1710 蓝本 a13b89a 同款 twin）：
+ *     pre_parallel0-7/parallel0-7 与主状态并排常驻施加（applyParallelSlots，主线
+ *     PlayerAnimationController:51,77 registerParallelController 对位），模型包据此
+ *     挂常驻隐藏件/表情槽。</li>
  * <li>骨骼隐藏双源（r3 追加）：消费侧=LegacyModelTranslator（offset9=hidden/
  *     offset10=skipChildren，父链子树继承，scale0 同判不可见——镜像
  *     NativeModelRenderer.calculateBoneMatrix:328-345）；写入侧=resetParams
@@ -82,14 +86,44 @@ public final class LegacyAnimationSampler {
     }
 
     /**
-     * 采样：先重置全部骨到绑定位（中性），再按 tick 施加动画值。
+     * 采样：先重置全部骨到绑定位（中性），再施加常驻并行动画（fix-122-08sta-scale），
+     * 最后按 tick 施加主状态动画。
      *
      * @param tick     动画时间轴（tick；调用方由 ms/50 推得，跨帧单调）
-     * @return false=无此动画（params 已是绑定位=主线 STOP 语义）
+     * @return false=无此动画（params 已是绑定位+并行槽=主线 STOP 语义）
      */
     public static boolean sample(GeoModel model, float[] params, ClientModelInfo bundle,
                                  String animName, float tick) {
         resetParams(model, params);
+        applyParallelSlots(model, params, bundle, tick);
+        return applyAnimation(model, params, bundle, animName, tick);
+    }
+
+    /**
+     * YSM 并行槽机制（主线 PlayerAnimationController.java:51,77 registerParallelController
+     * "pre_parallel"/"parallel" 注册；ParallelProcessor 常驻求值）：动画文件内名为
+     * pre_parallel0-7 / parallel0-7 的动画与主状态动画并排常驻播放，模型包用它挂
+     * 常驻态——隐藏件（08_sta 的 Root_car/Root_car2 载具系在 pre_parallel1/2 恒
+     * scale0/表达式选值）、表情槽（molang 变量选值，未定义变量经共享 evalSafe
+     * 降级 0=隐藏，与主线同一 molang 运行时行为一致）。
+     * 修复前此机制缺失→08_sta 载具骨停绑定位 scale1 全量绘制（quadsDrawn=25103
+     * 十格巨影，/tmp/f08-122-run2.log 实证）。先并行槽后主状态：重叠骨主状态覆盖
+     * （1710 蓝本同序；主线注册序 pre_parallel<main<parallel 为 parallel 赢——
+     * 并行槽骨域与状态骨域不相交前提下无观察差，parallel_order_note 记档）。
+     */
+    private static void applyParallelSlots(GeoModel model, float[] params,
+                                           ClientModelInfo bundle, float tick) {
+        for (int i = 0; i < 8; i++) {
+            applyAnimation(model, params, bundle, "pre_parallel" + i, tick);
+        }
+        for (int i = 0; i < 8; i++) {
+            applyAnimation(model, params, bundle, "parallel" + i, tick);
+        }
+    }
+
+    /** 单动画施加（sample 主路径与并行槽共用；含 LOOP 取模/非 LOOP 钳末帧）。 */
+    private static boolean applyAnimation(GeoModel model, float[] params, ClientModelInfo bundle,
+                                          String animName, float tick) {
         Animation anim = findAnimation(bundle, animName);
         if (anim == null || anim.boneAnimations.isEmpty()
                 || model == null || model.bakedBones == null || params == null) {

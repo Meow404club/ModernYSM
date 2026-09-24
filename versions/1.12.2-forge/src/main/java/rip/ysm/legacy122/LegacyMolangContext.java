@@ -86,16 +86,21 @@ public final class LegacyMolangContext {
 
     private static final Frame FRAME = new Frame();
 
+    /** 调试采样帧计数（beginFrame 每 20 帧打点，挥击期叶子逐帧打点）。 */
+    private static int debugFrame;
+
     /** 世界链每帧开头调用（GUI 预览传 null player）。 */
     public static void beginFrame(@Nullable EntityPlayer player, float partialTick) {
         FRAME.player = player;
         FRAME.partialTick = partialTick;
         FRAME.animTimeTicks = 0.0f;
-        if (DEBUG && player != null) {
+        if (DEBUG && player != null && debugFrame++ % 20 == 0) {
             LOG.info(String.format(
-                    "[ysm-legacy122] molangFrame vanilla-truth: swingProgressInt=%d swingProgress=%.4f hurtTime=%d health=%.1f",
+                    "[ysm-legacy122] molangFrame vanilla-truth: swingProgressInt=%d swingProgress=%.4f hurtTime=%d health=%.1f groundSpeed=%.3f",
                     player.swingProgressInt, player.getSwingProgress(partialTick),
-                    player.hurtTime, player.getHealth()));
+                    player.hurtTime, player.getHealth(),
+                    20.0f * MathHelper.sqrt((float) (player.motionX * player.motionX
+                            + player.motionZ * player.motionZ))));
         }
     }
 
@@ -331,7 +336,7 @@ public final class LegacyMolangContext {
                         return null;
                     }
                     int v = p.swingProgressInt;
-                    if (DEBUG) {
+                    if (DEBUG && p.isSwingInProgress) {
                         LOG.info(String.format("[ysm-legacy122] molang swing_time=%d (swingProgress=%.4f)", v, p.swingProgress));
                     }
                     return (float) v;
@@ -347,7 +352,7 @@ public final class LegacyMolangContext {
                         return null;
                     }
                     float v = p.getSwingProgress(FRAME.partialTick);
-                    if (DEBUG) {
+                    if (DEBUG && p.isSwingInProgress) {
                         LOG.info(String.format("[ysm-legacy122] molang attack_time=%.4f (swingProgressInt=%d)", v, p.swingProgressInt));
                     }
                     return v;

@@ -15,6 +15,12 @@ public abstract class YuiWidget {
     public int height;
     public boolean visible = true;
 
+    /**
+     * 悬停 tooltip 文本（null=无）。渲染由 YuiScreen 后置 pass 统一画（后画在上，
+     * 不被后加组件盖住）；主线 PackIconButton.renderDescription hover 面适形。
+     */
+    public String tooltip;
+
     protected YuiWidget(int x, int y, int width, int height) {
         this.x = x;
         this.y = y;

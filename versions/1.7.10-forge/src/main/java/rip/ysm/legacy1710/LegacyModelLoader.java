@@ -328,6 +328,17 @@ public final class LegacyModelLoader {
             String[] l = locale == null ? null : this.lang.get(locale);
             return l != null && l[0] != null ? l[0] : this.name;
         }
+
+        /**
+         * 本地化描述（wave-d-b4 tooltip 面，122 同构）：lang[locale].description →
+         * description 回退；空白→null（无 tooltip，主线 PackIconButton
+         * .renderDescription:117-119 isBlank 早退同语义）。
+         */
+        public String localizedDescription(String locale) {
+            String[] l = locale == null ? null : this.lang.get(locale);
+            String s = l != null && l[1] != null ? l[1] : this.description;
+            return s == null || s.trim().isEmpty() ? null : s;
+        }
     }
 
     /** 枚举 classpath 目录子项（dev=文件系统 / 生产=jar 条目，两态覆盖）。 */

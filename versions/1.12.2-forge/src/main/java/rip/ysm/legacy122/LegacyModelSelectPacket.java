@@ -58,6 +58,14 @@ public class LegacyModelSelectPacket implements IMessage {
         if (modelId == null) {
             modelId = "";
         }
+        // CAN_SWITCH_MODEL 门禁（wave-d-b4）：主线 C2SRequestSwitchModelPacket.handle:35
+        // 同语义——开关关闭时静默拒收切换请求（拒绝日志=采证锚点）
+        if (!rip.ysm.LegacyConfig.canSwitchModel()) {
+            System.out.printf(
+                    "[ysm-legacy122] model select rejected (can_switch_model=false): uuid=%s model=%s%n",
+                    player.getUniqueID(), modelId);
+            return;
+        }
         boolean isDefault = LegacyModelRegistry.DEFAULT_MODEL_ID.equals(modelId);
         if (!modelId.isEmpty() && !isDefault
                 && !LegacyModelLoader.listBuiltinModels().contains(modelId)) {

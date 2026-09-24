@@ -13,6 +13,7 @@ import org.lwjgl.input.Keyboard;
 import rip.ysm.legacy122.LegacyModelLoader;
 import rip.ysm.legacy122.LegacyModelRegistry;
 import rip.ysm.legacy122.LegacyModelSelectScreen;
+import rip.ysm.legacy122.LegacyModelState;
 import rip.ysm.legacy122.LegacySyncChannel;
 import rip.ysm.yui.YuiBackend;
 import rip.ysm.yui.YuiCardGrid;
@@ -114,7 +115,7 @@ public final class YuiModelSelectScreen extends YuiScreen {
         // 左栏模型名：split 125 @+205 起，行距 10，居中 135（:870-883 同几何）；
         // 标签持引用，select() 时刷新（左栏预览读 registry 即时切换，名字不能滞后）
         this.nameLabels.clear();
-        this.setNameLines(this.selected);
+        this.setNameLines(cardDisplayName(this.selected));
 
         // 左栏版本串（:592-605 同位暗灰）
         YuiLabel version = new YuiLabel(left + 2, top + 226, 0, 10, "openysm legacy122");
@@ -151,6 +152,8 @@ public final class YuiModelSelectScreen extends YuiScreen {
                             enterPack(packPath);
                         }
                     });
+            // 包描述 hover tooltip（wave-d-b4：主线 PackIconButton.renderDescription 适形）
+            card.tooltip = packDescription(packPath);
             this.grid.addCard(card);
             this.pageCells.add(card);
             this.pageCellIds.add(null);
@@ -256,7 +259,7 @@ public final class YuiModelSelectScreen extends YuiScreen {
         for (int i = 0; i < this.cards.size(); i++) {
             this.cards.get(i).selected = this.cardIds.get(i).equals(id);
         }
-        this.setNameLines(id);
+        this.setNameLines(cardDisplayName(id));
         LegacySyncChannel.requestSelect(id);
         System.out.println("[ysm-legacy122] gui selected: " + id);
     }
@@ -290,10 +293,34 @@ public final class YuiModelSelectScreen extends YuiScreen {
         }
         return packPath.substring(packPath.lastIndexOf('/') + 1);
     }
+    /** 包描述 tooltip 文本：ysm-pack.json description（lang 优先；空白/缺 meta→null）。 */
+    private static String packDescription(String packPath) {
+        LegacyModelLoader.PackMeta meta = LegacyModelLoader.packMeta(packPath);
+        if (meta == null) {
+            return null;
+        }
+        String locale = Minecraft.getMinecraft().getLanguageManager()
+                .getCurrentLanguage().getLanguageCode();
+        return meta.localizedDescription(locale);
+    }
 
-    /** 卡显示名：路径末段（主线 displayName=去扩展名模型名同形）。 */
+
+    /**
+     * 卡显示名（wave-d-b4 ShowModelIdFirst）：开关开=路径末段 id（主线
+     * ModelButton.getMessage 的 displayName 面）；关=模型作者填的 metadata.name
+     * （主线 createDisplayName 语义，缺/空白回退 id）。legacy 无 metadata lang
+     * 本地化面（主线经 ModelMetadataPresenter+ModelAssembly），raw name 直显。
+     */
     private static String cardDisplayName(String id) {
-        return id.substring(id.lastIndexOf('/') + 1);
+        String idName = id.substring(id.lastIndexOf('/') + 1);
+        if (rip.ysm.LegacyConfig.showModelIdFirst()) {
+            return idName;
+        }
+        com.elfmcys.yesstevemodel.client.ClientModelInfo bundle = LegacyModelState.bundleOf(id);
+        com.elfmcys.yesstevemodel.resource.models.Metadata meta =
+                bundle == null ? null : bundle.getInfo().getExtraInfo();
+        return meta != null && meta.getName() != null && !meta.getName().trim().isEmpty()
+                ? meta.getName() : idName;
     }
 
     private void moveFocus(int delta) {

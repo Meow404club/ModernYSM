@@ -3,6 +3,11 @@ package rip.ysm.legacy1710;
 import com.elfmcys.yesstevemodel.client.ClientModelInfo;
 import com.elfmcys.yesstevemodel.geckolib3.core.builder.Animation;
 import com.elfmcys.yesstevemodel.geckolib3.core.builder.ILoopType;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
+import net.minecraft.entity.item.EntityBoat;
+import net.minecraft.entity.passive.EntityHorse;
+import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.Item;
@@ -74,6 +79,8 @@ final class LegacyWorldAnimationController {
     private static final float SWING_BEGIN_TICKS = 0.0f;
     /** use 控制器注册转场 0.1f（PlayerAnimationController.java:70）×20 = 2 tick（同 main）。 */
     private static final float USE_BEGIN_TICKS = BEGIN_TICKS;
+    /** vehicle 控制器注册转场 0.1f（PlayerAnimationController.java:55）×20 = 2 tick（同 main）。 */
+    private static final float VEHICLE_BEGIN_TICKS = BEGIN_TICKS;
 
     private static final int IDLE = 0;
     private static final int BEGINNING = 1;
@@ -253,6 +260,13 @@ final class LegacyWorldAnimationController {
      */
     private final Channel swingChannel = new Channel("swing", SWING_BEGIN_TICKS, MODE_ONCE, 0);
     private final Channel useChannel = new Channel("use", USE_BEGIN_TICKS, MODE_LOOP, 1);
+    /**
+     * vehicle 通道（wave-d-anim-3，122 蓝本同款 twin）：坐骑链 ride_pig/ride/boat/sit+
+     * ConditionVehicle id 面（主线 LivingMovementAnimationPredicate.java:49-102 逐行对位，
+     * 全 LOOP，注册转场 0.1f=PlayerAnimationController.java:55）。fireMarker=-1=状态门
+     * （主线谓词逐帧求值，无 swing/use 的首帧沿窗）。
+     */
+    private final Channel vehicleChannel = new Channel("vehicle", VEHICLE_BEGIN_TICKS, MODE_LOOP, -1);
 
     private LegacyWorldAnimationController(UUID owner) {
         this.owner = owner;
@@ -292,8 +306,9 @@ final class LegacyWorldAnimationController {
             return;
         }
 
-        // 状态裁决：先匹配先赢（AnimationManager 同构）；骑乘→null（vehicle→STOP）
-        String state = player.isRiding() ? null : resolve(player, limbSwingAmount); // isRiding Entity.java:1358
+        // 状态裁决：先匹配先赢（AnimationManager 同构）；骑乘→null（:49-52
+        // vehicle!=null && vehicle.isAlive() → STOP）
+        String state = ridingAlive(player) ? null : resolve(player, limbSwingAmount); // isRiding Entity.java:1358
         // pin 置位先于查动画（setAnimation 同序：等值早退的键）
         String from = lastRequested;
         boolean requested = state != null && !state.equals(lastRequested);
@@ -341,9 +356,12 @@ final class LegacyWorldAnimationController {
 
         advance(dt, model, params, bundle);
 
-        // swing/use 通道（wave-d-anim-2，122 树同款 twin）：main 采样结果之上叠加。
-        // 先 swing 后 use=主线注册序（PlayerAnimationController.java:67 → :70），重叠骨
-        // use 赢。通道自带相位机，与 main 状态机互不裁决。
+        // vehicle/swing/use 通道（wave-d-anim-2/-3，122 树同款 twin）：main 采样结果之上
+        // 叠加。通道相对序=主线注册序（vehicle :55 → swing :67 → use :70），重叠骨后到者赢
+        // （骑乘挥剑=swing 覆 ride 触骨）。vehicle 主线注册于 main 之前，main 骑乘即 STOP
+        // （无贡献）使该序差无观察面，唯上马 3t 淡出窗方向相反（适形注见 Channel javadoc）。
+        // 通道自带相位机，与 main 状态机互不裁决。
+        vehicleChannel.tickFrame(player, dt, model, params, bundle);
         swingChannel.tickFrame(player, dt, model, params, bundle);
         useChannel.tickFrame(player, dt, model, params, bundle);
     }
@@ -483,6 +501,65 @@ final class LegacyWorldAnimationController {
     }
 
     /**
+     * 骑乘存活门，主线 AnimationManager.java:49-52（main STOP）与
+     * LivingMovementAnimationPredicate.java:53（vehicle 链不触发）共用同一面：
+     * vehicle != null && vehicle.isAlive()。1.7.10 对位=!isDead（vanilla-mc-1710
+     * Entity.java:68 公开字段；isEntityAlive 仅 EntityLivingBase:788 可达，EntityBoat
+     * 这类非 Living 载具不可达 → 公开字段面）；骑乘面=ridingEntity（Entity.java:44
+     * 公开字段，isRiding Entity.java:1358-1360 即同判据）。
+     */
+    private static boolean ridingAlive(EntityPlayer p) {
+        Entity vehicle = p.ridingEntity;
+        return vehicle != null && !vehicle.isDead;
+    }
+
+    /**
+     * vehicle 门（主线 LivingMovementAnimationPredicate.renderRidingAnimation:49-102
+     * 逐行对位，122 蓝本 vehicleGate twin；SWEM/TLM/carryon 第三方 mod 面不实现=域外
+     * 声明）。分支序：ConditionVehicle id → ride_pig → ride → boat → sit 兜底，全 LOOP
+     * （主线各分支 playAnimationWithLoop(LOOP)），命中即 return 不后落。vanilla 面
+     * 1.7.10 考古（vanilla-mc-1.7.10 行号亲证）：
+     * <ul>
+     * <li>ConditionVehicle（:67-73）：id 面=vehicle$&lt;entityId&gt; 命中即 return
+     *     （主线 doIdTest ConditionVehicle.java:78-85 返回 idPre+key 同构）。idTest 集合
+     *     由模型动画名建面（ConditionManager.addTest ← ModelAssemblyFactory.java:88-90）
+     *     → 集合含 key ⟺ 模型含该动画，动画存在性查=等价适形。EntityList.getEntityString
+     *     （EntityList.java:173-175，"Horse" 形）——1.7.10 无 ResourceLocation 注册表
+     *     （1.9+），id 无 namespace=可达成口径代差声明。tag 面（vehicle#）1.13+ data
+     *     pack tags 不实现。</li>
+     * <li>ride_pig（:74-76）：vehicle instanceof EntityPig（passive/EntityPig.java:25）。</li>
+     * <li>ride（:77-88 &lt;21.5 分支=instanceof Saddleable，无鞍检）：1.7.10 鞍乘族=
+     *     EntityHorse（passive/EntityHorse.java:40；1.7.10 无 AbstractHorse 族拆分
+     *     （1.12 才拆），马/驴/骡/骷髅/僵尸马同一类）。</li>
+     * <li>boat（:89-91）：vehicle instanceof EntityBoat（item/EntityBoat.java:18）。</li>
+     * <li>sit（:101 兜底）：其余存活载具（矿车/其他玩家等）。</li>
+     * </ul>
+     */
+    private static String vehicleGate(EntityPlayer p, ClientModelInfo bundle) {
+        Entity vehicle = p.ridingEntity;
+        if (vehicle == null || vehicle.isDead) { // 主线 :53 gate 同构
+            return null;
+        }
+        String key = EntityList.getEntityString(vehicle);
+        if (key != null) {
+            String conditioned = "vehicle$" + key; // 主线 idPre+key 同构（无 namespace 形）
+            if (LegacyAnimationSampler.findAnimation(bundle, conditioned) != null) {
+                return conditioned;
+            }
+        }
+        if (vehicle instanceof EntityPig) {
+            return "ride_pig";
+        }
+        if (vehicle instanceof EntityHorse) {
+            return "ride";
+        }
+        if (vehicle instanceof EntityBoat) {
+            return "boat";
+        }
+        return "sit";
+    }
+
+    /**
      * swing/use 独立通道（wave-d-anim-2）。主线对位与混合语义同 122 蓝本
      * （swing=ItemHoldAnimationPredicate/PlayerAnimationController.java:67 转场 0.0f
      * PLAY_ONCE；use=InteractionHandAnimationPredicate/:70 转场 0.1f LOOP；跨控制器
@@ -497,6 +574,16 @@ final class LegacyWorldAnimationController {
      * getTicksUsingItem()==1 同构。代差：1.7.10 无副手（1.9+）→ 无 swingingHand/
      * getActiveHand，通道恒主手域（swing_hand/use_mainhand）；无盾（ItemShield 1.9+）
      * → 分类面无 shield。
+     *
+     * <p>vehicle 通道（wave-d-anim-3，122 蓝本同款 twin）：状态门（fireMarker=-1，无沿
+     * 窗）——骑乘即请求、换乘即切换、下马即 STOP 淡出+清 pin（主线 PredicateBasedController
+     * STOP 分支同构，与 main :49-52 骑乘 STOP 语义同一镜像）。注册转场 0.1f=BEGINNING
+     * 2 tick、全 LOOP（PlayerAnimationController.java:55 + LivingMovementAnimationPredicate
+     * 各分支）。适形注：主线 vehicle 注册于 main（:57）之前，跨控制器后注册者整值覆盖
+     * 语义下本应 main 触骨覆盖 vehicle——但 main 骑乘即 STOP（AnimationManager:49-52）
+     * 无贡献，故此处 vehicle 叠加在 main 采样结果之上（本架构通道必须在 main 后写）与
+     * 主线唯一观察差=上马后 main 3t 淡出窗内骑乘触骨先出 ride 姿态（主线窗内仍是 main
+     * 淡出姿态），下马方向（vehicle ENDING 淡向 main 当帧值）两线一致。
      */
     private final class Channel {
         final String key;
@@ -533,9 +620,9 @@ final class LegacyWorldAnimationController {
                 endingPose = null;
                 written = null;
             }
-            String requested = swing ? swingGate(p, bundle) : useGate(p, bundle);
+            String requested = gateRequest(p, bundle);
             boolean fire = false;
-            if (requested != null) {
+            if (requested != null && fireMarker >= 0) {
                 int marker = swing ? p.swingProgressInt : p.getItemInUseDuration();
                 if (marker != fireMarker) {
                     armed = true;
@@ -562,6 +649,14 @@ final class LegacyWorldAnimationController {
                 // 缺动画=只置 pin 不贡献（主线 setAnimation:104-107）
             }
             advanceChannel(dt, model, params, bundle);
+        }
+
+        /** 通道门分派：swing/use=首帧沿门（fireMarker>=0），vehicle=状态门（主线谓词逐帧求值）。 */
+        private String gateRequest(EntityPlayer p, ClientModelInfo bundle) {
+            if (fireMarker < 0) {
+                return vehicleGate(p, bundle);
+            }
+            return swing ? swingGate(p, bundle) : useGate(p, bundle);
         }
 
         private void advanceChannel(float dt, LegacyBakedModel model, float[] params, ClientModelInfo bundle) {

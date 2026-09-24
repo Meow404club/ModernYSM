@@ -5,8 +5,22 @@ import com.elfmcys.yesstevemodel.geckolib3.core.builder.Animation;
 import com.elfmcys.yesstevemodel.geckolib3.core.builder.ILoopType;
 import com.elfmcys.yesstevemodel.geckolib3.geo.render.built.GeoModel;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemAxe;
+import net.minecraft.item.ItemBow;
+import net.minecraft.item.ItemFishingRod;
+import net.minecraft.item.ItemHoe;
+import net.minecraft.item.ItemPickaxe;
+import net.minecraft.item.ItemShield;
+import net.minecraft.item.ItemSpade;
+import net.minecraft.item.ItemSword;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.ResourceLocation;
+import rip.ysm.util.UseAction;
 
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -66,6 +80,10 @@ final class LegacyWorldAnimationController {
     private static final float END_TICKS = 3.0f;
     /** 单帧最大推进 tick（卡顿钳制）。 */
     private static final float MAX_FRAME_TICKS = 5.0f;
+    /** swing 控制器注册转场 0.0f（PlayerAnimationController.java:67）=进 RUNNING 无淡入。 */
+    private static final float SWING_BEGIN_TICKS = 0.0f;
+    /** use 控制器注册转场 0.1f（PlayerAnimationController.java:70）×20 = 2 tick（同 main）。 */
+    private static final float USE_BEGIN_TICKS = BEGIN_TICKS;
 
     private static final int IDLE = 0;
     private static final int BEGINNING = 1;
@@ -231,6 +249,17 @@ final class LegacyWorldAnimationController {
     private float[] savedPose;
     private long lastNanos;
 
+    /**
+     * swing/use 独立通道（wave-d-anim-2）：注册序在 main 之后（主线
+     * PlayerAnimationController.java:67 swing / :70 use），与 main 19 状态并行不互斥；
+     * 重叠骨按注册序后到者赢（见 Channel javadoc）。swing 恒 PLAY_ONCE（主线 :59）、
+     * use 恒 LOOP（主线 :37）——注册 loopType 覆盖动画自身值。首帧门标记：swing=
+     * swingProgressInt==0（主线 :48 swingTime==0 同构）、use=getItemInUseMaxCount()==1
+     * （主线 :25 getTicksUsingItem()==1 同构）。
+     */
+    private final Channel swingChannel = new Channel("swing", SWING_BEGIN_TICKS, MODE_ONCE, 0);
+    private final Channel useChannel = new Channel("use", USE_BEGIN_TICKS, MODE_LOOP, 1);
+
     private LegacyWorldAnimationController(UUID owner) {
         this.owner = owner;
     }
@@ -315,6 +344,11 @@ final class LegacyWorldAnimationController {
         }
 
         advance(dt, model, params, bundle);
+
+        // swing/use 通道（wave-d-anim-2）：main 采样结果之上叠加。先 swing 后 use=
+        // 主线注册序（:67 → :70），重叠骨 use 赢。通道自带相位机，与 main 状态机互不裁决。
+        swingChannel.tickFrame(player, dt, model, params, bundle);
+        useChannel.tickFrame(player, dt, model, params, bundle);
     }
 
     private void advance(float dt, GeoModel model, float[] params, ClientModelInfo bundle) {
@@ -449,5 +483,295 @@ final class LegacyWorldAnimationController {
 
     private static float[] copyPose(float[] params) {
         return Arrays.copyOf(params, params.length);
+    }
+
+    /**
+     * swing/use 独立通道（wave-d-anim-2）。主线对位：swing=ItemHoldAnimationPredicate
+     * （PlayerAnimationController.java:67 注册，转场 0.0f，谓词 PLAY_ONCE :59）、use=
+     * InteractionHandAnimationPredicate（:70 注册，转场 0.1f，谓词 LOOP :37/:46）；两通道
+     * 与 main 控制器各自独立裁决（并行不互斥），注册序在 main 之后。
+     *
+     * <p>跨控制器混合语义（适形）：主线 AnimationProcessor.applyTransform:204-256 逐
+     * 控制器施加——首贡献者清零骨值、后续贡献者经 applyLinearBlendTo/applyRotationBlendTo
+     * 混入；PredicateBasedController（主线 coded 谓词路径）对普通 AnimationPoint 恒
+     * setPercentCompleted(0.0f)（:249/:268/:290），progress=0 时两 blend 即 target.set(本帧值)
+     * （TransitionVector3f.java:29-54）→ 后注册控制器在同骨上整值覆盖先注册者。本通道=
+     * main 采样结果之上的覆盖层：RUNNING 仅写通道动画有关键帧的骨通道（written mask），
+     * 未触骨保持 main 当帧值；BEGINNING/ENDING 与 savedPose/endingPose 间 lerp 只作用于
+     * 触面 offsets。
+     *
+     * <p>1.12.2 门面对位（recompiled_minecraft-1.12.2.jar javap 亲证 + 源码行号）：
+     * <ul>
+     * <li>swing：isSwingInProgress（EntityLivingBase:93 公开字段）↔主线 swinging；
+     *     swingProgressInt（:95）↔主线 swingTime——swingArm :1156-1165 置 -1，
+     *     updateArmSwingProgress :1219-1232 每 tick ++，旗标期内恰一拍为 0=主线 :48
+     *     swingTime==0 首帧门同构；swingingHand（:94）↔主线 swingingArm。远端玩家经
+     *     SPacketAnimation → swingArm（NetHandlerPlayClient:734-743）+EntityOtherPlayerMP:94
+     *     updateArmSwingProgress 逐 tick，本地/远端同面。</li>
+     * <li>use：isHandActive（EntityLivingBase:2046，HAND_STATES DataParameter 远端同步）
+     *     ↔主线 isUsingItem；getItemInUseMaxCount（:2150-2152 = 最大使用时长-剩余计数，
+     *     随 tick 递增）↔主线 getTicksUsingItem，首帧恰一拍==1=主线 :25 同构；
+     *     getActiveHand（:2050）↔ getUsedItemHand。</li>
+     * </ul>
+     *
+     * <p>pin/沿语义：pin（lastRequested）等值不重触发；首帧沿 armed=主线
+     * PositionTracker.markProcessed 等价形（标记离开触发值重新武装，一次窗内一拍）；
+     * 门消失=主线谓词 STOP 分支（淡出+清 pin）；PLAY_ONCE 播完进 ENDING 且 pin 保留
+     * （主线 clearAnimation 不清 lastRequestedAnimation），下次挥动经首帧沿重触发。
+     * 缺动画=只置 pin 不贡献（主线 setAnimation:104-107 同构，观察上=纯 main 值）。
+     */
+    private final class Channel {
+        final String key;
+        final float beginTicks;
+        final int mode;
+        final int fireMarker;
+        final boolean swing;
+        int phase = IDLE;
+        String lastRequested;
+        String currentAnim;
+        float animLength;
+        float animTime;
+        float phaseTime;
+        boolean[] written;
+        float[] savedPose;
+        float[] endingPose;
+        boolean armed = true;
+
+        Channel(String key, float beginTicks, int mode, int fireMarker) {
+            this.key = key;
+            this.beginTicks = beginTicks;
+            this.mode = mode;
+            this.fireMarker = fireMarker;
+            this.swing = "swing".equals(key);
+        }
+
+        void tickFrame(EntityPlayer p, float dt, GeoModel model, float[] params, ClientModelInfo bundle) {
+            // 模型/参数面换绑（热重载）→ 硬复位（main 机 lastParamsRef 同款守卫）
+            if (written != null && written.length != params.length) {
+                phase = IDLE;
+                lastRequested = null;
+                currentAnim = null;
+                savedPose = null;
+                endingPose = null;
+                written = null;
+            }
+            String requested = swing ? swingGate(p, bundle) : useGate(p, bundle);
+            boolean fire = false;
+            if (requested != null) {
+                int marker = swing ? p.swingProgressInt : p.getItemInUseMaxCount();
+                if (marker != fireMarker) {
+                    armed = true;
+                } else if (armed) {
+                    armed = false;
+                    fire = true;
+                }
+            }
+            if (requested == null) {
+                if (phase == BEGINNING || phase == RUNNING) {
+                    // 主线谓词 STOP 分支镜像：淡出+清 pin
+                    startEnding(copyPose(params), "stop");
+                    lastRequested = null;
+                }
+                // ENDING 续淡
+            } else if (fire || !requested.equals(lastRequested)) {
+                // fire=主线 stopTransition（首帧门+markProcessed 清 pin）再 setAnimation 同拍重启
+                String from = lastRequested;
+                lastRequested = requested;
+                Animation anim = LegacyAnimationSampler.findAnimation(bundle, requested);
+                if (anim != null && anim.animationLength > 0.0f) {
+                    begin(from, requested, anim, model, params);
+                }
+                // 缺动画=只置 pin 不贡献（主线 setAnimation:104-107）
+            }
+            advanceChannel(dt, model, params, bundle);
+        }
+
+        private void advanceChannel(float dt, GeoModel model, float[] params, ClientModelInfo bundle) {
+            switch (phase) {
+                case BEGINNING: {
+                    animTime += dt;
+                    phaseTime += dt;
+                    LegacyAnimationSampler.applyChannelAnimation(model, params, bundle, currentAnim, animTime);
+                    float f = Math.min(phaseTime / beginTicks, 1.0f);
+                    blendWritten(params, savedPose, f);
+                    if (phaseTime >= beginTicks) {
+                        phase = RUNNING;
+                        phaseTime = 0.0f;
+                    }
+                    break;
+                }
+                case RUNNING: {
+                    animTime += dt;
+                    LegacyAnimationSampler.applyChannelAnimation(model, params, bundle, currentAnim, animTime);
+                    if (mode == MODE_ONCE && animTime >= animLength) {
+                        startEnding(copyPose(params), "once:" + currentAnim);
+                    }
+                    break;
+                }
+                case ENDING: {
+                    phaseTime += dt;
+                    float f = Math.min(phaseTime / END_TICKS, 1.0f);
+                    // params[written] 此刻=main 当帧值（通道未写）；endingPose→main 淡出。
+                    // 适形：主线 ENDING 是通道贡献乘 (1-f) 叠在 main 之上，此处为
+                    // endingPose 与 main 当帧值两点 lerp——收敛点同为主帧值，淡出曲线同级。
+                    if (endingPose != null && endingPose.length == params.length) {
+                        for (int i = 0; i < params.length; i++) {
+                            if (written[i]) {
+                                params[i] = params[i] + (endingPose[i] - params[i]) * (1.0f - f);
+                            }
+                        }
+                    }
+                    if (f >= 1.0f) {
+                        phase = IDLE; // once 完 pin 保留（挡重播至下一挥动）；stop 已清 pin
+                    }
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+
+        /** 进入新动画：BEGINNING 从 begin 时刻 main 结果淡入（swing beginTicks=0 即进 RUNNING）。 */
+        private void begin(String from, String name, Animation anim, GeoModel model, float[] params) {
+            LOG.info(String.format("[ysm-legacy122] animChannel %s %s: %s -> %s (main=%s mode=%s len=%.1f phase=%d)",
+                    key, displayName, from == null ? "-" : from, name,
+                    currentAnimOfMain(), mode == MODE_ONCE ? "ONCE" : "LOOP", anim.animationLength, phase));
+            currentAnim = name;
+            animLength = anim.animationLength;
+            animTime = 0.0f;
+            phaseTime = 0.0f;
+            written = LegacyAnimationSampler.writtenOffsets(model, anim, params.length);
+            savedPose = copyPose(params);
+            phase = beginTicks <= 0.0f ? RUNNING : BEGINNING;
+        }
+
+        private void startEnding(float[] fromPose, String reason) {
+            LOG.info(String.format("[ysm-legacy122] animChannel %s %s end: fade-to-main (%s)",
+                    key, displayName, reason));
+            endingPose = fromPose;
+            phaseTime = 0.0f;
+            currentAnim = null;
+            phase = ENDING;
+        }
+
+        private void blendWritten(float[] params, float[] saved, float f) {
+            if (saved == null || saved.length != params.length || written == null) {
+                return;
+            }
+            for (int i = 0; i < params.length; i++) {
+                if (written[i]) {
+                    params[i] = saved[i] + (params[i] - saved[i]) * f;
+                }
+            }
+        }
+    }
+
+    /** main 通道当前动画名（通道日志并行证据：挥动时 main=walk 即并行不互斥）。 */
+    private String currentAnimOfMain() {
+        return currentAnim == null ? "-" : currentAnim;
+    }
+
+    /**
+     * swing 门（主线 ItemHoldAnimationPredicate.java:47-59 对位：
+     * swinging && !isSleeping()，按 swingingArm 分 swing_hand/swing_offhand）。
+     * 返回条件面解析后的请求动画名；null=不活跃。
+     */
+    private String swingGate(EntityPlayer p, ClientModelInfo bundle) {
+        if (!p.isSwingInProgress || p.isPlayerSleeping()) {
+            return null;
+        }
+        // swingingHand==null 守卫取主手（旗标期内恒非 null，防御面）
+        boolean offhand = p.swingingHand == EnumHand.OFF_HAND;
+        ItemStack held = offhand ? p.getHeldItemOffhand() : p.getHeldItemMainhand();
+        return resolveConditioned(p, bundle, held,
+                offhand ? "swing_offhand$" : "swing$",
+                offhand ? "swing_offhand:" : "swing:",
+                offhand ? "swing_offhand" : "swing_hand");
+    }
+
+    /**
+     * use 门（主线 InteractionHandAnimationPredicate.java:24-46 对位：
+     * isUsingItem() && !isSleeping()，按 getUsedItemHand 分 use_mainhand/use_offhand）。
+     */
+    private String useGate(EntityPlayer p, ClientModelInfo bundle) {
+        if (!p.isHandActive() || p.isPlayerSleeping()) {
+            return null;
+        }
+        boolean offhand = p.getActiveHand() == EnumHand.OFF_HAND;
+        ItemStack held = offhand ? p.getHeldItemOffhand() : p.getHeldItemMainhand();
+        return resolveConditioned(p, bundle, held,
+                offhand ? "use_offhand$" : "use_mainhand$",
+                offhand ? "use_offhand:" : "use_mainhand:",
+                offhand ? "use_offhand" : "use_mainhand");
+    }
+
+    /**
+     * ConditionSwing/ConditionUse 数据条件面最小档（ConditionSwing.doTest:89-102
+     * 序：id → tag → extra；ConditionUse 同构）。id 面=手持物品 registry name 命中
+     * 模型内同前缀动画（主线 :108-112 返回 idPre+key 同构）；extra 面=内部分类
+     * （主线 InnerClassify.getItemType:25-86 类序，:125-133 先 inner 后动作）+使用
+     * 动作（主线 :133-136，"none" 跳过 :80 同构）。tag 面（swing#…）1.12.2 无
+     * data pack tags（1.13+）不实现；TLM gohei/slashblade/lance 模组面不实现
+     * （compat 域）。1.12.2 类对位（javap 亲证）：ItemSword/ItemAxe/ItemPickaxe/
+     * ItemSpade(=shovel)/ItemHoe/ItemShield/ItemBow/ItemFishingRod；crossbow（1.14+）
+     * 与 spear（三叉戟 1.13+）恒缺。
+     */
+    private static String resolveConditioned(EntityPlayer p, ClientModelInfo bundle, ItemStack held,
+                                             String idPrefix, String actionPrefix, String base) {
+        if (held.isEmpty()) { // ItemStack.isEmpty（compile jar javap 亲证）
+            return base;
+        }
+        ResourceLocation id = held.getItem().getRegistryName(); // Item 继承 IForgeRegistryEntry.Impl
+        if (id != null) {
+            String conditioned = idPrefix + id; // toString=domain:path
+            if (LegacyAnimationSampler.findAnimation(bundle, conditioned) != null) {
+                return conditioned;
+            }
+        }
+        String classify = classifyItem(held);
+        if (!classify.isEmpty()) {
+            String conditioned = actionPrefix + classify;
+            if (LegacyAnimationSampler.findAnimation(bundle, conditioned) != null) {
+                return conditioned;
+            }
+        }
+        UseAction action = UseAction.of(held); // 共享门面 <1.13 分支=ItemStack.getItemUseAction()
+        if (action != UseAction.NONE) {
+            String conditioned = actionPrefix + action.name().toLowerCase(Locale.US);
+            if (LegacyAnimationSampler.findAnimation(bundle, conditioned) != null) {
+                return conditioned;
+            }
+        }
+        return base;
+    }
+
+    /** 内部分类面（主线 InnerClassify.getItemType:25-86 类序，1.12.2 可达子集）。 */
+    private static String classifyItem(ItemStack held) {
+        Item item = held.getItem();
+        if (item instanceof ItemSword) {
+            return "sword";
+        }
+        if (item instanceof ItemAxe) {
+            return "axe";
+        }
+        if (item instanceof ItemPickaxe) {
+            return "pickaxe";
+        }
+        if (item instanceof ItemSpade) {
+            return "shovel"; // 1.12.2 铲=ItemSpade，主线分类名沿用 shovel
+        }
+        if (item instanceof ItemHoe) {
+            return "hoe";
+        }
+        if (item instanceof ItemShield) {
+            return "shield";
+        }
+        if (item instanceof ItemBow) {
+            return "bow";
+        }
+        if (item instanceof ItemFishingRod) {
+            return "fishing_rod";
+        }
+        return "";
     }
 }

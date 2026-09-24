@@ -59,6 +59,7 @@ repositories {
 }
 
 val lwjgl3ifyVersion = "d6af8e7"
+val mixinBooterSpec = "zone.rong:mixinbooter:10.5"
 
 // lwjgl3ify forgePatches：运行面（先例 forge122:118-126 同款，implementation 仅 :dev）
 val forgePatchDeps by configurations.creating {
@@ -69,20 +70,42 @@ val forgePatchDeps by configurations.creating {
 dependencies {
     implementation("org.taumc:lwjgl3ify:${lwjgl3ifyVersion}:dev") { isTransitive = false }
     forgePatchDeps("org.taumc:lwjgl3ify:${lwjgl3ifyVersion}:forgePatches") { isTransitive = false }
-    // mixinbooter（先例 :114；stub 阶段只进 runtime 面，L1 写 mixin 类时再挂配置）
-    implementation("zone.rong:mixinbooter:10.5")
+    // mixinbooter（先例 :114）：fat jar 自带 mixin runtime + Mixin AP（META-INF/services
+    // javax.annotation.processing.Processor + IObfuscationService 实证），编译注解/运行态共一件
+    implementation(mixinBooterSpec)
+    // Mixin AP 处理器路径（UniversalTweaks build.gradle:522-535 生产先例同款）：AP 自身依赖
+    // guava/gson/ASM，须随 annotationProcessor 配置显式上处理器路径（javac -processorpath
+    // 非空即替代 classpath AP 发现，缺这三件 AP NoClassDefFoundError）
+    annotationProcessor(mixinBooterSpec) { isTransitive = false }
+    annotationProcessor("org.ow2.asm:asm-debug-all:5.2")
+    annotationProcessor("com.google.guava:guava:30.0-jre")
+    annotationProcessor("com.google.code.gson:gson:2.8.9")
     // 共享源渲染/动画链以 JOML 为工作类型（geckolib3 全线 org.joml），1.12.2 无内置 →
     // Celeritas forge122 先例同款显式依赖（build.gradle.kts:118 org.joml:joml:1.10.5）
     implementation("org.joml:joml:1.10.5")
 }
+
+// ===== Mixin refmap 生产接线（debt-122-mixin-refmap-production）=====
+// RFG 1.4.8 插件内建标准解 ModUtils.enableMixins（retrofuturagradle-1.4.8.jar 字节码实证：
+// 构造期 wiring 三件套——①mixinSourceSet（默认 main，RenderLivingBaseMixin 实际所在源集）
+// 的 compileJava 挂 Mixin AP（-AreobfSrgFile=reobfJar srg → -AoutSrgFile/-AoutRefMapFile=
+// build/tmp/mixins/）；②processResources 收编 refmap 进 jar；③reobfJar.extraSrgFiles 并入
+// mixins.srg。返回值=第一参数 notation 原样回传（GTNH 生产 mod UniversalTweaks
+// build.gradle:528 `modUtils.enableMixins(mixinProviderSpec, refmap)` 同款）。refmap 名必须
+// 与 openysm.mixins.json 的 "refmap" 键逐字一致；AP 按 searge env 出 MCP→SRG 条目，
+// 生产 launchwrapper 面 mixin 据此把 MCP 形注解目标解析到 func_77036_a（dev MCP 面下
+// refmap 惰性不参与，dev 行为零变化）。
+extensions.getByType<com.gtnewhorizons.retrofuturagradle.modutils.ModUtils>()
+    .enableMixins(mixinBooterSpec, "$modId.refmap.json")
 
 // 共享源分代面首轮编译错误 >100，javac 默认上限截断——1.16.5 线同款放开（build.unimined:51）
 tasks.named<JavaCompile>("compileJava") {
     options.compilerArgs.addAll(listOf("-Xmaxerrs", "10000"))
 }
 
-// stub 阶段 jar 即产物（RFB reobfJar 对纯 SRG 命名编译输出做 ForgeSRG→notch 映射；
-// Celeritas 生产先例关闭它走自研 remap——本卡无 shadow/mixin，保留默认 reobfJar 即可）
+// jar=reobfJar 输入；reobfJar=发布产物（RFG 任务描述原文 "Reobfuscate ... to SRG mappings"，
+// 实证 dev jar MCP 调用点 getMinecraft → 发布 jar func_71410_x：生产面=MCP 类名+SRG 成员，
+// 与 launchwrapper deobf 运行时对齐）。mixin 生产重映射接线见上方 enableMixins 块。
 tasks.named<Jar>("jar") {
     manifest {
         attributes["Lwjgl3ify-Aware"] = "true"

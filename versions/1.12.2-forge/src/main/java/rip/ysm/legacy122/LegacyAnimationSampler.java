@@ -121,6 +121,49 @@ public final class LegacyAnimationSampler {
         }
     }
 
+    /**
+     * 通道叠加施加（wave-d-anim-2）：不 reset、不并行槽——swing/use 通道按写触面
+     * 覆盖到 main 采样结果之上（未触骨保持 main 当帧值）。applyAnimation 复用
+     * （LOOP 取模/非 LOOP 钳末帧语义与 main 路径同一份代码）。
+     */
+    public static void applyChannelAnimation(GeoModel model, float[] params, ClientModelInfo bundle,
+                                             String animName, float tick) {
+        applyAnimation(model, params, bundle, animName, tick);
+    }
+
+    /**
+     * 通道动画写触面 mask（wave-d-anim-2）：rot/pos/scale 各自有关键帧的骨通道
+     * offset 置 true。通道 BEGINNING/ENDING 的 lerp 与 RUNNING 的覆盖只作用于触面
+     * offsets——未触通道保持 main 结果（主线 applyTransform 逐通道队列同构）。
+     */
+    public static boolean[] writtenOffsets(GeoModel model, Animation anim, int paramsLength) {
+        boolean[] mask = new boolean[paramsLength];
+        if (anim == null || model == null || model.bakedBones == null) {
+            return mask;
+        }
+        for (int i = 0; i < anim.boneAnimations.size(); i++) {
+            BoneAnimation bone = anim.boneAnimations.get(i);
+            int idx = boneIndex(model, bone.boneName);
+            if (idx < 0) {
+                continue;
+            }
+            int p = idx * 12;
+            if (p + 11 >= paramsLength) {
+                break;
+            }
+            if (bone.rotationKeyFrames != null && !bone.rotationKeyFrames.isEmpty()) {
+                mask[p] = mask[p + 1] = mask[p + 2] = true;
+            }
+            if (bone.positionKeyFrames != null && !bone.positionKeyFrames.isEmpty()) {
+                mask[p + 3] = mask[p + 4] = mask[p + 5] = true;
+            }
+            if (bone.scaleKeyFrames != null && !bone.scaleKeyFrames.isEmpty()) {
+                mask[p + 6] = mask[p + 7] = mask[p + 8] = true;
+            }
+        }
+        return mask;
+    }
+
     /** 单动画施加（sample 主路径与并行槽共用；含 LOOP 取模/非 LOOP 钳末帧）。 */
     private static boolean applyAnimation(GeoModel model, float[] params, ClientModelInfo bundle,
                                           String animName, float tick) {
